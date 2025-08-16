@@ -1,0 +1,1 @@
+I am developing a restaurant management software based on my existing Inventory management software, I need help converting some of the code in my front and backend let's start with the product, I have also noticed that's restaurant does not need batching or expiry dates on menu items, also if this is for Nigerian restaurants so keep things simple

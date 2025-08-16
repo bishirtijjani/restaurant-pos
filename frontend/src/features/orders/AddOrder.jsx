@@ -1,0 +1,628 @@
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  ShoppingBag,
+  UtensilsCrossed,
+  Truck,
+  PlusCircle,
+  MinusCircle,
+  X,
+  Search,
+  Coffee,
+  Pizza,
+  Salad,
+  Sandwich,
+  Cake,
+  CreditCard,
+  DollarSign,
+  Receipt,
+  User,
+} from "lucide-react";
+import { openModal } from "../common/modalSlice";
+import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
+import { fetchAllMenuItems } from "../menuItems/menuItemsSlice";
+import { fetchAllCategories } from "../categories/categoriesSlice";
+
+// Component for the order type selector
+const OrderTypeSelector = ({ orderType, setOrderType }) => (
+  <div className="join mb-4">
+    <button
+      className={`join-item btn ${
+        orderType === "dine-in" ? "btn-primary" : "btn-outline"
+      }`}
+      onClick={() => setOrderType("dine-in")}
+    >
+      <UtensilsCrossed size={18} className="mr-1" /> Dine-in
+    </button>
+    <button
+      className={`join-item btn ${
+        orderType === "takeaway" ? "btn-primary" : "btn-outline"
+      }`}
+      onClick={() => setOrderType("takeaway")}
+    >
+      <ShoppingBag size={18} className="mr-1" /> Takeaway
+    </button>
+    <button
+      className={`join-item btn ${
+        orderType === "delivery" ? "btn-primary" : "btn-outline"
+      }`}
+      onClick={() => setOrderType("delivery")}
+    >
+      <Truck size={18} className="mr-1" /> Delivery
+    </button>
+  </div>
+);
+
+// Component for category filters
+const CategoryFilter = ({ activeCategory, setActiveCategory, categories }) => {
+  // Add 'All' category if it doesn't exist in the categories array
+  const allCategories = [
+    { id: "all", name: "All" },
+    ...categories.filter((category) => category.name !== "All"),
+  ];
+
+  return (
+    <div className="flex overflow-x-auto space-x-2 pb-4 mb-4">
+      {allCategories.map((category) => (
+        <button
+          key={category._id || category.name}
+          className={`btn ${
+            activeCategory === category.name ? "btn-primary" : "btn-outline"
+          } flex-shrink-0`}
+          onClick={() => setActiveCategory(category.name)}
+        >
+          {category.icon && category.icon}
+          <span className="ml-2">{category.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// Component for a single menu item
+const MenuItem = ({ item, addToCart }) => (
+  <div
+    className="bg-white border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+    onClick={() => addToCart(item)}
+  >
+    <div className="h-32 w-full bg-gray-200 flex items-center justify-center">
+      {item.image ? (
+        <img
+          src={item.image}
+          alt={item.name}
+          className="h-32 w-full object-cover"
+        />
+      ) : (
+        <div className="text-gray-400">
+          {item.category === "Coffee" && <Coffee size={48} />}
+          {item.category === "Pizza" && <Pizza size={48} />}
+          {item.category === "Salad" && <Salad size={48} />}
+          {item.category === "Sandwich" && <Sandwich size={48} />}
+          {item.category === "Dessert" && <Cake size={48} />}
+        </div>
+      )}
+    </div>
+    <div className="p-3">
+      <h3 className="font-medium text-lg">{item.name}</h3>
+      <div className="flex justify-between items-center mt-2">
+        <span className="text-primary font-semibold">
+          ₦{item.price.toFixed(2)}
+        </span>
+        <button className="btn btn-sm btn-primary btn-circle">
+          <PlusCircle size={16} />
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// Component for a cart item
+const CartItem = ({ item, updateQuantity }) => (
+  <div className="flex items-center justify-between border-b pb-3 mb-3">
+    <div className="flex items-center">
+      <div className="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center mr-3">
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.name}
+            className="w-12 h-12 rounded-md object-cover"
+          />
+        ) : (
+          <div className="text-gray-400">
+            {item.category === "Coffee" && <Coffee size={24} />}
+            {item.category === "Pizza" && <Pizza size={24} />}
+            {item.category === "Salad" && <Salad size={24} />}
+            {item.category === "Sandwich" && <Sandwich size={24} />}
+            {item.category === "Dessert" && <Cake size={24} />}
+          </div>
+        )}
+      </div>
+      <div>
+        <h4 className="font-medium">{item.name}</h4>
+        <p className="text-primary font-semibold">₦{item.price.toFixed(2)}</p>
+      </div>
+    </div>
+    <div className="flex items-center space-x-2">
+      <button
+        className="btn btn-sm btn-circle btn-ghost"
+        onClick={(e) => {
+          e.stopPropagation();
+          updateQuantity(item._id, item.quantity - 1);
+        }}
+      >
+        <MinusCircle size={16} />
+      </button>
+      <span className="w-6 text-center font-medium">{item.quantity}</span>
+      <button
+        className="btn btn-sm btn-circle btn-ghost"
+        onClick={(e) => {
+          e.stopPropagation();
+          updateQuantity(item._id, item.quantity + 1);
+        }}
+      >
+        <PlusCircle size={16} />
+      </button>
+      <button
+        className="btn btn-sm btn-circle btn-ghost text-error ml-2"
+        onClick={(e) => {
+          e.stopPropagation();
+          updateQuantity(item._id, 0);
+        }}
+      >
+        <X size={16} />
+      </button>
+    </div>
+  </div>
+);
+
+// Component for the empty cart state
+const EmptyCart = () => (
+  <div className="text-center text-gray-500 py-12">
+    <ShoppingBag size={40} className="mx-auto mb-4 opacity-50" />
+    <p>Your order is empty</p>
+    <p className="text-sm">Add items from the menu</p>
+  </div>
+);
+
+// Component for order summary
+const OrderSummary = ({
+  cart,
+  orderType,
+  packagingFee,
+  setPackagingFee,
+  deliveryFee,
+  setDeliveryFee,
+}) => {
+  // Calculate subtotal
+  const calculateSubtotal = () => {
+    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  };
+
+  // Calculate total
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    const packaging =
+      orderType === "dine-in" ? 0 : parseFloat(packagingFee) || 0;
+    const delivery =
+      orderType === "delivery" ? parseFloat(deliveryFee) || 0 : 0;
+    return subtotal + packaging + delivery;
+  };
+
+  return (
+    <div className="bg-base-200 rounded-lg p-4 mb-4">
+      <div className="flex justify-between mb-2">
+        <span>Subtotal</span>
+        <span>₦{calculateSubtotal().toFixed(2)}</span>
+      </div>
+
+      {orderType === "takeaway" && (
+        <div className="flex justify-between mb-2 text-info">
+          <div className="flex items-center">
+            <span className="mr-2">Packaging fee</span>
+            <input
+              type="number"
+              className="input input-bordered input-sm w-20"
+              value={packagingFee}
+              onChange={(e) => setPackagingFee(e.target.value)}
+              step="0.01"
+              min="0"
+            />
+          </div>
+          <span>₦{parseFloat(packagingFee || 0).toFixed(2)}</span>
+        </div>
+      )}
+
+      {orderType === "delivery" && (
+        <>
+          <div className="flex justify-between mb-2 text-info">
+            <div className="flex items-center">
+              <span className="mr-2">Packaging fee</span>
+              <input
+                type="number"
+                className="input input-bordered input-sm w-20"
+                value={packagingFee}
+                onChange={(e) => setPackagingFee(e.target.value)}
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <span>₦{parseFloat(packagingFee || 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between mb-2 text-info">
+            <div className="flex items-center">
+              <span className="mr-2">Delivery fee</span>
+              <input
+                type="number"
+                className="input input-bordered input-sm w-20"
+                value={deliveryFee}
+                onChange={(e) => setDeliveryFee(e.target.value)}
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <span>₦{parseFloat(deliveryFee || 0).toFixed(2)}</span>
+          </div>
+        </>
+      )}
+
+      <div className="border-t border-gray-300 my-2"></div>
+
+      <div className="flex justify-between font-bold text-lg">
+        <span>Total</span>
+        <span>₦{calculateTotal().toFixed(2)}</span>
+      </div>
+    </div>
+  );
+};
+
+// Customer Details Component for delivery orders
+const CustomerDetailsForm = ({ customerDetails, setCustomerDetails }) => (
+  <div className="bg-base-200 rounded-lg p-4 mb-4">
+    <h3 className="font-medium mb-3 flex items-center">
+      <User size={16} className="mr-2" /> Customer Details
+    </h3>
+    <div className="space-y-3">
+      <div>
+        <label className="text-sm block mb-1">Name</label>
+        <input
+          type="text"
+          className="input input-bordered w-full"
+          value={customerDetails.name}
+          onChange={(e) =>
+            setCustomerDetails({ ...customerDetails, name: e.target.value })
+          }
+          placeholder="Customer name"
+        />
+      </div>
+      <div>
+        <label className="text-sm block mb-1">Phone</label>
+        <input
+          type="tel"
+          className="input input-bordered w-full"
+          value={customerDetails.phone}
+          onChange={(e) =>
+            setCustomerDetails({ ...customerDetails, phone: e.target.value })
+          }
+          placeholder="Phone number"
+        />
+      </div>
+      {customerDetails.address !== undefined && (
+        <div>
+          <label className="text-sm block mb-1">Address</label>
+          <textarea
+            className="textarea textarea-bordered w-full"
+            value={customerDetails.address}
+            onChange={(e) =>
+              setCustomerDetails({
+                ...customerDetails,
+                address: e.target.value,
+              })
+            }
+            placeholder="Delivery address"
+            rows="2"
+          ></textarea>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+// Main POS component
+export default function POS() {
+  const dispatch = useDispatch();
+  const menuItems = useSelector((state) => state.menuItems.menuItems);
+  const menuItemsStatus = useSelector((state) => state.menuItems.status);
+  const menuItemsError = useSelector((state) => state.menuItems.error);
+  const categories = useSelector((state) => state.categories.categories);
+  const categoriesStatus = useSelector((state) => state.categories.status);
+  const categoriesError = useSelector((state) => state.categories.error);
+
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [orderType, setOrderType] = useState("dine-in");
+  const [cart, setCart] = useState([]);
+  const [note, setNote] = useState("");
+  const [packagingFee, setPackagingFee] = useState("0.00");
+  const [deliveryFee, setDeliveryFee] = useState("3.00");
+  const [tableNumber, setTableNumber] = useState("1");
+  const [customerDetails, setCustomerDetails] = useState({
+    name: "Walk-in",
+    phone: "",
+    address: "",
+  });
+
+  // Fetch menu items on component mount
+  useEffect(() => {
+    if (!menuItems.length) dispatch(fetchAllMenuItems());
+    if (!categories.length) dispatch(fetchAllCategories());
+  }, [dispatch]);
+
+  // Filter menu items by category and search query
+  const filteredItems = menuItems.filter(
+    (item) =>
+      (activeCategory === "All" || item.category === activeCategory) &&
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      item.isAvailable
+  );
+
+  // Add item to cart
+  const addToCart = (item) => {
+    console.log("Adding item with ID:", item._id);
+    console.log(
+      "Current cart item IDs:",
+      cart.map((i) => i._id)
+    );
+    const existingItem = cart.find((cartItem) => cartItem._id === item._id);
+
+    if (existingItem) {
+      setCart(
+        cart.map((cartItem) =>
+          cartItem._id === item._id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        )
+      );
+    } else {
+      setCart([...cart, { ...item, quantity: 1 }]);
+    }
+  };
+
+  // Update item quantity
+  const updateQuantity = (id, newQuantity) => {
+    if (newQuantity === 0) {
+      setCart(cart.filter((item) => item._id !== id));
+    } else {
+      setCart(
+        cart.map((item) =>
+          item._id === id ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    }
+  };
+
+  // Calculate total for payment button
+  const calculateTotal = () => {
+    const subtotal = cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    const packaging =
+      orderType === "dine-in" ? 0 : parseFloat(packagingFee) || 0;
+    const delivery =
+      orderType === "delivery" ? parseFloat(deliveryFee) || 0 : 0;
+    return subtotal + packaging + delivery;
+  };
+
+  // Handle checkout process
+  const handleCheckout = () => {
+    if (cart.length === 0) return;
+
+    // Prepare order items in the format expected by the backend
+    const orderItems = cart.map((item) => ({
+      menuItemId: item._id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      customizations: "", // Could be added as an extra feature
+      subtotal: item.price * item.quantity,
+      preparationTime: item.preparationTime || 15,
+    }));
+
+    // Calculate totals
+    const subtotal = cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    const packagingAmount =
+      orderType === "dine-in" ? 0 : parseFloat(packagingFee) || 0;
+    const deliveryAmount =
+      orderType === "delivery" ? parseFloat(deliveryFee) || 0 : 0;
+
+    const totalAmount = subtotal + packagingAmount + deliveryAmount;
+
+    // Create order payload according to your schema
+    const orderPayload = {
+      table: orderType === "dine-in" ? tableNumber : "Takeaway",
+      customerDetails: {
+        name: customerDetails.name || "Walk-in",
+        phone: customerDetails.phone || "",
+        email: "",
+        address: orderType === "delivery" ? customerDetails.address : "",
+      },
+      orderType,
+      orderItems,
+      subtotal,
+      packagingFee: packagingAmount,
+      deliveryFee: deliveryAmount,
+      totalAmount,
+      note,
+      menuItems: cart.map((item) => ({
+        ...item,
+        totalAmount: item.price * item.quantity,
+      })),
+    };
+
+    // Open payment confirmation modal with order details
+    dispatch(
+      openModal({
+        title: "Payment Confirmation",
+        bodyType: MODAL_BODY_TYPES.PAYMENT_CONFIRMATION,
+        extraObject: orderPayload,
+        size: "lg",
+      })
+    );
+  };
+
+  // Update customer details when order type changes
+  useEffect(() => {
+    if (orderType === "delivery" && !customerDetails.address) {
+      setCustomerDetails({ ...customerDetails, address: "" });
+    }
+  }, [orderType]);
+
+  return (
+    <div className="flex h-screen bg-gray-100 text-gray-800">
+      {/* Left side - Menu */}
+      <div className="w-3/5 flex flex-col p-4 pr-2">
+        <div className="bg-white rounded-xl shadow-lg p-6 flex-grow flex flex-col">
+          {/* Search bar */}
+          <div className="relative w-64 mb-6">
+            <input
+              type="text"
+              placeholder="Search items..."
+              className="input input-bordered w-full pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+          </div>
+
+          {/* Categories */}
+          <CategoryFilter
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
+            categories={categories}
+          />
+
+          {/* Menu items grid */}
+          <div className="grid grid-cols-3 gap-4 overflow-y-auto flex-grow">
+            {filteredItems.map((item) => (
+              <MenuItem key={item._id} item={item} addToCart={addToCart} />
+            ))}
+            {filteredItems.length === 0 && (
+              <div className="col-span-3 text-center text-gray-500 py-12">
+                No items found for this category or search query.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Right side - Order details */}
+      <div className="w-2/5 flex flex-col p-4 pl-2">
+        <div className="bg-white rounded-xl shadow-lg p-6 flex-grow flex flex-col">
+          <h2 className="text-xl font-bold mb-4">Current Order</h2>
+
+          {/* Order type selector */}
+          <OrderTypeSelector
+            orderType={orderType}
+            setOrderType={setOrderType}
+          />
+
+          {/* Order type indicator */}
+          <div className="bg-base-200 rounded-lg p-3 mb-4 flex items-center justify-between">
+            <div className="flex items-center">
+              {orderType === "dine-in" && (
+                <UtensilsCrossed size={20} className="mr-2 text-primary" />
+              )}
+              {orderType === "takeaway" && (
+                <ShoppingBag size={20} className="mr-2 text-primary" />
+              )}
+              {orderType === "delivery" && (
+                <Truck size={20} className="mr-2 text-primary" />
+              )}
+              <span className="capitalize font-medium">{orderType}</span>
+            </div>
+            {orderType === "dine-in" && (
+              <div className="flex items-center">
+                <span className="mr-2">Table:</span>
+                <input
+                  type="number"
+                  className="input input-bordered input-sm w-16"
+                  value={tableNumber}
+                  onChange={(e) => setTableNumber(e.target.value)}
+                  min="1"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Customer Details Form for delivery orders */}
+          {orderType === "delivery" && (
+            <CustomerDetailsForm
+              customerDetails={customerDetails}
+              setCustomerDetails={setCustomerDetails}
+            />
+          )}
+
+          {/* Cart items */}
+          <div className="flex-grow overflow-y-auto mb-4">
+            {cart.length === 0 ? (
+              <EmptyCart />
+            ) : (
+              <div className="space-y-1">
+                {cart.map((item) => (
+                  <CartItem
+                    key={item._id}
+                    item={item}
+                    updateQuantity={updateQuantity}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Note textarea */}
+          <div className="mb-4">
+            <textarea
+              className="textarea textarea-bordered w-full"
+              placeholder="Add note (allergies, special requests...)"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows="2"
+            ></textarea>
+          </div>
+
+          {/* Order summary with fee inputs */}
+          <OrderSummary
+            cart={cart}
+            orderType={orderType}
+            packagingFee={packagingFee}
+            setPackagingFee={setPackagingFee}
+            deliveryFee={deliveryFee}
+            setDeliveryFee={setDeliveryFee}
+          />
+
+          {/* Action buttons */}
+          <div className="flex space-x-3">
+            <button
+              className="btn btn-outline flex-1"
+              onClick={() => setCart([])}
+              disabled={cart.length === 0}
+            >
+              Clear
+            </button>
+            <button
+              className="btn btn-primary flex-1"
+              onClick={handleCheckout}
+              disabled={cart.length === 0}
+            >
+              Pay ₦{calculateTotal().toFixed(2)}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
