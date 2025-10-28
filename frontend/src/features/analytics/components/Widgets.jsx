@@ -49,7 +49,7 @@ const SalesOverviewWidget = ({ data }) => {
               type="monotone"
               dataKey="sales"
               stroke="#570DF8"
-              name="Sales ($)"
+              name="Sales (₦)"
             />
             <Line
               yAxisId="right"

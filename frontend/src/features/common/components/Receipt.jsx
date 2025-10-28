@@ -22,8 +22,8 @@ const Receipt = ({ extraObject }) => {
 
   // Format the receipt data
   const receipt = {
-    businessName: "YOUR RESTAURANT NAME", // Update with your restaurant name
-    address: "123 Restaurant Street, City", // Update with your address
+    businessName: "Codeket Restaurant", // Update with your restaurant name
+    address: "123 Street, This City, Nigeria", // Update with your address
     phone: "+234 123 456 7890", // Update with your phone number
     date: new Date().toLocaleString(),
     orderNumber: orderData.orderNumber || "New Order",
@@ -280,7 +280,7 @@ const Receipt = ({ extraObject }) => {
             {/* Footer */}
             <div className="text-center text-gray-600 mt-4">
               <p>Thank you for dining with us!</p>
-              <p className="text-xs mt-2">Powered by Your System Name</p>
+              <p className="text-xs mt-2">Powered by Codeket</p>
             </div>
           </div>
         </div>
@@ -462,8 +462,8 @@ const ReceiptPDF = ({ receipt }) => (
       <View style={styles.divider} />
 
       <View style={styles.footer}>
-        <Text>Thank you for dining with us!</Text>
-        <Text style={styles.smallText}>Powered by Your System Name</Text>
+        <Text>Thank's for your patronage!</Text>
+        <Text style={styles.smallText}>Powered by Codeket</Text>
       </View>
     </Page>
   </Document>

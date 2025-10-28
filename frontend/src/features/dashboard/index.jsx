@@ -26,7 +26,6 @@ import ShoppingCartIcon from "@heroicons/react/24/outline/ShoppingCartIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import ClockIcon from "@heroicons/react/24/outline/ClockIcon";
 import ArrowTrendingUpIcon from "@heroicons/react/24/outline/ArrowTrendingUpIcon";
-import CurrencyDollarIcon from "@heroicons/react/24/outline/CurrencyDollarIcon";
 import BuildingOfficeIcon from "@heroicons/react/24/outline/BuildingOfficeIcon";
 import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import BanknotesIcon from "@heroicons/react/24/outline/BanknotesIcon";

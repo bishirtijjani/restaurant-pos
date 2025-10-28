@@ -4,32 +4,36 @@ import { useSelector, useDispatch } from "react-redux";
 import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import Bars3Icon from "@heroicons/react/24/outline/Bars3Icon";
 import MoonIcon from "@heroicons/react/24/outline/MoonIcon";
-import UserIcon from "@heroicons/react/24/outline/UserIcon";
 import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import { openRightDrawer } from "../features/common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
 import { NavLink, Routes, Link, useLocation } from "react-router-dom";
+import UserCircleIcon from "@heroicons/react/24/outline/UserCircleIcon";
+import { RefreshCw, Paintbrush, PaletteIcon } from "lucide-react";
 
 function Header() {
   const dispatch = useDispatch();
   const { noOfNotifications, pageTitle } = useSelector((state) => state.header);
   const [currentTheme, setCurrentTheme] = useState(
-    localStorage.getItem("theme") ||
-      (window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light")
+    localStorage.getItem("theme")
   );
 
   useEffect(() => {
     themeChange(false);
-    localStorage.setItem("theme", currentTheme);
-  }, [currentTheme]);
+    if (currentTheme === null) {
+      if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        setCurrentTheme("dark");
+      } else {
+        setCurrentTheme("light");
+      }
+    }
+    // 👆 false parameter is required for react project
+  }, []);
 
-  const handleThemeChange = (event) => {
-    setCurrentTheme(event.target.value);
-  };
-
+  // Opening right sidebar for notification
   const openNotification = () => {
     dispatch(
       openRightDrawer({
@@ -45,95 +49,101 @@ function Header() {
   }
 
   return (
+    // navbar fixed  flex-none justify-between bg-base-300  z-10 shadow-md
+
     <>
-      <div className="navbar border-b border-b-primary sticky top-0 bg-base-100 z-10 shadow-md ">
-        <div className="flex-1">
+      <div className="navbar sticky top-0 bg-base-100  z-10 shadow-md flex justify-between">
+        {/* Menu toogle for mobile view or small screen */}
+        <div className="">
           <label
             htmlFor="left-sidebar-drawer"
             className="btn btn-primary drawer-button lg:hidden"
           >
             <Bars3Icon className="h-5 inline-block w-5" />
           </label>
-          <h1 className="text-2xl font-semibold ml-2">{pageTitle}</h1>
+          <h1 className="text-2xl font-semibold ml-2 hidden lg:block">
+            {pageTitle}
+          </h1>
         </div>
+
+        <button
+          className="btn btn-sm rounded-box btn-outline mx-2 md:btn-md"
+          onClick={() => window.location.reload()}
+        >
+          <RefreshCw className="h-5 w-5" />
+          Refresh
+        </button>
+
         <div className="flex-none ">
-          <div className="theme-div flex items-center rounded-full border p-1 ">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-paintbrush"
+          {/* Theme selection dropdown */}
+          <div className="dropdown dropdown-end">
+            <div
+              tabIndex={0}
+              role="button"
+              className="theme-div btn btn-sm rounded-box btn-outline mx-2 md:btn-md"
             >
-              <path d="m14.622 17.897-10.68-2.913" />
-              <path d="M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z" />
-              <path d="M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15" />
-            </svg>
-            <select
-              className="select select-sm"
-              value={currentTheme}
-              onChange={handleThemeChange}
-              data-choose-theme
+              <PaletteIcon className="h-5 w-5" />
+              <span className="text-sm">Theme</span>
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40"
             >
-              <option disabled value="">
-                Theme
-              </option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="cupcake">Cupcake</option>
-              <option value="bumblebee">Bumblebee</option>
-              <option value="emerald">Emerald</option>
-              <option value="corporate">Corporate</option>
-              <option value="synthwave">Synthwave</option>
-              <option value="retro">Retro</option>
-              <option value="cyberpunk">Cyberpunk</option>
-              <option value="valentine">Valentine</option>
-              <option value="halloween">Halloween</option>
-              <option value="garden">Garden</option>
-              <option value="forest">Forest</option>
-              <option value="aqua">Aqua</option>
-              <option value="lofi">Lofi</option>
-              <option value="pastel">Pastel</option>
-              <option value="fantasy">Fantasy</option>
-              <option value="wireframe">Wireframe</option>
-              <option value="black">Black</option>
-              <option value="luxury">Luxury</option>
-              <option value="dracula">Dracula</option>
-              <option value="cmyk">Cmyk</option>
-              <option value="autumn">Autumn</option>
-              <option value="business">Business</option>
-              <option value="acid">Acid</option>
-              <option value="lemonade">Lemonade</option>
-              <option value="night">Night</option>
-              <option value="coffee">Coffee</option>
-              <option value="winter">Winter</option>
-              <option value="dim">Dim</option>
-              <option value="nord">Nord</option>
-              <option value="sunset">Sunset</option>
-            </select>
+              <li>
+                <a data-set-theme="light" data-act-class="active">
+                  Light
+                </a>
+              </li>
+              <li>
+                <a data-set-theme="dark" data-act-class="active">
+                  Dark
+                </a>
+              </li>
+              <li>
+                <a data-set-theme="retro" data-act-class="active">
+                  Retro
+                </a>
+              </li>
+              <li>
+                <a data-set-theme="lofi" data-act-class="active">
+                  Lofi
+                </a>
+              </li>
+              <li>
+                <a data-set-theme="black" data-act-class="active">
+                  Black
+                </a>
+              </li>
+              <li>
+                <a data-set-theme="luxury" data-act-class="active">
+                  Luxury
+                  <span className="badge badge-ghost">New</span>
+                </a>
+              </li>
+            </ul>
           </div>
-          <button
-            className="btn btn-ghost ml-4 btn-circle"
+
+          {/* Notification icon */}
+          {/* <button
+            className="btn btn-ghost ml-4  btn-circle"
             onClick={() => openNotification()}
           >
             <div className="indicator">
               <BellIcon className="h-6 w-6" />
-              {noOfNotifications > -10 ? (
-                <span className="indicator-item badge badge-secondary badge-sm">
+              {noOfNotifications > 0 ? (
+                <span className="indicator-item animate-[bounce_3s_linear_4s_infinite_alternate]  badge badge-secondary badge-sm">
                   {noOfNotifications}
                 </span>
               ) : null}
             </div>
-          </button>
-          <div className="dropdown dropdown-end ml-4">
+          </button> */}
+
+          {/* Profile icon, opening menu on click */}
+          <div className="dropdown dropdown-end ml-4 " style={{ zIndex: 5000 }}>
             <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 flex center rounded-full">
-                <UserIcon className="w-8 h-8" />
+              <div className="w-10 rounded-full">
+                {/* <img src="#" alt="profile" /> */}
+                <UserCircleIcon />
               </div>
             </label>
             <ul
@@ -142,11 +152,12 @@ function Header() {
             >
               <li className="justify-between">
                 <Link to={"/app/settings-profile"}>
-                  Profile Settings <span className="badge">New</span>
+                  Profile Settings
+                  <span className="badge">New</span>
                 </Link>
               </li>
               <li className="">
-                <Link to={"/app/settings-billing"}>Bill History</Link>
+                <Link to={"/app/transactions"}>Bill History</Link>
               </li>
               <div className="divider mt-0 mb-0"></div>
               <li>
