@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser, updateUserProfile } from "../../../app/authSlice";
 import TitleCard from "../../../components/Cards/TitleCard";
-import SecurityQuestionsInput from "../../../components/SequrityQuestions/SecurityQuestionsInput";
+import SecurityQuestionsInput from "../../../components/SecurityQuestions/SecurityQuestionsInput";
 
 function ProfileSettings() {
   const dispatch = useDispatch();

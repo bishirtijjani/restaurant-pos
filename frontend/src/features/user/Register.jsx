@@ -6,7 +6,7 @@ import LoginHeroSection from "./LoginHeroSection";
 import ErrorText from "../../components/Typography/ErrorText";
 import InputText from "../../components/Input/InputText";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import SecurityQuestionsInput from "../../components/SequrityQuestions/SecurityQuestionsInput";
+import SecurityQuestionsInput from "../../components/SecurityQuestions/SecurityQuestionsInput";
 
 function Register() {
   const dispatch = useDispatch();
