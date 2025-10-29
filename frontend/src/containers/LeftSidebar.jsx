@@ -61,10 +61,10 @@ function LeftSidebar() {
     if (sidebarToggle) sidebarToggle.click();
   };
 
-  const logoutUser = () => {
+  function logoutUser() {
     localStorage.clear();
-    navigate("/");
-  };
+    window.location.href = "/";
+  }
 
   return (
     <div className="drawer-side z-30 border-r border-base-200">
