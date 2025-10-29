@@ -2,7 +2,10 @@ const mongoose = require("mongoose");
 
 module.exports = connectToDB = () => {
   mongoose
-    .connect("mongodb://127.0.0.1:27017/restaurant")
+    .connect(process.env.MONGODB_CONNECTION_STRING, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
     .then(() => {
       console.log("Database connected successfully");
     })
