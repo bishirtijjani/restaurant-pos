@@ -12,6 +12,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: "staff",
     },
+    securityQuestions: [
+      {
+        question: { type: String, required: true },
+        answer: { type: String, required: true }, // Will be hashed
+      },
+    ],
     lastAction: {
       action: {
         type: String,
@@ -22,10 +28,11 @@ const userSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         default: null,
-      }, // User who performed the action
-      createdAt: { type: Date, default: null }, // Timestamp of last action
-      reason: { type: String, default: null }, // Reason for the action
+      },
+      createdAt: { type: Date, default: null },
+      reason: { type: String, default: null },
     },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -35,6 +42,20 @@ userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
   }
+
+  // Hash security answers before saving
+  if (this.isModified("securityQuestions")) {
+    for (let i = 0; i < this.securityQuestions.length; i++) {
+      if (this.securityQuestions[i].answer) {
+        // Convert answer to lowercase for case-insensitive comparison
+        const answerLower = this.securityQuestions[i].answer
+          .toLowerCase()
+          .trim();
+        this.securityQuestions[i].answer = await bcrypt.hash(answerLower, 10);
+      }
+    }
+  }
+
   next();
 });
 

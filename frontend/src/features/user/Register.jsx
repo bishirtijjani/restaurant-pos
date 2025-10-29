@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser } from "../../app/authSlice"; // Import the registerUser thunk
+import { registerUser } from "../../app/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import LoginHeroSection from "./LoginHeroSection";
 import ErrorText from "../../components/Typography/ErrorText";
 import InputText from "../../components/Input/InputText";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import SecurityQuestionsInput from "../../components/SequrityQuestions/SecurityQuestionsInput";
 
 function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth); // Get loading and error from Redux
+  const { loading, error } = useSelector((state) => state.auth);
 
   const [registerObj, setRegisterObj] = useState({
     fullname: "",
@@ -19,9 +20,14 @@ function Register() {
     confirmPassword: "",
   });
 
+  const [securityQuestions, setSecurityQuestions] = useState([
+    { question: "", answer: "" },
+    { question: "", answer: "" },
+  ]);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState(""); // For password match feedback
+  const [passwordError, setPasswordError] = useState("");
 
   const submitForm = async (e) => {
     e.preventDefault();
@@ -38,17 +44,40 @@ function Register() {
       return;
     }
 
-    setPasswordError(""); // Clear any previous errors
+    // Validate security questions
+    if (
+      !securityQuestions[0].question ||
+      !securityQuestions[0].answer ||
+      !securityQuestions[1].question ||
+      !securityQuestions[1].answer
+    ) {
+      setPasswordError("Please answer both security questions.");
+      return;
+    }
+
+    if (
+      securityQuestions[0].answer.trim().length < 2 ||
+      securityQuestions[1].answer.trim().length < 2
+    ) {
+      setPasswordError("Security answers must be at least 2 characters long.");
+      return;
+    }
+
+    setPasswordError("");
 
     try {
-      // Dispatch the register action and wait for the response
-      await dispatch(registerUser({ fullname, email, password })).unwrap();
+      await dispatch(
+        registerUser({
+          fullname,
+          email,
+          password,
+          securityQuestions,
+        })
+      ).unwrap();
 
-      // If successful, redirect to the login page
       navigate("/login");
     } catch (err) {
-      // Handle errors gracefully (error is already managed by Redux state)
-      console.error("Registration failed: ", err);
+      // Error is handled by Redux state
     }
   };
 
@@ -57,13 +86,13 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 flex items-center">
+    <div className="min-h-screen bg-base-200 flex items-center py-8">
       <div className="card mx-auto w-full max-w-5xl shadow-xl">
         <div className="grid md:grid-cols-2 grid-cols-1 bg-base-100 rounded-xl">
           <div className="hidden md:block">
             <LoginHeroSection />
           </div>
-          <div className="py-24 px-10">
+          <div className="py-12 px-10 overflow-y-auto max-h-screen">
             <h2 className="text-2xl font-semibold mb-2 text-center">
               Register
             </h2>
@@ -123,6 +152,15 @@ function Register() {
                     )}
                   </button>
                 </div>
+
+                <div className="mt-6">
+                  <SecurityQuestionsInput
+                    securityQuestions={securityQuestions}
+                    onSecurityQuestionsChange={setSecurityQuestions}
+                    showAnswers={true}
+                  />
+                </div>
+
                 {passwordError && (
                   <ErrorText styleClass="mt-2">{passwordError}</ErrorText>
                 )}

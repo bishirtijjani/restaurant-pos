@@ -1,18 +1,35 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
-
-const JWT_SECRET = process.env.JWT_SECRET;
 
 const register = async (req, res) => {
   try {
-    const { fullname, email, password } = req.body;
+    const { fullname, email, password, securityQuestions } = req.body;
 
     if (!fullname || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
     }
-    // Log the incoming request body to ensure the correct data
+
+    // Validate security questions
+    if (!securityQuestions || securityQuestions.length !== 2) {
+      return res.status(400).json({
+        message: "Two security questions are required",
+      });
+    }
+
+    // Validate that questions and answers are provided
+    for (let i = 0; i < securityQuestions.length; i++) {
+      if (!securityQuestions[i].question || !securityQuestions[i].answer) {
+        return res.status(400).json({
+          message: "Both security questions must have questions and answers",
+        });
+      }
+      if (securityQuestions[i].answer.trim().length < 2) {
+        return res.status(400).json({
+          message: "Security answers must be at least 2 characters long",
+        });
+      }
+    }
 
     // Check if user already exists with the same email
     const existingUser = await User.findOne({ email });
@@ -20,14 +37,32 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "User Email already registered" });
     }
 
-    // Create new user
-    const user = await User.create({ fullname, email, password });
+    // Check if this is the first user (to make them admin)
+    const userCount = await User.countDocuments({});
+    const role = userCount === 0 ? "admin" : "staff";
 
-    // Log successful user creation
+    // Create new user with appropriate role
+    const user = await User.create({
+      fullname,
+      email,
+      password,
+      role,
+      securityQuestions,
+    });
 
-    res.status(201).json({ message: "User created successfully", user });
+    res.status(201).json({
+      message:
+        userCount === 0
+          ? "Admin user created successfully"
+          : "User created successfully",
+      user: {
+        _id: user._id,
+        fullname: user.fullname,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (error) {
-    // Log error details for debugging
     res.status(500).json({ error: error.message });
   }
 };
@@ -35,120 +70,222 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, deletedAt: null });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, role: user?.role }, JWT_SECRET, {
-      expiresIn: "2h",
+    const token = jwt.sign({ id: user._id, role: user?.role }, "68149540", {
+      expiresIn: "3d",
     });
-    res.json({ token, user });
+
+    const userResponse = {
+      _id: user._id,
+      fullname: user.fullname,
+      email: user.email,
+      role: user.role,
+    };
+
+    res.json({ token, user: userResponse });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message || "Internal Server Error" });
   }
 };
 
-const requestPasswordReset = async (req, res) => {
-  const { email } = req.body;
-
+// Get security questions for a user
+const getSecurityQuestions = async (req, res) => {
   try {
-    const user = await User.findOne({ email });
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email, deletedAt: null });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Generate reset token
-    const token = crypto.randomBytes(32).toString("hex");
+    // Return only the questions, not the answers
+    const questions = user.securityQuestions.map((sq, index) => ({
+      index,
+      question: sq.question,
+    }));
 
-    // Set token and expiry in user document
-    user.resetPasswordToken = token;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour expiry
-    await user.save();
-
-    // Send email with reset link
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-
-    const transporter = nodemailer.createTransport({
-      service: "Gmail", // or another provider
-      auth: {
-        user: `${process.env.USER_EMAIL_ADDRESS}`,
-        pass: `${process.env.USER_EMAIL_PASSWORD}`,
-      },
+    res.status(200).json({
+      success: true,
+      questions,
     });
-
-    const mailOptions = {
-      from: '"Bishir TM" <no-reply@yourapp.com>',
-      to: user.email,
-      subject: "Password Reset Request",
-      text: `You requested a password reset. Click the link below to reset your password:\n\n${resetLink}\n\nIf you didn't request this, please ignore this email.`,
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    res
-      .status(200)
-      .json({ message: "Password reset link sent to your email." });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error sending reset email." });
+    res.status(500).json({ message: "Error retrieving security questions" });
   }
 };
 
-const handlePasswordReset = async (req, res) => {
-  const { token, newPassword } = req.body;
-
+// Verify security answers and reset password
+const verifySecurityAnswers = async (req, res) => {
   try {
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }, // Check if token is still valid
-    });
+    const { email, answers, newPassword } = req.body;
 
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired token." });
+    if (!email || !answers || !newPassword) {
+      return res.status(400).json({
+        message: "Email, security answers, and new password are required",
+      });
     }
 
-    // Update password and clear reset fields
-    user.password = await bcrypt.hash(newPassword, 10);
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    if (answers.length !== 2) {
+      return res.status(400).json({
+        message: "Both security answers are required",
+      });
+    }
 
+    const user = await User.findOne({ email, deletedAt: null });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify both security answers
+    let allAnswersCorrect = true;
+    for (let i = 0; i < answers.length; i++) {
+      const answerLower = answers[i].trim().toLowerCase();
+      const isMatch = await bcrypt.compare(
+        answerLower,
+        user.securityQuestions[i].answer
+      );
+      if (!isMatch) {
+        allAnswersCorrect = false;
+        break;
+      }
+    }
+
+    if (!allAnswersCorrect) {
+      return res.status(400).json({
+        message: "Security answers are incorrect",
+      });
+    }
+
+    // Update password
+    user.password = newPassword; // Will be hashed by pre-save hook
     await user.save();
 
-    res.json({ message: "Password reset successful. You can now log in." });
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful. You can now log in.",
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error resetting password." });
+    console.log(error);
+    res.status(500).json({ message: "Error resetting password" });
   }
 };
 
 // Get current user data
 const getCurrentUser = async (req, res) => {
   try {
-    // `req.user` is set by the authMiddleware and contains the decoded JWT token
     const userId = req.user.id;
+    const user = await User.findById(userId).select("-password");
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
 
-    // Find user by ID
-    const user = await User.findById(userId).select("-password"); // Don't include the password field
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    // Remove hashed security answers from response
+    const userResponse = user.toObject();
+    if (userResponse.securityQuestions) {
+      userResponse.securityQuestions = userResponse.securityQuestions.map(
+        (sq) => ({
+          question: sq.question,
+          // Don't send the answer
+        })
+      );
     }
 
-    // Return user data without the password
-    res.json({ user });
+    res.status(200).json({ success: true, user: userResponse });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Allow current user to update profile
+const updateCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { fullname, email, password, securityQuestions } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    if (email && email !== user.email) {
+      const existing = await User.findOne({ email });
+      if (existing)
+        return res
+          .status(400)
+          .json({ success: false, message: "Email already in use" });
+      user.email = email;
+    }
+
+    if (fullname) user.fullname = fullname;
+
+    if (password) {
+      user.password = password; // Will be hashed by pre-save hook
+    }
+
+    // Update security questions if provided
+    if (securityQuestions && securityQuestions.length === 2) {
+      // Validate security questions
+      for (let i = 0; i < securityQuestions.length; i++) {
+        if (!securityQuestions[i].question || !securityQuestions[i].answer) {
+          return res.status(400).json({
+            success: false,
+            message: "Both security questions must have questions and answers",
+          });
+        }
+        if (securityQuestions[i].answer.trim().length < 2) {
+          return res.status(400).json({
+            success: false,
+            message: "Security answers must be at least 2 characters long",
+          });
+        }
+      }
+      user.securityQuestions = securityQuestions;
+    }
+
+    user.lastAction = {
+      action: "update",
+      performedBy: req.user.id,
+      createdAt: new Date(),
+      reason: req.body.reason || "Profile update",
+    };
+
+    await user.save();
+
+    const safeUser = user.toObject();
+    delete safeUser.password;
+
+    // Remove hashed security answers from response
+    if (safeUser.securityQuestions) {
+      safeUser.securityQuestions = safeUser.securityQuestions.map((sq) => ({
+        question: sq.question,
+      }));
+    }
+
+    res.status(200).json({ success: true, user: safeUser });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: error.message || "Server error" });
   }
 };
 
 module.exports = {
   register,
   login,
-  requestPasswordReset,
-  handlePasswordReset,
+  getSecurityQuestions,
+  verifySecurityAnswers,
   getCurrentUser,
+  updateCurrentUser,
 };
