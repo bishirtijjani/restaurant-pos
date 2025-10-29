@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { themeChange } from "theme-change";
-import MoonIcon from "@heroicons/react/24/outline/MoonIcon";
-import SunIcon from "@heroicons/react/24/outline/SunIcon";
+// frontend/src/features/home/components/Header.jsx
+import React, { useState, useEffect } from "react";
+import { Menu, X, MoonIcon, SunIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { themeChange } from "theme-change";
 
 const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("theme")
   );
@@ -21,100 +22,160 @@ const Header = () => {
         setCurrentTheme("light");
       }
     }
-    // 👆 false parameter is required for react project
   }, []);
 
+  useEffect(() => {
+    const theme = localStorage.getItem("theme");
+    setCurrentTheme(theme);
+  }, []);
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
   return (
-    <header className="bg-base-100 shadow-md">
-      <div className="container mx-auto px-4 flex justify-between items-center h-16">
-        {/* Logo */}
-        <div className="text-xl font-bold text-primary">
-          <Link to="#home">LOGO</Link>
-        </div>
+    <header className="bg-base-100/95 backdrop-blur-lg border-b border-base-content/10 sticky top-0 z-50">
+      <div className="container mx-auto px-6">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <img
+              src="/codeket-restaurant.png"
+              className="w-12 h-12 text-white"
+              alt="Codeket Restaurant Logo"
+            />
+            <span className="text-2xl font-bold text-base-content">
+              Codeket<span className="text-primary">Restaurant</span>
+            </span>
+          </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex space-x-6">
-          <Link to="#products" className="text-base hover:text-primary">
-            Link
-          </Link>
-          <Link to="#why-choose-us" className="text-base hover:text-primary">
-            Link
-          </Link>
-          <Link to="#pricing" className="text-base hover:text-primary">
-            And Link
-          </Link>
-        </nav>
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-8">
+            <a
+              href="#features"
+              className="text-base-content hover:text-primary transition-colors duration-200"
+            >
+              Features
+            </a>
+            <a
+              href="#pricing"
+              className="text-base-content hover:text-primary transition-colors duration-200"
+            >
+              Pricing
+            </a>
+            <a
+              href="https://docs.restaurant.codeket.com"
+              className="text-base-content hover:text-primary transition-colors duration-200"
+            >
+              Help Docs
+            </a>
+            <a
+              href="#"
+              className="text-base-content hover:text-primary transition-colors duration-200"
+            >
+              Support
+            </a>
+          </nav>
 
-        {/* Light and dark theme selection toogle **/}
-        {/* <label className="swap">
-          <input type="checkbox" />
-          <MoonIcon
-            data-set-theme="light"
-            data-act-class="ACTIVECLASS"
-            className={
-              "fill-current w-6 h-6 " +
-              (currentTheme === "dark" ? "swap-on" : "swap-off")
-            }
-          />
-          <SunIcon
-            data-set-theme="dark"
-            data-act-class="ACTIVECLASS"
-            className={
-              "fill-current w-6 h-6 " +
-              (currentTheme === "light" ? "swap-on" : "swap-off")
-            }
-          />
-        </label> */}
+          {/* Desktop: Theme Toggle and CTA Buttons */}
+          <div className="hidden lg:flex items-center gap-4">
+            {/* Light and dark theme selection toggle */}
+            <label className="swap swap-rotate">
+              <input type="checkbox" className="theme-controller" />
+              <SunIcon
+                data-set-theme="light"
+                data-act-class="ACTIVECLASS"
+                className="swap-off fill-current w-6 h-6"
+              />
+              <MoonIcon
+                data-set-theme="dark"
+                data-act-class="ACTIVECLASS"
+                className="swap-on fill-current w-6 h-6"
+              />
+            </label>
 
-        {/* Buttons */}
-        <div className="hidden lg:flex space-x-4">
-          <Link to="/login" className="btn btn-outline btn-primary">
-            Login
-          </Link>
-          <Link to="/register" className="btn btn-primary">
-            Sign Up
-          </Link>
+            <Link
+              to="/login"
+              className="text-base-content hover:text-primary transition-colors duration-200"
+            >
+              Sign In
+            </Link>
+
+            <button className="btn btn-primary">Start Free Trial</button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={toggleMenu}
+            className="lg:hidden p-2 text-base-content hover:text-primary transition-colors duration-200"
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
         </div>
 
         {/* Mobile Menu */}
-        <div className="lg:hidden dropdown dropdown-end relative z-50">
-          <label tabIndex={0} className="btn btn-ghost btn-circle">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </label>
-          <ul
-            tabIndex={0}
-            className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
-          >
-            <li>
-              <Link to="#products"> Link</Link>
-            </li>
-            <li>
-              <Link to="#why-choose-us"> Link</Link>
-            </li>
-            <li>
-              <Link to="#pricing">And Link</Link>
-            </li>
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-            <li>
-              <Link to="/register">Sign Up</Link>
-            </li>
-          </ul>
-        </div>
+        {isMenuOpen && (
+          <div className="lg:hidden border-t border-base-content/10 py-4">
+            <div className="space-y-4">
+              <a
+                href="#features"
+                className="block py-2 text-base-content hover:text-primary transition-colors duration-200"
+              >
+                Features
+              </a>
+              <a
+                href="#pricing"
+                className="block py-2 text-base-content hover:text-primary transition-colors duration-200"
+              >
+                Pricing
+              </a>
+              <a
+                href="https://docs.restaurant.codeket.com"
+                className="block py-2 text-base-content hover:text-primary transition-colors duration-200"
+              >
+                Help Docs
+              </a>
+              <a
+                href="#"
+                className="block py-2 text-base-content hover:text-primary transition-colors duration-200"
+              >
+                Support
+              </a>
+              <div className="pt-4 border-t border-base-content/10 space-y-2">
+                {/* Mobile: Theme Toggle */}
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-base-content">Theme</span>
+                  <label className="swap swap-rotate">
+                    <input type="checkbox" className="theme-controller" />
+                    <SunIcon
+                      data-set-theme="light"
+                      data-act-class="ACTIVECLASS"
+                      className="swap-off fill-current w-6 h-6"
+                    />
+                    <MoonIcon
+                      data-set-theme="dark"
+                      data-act-class="ACTIVECLASS"
+                      className="swap-on fill-current w-6 h-6"
+                    />
+                  </label>
+                </div>
+
+                <Link
+                  to="/login"
+                  className="block w-full text-center py-2 text-base-content hover:text-primary transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
+                <button className="btn btn-primary w-full">
+                  Start Free Trial
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

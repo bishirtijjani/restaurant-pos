@@ -1,16 +1,31 @@
-import HeroSection from "./components/HeroSection";
-import Footer from "./components/Footer";
+// frontend/src/features/home/index.jsx
+import React from "react";
 import Header from "./components/Header";
-import LandingPage from "./LandingPage";
+import HeroSection from "./components/HeroSection";
+import Platforms from "./components/Platforms";
+import Features from "./components/Features";
+import Comparison from "./components/Comparison";
+import Testimonials from "./components/Testimonials";
+import Pricing from "./components/Pricing";
+import Guarantee from "./components/Guarantee";
+import FAQs from "./components/FAQs";
+import Footer from "./components/Footer";
 
-function Home() {
+const LandingPage = () => {
   return (
     <>
       <Header />
-      <LandingPage />
+      <HeroSection />
+      <Platforms />
+      <Features />
+      <Comparison />
+      <Testimonials />
+      <Pricing />
+      <Guarantee />
+      <FAQs />
       <Footer />
     </>
   );
-}
+};
 
-export default Home;
+export default LandingPage;
