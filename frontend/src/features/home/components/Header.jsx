@@ -46,7 +46,6 @@ const Header = () => {
               Codeket<span className="text-primary">Restaurant</span>
             </span>
           </div>
-
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
             <a
@@ -74,7 +73,6 @@ const Header = () => {
               Support
             </a>
           </nav>
-
           {/* Desktop: Theme Toggle and CTA Buttons */}
           <div className="hidden lg:flex items-center gap-4">
             {/* Light and dark theme selection toggle */}
@@ -99,9 +97,10 @@ const Header = () => {
               Sign In
             </Link>
 
-            <button className="btn btn-primary">Start Free Trial</button>
+            <Link to="/register">
+              <button className="btn btn-primary">Start Free Trial</button>
+            </Link>
           </div>
-
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMenu}

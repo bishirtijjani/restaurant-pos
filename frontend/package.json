@@ -34,6 +34,7 @@
     "react-to-print": "^2.15.1",
     "react-toastify": "^10.0.5",
     "recharts": "^2.15.0",
+    "styled-components": "^6.1.19",
     "theme-change": "^2.5.0",
     "xlsx": "^0.18.5"
   },

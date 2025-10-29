@@ -1,8 +1,17 @@
 // frontend/src/features/home/components/Pricing.jsx
 import React, { useState } from "react";
 import { Store, Building2, Warehouse, Check, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const PricingSection = () => {
+  const navigate = useNavigate();
+
+  const handleStartTrial = (plan) => {
+    // Store selected plan in localStorage for registration
+    localStorage.setItem("selectedPlan", JSON.stringify(plan));
+    navigate("/register");
+  };
+
   const [isAnnual, setIsAnnual] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
 
@@ -225,7 +234,7 @@ const PricingSection = () => {
 
                 {/* CTA Button */}
                 <button
-                  onClick={() => setSelectedPlan(plan)}
+                  onClick={() => handleStartTrial(plan)}
                   className={`btn btn-block mb-6 lg:mb-8 btn-sm lg:btn-md ${
                     plan.popular
                       ? "btn-primary text-white"
