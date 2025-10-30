@@ -1,28 +1,17 @@
 const express = require("express");
-const authRoutes = require("./authRoutes");
-const userRoutes = require("./userRoutes");
-const menuItemRoutes = require("./menuItemRoutes");
-const dashboardRoutes = require("./dashboardRoutes");
-const supplierRoutes = require("./supplierRoutes");
-const orderRoutes = require("./orderRoutes");
-const expenseRoutes = require("./expenseRoutes");
-const customerRoutes = require("./customerRoutes");
-const categoryRoutes = require("./categoryRoutes");
-const purchaseRoutes = require("./purchaseRoutes");
-const analyticsRoutes = require("./analyticsRoutes");
-
 const router = express.Router();
 
-router.use("/auth", authRoutes);
-router.use("/users", userRoutes);
-router.use("/customers", customerRoutes);
-router.use("/categories", categoryRoutes);
-router.use("/dashboard", dashboardRoutes);
-router.use("/menu-items", menuItemRoutes);
-router.use("/suppliers", supplierRoutes);
-router.use("/purchase", purchaseRoutes);
-router.use("/orders", orderRoutes);
-router.use("/analytics", analyticsRoutes);
-router.use("/expenses", expenseRoutes);
+router.use("/settings", require("./generalSettingsRoutes"));
+router.use("/auth", require("./authRoutes"));
+router.use("/users", require("./userRoutes"));
+router.use("/customers", require("./customerRoutes"));
+router.use("/categories", require("./categoryRoutes"));
+router.use("/dashboard", require("./dashboardRoutes"));
+router.use("/menu-items", require("./menuItemRoutes"));
+router.use("/suppliers", require("./supplierRoutes"));
+router.use("/purchase", require("./purchaseRoutes"));
+router.use("/orders", require("./orderRoutes"));
+router.use("/analytics", require("./analyticsRoutes"));
+router.use("/expenses", require("./expenseRoutes"));
 
 module.exports = router;

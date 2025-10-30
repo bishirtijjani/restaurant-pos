@@ -17,6 +17,15 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import StatCard from "./components/StatCard";
+import {
+  ShoppingBasket,
+  TrendingUp,
+  IceCreamBowl,
+  Currency,
+  PiggyBank,
+  ShoppingBag,
+} from "lucide-react";
 
 import { format } from "date-fns";
 
@@ -115,10 +124,11 @@ const AnalyticsDashboard = () => {
   }, []);
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: "NGN",
-    }).format(value);
+      minimumFractionDigits: 0,
+    }).format(value || 0);
   };
 
   // Loading state render
@@ -276,47 +286,35 @@ const OverviewTab = ({
   return (
     <div>
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="stats shadow">
-          <div className="stat">
-            <div className="stat-title">Total Sales</div>
-            <div className="stat-value text-primary">
-              {formatCurrency(overviewStats.totalSales)}
-            </div>
-            <div className="stat-desc">{overviewStats.orderCount} orders</div>
-          </div>
-        </div>
-
-        <div className="stats shadow">
-          <div className="stat">
-            <div className="stat-title">Average Check</div>
-            <div className="stat-value text-secondary">
-              {formatCurrency(overviewStats.averageCheck)}
-            </div>
-            <div className="stat-desc">Per customer</div>
-          </div>
-        </div>
-
-        <div className="stats shadow">
-          <div className="stat">
-            <div className="stat-title">Gross Profit</div>
-            <div className="stat-value">
-              {formatCurrency(overviewStats.grossProfit)}
-            </div>
-            <div className="stat-desc">
-              {overviewStats.grossProfitMargin.toFixed(1)}% margin
-            </div>
-          </div>
-        </div>
-
-        <div className="stats shadow">
-          <div className="stat">
-            <div className="stat-title">Total Expenses</div>
-            <div className="stat-value text-error">
-              {formatCurrency(overviewStats.totalExpenses)}
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <StatCard
+          title="Total Sales"
+          value={formatCurrency(overviewStats.totalSales)}
+          icon={Currency}
+          description={overviewStats.orderCount}
+          color="success"
+        />
+        <StatCard
+          title="Average Check"
+          value={formatCurrency(overviewStats.averageCheck)}
+          icon={Currency}
+          description="Per customer"
+          color="info"
+        />
+        <StatCard
+          title="Gross Profit"
+          value={formatCurrency(overviewStats.grossProfit)}
+          icon={Currency}
+          description={`${overviewStats.grossProfitMargin.toFixed(1)}% margin`}
+          color="secondary"
+        />
+        <StatCard
+          title="Total Expenses"
+          value={formatCurrency(overviewStats.totalExpenses)}
+          icon={Currency}
+          description={`${overviewStats.grossProfitMargin.toFixed(1)}% margin`}
+          color="error"
+        />
       </div>
 
       {/* Order Types Pie Chart */}

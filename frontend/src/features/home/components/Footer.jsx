@@ -19,10 +19,13 @@ const Footer = () => {
           {/* Company Info */}
           <div className="space-y-4 lg:space-y-6">
             <div className="flex items-center gap-3">
-              <img
-                src="/codeket-restaurant.png"
-                className="w-12 h-12 lg:h-24 lg:w-24 text-white"
-              />
+              <a href="/">
+                <img
+                  src="/icon.svg"
+                  className="w-12 h-12 text-white"
+                  alt="Codeket Restaurant Logo"
+                />
+              </a>
               <span className="text-xl lg:text-2xl font-bold text-base-content">
                 Codeket<span className="text-primary">Restaurant</span>
               </span>

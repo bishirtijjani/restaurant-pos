@@ -19,6 +19,9 @@ const Analytics = lazy(() => import("../pages/protected/Analytics"));
 const Receipt = lazy(() => import("../features/common/components/Receipt"));
 const Users = lazy(() => import("../pages/protected/Users"));
 const Customers = lazy(() => import("../pages/protected/Customers"));
+const GeneralSettings = lazy(() =>
+  import("../pages/protected/GeneralSettings")
+);
 
 const routes = [
   {
@@ -26,8 +29,12 @@ const routes = [
     component: Analytics, // view rendered
   },
   {
-    path: "/settings-profile",
+    path: "/settings/profile",
     component: ProfileSettings,
+  },
+  {
+    path: "/settings/general",
+    component: GeneralSettings,
   },
   {
     path: "/categories",

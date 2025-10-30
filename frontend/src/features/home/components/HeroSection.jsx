@@ -18,7 +18,7 @@ export default function HeroSection() {
     >
       {/* Hero Content */}
       <div className="hero min-h-[calc(100vh-4rem)] px-4 py-8 lg:py-0">
-        <div className="hero-content text-center max-w-6xl w-full">
+        <div className="hero-content text-center w-full mt-6 lg:mt-12">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Column - Content */}
             <div className="text-left space-y-6 lg:space-y-8">
@@ -29,7 +29,7 @@ export default function HeroSection() {
               </div>
 
               {/* Main Headline */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-base-content leading-tight">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-base-content leading-tight text-center lg:tezt-left">
                 Stop Losing Money to
                 <span className="text-transparent bg-gradient-to-r from-primary to-secondary bg-clip-text">
                   {" "}

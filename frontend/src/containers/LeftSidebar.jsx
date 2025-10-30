@@ -81,9 +81,13 @@ function LeftSidebar() {
         {/* Logo Section */}
         <li className="sticky top-0 bg-base-100 px-6 py-5 z-40 border-b border-base-300 shadow-sm">
           <Link to="/dashboard" className="flex items-center gap-4">
-            <div className="text-lg font-bold text-error p-3 rounded-full border border-error shadow-sm">
-              i
-            </div>
+            <a href="/">
+              <img
+                src="/icon.svg"
+                className="w-12 h-12 text-white"
+                alt="Codeket Restaurant Logo"
+              />
+            </a>
             <span className="text-2xl font-bold tracking-wide text-base-content">
               Restaurant
             </span>
@@ -95,13 +99,13 @@ function LeftSidebar() {
 
         {/* Logout Button */}
         <li className="mt-auto px-4 py-6">
-          <button
+          <a
             className="w-full btn bg-error text-white hover:bg-error/90 shadow-md flex items-center justify-center gap-2"
             onClick={logoutUser}
           >
             <ArrowLeftStartOnRectangleIcon className="h-5 w-5" />
             Logout
-          </button>
+          </a>
         </li>
       </ul>
     </div>

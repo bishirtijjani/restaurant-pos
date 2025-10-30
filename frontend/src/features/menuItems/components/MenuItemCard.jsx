@@ -59,8 +59,8 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
   };
 
   return (
-    <div className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow duration-300">
-      <figure className="h-48 relative">
+    <div className="card border border-neutral bg-base-100 shadow-md hover:shadow-lg transition-shadow duration-300">
+      <figure className="h-48 relative border-b border-neutral">
         {item.image ? (
           <img
             src={item.image}
@@ -69,7 +69,7 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
           />
         ) : (
           <div className="w-full h-full bg-base-200 flex items-center justify-center">
-            <PhotoIcon className="w-12 h-12 text-base-300" />
+            <PhotoIcon className="w-12 h-12 " />
           </div>
         )}
         <div className="absolute top-2 right-2">

@@ -105,7 +105,7 @@ const Dashboard = () => {
       )}
 
       {/* Top Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6 center justify-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 center justify-center">
         <StatCard
           title="Total Inventory Value"
           value={`₦ ${stats?.totalInventoryValue.toLocaleString({

@@ -37,11 +37,13 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img
-              src="/codeket-restaurant.png"
-              className="w-12 h-12 text-white"
-              alt="Codeket Restaurant Logo"
-            />
+            <a href="/">
+              <img
+                src="/icon.svg"
+                className="w-12 h-12 text-white"
+                alt="Codeket Restaurant Logo"
+              />
+            </a>
             <span className="text-2xl font-bold text-base-content">
               Codeket<span className="text-primary">Restaurant</span>
             </span>

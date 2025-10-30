@@ -13,6 +13,7 @@ import purchasesReducer from "../features/purchase/purchaseSlice";
 import ordersReducer from "../features/orders/ordersSlice";
 import expensesReducer from "../features/expenses/expensesSlice";
 import analyticsReducer from "../features/analytics/analyticsSlice";
+import generalSettingsReducer from "../features/settings/generalSettings/generalSettingsSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -29,6 +30,7 @@ const combinedReducer = {
   orders: ordersReducer,
   expenses: expensesReducer,
   analytics: analyticsReducer,
+  generalSettings: generalSettingsReducer,
 };
 
 export default configureStore({

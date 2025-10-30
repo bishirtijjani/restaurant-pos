@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 const register = async (req, res) => {
+  console.log(" trying");
   try {
     const { fullname, email, password, securityQuestions } = req.body;
 
@@ -68,6 +69,7 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
+  console.log("login attempt");
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email, deletedAt: null });

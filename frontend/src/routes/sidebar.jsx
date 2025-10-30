@@ -81,14 +81,14 @@ export const adminRoutes = [
     name: "Settings",
     submenu: [
       {
-        path: "/app/settings-profile",
+        path: "/app/settings/profile",
         icon: <IdentificationIcon className={submenuIconClasses} />,
         name: "Profile",
       },
       {
-        path: "/app/settings-pin",
+        path: "/app/settings/general",
         icon: <KeyIcon className={submenuIconClasses} />,
-        name: "Change PIN",
+        name: "General Settings",
       },
     ],
   },
