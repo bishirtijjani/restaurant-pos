@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-router.use("/settings", require("./generalSettingsRoutes"));
+router.use("/general-settings", require("./generalSettingsRoutes"));
 router.use("/auth", require("./authRoutes"));
 router.use("/users", require("./userRoutes"));
 router.use("/customers", require("./customerRoutes"));

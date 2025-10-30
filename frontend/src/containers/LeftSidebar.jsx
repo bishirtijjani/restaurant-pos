@@ -79,16 +79,16 @@ function LeftSidebar() {
         </button>
 
         {/* Logo Section */}
-        <li className="sticky top-0 bg-base-100 px-6 py-5 z-40 border-b border-base-300 shadow-sm">
-          <Link to="/dashboard" className="flex items-center gap-4">
+        <li className="sticky top-0 bg-base-100 py-3 z-40 border-b border-base-300 shadow-sm">
+          <Link to="/dashboard" className="">
             <a href="/">
               <img
                 src="/icon.svg"
-                className="w-12 h-12 text-white"
+                className="w-8 h-8 m-0 p-0 text-white"
                 alt="Codeket Restaurant Logo"
               />
             </a>
-            <span className="text-2xl font-bold tracking-wide text-base-content">
+            <span className="text-xl m-0 p-0 font-bold tracking-wide text-base-content">
               Restaurant
             </span>
           </Link>

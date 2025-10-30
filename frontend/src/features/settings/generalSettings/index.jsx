@@ -36,11 +36,11 @@ const GeneralSettings = () => {
   const successMessage = useSelector(selectSettingsSuccess);
 
   const [formData, setFormData] = useState({
-    companyName: "",
-    companyAddress: "",
-    companyPhone: "",
-    companyEmail: "",
-    companyMotto: "",
+    restaurantName: "",
+    restaurantAddress: "",
+    restaurantPhone: "",
+    restaurantEmail: "",
+    restaurantMotto: "",
     currency: {
       code: "USD",
       name: "US Dollar",
@@ -144,7 +144,7 @@ const GeneralSettings = () => {
           <h1 className="text-3xl font-bold">General Settings</h1>
         </div>
         <p className="text-base-content/70">
-          Configure your inventory management system preferences
+          Configure your Restaurant management system preferences
         </p>
       </div>
 
@@ -164,26 +164,28 @@ const GeneralSettings = () => {
 
       {/* Settings Form */}
       <div className="space-y-8">
-        {/* Company Information */}
+        {/* Restaurant Information */}
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body">
             <div className="flex items-center gap-2 mb-4">
               <Building2 className="w-5 h-5 text-primary" />
-              <h2 className="card-title">Company Information</h2>
+              <h2 className="card-title">Restaurant Information</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-medium">Company Name *</span>
+                  <span className="label-text font-medium">
+                    Restaurant Name *
+                  </span>
                 </label>
                 <input
                   type="text"
-                  name="companyName"
-                  value={formData.companyName}
+                  name="restaurantName"
+                  value={formData.restaurantName}
                   onChange={handleInputChange}
                   className="input input-bordered"
-                  placeholder="Enter your company name"
+                  placeholder="Enter your restaurant name"
                   required
                 />
               </div>
@@ -191,18 +193,18 @@ const GeneralSettings = () => {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-medium">
-                    Company Email *
+                    Restaurant Email *
                   </span>
                 </label>
                 <label className="input input-bordered flex items-center gap-2">
                   <Mail className="w-4 h-4 opacity-70" />
                   <input
                     type="email"
-                    name="companyEmail"
-                    value={formData.companyEmail}
+                    name="restaurantEmail"
+                    value={formData.restaurantEmail}
                     onChange={handleInputChange}
                     className="grow"
-                    placeholder="company@example.com"
+                    placeholder="restaurant@example.com"
                     required
                   />
                 </label>
@@ -211,17 +213,17 @@ const GeneralSettings = () => {
               <div className="form-control md:col-span-2">
                 <label className="label">
                   <span className="label-text font-medium">
-                    Company Address *
+                    Restaurant Address *
                   </span>
                 </label>
                 <label className="textarea textarea-bordered flex items-start gap-2 min-h-20">
                   <MapPin className="w-4 h-4 opacity-70 mt-1 flex-shrink-0" />
                   <textarea
-                    name="companyAddress"
-                    value={formData.companyAddress}
+                    name="restaurantAddress"
+                    value={formData.restaurantAddress}
                     onChange={handleInputChange}
                     className="grow resize-none bg-transparent border-none outline-none"
-                    placeholder="Enter your company address"
+                    placeholder="Enter your restaurant address"
                     rows="3"
                     required
                   />
@@ -236,8 +238,8 @@ const GeneralSettings = () => {
                   <Phone className="w-4 h-4 opacity-70" />
                   <input
                     type="tel"
-                    name="companyPhone"
-                    value={formData.companyPhone}
+                    name="restaurantPhone"
+                    value={formData.restaurantPhone}
                     onChange={handleInputChange}
                     className="grow"
                     placeholder="+1 (555) 123-4567"
@@ -248,7 +250,9 @@ const GeneralSettings = () => {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-medium">Company Motto</span>
+                  <span className="label-text font-medium">
+                    Restaurant Motto
+                  </span>
                   <span className="label-text-alt text-base-content/50">
                     Optional
                   </span>
@@ -257,11 +261,11 @@ const GeneralSettings = () => {
                   <Quote className="w-4 h-4 opacity-70" />
                   <input
                     type="text"
-                    name="companyMotto"
-                    value={formData.companyMotto}
+                    name="restaurantMotto"
+                    value={formData.restaurantMotto}
                     onChange={handleInputChange}
                     className="grow"
-                    placeholder="Your company's motto or tagline"
+                    placeholder="Your restaurant's motto or tagline"
                   />
                 </label>
               </div>

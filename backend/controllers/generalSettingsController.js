@@ -13,11 +13,11 @@ const getSettings = async (req, res) => {
     // If no settings exist, create default settings
     if (!settings) {
       settings = new GeneralSettings({
-        companyName: "Your Company",
-        companyAddress: "",
-        companyPhone: "",
-        companyEmail: "",
-        companyMotto: "",
+        restaurantName: "Your Restaurant",
+        restaurantAddress: "",
+        restaurantPhone: "",
+        restaurantEmail: "",
+        restaurantMotto: "",
         currency: {
           code: "USD",
           name: "US Dollar",
@@ -52,11 +52,11 @@ const getSettings = async (req, res) => {
 const updateSettings = async (req, res) => {
   try {
     const {
-      companyName,
-      companyAddress,
-      companyPhone,
-      companyEmail,
-      companyMotto,
+      restaurantName,
+      restaurantAddress,
+      restaurantPhone,
+      restaurantEmail,
+      restaurantMotto,
       currency,
       dateFormat,
       lowStockAlert,
@@ -67,36 +67,36 @@ const updateSettings = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!companyName || companyName.trim() === "") {
+    if (!restaurantName || restaurantName.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Company name is required",
+        message: "Restaurant name is required",
       });
     }
 
-    if (!companyAddress || companyAddress.trim() === "") {
+    if (!restaurantAddress || restaurantAddress.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Company address is required",
+        message: "Restaurant address is required",
       });
     }
 
-    if (!companyPhone || companyPhone.trim() === "") {
+    if (!restaurantPhone || restaurantPhone.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Company phone number is required",
+        message: "Restaurant phone number is required",
       });
     }
 
-    if (!companyEmail || companyEmail.trim() === "") {
+    if (!restaurantEmail || restaurantEmail.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Company email is required",
+        message: "Restaurant email is required",
       });
     }
 
     // Validate email format
-    if (!emailRegex.test(companyEmail)) {
+    if (!emailRegex.test(restaurantEmail)) {
       return res.status(400).json({
         success: false,
         message: "Please enter a valid email address",
@@ -132,11 +132,11 @@ const updateSettings = async (req, res) => {
     if (!settings) {
       // Create new settings if they don't exist
       settings = new GeneralSettings({
-        companyName,
-        companyAddress,
-        companyPhone,
-        companyEmail,
-        companyMotto: companyMotto || "",
+        restaurantName,
+        restaurantAddress,
+        restaurantPhone,
+        restaurantEmail,
+        restaurantMotto: restaurantMotto || "",
         currency,
         dateFormat,
         lowStockAlert,
@@ -147,11 +147,11 @@ const updateSettings = async (req, res) => {
       });
     } else {
       // Update existing settings
-      settings.companyName = companyName;
-      settings.companyAddress = companyAddress;
-      settings.companyPhone = companyPhone;
-      settings.companyEmail = companyEmail;
-      settings.companyMotto = companyMotto || "";
+      settings.restaurantName = restaurantName;
+      settings.restaurantAddress = restaurantAddress;
+      settings.restaurantPhone = restaurantPhone;
+      settings.restaurantEmail = restaurantEmail;
+      settings.restaurantMotto = restaurantMotto || "";
       settings.currency = currency;
       settings.dateFormat = dateFormat;
       settings.lowStockAlert = lowStockAlert;
@@ -189,11 +189,11 @@ const resetSettings = async (req, res) => {
     }
 
     // Reset to default values
-    settings.companyName = "Your Company";
-    settings.companyAddress = "";
-    settings.companyPhone = "";
-    settings.companyEmail = "";
-    settings.companyMotto = "";
+    settings.restaurantName = "Your Restaurant";
+    settings.restaurantAddress = "";
+    settings.restaurantPhone = "";
+    settings.restaurantEmail = "";
+    settings.restaurantMotto = "";
     settings.currency = {
       code: "USD",
       name: "US Dollar",
