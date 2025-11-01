@@ -15,6 +15,10 @@ const menuItemSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
+    customTax: {
+      enabled: { type: Boolean, default: false },
+      rate: { type: Number, default: 0, min: 0, max: 100 },
+    },
     costPrice: {
       type: Number,
       default: 0,

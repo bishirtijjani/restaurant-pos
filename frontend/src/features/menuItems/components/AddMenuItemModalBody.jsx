@@ -24,6 +24,10 @@ const AddMenuItemModalBody = () => {
     itemCode: "",
     preparationTime: "15",
     description: "",
+    customTax: {
+      enabled: false,
+      rate: 0,
+    },
     isAvailable: true,
     image: null,
   });
@@ -409,6 +413,56 @@ const AddMenuItemModalBody = () => {
             />
           </label>
         </div>
+
+        <div className="divider">Tax Settings (Optional)</div>
+
+        <div className="form-control">
+          <label className="label cursor-pointer justify-start gap-3">
+            <input
+              type="checkbox"
+              className="checkbox checkbox-primary checkbox-sm"
+              checked={formData.customTax.enabled}
+              onChange={(e) =>
+                updateFormValue({
+                  updateType: "customTax",
+                  value: { ...formData.customTax, enabled: e.target.checked },
+                })
+              }
+            />
+            <div>
+              <span className="label-text font-medium">Custom Tax Rate</span>
+              <p className="text-xs opacity-70">
+                Override global tax for this item
+              </p>
+            </div>
+          </label>
+        </div>
+
+        {formData.customTax.enabled && (
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Tax Rate (%)</span>
+            </label>
+            <input
+              type="number"
+              className="input input-bordered"
+              value={formData.customTax.rate}
+              onChange={(e) =>
+                updateFormValue({
+                  updateType: "customTax",
+                  value: {
+                    ...formData.customTax,
+                    rate: parseFloat(e.target.value),
+                  },
+                })
+              }
+              min="0"
+              max="100"
+              step="0.1"
+              placeholder="Enter custom tax rate"
+            />
+          </div>
+        )}
 
         {/* Submit button */}
         <div className="modal-action">

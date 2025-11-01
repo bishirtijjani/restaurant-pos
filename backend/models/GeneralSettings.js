@@ -85,6 +85,28 @@ const GeneralSettingsSchema = new mongoose.Schema(
       type: String,
       default: "Nigeria/Lagos",
     },
+
+    taxSettings: {
+      enabled: { type: Boolean, default: true },
+      globalRate: { type: Number, default: 7.5, min: 0, max: 100 },
+      name: { type: String, default: "VAT" },
+      mode: {
+        type: String,
+        enum: ["per-item", "per-order"],
+        default: "per-item",
+      },
+      includeInPrice: { type: Boolean, default: false },
+    },
+    serviceCharge: {
+      enabled: { type: Boolean, default: false },
+      rate: { type: Number, default: 0, min: 0, max: 100 },
+      name: { type: String, default: "Service Charge" },
+      applyTo: {
+        type: String,
+        enum: ["all", "dine-in", "delivery"],
+        default: "dine-in",
+      },
+    },
   },
   {
     timestamps: true,

@@ -1,5 +1,6 @@
 const Order = require("../models/Order");
 const MenuItem = require("../models/MenuItem");
+const GeneralSettings = require("../models/GeneralSettings");
 const logAction = require("../utils/logAction");
 
 // Function to generate unique order numbers
@@ -15,9 +16,63 @@ const generateOrderNumber = async () => {
   return orderNumber;
 };
 
-// Function to check if an order number exists
-const checkOrderNumber = async (orderNumber) => {
-  return await Order.exists({ orderNumber });
+// Tax calculation utility
+const calculateOrderTax = (orderItems, settings, orderType) => {
+  const { taxSettings, serviceCharge } = settings;
+
+  let subtotal = 0;
+  let totalTax = 0;
+  const itemTaxes = [];
+
+  // Calculate subtotal and per-item taxes
+  orderItems.forEach((item) => {
+    const itemSubtotal = item.price * item.quantity;
+    subtotal += itemSubtotal;
+
+    if (taxSettings?.enabled) {
+      // Check if item has custom tax, otherwise use global rate
+      const taxRate = item.customTax?.enabled
+        ? item.customTax.rate
+        : taxSettings.globalRate;
+
+      // Calculate tax based on mode
+      if (taxSettings.mode === "per-item") {
+        const taxAmount = (itemSubtotal * taxRate) / 100;
+        totalTax += taxAmount;
+
+        itemTaxes.push({
+          menuItemId: item.menuItemId,
+          name: item.name,
+          taxRate,
+          taxAmount,
+        });
+      }
+    }
+  });
+
+  // Per-order tax calculation (applies global rate to entire subtotal)
+  if (taxSettings?.enabled && taxSettings.mode === "per-order") {
+    totalTax = (subtotal * taxSettings.globalRate) / 100;
+  }
+
+  // Service charge calculation
+  let serviceChargeAmount = 0;
+  if (serviceCharge?.enabled) {
+    const shouldApply =
+      serviceCharge.applyTo === "all" || serviceCharge.applyTo === orderType;
+
+    if (shouldApply) {
+      serviceChargeAmount = (subtotal * serviceCharge.rate) / 100;
+    }
+  }
+
+  return {
+    subtotal,
+    totalTax,
+    serviceCharge: serviceChargeAmount,
+    total: subtotal + totalTax + serviceChargeAmount,
+    itemTaxes,
+  };
 };
 
 // Create a new order
@@ -30,9 +85,12 @@ const createOrder = async (req, res) => {
       orderItems,
       amountPaid,
       paymentMethod,
+      packagingFee,
+      deliveryFee,
+      note,
     } = req.body.order;
 
-    console.log(req.body);
+    console.log("Creating order with data:", req.body);
 
     // Validate that we have order items
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
@@ -42,9 +100,17 @@ const createOrder = async (req, res) => {
       });
     }
 
+    // Fetch general settings for tax calculation
+    const settings = await GeneralSettings.findOne();
+    if (!settings) {
+      return res.status(500).json({
+        success: false,
+        message: "Restaurant settings not configured",
+      });
+    }
+
     // Process each order item, fetching current details from the database
     const processedItems = [];
-    let totalAmount = 0;
 
     for (const item of orderItems) {
       // Fetch the current menu item details from the database
@@ -71,7 +137,7 @@ const createOrder = async (req, res) => {
       // Add preparation time if available from the menu item
       const preparationTime = menuItem.preparationTime || 15;
 
-      // Add to processed items
+      // Add to processed items with tax information
       processedItems.push({
         menuItemId: menuItem._id,
         name: menuItem.name,
@@ -79,22 +145,39 @@ const createOrder = async (req, res) => {
         quantity,
         customizations: item.customizations || "",
         subtotal,
-        preparationTime, // Store this for estimating ready time
+        preparationTime,
+        customTax: menuItem.customTax || { enabled: false, rate: 0 },
       });
-
-      totalAmount += subtotal;
     }
+
+    // Calculate tax breakdown
+    const taxCalculation = calculateOrderTax(
+      processedItems,
+      settings,
+      orderType || "dine-in"
+    );
+
+    // Add packaging and delivery fees to total
+    const packagingAmount =
+      orderType === "dine-in" ? 0 : parseFloat(packagingFee) || 0;
+
+    const deliveryAmount =
+      orderType === "delivery" ? parseFloat(deliveryFee) || 0 : 0;
+
+    // Calculate final total
+    const finalTotal = taxCalculation.total + packagingAmount + deliveryAmount;
 
     // Determine payment status
     let paymentStatus = "pending";
-    let balance = totalAmount;
+    let balance = finalTotal;
+    const paidAmount = parseFloat(amountPaid) || 0;
 
-    if (amountPaid >= totalAmount) {
+    if (paidAmount >= finalTotal) {
       paymentStatus = "paid";
       balance = 0;
-    } else if (amountPaid > 0) {
+    } else if (paidAmount > 0) {
       paymentStatus = "partial";
-      balance = totalAmount - amountPaid;
+      balance = finalTotal - paidAmount;
     }
 
     // Create the order
@@ -103,13 +186,41 @@ const createOrder = async (req, res) => {
       table: table || "Takeaway",
       customerDetails: customerDetails || { name: "Walk-in" },
       orderType: orderType || "dine-in",
-      orderItems: processedItems,
+      orderItems: processedItems.map((item) => ({
+        menuItemId: item.menuItemId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        customizations: item.customizations,
+        subtotal: item.subtotal,
+      })),
       servedBy: req.user.id,
-      totalAmount,
-      amountPaid: amountPaid || 0,
+
+      // Tax breakdown
+      taxBreakdown: {
+        items: taxCalculation.itemTaxes,
+        totalTax: taxCalculation.totalTax,
+        serviceCharge: taxCalculation.serviceCharge,
+        subtotal: taxCalculation.subtotal,
+      },
+
+      // Additional fees
+      packagingFee: packagingAmount,
+      deliveryFee: deliveryAmount,
+
+      // Totals
+      totalAmount: finalTotal,
+      amountPaid: paidAmount,
       balance,
+
+      // Payment details
       paymentMethod: paymentMethod || "cash",
       paymentStatus,
+
+      // Additional info
+      note: note || "",
+
+      // Action tracking
       lastAction: {
         action: "create",
         performedBy: req.user.id,
@@ -130,9 +241,15 @@ const createOrder = async (req, res) => {
       `Created new order #${newOrder.orderNumber}`
     );
 
+    // Populate order details for response
+    const populatedOrder = await Order.findById(newOrder._id)
+      .populate("servedBy", "fullname")
+      .populate("orderItems.menuItemId", "name category");
+
     return res.status(201).json({
       success: true,
-      data: newOrder,
+      message: "Order created successfully",
+      data: populatedOrder,
     });
   } catch (error) {
     console.error("Error creating order:", error);

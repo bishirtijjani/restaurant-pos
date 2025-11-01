@@ -43,6 +43,19 @@ const OrderSchema = new mongoose.Schema(
       required: true,
     },
     totalAmount: { type: Number, required: true },
+    taxBreakdown: {
+      items: [
+        {
+          menuItemId: mongoose.Schema.Types.ObjectId,
+          name: String,
+          taxRate: Number,
+          taxAmount: Number,
+        },
+      ],
+      totalTax: { type: Number, default: 0 },
+      serviceCharge: { type: Number, default: 0 },
+      subtotal: { type: Number, default: 0 },
+    },
     discount: { type: Number, default: 0 },
     amountPaid: { type: Number, required: true, default: 0 },
     balance: { type: Number, default: 0 }, // For unpaid or partially paid orders

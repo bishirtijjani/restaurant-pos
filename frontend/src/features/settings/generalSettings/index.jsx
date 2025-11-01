@@ -27,6 +27,7 @@ import {
 } from "./generalSettingsSlice";
 import { showNotification } from "../../common/headerSlice";
 import CurrencySelect from "./components/CurrencySelect";
+import TaxSettings from "./components/TaxSettings";
 
 const GeneralSettings = () => {
   const dispatch = useDispatch();
@@ -355,32 +356,7 @@ const GeneralSettings = () => {
         </div>
 
         {/* Tax & Pricing */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <div className="flex items-center gap-2 mb-4">
-              <Receipt className="w-5 h-5 text-primary" />
-              <h2 className="card-title">Tax & Pricing</h2>
-            </div>
-
-            <div className="form-control max-w-xs">
-              <label className="label">
-                <span className="label-text font-medium">
-                  Default Tax Rate (%)
-                </span>
-              </label>
-              <input
-                type="number"
-                name="taxRate"
-                value={formData.taxRate}
-                onChange={handleInputChange}
-                className="input input-bordered"
-                min="0"
-                max="100"
-                step="0.01"
-              />
-            </div>
-          </div>
-        </div>
+        <TaxSettings />
 
         {/* System Settings */}
         <div className="card bg-base-100 shadow-lg">

@@ -22,6 +22,7 @@ import { openModal } from "../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { fetchAllMenuItems } from "../menuItems/menuItemsSlice";
 import { fetchAllCategories } from "../categories/categoriesSlice";
+import TaxBreakdown from "./components/TaxBreakdown";
 
 // Component for the order type selector
 const OrderTypeSelector = ({ orderType, setOrderType }) => (
@@ -185,92 +186,92 @@ const EmptyCart = () => (
 );
 
 // Component for order summary
-const OrderSummary = ({
-  cart,
-  orderType,
-  packagingFee,
-  setPackagingFee,
-  deliveryFee,
-  setDeliveryFee,
-}) => {
-  // Calculate subtotal
-  const calculateSubtotal = () => {
-    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  };
+const OrderSummary = ({ cart, orderType, packagingFee, deliveryFee }) => {
+  const settings = useSelector((state) => state.settings.settings);
 
-  // Calculate total
-  const calculateTotal = () => {
-    const subtotal = calculateSubtotal();
+  // Calculate with tax
+  const calculateWithTax = () => {
+    const subtotal = cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    let totalTax = 0;
+    const itemTaxes = [];
+
+    if (settings?.taxSettings?.enabled) {
+      if (settings.taxSettings.mode === "per-item") {
+        cart.forEach((item) => {
+          const itemSubtotal = item.price * item.quantity;
+          const taxRate = item.customTax?.enabled
+            ? item.customTax.rate
+            : settings.taxSettings.globalRate;
+          const taxAmount = (itemSubtotal * taxRate) / 100;
+          totalTax += taxAmount;
+          itemTaxes.push({
+            name: item.name,
+            taxRate,
+            taxAmount,
+          });
+        });
+      } else {
+        totalTax = (subtotal * settings.taxSettings.globalRate) / 100;
+      }
+    }
+
     const packaging =
       orderType === "dine-in" ? 0 : parseFloat(packagingFee) || 0;
     const delivery =
       orderType === "delivery" ? parseFloat(deliveryFee) || 0 : 0;
-    return subtotal + packaging + delivery;
+
+    let serviceCharge = 0;
+    if (settings?.serviceCharge?.enabled) {
+      const shouldApply =
+        settings.serviceCharge.applyTo === "all" ||
+        settings.serviceCharge.applyTo === orderType;
+      if (shouldApply) {
+        serviceCharge = (subtotal * settings.serviceCharge.rate) / 100;
+      }
+    }
+
+    return {
+      subtotal,
+      totalTax,
+      serviceCharge,
+      packaging,
+      delivery,
+      total: subtotal + totalTax + serviceCharge + packaging + delivery,
+      itemTaxes,
+    };
   };
 
-  return (
-    <div className="bg-base-200 rounded-lg p-4 mb-4">
-      <div className="flex justify-between mb-2">
-        <span>Subtotal</span>
-        <span>₦{calculateSubtotal().toFixed(2)}</span>
-      </div>
+  const taxData = calculateWithTax();
 
-      {orderType === "takeaway" && (
-        <div className="flex justify-between mb-2 text-info">
-          <div className="flex items-center">
-            <span className="mr-2">Packaging fee</span>
-            <input
-              type="number"
-              className="input input-bordered input-sm w-20"
-              value={packagingFee}
-              onChange={(e) => setPackagingFee(e.target.value)}
-              step="0.01"
-              min="0"
-            />
-          </div>
-          <span>₦{parseFloat(packagingFee || 0).toFixed(2)}</span>
+  return (
+    <div className="bg-base-200 rounded-lg p-4 space-y-3">
+      <TaxBreakdown
+        taxBreakdown={{
+          subtotal: taxData.subtotal,
+          totalTax: taxData.totalTax,
+          serviceCharge: taxData.serviceCharge,
+          items: taxData.itemTaxes,
+        }}
+        settings={settings}
+      />
+
+      {taxData.packaging > 0 && (
+        <div className="flex justify-between text-sm opacity-70">
+          <span>Packaging</span>
+          <span>₦{taxData.packaging.toFixed(2)}</span>
         </div>
       )}
 
-      {orderType === "delivery" && (
-        <>
-          <div className="flex justify-between mb-2 text-info">
-            <div className="flex items-center">
-              <span className="mr-2">Packaging fee</span>
-              <input
-                type="number"
-                className="input input-bordered input-sm w-20"
-                value={packagingFee}
-                onChange={(e) => setPackagingFee(e.target.value)}
-                step="0.01"
-                min="0"
-              />
-            </div>
-            <span>₦{parseFloat(packagingFee || 0).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between mb-2 text-info">
-            <div className="flex items-center">
-              <span className="mr-2">Delivery fee</span>
-              <input
-                type="number"
-                className="input input-bordered input-sm w-20"
-                value={deliveryFee}
-                onChange={(e) => setDeliveryFee(e.target.value)}
-                step="0.01"
-                min="0"
-              />
-            </div>
-            <span>₦{parseFloat(deliveryFee || 0).toFixed(2)}</span>
-          </div>
-        </>
+      {taxData.delivery > 0 && (
+        <div className="flex justify-between text-sm opacity-70">
+          <span>Delivery</span>
+          <span>₦{taxData.delivery.toFixed(2)}</span>
+        </div>
       )}
-
-      <div className="border-t border-base-300 my-2"></div>
-
-      <div className="flex justify-between font-bold text-lg">
-        <span>Total</span>
-        <span>₦{calculateTotal().toFixed(2)}</span>
-      </div>
     </div>
   );
 };
