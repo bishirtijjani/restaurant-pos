@@ -25,9 +25,9 @@ import { fetchAllCategories } from "../categories/categoriesSlice";
 
 // Component for the order type selector
 const OrderTypeSelector = ({ orderType, setOrderType }) => (
-  <div className="join mb-4">
+  <div className="join mb-4 join-vertical lg:join-horizontal">
     <button
-      className={`join-item btn ${
+      className={`join-item btn btn-sm md:btn-md ${
         orderType === "dine-in" ? "btn-primary" : "btn-outline"
       }`}
       onClick={() => setOrderType("dine-in")}
@@ -35,7 +35,7 @@ const OrderTypeSelector = ({ orderType, setOrderType }) => (
       <UtensilsCrossed size={18} className="mr-1" /> Dine-in
     </button>
     <button
-      className={`join-item btn ${
+      className={`join-item btn btn-sm md:btn-md ${
         orderType === "takeaway" ? "btn-primary" : "btn-outline"
       }`}
       onClick={() => setOrderType("takeaway")}
@@ -43,7 +43,7 @@ const OrderTypeSelector = ({ orderType, setOrderType }) => (
       <ShoppingBag size={18} className="mr-1" /> Takeaway
     </button>
     <button
-      className={`join-item btn ${
+      className={`join-item btn btn-sm md:btn-md ${
         orderType === "delivery" ? "btn-primary" : "btn-outline"
       }`}
       onClick={() => setOrderType("delivery")}
@@ -82,10 +82,10 @@ const CategoryFilter = ({ activeCategory, setActiveCategory, categories }) => {
 // Component for a single menu item
 const MenuItem = ({ item, addToCart }) => (
   <div
-    className="bg-white border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+    className="bg-base-100 border border-base-300 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
     onClick={() => addToCart(item)}
   >
-    <div className="h-32 w-full bg-gray-200 flex items-center justify-center">
+    <div className="h-32 w-full bg-base-200 flex items-center justify-center">
       {item.image ? (
         <img
           src={item.image}
@@ -93,7 +93,7 @@ const MenuItem = ({ item, addToCart }) => (
           className="h-32 w-full object-cover"
         />
       ) : (
-        <div className="text-gray-400">
+        <div className="text-muted">
           {item.category === "Coffee" && <Coffee size={48} />}
           {item.category === "Pizza" && <Pizza size={48} />}
           {item.category === "Salad" && <Salad size={48} />}
@@ -118,9 +118,9 @@ const MenuItem = ({ item, addToCart }) => (
 
 // Component for a cart item
 const CartItem = ({ item, updateQuantity }) => (
-  <div className="flex items-center justify-between border-b pb-3 mb-3">
+  <div className="flex items-center justify-between border-b border-base-300 pb-3 mb-3">
     <div className="flex items-center">
-      <div className="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center mr-3">
+      <div className="w-12 h-12 rounded-md bg-base-200 flex items-center justify-center mr-3">
         {item.image ? (
           <img
             src={item.image}
@@ -128,7 +128,7 @@ const CartItem = ({ item, updateQuantity }) => (
             className="w-12 h-12 rounded-md object-cover"
           />
         ) : (
-          <div className="text-gray-400">
+          <div className="text-muted">
             {item.category === "Coffee" && <Coffee size={24} />}
             {item.category === "Pizza" && <Pizza size={24} />}
             {item.category === "Salad" && <Salad size={24} />}
@@ -177,7 +177,7 @@ const CartItem = ({ item, updateQuantity }) => (
 
 // Component for the empty cart state
 const EmptyCart = () => (
-  <div className="text-center text-gray-500 py-12">
+  <div className="text-center text-muted py-12">
     <ShoppingBag size={40} className="mx-auto mb-4 opacity-50" />
     <p>Your order is empty</p>
     <p className="text-sm">Add items from the menu</p>
@@ -265,7 +265,7 @@ const OrderSummary = ({
         </>
       )}
 
-      <div className="border-t border-gray-300 my-2"></div>
+      <div className="border-t border-base-300 my-2"></div>
 
       <div className="flex justify-between font-bold text-lg">
         <span>Total</span>
@@ -346,7 +346,7 @@ export default function POS() {
   const [deliveryFee, setDeliveryFee] = useState("3.00");
   const [tableNumber, setTableNumber] = useState("1");
   const [customerDetails, setCustomerDetails] = useState({
-    name: "Walk-in",
+    name: "",
     phone: "",
     address: "",
   });
@@ -482,12 +482,12 @@ export default function POS() {
   }, [orderType]);
 
   return (
-    <div className="flex h-screen bg-gray-100 text-gray-800">
+    <div className="flex flex-col md:flex-row min-h-screen bg-base-200 text-base-content">
       {/* Left side - Menu */}
-      <div className="w-3/5 flex flex-col p-4 pr-2">
-        <div className="bg-white rounded-xl shadow-lg p-6 flex-grow flex flex-col">
+      <div className="w-full md:w-3/5 flex flex-col px-0 md:pr-2 mb-4 md:mb-0">
+        <div className="bg-base-100 rounded-xl shadow-lg p-4 md:p-6 flex-grow flex flex-col">
           {/* Search bar */}
-          <div className="relative w-64 mb-6">
+          <div className="relative w-full md:w-64 mb-4 md:mb-6">
             <input
               type="text"
               placeholder="Search items..."
@@ -495,7 +495,7 @@ export default function POS() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-3 text-muted" size={18} />
           </div>
 
           {/* Categories */}
@@ -506,12 +506,12 @@ export default function POS() {
           />
 
           {/* Menu items grid */}
-          <div className="grid grid-cols-3 gap-4 overflow-y-auto flex-grow">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 overflow-y-auto flex-grow">
             {filteredItems.map((item) => (
               <MenuItem key={item._id} item={item} addToCart={addToCart} />
             ))}
             {filteredItems.length === 0 && (
-              <div className="col-span-3 text-center text-gray-500 py-12">
+              <div className="col-span-3 text-center text-muted py-12">
                 No items found for this category or search query.
               </div>
             )}
@@ -520,8 +520,8 @@ export default function POS() {
       </div>
 
       {/* Right side - Order details */}
-      <div className="w-2/5 flex flex-col p-4 pl-2">
-        <div className="bg-white rounded-xl shadow-lg p-6 flex-grow flex flex-col">
+      <div className="w-full md:w-2/5 flex flex-col px-0 md:pl-2">
+        <div className="bg-base-100 rounded-xl shadow-lg p-4 md:p-6 flex-grow flex flex-col">
           <h2 className="text-xl font-bold mb-4">Current Order</h2>
 
           {/* Order type selector */}
@@ -605,16 +605,16 @@ export default function POS() {
           />
 
           {/* Action buttons */}
-          <div className="flex space-x-3">
+          <div className="flex flex-col md:flex-row md:space-x-3 space-y-2 md:space-y-0">
             <button
-              className="btn btn-outline flex-1"
+              className="btn btn-outline w-full md:flex-1"
               onClick={() => setCart([])}
               disabled={cart.length === 0}
             >
               Clear
             </button>
             <button
-              className="btn btn-primary flex-1"
+              className="btn btn-primary w-full md:flex-1"
               onClick={handleCheckout}
               disabled={cart.length === 0}
             >

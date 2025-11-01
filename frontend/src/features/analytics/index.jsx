@@ -195,7 +195,7 @@ const AnalyticsDashboard = () => {
       </div>
 
       {/* Dashboard Tabs */}
-      <div className="tabs tabs-boxed mb-4">
+      <div className="tabs tabs-boxed mb-4 overflow-x-auto">
         <a
           className={`tab ${activeTab === "overview" ? "tab-active" : ""}`}
           onClick={() => setActiveTab("overview")}
