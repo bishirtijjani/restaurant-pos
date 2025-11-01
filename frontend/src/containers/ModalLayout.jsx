@@ -12,8 +12,6 @@ import AddCategoryModalBody from "../features/categories/components/AddCategoryM
 import EditCategoryModalBody from "../features/categories/components/EditCategoryModalBody";
 import AddSupplierModalBody from "../features/suppliers/components/AddSupplierModalBody";
 import EditSupplierModalBody from "../features/suppliers/components/EditSupplierModalBody";
-import AddPurchaseModalBody from "../features/purchase/components/AddPurchaseModalBody";
-import EditPurchaseModalBody from "../features/purchase/components/EditPurchaseModalBody";
 import AddOrderModalBody from "../features/orders/components/AddOrderModalBody";
 import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
 import Receipt from "../features/common/components/Receipt";
@@ -22,7 +20,7 @@ import EditExpenseModalBody from "../features/expenses/components/EditExpenseMod
 import AddCustomerModalBody from "../features/customers/components/AddCustomerModalBody";
 import EditCustomerModalBody from "../features/customers/components/EditCustomerModalBody";
 import ViewMenuItemModalBody from "../features/menuItems/components/ViewMenuItemModalBody";
-
+import { X } from "lucide-react";
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
     (state) => state.modal
@@ -36,150 +34,142 @@ function ModalLayout() {
   return (
     <>
       {/* The button to open modal */}
-
-      {/* Put this part before </body> tag */}
-      <div className={`modal h-full ${isOpen ? "modal-open" : ""}`}>
+      <div className={`modal h-full ${isOpen ? "modal-open" : ""} `}>
         <div
-          className={`modal-box h-full ${size === "xl" ? "max-w-full" : ""}`}
+          className={`modal-box flex flex-col p-0 border border-primary/10 ${
+            size === "xl" ? "max-w-full h-full" : ""
+          }`}
         >
-          <button
-            className="btn btn-circle btn-error sticky btn-outline -right-2 float-right top-0 z-50"
-            onClick={() => close()}
-          >
-            ✕
-          </button>
-
-          <h3 className="font-bolder text-xl pb-6 text-center">{title}</h3>
-
-          {/* Loading modal body according to different modal type */}
-          {
+          {/* Modal Header */}
+          <div className="bg-base-200 py-3 px-4 rounded-t-lg flex items-center justify-between border-b border-base-300 sticky top-0 z-10">
+            <h3 className="font-bold text-xl">{title}</h3>
+            <button
+              className="btn btn-sm btn-circle btn-error btn-outline"
+              onClick={() => close()}
+            >
+              <X size={20} />
+            </button>
+          </div>
+          {/* Modal Body */}
+          <div className="p-4 overflow-y-auto flex-grow">
+            {/* Loading modal body according to different modal type */}
             {
-              [MODAL_BODY_TYPES.ADD_NEW_USER]: (
-                <AddUserModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.EDIT_USER]: (
-                <EditUserModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.VIEW_USER]: (
-                <ViewUserModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.ADD_NEW_CUSTOMER]: (
-                <AddCustomerModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.EDIT_CUSTOMER]: (
-                <EditCustomerModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.ADD_NEW_MENU_ITEM]: (
-                <AddMenuItemModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.EDIT_MENU_ITEM]: (
-                <EditMenuItemModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.VIEW_MENU_ITEM]: (
-                <ViewMenuItemModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.ADD_NEW_CATEGORY]: (
-                <AddCategoryModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.EDIT_CATEGORY]: (
-                <EditCategoryModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.ADD_NEW_SUPPLIER]: (
-                <AddSupplierModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.EDIT_SUPPLIER]: (
-                <EditSupplierModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.ADD_PURCHASE]: (
-                <AddPurchaseModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.EDIT_PURCHASE]: (
-                <EditPurchaseModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.ADD_ORDER]: (
-                <AddOrderModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.ADD_EXPENSE]: (
-                <AddExpenseModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.EDIT_EXPENSE]: (
-                <EditExpenseModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.PAYMENT_CONFIRMATION]: (
-                <PaymentConfirmationModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.RECEIPT_MODAL]: (
-                <Receipt closeModal={close} extraObject={extraObject} />
-              ),
-              [MODAL_BODY_TYPES.SESSION_EXPIRED]: (
-                <SessionExpiredModalBody
-                  closeModal={close}
-                  extraObject={extraObject}
-                />
-              ),
-              [MODAL_BODY_TYPES.CONFIRMATION]: (
-                <ConfirmationModalBody
-                  extraObject={extraObject}
-                  closeModal={close}
-                />
-              ),
-              [MODAL_BODY_TYPES.DEFAULT]: <div></div>,
-            }[bodyType]
-          }
+              {
+                [MODAL_BODY_TYPES.ADD_NEW_USER]: (
+                  <AddUserModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_USER]: (
+                  <EditUserModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.VIEW_USER]: (
+                  <ViewUserModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_NEW_CUSTOMER]: (
+                  <AddCustomerModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_CUSTOMER]: (
+                  <EditCustomerModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_NEW_MENU_ITEM]: (
+                  <AddMenuItemModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_MENU_ITEM]: (
+                  <EditMenuItemModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.VIEW_MENU_ITEM]: (
+                  <ViewMenuItemModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_NEW_CATEGORY]: (
+                  <AddCategoryModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_CATEGORY]: (
+                  <EditCategoryModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_NEW_SUPPLIER]: (
+                  <AddSupplierModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_SUPPLIER]: (
+                  <EditSupplierModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_ORDER]: (
+                  <AddOrderModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_EXPENSE]: (
+                  <AddExpenseModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_EXPENSE]: (
+                  <EditExpenseModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.PAYMENT_CONFIRMATION]: (
+                  <PaymentConfirmationModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.RECEIPT_MODAL]: (
+                  <Receipt closeModal={close} extraObject={extraObject} />
+                ),
+                [MODAL_BODY_TYPES.SESSION_EXPIRED]: (
+                  <SessionExpiredModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.CONFIRMATION]: (
+                  <ConfirmationModalBody
+                    extraObject={extraObject}
+                    closeModal={close}
+                  />
+                ),
+                [MODAL_BODY_TYPES.DEFAULT]: <div></div>,
+              }[bodyType]
+            }
+          </div>
         </div>
       </div>
     </>

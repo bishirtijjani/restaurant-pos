@@ -105,7 +105,7 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
           name="category"
           value={expense.category}
           onChange={handleInputChange}
-          className="input input-bordered w-full mt-2"
+          className="select select-bordered w-full mt-2"
         >
           <option value="">Select Category</option>
           {categories.map((category) => (
@@ -142,7 +142,7 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
           name="description"
           value={expense.description}
           onChange={handleInputChange}
-          className="input input-bordered w-full mt-2"
+          className="input input-bordered w-full mt-2 h-full"
           placeholder="Enter Description"
           rows="4"
         />
@@ -158,7 +158,7 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
           name="paymentMethod"
           value={expense.paymentMethod}
           onChange={handleInputChange}
-          className="input input-bordered w-full mt-2"
+          className="select select-bordered w-full mt-2"
         >
           <option value="">Select Payment Method</option>
           {paymentMethods.map((method) => (
@@ -181,7 +181,7 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
           value={expense.invoice}
           onChange={handleInputChange}
           className="input input-bordered w-full mt-2"
-          placeholder="Enter Invoice"
+          placeholder="Enter Invoice ID"
         />
       </div>
 

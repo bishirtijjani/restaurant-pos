@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
 import {
   PDFDownloadLink,
@@ -15,16 +16,30 @@ import {
   Truck,
   Receipt as ReceiptIcon,
 } from "lucide-react";
+import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
 
 const Receipt = ({ extraObject }) => {
+  const dispatch = useDispatch();
   const location = useLocation();
   const orderData = extraObject;
+  console.log(extraObject);
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+
+  useEffect(() => {
+    dispatch(fetchSettings());
+  }, [dispatch]);
 
   // Format the receipt data
   const receipt = {
-    businessName: "Codeket Restaurant", // Update with your restaurant name
-    address: "123 Street, This City, Nigeria", // Update with your address
-    phone: "+234 123 456 7890", // Update with your phone number
+    restaurantLogo: settings?.restaurantLogo,
+    restaurantName:
+      settings?.restaurantName?.toUpperCase() || "CODEKET RESTAURANT",
+    restaurantAddress: settings?.restaurantAddress,
+    restaurantPhone: settings?.restaurantPhone,
+    restaurantEmail: settings?.restaurantEmail,
+    motto: settings?.restaurantMotto,
     date: new Date().toLocaleString(),
     orderNumber: orderData.orderNumber || "New Order",
     orderType: orderData.orderType || "dine-in",
@@ -107,15 +122,32 @@ const Receipt = ({ extraObject }) => {
   return (
     <div className="max-w-md mx-auto p-4">
       {/* Main receipt card */}
-      <div className="bg-white shadow-lg rounded-lg">
+      <div className="bg-white text-black shadow-lg rounded-lg">
         <div className="p-6">
           {/* Printable Receipt Content */}
           <div id="printableArea" className="text-sm space-y-4">
-            {/* Header */}
-            <div className="text-center mb-4">
-              <h2 className="text-xl font-bold">{receipt.businessName}</h2>
-              <p className="text-gray-600">{receipt.address}</p>
-              <p className="text-gray-600">{receipt.phone}</p>
+            {/* Header with full restaurant details */}
+            <div className="text-center space-y-1 border-b pb-4">
+              {/* {receipt.restaurantLogo && (
+                <img
+                  src={receipt.restaurantLogo}
+                  alt="Company Logo"
+                  className="h-12 mx-auto object-contain"
+                />
+              )} */}
+              <h1 className="font-bold text-lg">{receipt.restaurantName}</h1>
+              {receipt.motto && (
+                <p className="italic text-xs">{receipt.motto}</p>
+              )}
+              {receipt.restaurantAddress && (
+                <p className="text-xs">{receipt.restaurantAddress}</p>
+              )}
+              {receipt.restaurantPhone && (
+                <p className="text-xs">Phone: {receipt.restaurantPhone}</p>
+              )}
+              {receipt.restaurantEmail && (
+                <p className="text-xs">Email: {receipt.restaurantEmail}</p>
+              )}
             </div>
 
             <div className="divider"></div>
@@ -123,15 +155,15 @@ const Receipt = ({ extraObject }) => {
             {/* Order Info */}
             <table className="w-full">
               <tbody>
-                <tr>
+                <tr className="border-b">
                   <td className="font-medium">Order #:</td>
                   <td className="text-right">{receipt.orderNumber}</td>
                 </tr>
-                <tr>
+                <tr className="border-b">
                   <td className="font-medium">Date:</td>
                   <td className="text-right">{receipt.date}</td>
                 </tr>
-                <tr>
+                <tr className="border-b">
                   <td className="font-medium">Type:</td>
                   <td className="text-right flex items-center justify-end">
                     <span className="mr-1 capitalize">{receipt.orderType}</span>
@@ -139,26 +171,26 @@ const Receipt = ({ extraObject }) => {
                   </td>
                 </tr>
                 {receipt.orderType === "dine-in" && receipt.table && (
-                  <tr>
+                  <tr className="border-b">
                     <td className="font-medium">Table:</td>
                     <td className="text-right">{receipt.table}</td>
                   </tr>
                 )}
                 {receipt.customerName !== "Walk-in Customer" && (
-                  <tr>
+                  <tr className="border-b">
                     <td className="font-medium">Customer:</td>
                     <td className="text-right">{receipt.customerName}</td>
                   </tr>
                 )}
                 {receipt.customerPhone && (
-                  <tr>
+                  <tr className="border-b">
                     <td className="font-medium">Phone:</td>
                     <td className="text-right">{receipt.customerPhone}</td>
                   </tr>
                 )}
                 {receipt.orderType === "delivery" &&
                   receipt.customerAddress && (
-                    <tr>
+                    <tr className="border-b">
                       <td className="font-medium">Address:</td>
                       <td className="text-right">{receipt.customerAddress}</td>
                     </tr>
@@ -171,7 +203,7 @@ const Receipt = ({ extraObject }) => {
             {/* Order Items */}
             <table className="w-full">
               <thead>
-                <tr>
+                <tr className="border-b">
                   <th className="text-left font-medium">Item</th>
                   <th className="text-center font-medium">Qty</th>
                   <th className="text-right font-medium">Price</th>
@@ -184,10 +216,12 @@ const Receipt = ({ extraObject }) => {
                     <td className="py-1">{item.name}</td>
                     <td className="text-center py-1">{item.quantity}</td>
                     <td className="text-right py-1">
-                      ₦{parseFloat(item.price).toFixed(2)}
+                      {settings?.currency?.symbol}
+                      {parseFloat(item.price).toFixed(2)}
                     </td>
                     <td className="text-right py-1">
-                      ₦{parseFloat(item.price * item.quantity).toFixed(2)}
+                      {settings?.currency?.symbol}
+                      {parseFloat(item.price * item.quantity).toFixed(2)}
                     </td>
                   </tr>
                 ))}
@@ -199,27 +233,30 @@ const Receipt = ({ extraObject }) => {
             {/* Totals */}
             <table className="w-full">
               <tbody>
-                <tr>
+                <tr className="border-b">
                   <td>Subtotal:</td>
                   <td className="text-right">
-                    ₦{parseFloat(receipt.subtotal).toFixed(2)}
+                    {settings?.currency?.symbol}
+                    {parseFloat(receipt.subtotal).toFixed(2)}
                   </td>
                 </tr>
 
                 {receipt.packagingFee > 0 && (
-                  <tr>
+                  <tr className="border-b">
                     <td>Packaging:</td>
                     <td className="text-right">
-                      ₦{parseFloat(receipt.packagingFee).toFixed(2)}
+                      {settings?.currency?.symbol}
+                      {parseFloat(receipt.packagingFee).toFixed(2)}
                     </td>
                   </tr>
                 )}
 
                 {receipt.deliveryFee > 0 && (
-                  <tr>
+                  <tr className="border-b">
                     <td>Delivery:</td>
                     <td className="text-right">
-                      ₦{parseFloat(receipt.deliveryFee).toFixed(2)}
+                      {settings?.currency?.symbol}
+                      {parseFloat(receipt.deliveryFee).toFixed(2)}
                     </td>
                   </tr>
                 )}
@@ -227,38 +264,42 @@ const Receipt = ({ extraObject }) => {
                 <tr className="font-bold text-lg">
                   <td>Total:</td>
                   <td className="text-right">
-                    ₦{parseFloat(receipt.totalAmount).toFixed(2)}
+                    {settings?.currency?.symbol}
+                    {parseFloat(receipt.totalAmount).toFixed(2)}
                   </td>
                 </tr>
 
-                <tr>
+                <tr className="border-b">
                   <td>Payment Method:</td>
                   <td className="text-right capitalize">
                     {receipt.paymentMethod}
                   </td>
                 </tr>
 
-                <tr>
+                <tr className="border-b">
                   <td>Amount Paid:</td>
                   <td className="text-right">
-                    ₦{parseFloat(receipt.amountPaid).toFixed(2)}
+                    {settings?.currency?.symbol}
+                    {parseFloat(receipt.amountPaid).toFixed(2)}
                   </td>
                 </tr>
 
                 {receipt.change > 0 && (
-                  <tr>
+                  <tr className="border-b">
                     <td>Change:</td>
                     <td className="text-right">
-                      ₦{parseFloat(receipt.change).toFixed(2)}
+                      {settings?.currency?.symbol}
+                      {parseFloat(receipt.change).toFixed(2)}
                     </td>
                   </tr>
                 )}
 
                 {receipt.balance > 0 && (
-                  <tr>
+                  <tr className="border-b">
                     <td className="font-medium">Balance Due:</td>
                     <td className="text-right font-medium">
-                      ₦{parseFloat(receipt.balance).toFixed(2)}
+                      {settings?.currency?.symbol}
+                      {parseFloat(receipt.balance).toFixed(2)}
                     </td>
                   </tr>
                 )}
@@ -278,7 +319,7 @@ const Receipt = ({ extraObject }) => {
             <div className="divider"></div>
 
             {/* Footer */}
-            <div className="text-center text-gray-600 mt-4">
+            <div className="text-center  mt-4">
               <p>Thank you for dining with us!</p>
               <p className="text-xs mt-2">Powered by Codeket</p>
             </div>
@@ -292,7 +333,7 @@ const Receipt = ({ extraObject }) => {
           Print Receipt
         </button>
         <PDFDownloadLink
-          document={<ReceiptPDF receipt={receipt} />}
+          document={<ReceiptPDF receipt={receipt} settings={settings} />}
           fileName={`receipt-${receipt.orderNumber}.pdf`}
         >
           {({ loading }) => (
@@ -307,7 +348,7 @@ const Receipt = ({ extraObject }) => {
 };
 
 // PDF Document Component
-const ReceiptPDF = ({ receipt }) => (
+const ReceiptPDF = ({ receipt, settings }) => (
   <Document>
     <Page size="A6" style={styles.page}>
       <View style={styles.header}>
@@ -375,10 +416,12 @@ const ReceiptPDF = ({ receipt }) => (
             {item.quantity}
           </Text>
           <Text style={[styles.tableCell, { flex: 1, textAlign: "right" }]}>
-            ₦{parseFloat(item.price).toFixed(2)}
+            {settings?.currency?.symbol}
+            {parseFloat(item.price).toFixed(2)}
           </Text>
           <Text style={[styles.tableCell, { flex: 1, textAlign: "right" }]}>
-            ₦{parseFloat(item.price * item.quantity).toFixed(2)}
+            {settings?.currency?.symbol}
+            {parseFloat(item.price * item.quantity).toFixed(2)}
           </Text>
         </View>
       ))}
@@ -389,7 +432,8 @@ const ReceiptPDF = ({ receipt }) => (
         <View style={styles.row}>
           <Text style={styles.label}>Subtotal:</Text>
           <Text style={styles.value}>
-            ₦{parseFloat(receipt.subtotal).toFixed(2)}
+            {settings?.currency?.symbol}
+            {parseFloat(receipt.subtotal).toFixed(2)}
           </Text>
         </View>
 
@@ -397,7 +441,8 @@ const ReceiptPDF = ({ receipt }) => (
           <View style={styles.row}>
             <Text style={styles.label}>Packaging:</Text>
             <Text style={styles.value}>
-              ₦{parseFloat(receipt.packagingFee).toFixed(2)}
+              {settings?.currency?.symbol}
+              {parseFloat(receipt.packagingFee).toFixed(2)}
             </Text>
           </View>
         )}
@@ -406,7 +451,8 @@ const ReceiptPDF = ({ receipt }) => (
           <View style={styles.row}>
             <Text style={styles.label}>Delivery:</Text>
             <Text style={styles.value}>
-              ₦{parseFloat(receipt.deliveryFee).toFixed(2)}
+              {settings?.currency?.symbol}
+              {parseFloat(receipt.deliveryFee).toFixed(2)}
             </Text>
           </View>
         )}
@@ -414,7 +460,8 @@ const ReceiptPDF = ({ receipt }) => (
         <View style={styles.row}>
           <Text style={[styles.label, styles.bold]}>Total:</Text>
           <Text style={[styles.value, styles.bold]}>
-            ₦{parseFloat(receipt.totalAmount).toFixed(2)}
+            {settings?.currency?.symbol}
+            {parseFloat(receipt.totalAmount).toFixed(2)}
           </Text>
         </View>
 
@@ -426,7 +473,8 @@ const ReceiptPDF = ({ receipt }) => (
         <View style={styles.row}>
           <Text style={styles.label}>Amount Paid:</Text>
           <Text style={styles.value}>
-            ₦{parseFloat(receipt.amountPaid).toFixed(2)}
+            {settings?.currency?.symbol}
+            {parseFloat(receipt.amountPaid).toFixed(2)}
           </Text>
         </View>
 
@@ -434,7 +482,8 @@ const ReceiptPDF = ({ receipt }) => (
           <View style={styles.row}>
             <Text style={styles.label}>Change:</Text>
             <Text style={styles.value}>
-              ₦{parseFloat(receipt.change).toFixed(2)}
+              {settings?.currency?.symbol}
+              {parseFloat(receipt.change).toFixed(2)}
             </Text>
           </View>
         )}
@@ -443,7 +492,8 @@ const ReceiptPDF = ({ receipt }) => (
           <View style={styles.row}>
             <Text style={[styles.label, styles.bold]}>Balance Due:</Text>
             <Text style={[styles.value, styles.bold]}>
-              ₦{parseFloat(receipt.balance).toFixed(2)}
+              {settings?.currency?.symbol}
+              {parseFloat(receipt.balance).toFixed(2)}
             </Text>
           </View>
         )}

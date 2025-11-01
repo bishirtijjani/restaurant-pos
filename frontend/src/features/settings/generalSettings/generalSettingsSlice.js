@@ -51,11 +51,11 @@ export const resetSettings = createAsyncThunk(
 
 const initialState = {
   generalSettings: {
-    companyName: "",
-    companyAddress: "",
-    companyPhone: "",
-    companyEmail: "",
-    companyMotto: "",
+    restaurantName: "",
+    restaurantAddress: "",
+    restaurantPhone: "",
+    restaurantEmail: "",
+    restaurantMotto: "",
     currency: {
       code: "USD",
       name: "US Dollar",
@@ -67,6 +67,20 @@ const initialState = {
     taxRate: 0,
     emailNotifications: true,
     timezone: "America/New_York",
+    // Add tax settings here
+    taxSettings: {
+      enabled: true,
+      globalRate: 7.5,
+      name: "VAT",
+      mode: "per-item",
+      includeInPrice: false,
+    },
+    serviceCharge: {
+      enabled: false,
+      rate: 0,
+      name: "Service Charge",
+      applyTo: "dine-in",
+    },
   },
   loading: false,
   error: null,

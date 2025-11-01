@@ -179,26 +179,6 @@ const Dashboard = () => {
             {/* only admin and manager */}
             {(checkRole("admin") || checkRole("manager")) && (
               <button
-                className="btn btn-secondary"
-                onClick={() =>
-                  dispatch(
-                    openModal({
-                      title: "Add Stock",
-                      bodyType: MODAL_BODY_TYPES.ADD_PURCHASE,
-                      extraObject: {},
-                      size: "xl",
-                    })
-                  )
-                }
-              >
-                <TruckIcon className="w-5 h-5 mr-2" />
-                Add Stock
-              </button>
-            )}
-
-            {/* only admin and manager */}
-            {(checkRole("admin") || checkRole("manager")) && (
-              <button
                 className="btn btn-accent"
                 onClick={() =>
                   dispatch(

@@ -15,7 +15,7 @@ import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import PlusCircleIcon from "@heroicons/react/24/outline/PlusCircleIcon";
 
 const iconClasses = `h-6 w-6`;
-const submenuIconClasses = `h-5 w-5`;
+const submenuIconClasses = `h-6 w-6`;
 
 export const adminRoutes = [
   {
@@ -37,11 +37,6 @@ export const adminRoutes = [
     path: "/app/suppliers",
     icon: <TruckIcon className={iconClasses} />,
     name: "Suppliers",
-  },
-  {
-    path: "/app/purchase",
-    icon: <ClipboardIcon className={iconClasses} />,
-    name: "Purchase",
   },
   {
     path: "/app/expenses",
@@ -114,11 +109,6 @@ export const managerRoutes = [
     path: "/app/suppliers",
     icon: <TruckIcon className={iconClasses} />,
     name: "Suppliers",
-  },
-  {
-    path: "/app/purchase",
-    icon: <ClipboardIcon className={iconClasses} />,
-    name: "Purchase",
   },
   {
     path: "/app/expenses",

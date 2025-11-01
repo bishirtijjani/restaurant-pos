@@ -9,7 +9,6 @@ import customersReducer from "../features/customers/customersSlice";
 import menuItemsReducer from "../features/menuItems/menuItemsSlice";
 import categoriesReducer from "../features/categories/categoriesSlice";
 import suppliersReducer from "../features/suppliers/suppliersSlice";
-import purchasesReducer from "../features/purchase/purchaseSlice";
 import ordersReducer from "../features/orders/ordersSlice";
 import expensesReducer from "../features/expenses/expensesSlice";
 import analyticsReducer from "../features/analytics/analyticsSlice";
@@ -26,7 +25,6 @@ const combinedReducer = {
   menuItems: menuItemsReducer,
   categories: categoriesReducer,
   suppliers: suppliersReducer,
-  purchases: purchasesReducer,
   orders: ordersReducer,
   expenses: expensesReducer,
   analytics: analyticsReducer,

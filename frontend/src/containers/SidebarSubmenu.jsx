@@ -19,8 +19,11 @@ function SidebarSubmenu({ submenu, name, icon }) {
   return (
     <div className="flex flex-col">
       {/** Route header */}
-      <div className="w-full block" onClick={() => setIsExpanded(!isExpanded)}>
-        <span className="bg-base-300 rounded-lg p-1">{icon}</span> {name}
+      <div
+        className="w-full block items-center gap-2 py-2 rounded-lg transition-all duration-200"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <span className="bg-base-300 rounded-lg p-2">{icon}</span> {name}
         <ChevronDownIcon
           className={
             "w-5 h-5 mt-1 float-right delay-400 duration-500 transition-all  " +

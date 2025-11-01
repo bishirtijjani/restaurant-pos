@@ -22,6 +22,7 @@ import { openModal } from "../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { fetchAllMenuItems } from "../menuItems/menuItemsSlice";
 import { fetchAllCategories } from "../categories/categoriesSlice";
+import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 import TaxBreakdown from "./components/TaxBreakdown";
 
 // Component for the order type selector
@@ -81,41 +82,54 @@ const CategoryFilter = ({ activeCategory, setActiveCategory, categories }) => {
 };
 
 // Component for a single menu item
-const MenuItem = ({ item, addToCart }) => (
-  <div
-    className="bg-base-100 border border-base-300 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-    onClick={() => addToCart(item)}
-  >
-    <div className="h-32 w-full bg-base-200 flex items-center justify-center">
-      {item.image ? (
-        <img
-          src={item.image}
-          alt={item.name}
-          className="h-32 w-full object-cover"
-        />
-      ) : (
-        <div className="text-muted">
-          {item.category === "Coffee" && <Coffee size={48} />}
-          {item.category === "Pizza" && <Pizza size={48} />}
-          {item.category === "Salad" && <Salad size={48} />}
-          {item.category === "Sandwich" && <Sandwich size={48} />}
-          {item.category === "Dessert" && <Cake size={48} />}
+const MenuItem = ({ item, addToCart }) => {
+  const renderIcon = () => {
+    switch (item.category) {
+      case "Coffee":
+        return <Coffee size={48} />;
+      case "Pizza":
+        return <Pizza size={48} />;
+      case "Salad":
+        return <Salad size={48} />;
+      case "Sandwich":
+        return <Sandwich size={48} />;
+      case "Dessert":
+        return <Cake size={48} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div
+      className="bg-base-100 border max-h-min border-base-300 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => addToCart(item)}
+    >
+      <div className="h-32 w-full bg-base-200 flex items-center justify-center">
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.name}
+            className="h-32 w-full object-cover"
+          />
+        ) : (
+          <div className="text-muted">{renderIcon()}</div>
+        )}
+      </div>
+      <div className="p-3">
+        <h3 className="font-medium text-lg">{item.name}</h3>
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-primary font-semibold">
+            ₦{item.price.toFixed(2)}
+          </span>
+          <button className="btn btn-sm btn-primary btn-circle">
+            <PlusCircle size={16} />
+          </button>
         </div>
-      )}
-    </div>
-    <div className="p-3">
-      <h3 className="font-medium text-lg">{item.name}</h3>
-      <div className="flex justify-between items-center mt-2">
-        <span className="text-primary font-semibold">
-          ₦{item.price.toFixed(2)}
-        </span>
-        <button className="btn btn-sm btn-primary btn-circle">
-          <PlusCircle size={16} />
-        </button>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Component for a cart item
 const CartItem = ({ item, updateQuantity }) => (
@@ -187,7 +201,9 @@ const EmptyCart = () => (
 
 // Component for order summary
 const OrderSummary = ({ cart, orderType, packagingFee, deliveryFee }) => {
-  const settings = useSelector((state) => state.settings.settings);
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
 
   // Calculate with tax
   const calculateWithTax = () => {
@@ -356,6 +372,7 @@ export default function POS() {
   useEffect(() => {
     if (!menuItems.length) dispatch(fetchAllMenuItems());
     if (!categories.length) dispatch(fetchAllCategories());
+    dispatch(fetchSettings());
   }, [dispatch]);
 
   // Filter menu items by category and search query

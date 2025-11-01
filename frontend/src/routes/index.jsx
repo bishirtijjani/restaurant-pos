@@ -11,7 +11,6 @@ const ProfileSettings = lazy(() =>
 const MenuItems = lazy(() => import("../pages/protected/MenuItems"));
 const Categories = lazy(() => import("../pages/protected/Categories"));
 const Suppliers = lazy(() => import("../pages/protected/Suppliers"));
-const Purchase = lazy(() => import("../pages/protected/Purchase"));
 const Orders = lazy(() => import("../pages/protected/Orders"));
 const AddOrder = lazy(() => import("../pages/protected/AddOrder"));
 const Expenses = lazy(() => import("../pages/protected/Expenses"));
@@ -43,10 +42,6 @@ const routes = [
   {
     path: "/menu-items",
     component: MenuItems,
-  },
-  {
-    path: "/purchase",
-    component: Purchase,
   },
   {
     path: "/expenses",

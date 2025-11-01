@@ -107,15 +107,23 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
 
     dispatch(createOrder({ order: orderPayload }))
       .unwrap()
-      .then(() => {
+      .then((result) => {
+        // result is the API response object from the thunk (usually { success, message, data })
+        const createdOrder = result?.data || result;
+
         dispatch(
           showNotification({
             message: `Order ${
               paymentDetails.isPartialPayment ? "partially " : ""
-            }paid successfully!`,
+            }paid successfully!${
+              createdOrder?.orderNumber
+                ? ` Order #${createdOrder.orderNumber}`
+                : ""
+            }`,
             status: 1,
           })
         );
+
         dispatch(fetchOrders());
         dispatch(closeModal());
 
@@ -123,7 +131,7 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
           openModal({
             title: "Order Receipt",
             bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
-            extraObject: orderPayload,
+            extraObject: createdOrder,
           })
         );
       })

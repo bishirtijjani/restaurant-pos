@@ -1,75 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { updateSettings, fetchSettings } from "../generalSettingsSlice";
-import { showNotification } from "../../../common/headerSlice";
+// frontend/src/features/settings/generalSettings/components/TaxSettings.jsx
+import React from "react";
 import {
   ReceiptPercentIcon,
   CurrencyDollarIcon,
-  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 
-const TaxSettings = () => {
-  const dispatch = useDispatch();
-  const { generalSettings, loading } = useSelector(
-    (state) => state.generalSettings
-  );
-
-  const [formData, setFormData] = useState({
-    taxSettings: {
-      enabled: true,
-      globalRate: 7.5,
-      name: "VAT",
-      mode: "per-item",
-      includeInPrice: false,
-    },
-    serviceCharge: {
-      enabled: false,
-      rate: 0,
-      name: "Service Charge",
-      applyTo: "dine-in",
-    },
-  });
-
-  useEffect(() => {
-    if (generalSettings) {
-      setFormData({
-        taxSettings: generalSettings.taxSettings || formData.taxSettings,
-        serviceCharge: generalSettings.serviceCharge || formData.serviceCharge,
-      });
-    }
-  }, [generalSettings]);
-
+const TaxSettings = ({ formData, onTaxChange, onServiceChange }) => {
   const handleTaxChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      taxSettings: { ...prev.taxSettings, [field]: value },
-    }));
+    onTaxChange({
+      ...formData.taxSettings,
+      [field]: value,
+    });
   };
 
   const handleServiceChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      serviceCharge: { ...prev.serviceCharge, [field]: value },
-    }));
-  };
-
-  const handleSave = async () => {
-    try {
-      await dispatch(updateSettings(formData)).unwrap();
-      dispatch(
-        showNotification({
-          message: "Tax settings updated successfully",
-          status: 1,
-        })
-      );
-    } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.message || "Failed to update settings",
-          status: 0,
-        })
-      );
-    }
+    onServiceChange({
+      ...formData.serviceCharge,
+      [field]: value,
+    });
   };
 
   return (
@@ -87,14 +35,14 @@ const TaxSettings = () => {
               <input
                 type="checkbox"
                 className="toggle toggle-primary"
-                checked={formData.taxSettings.enabled}
+                checked={formData.taxSettings?.enabled || false}
                 onChange={(e) => handleTaxChange("enabled", e.target.checked)}
               />
               <span className="label-text font-medium">Enable Tax</span>
             </label>
           </div>
 
-          {formData.taxSettings.enabled && (
+          {formData.taxSettings?.enabled && (
             <div className="space-y-4 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-control">
@@ -104,7 +52,7 @@ const TaxSettings = () => {
                   <input
                     type="text"
                     className="input input-bordered"
-                    value={formData.taxSettings.name}
+                    value={formData.taxSettings?.name || ""}
                     onChange={(e) => handleTaxChange("name", e.target.value)}
                     placeholder="e.g., VAT, GST, Sales Tax"
                   />
@@ -117,9 +65,12 @@ const TaxSettings = () => {
                   <input
                     type="number"
                     className="input input-bordered"
-                    value={formData.taxSettings.globalRate}
+                    value={formData.taxSettings?.globalRate || 0}
                     onChange={(e) =>
-                      handleTaxChange("globalRate", parseFloat(e.target.value))
+                      handleTaxChange(
+                        "globalRate",
+                        parseFloat(e.target.value) || 0
+                      )
                     }
                     min="0"
                     max="100"
@@ -136,8 +87,9 @@ const TaxSettings = () => {
                 </label>
                 <div className="join join-vertical md:join-horizontal w-full">
                   <button
+                    type="button"
                     className={`join-item btn btn-sm md:btn-md flex-1 ${
-                      formData.taxSettings.mode === "per-item"
+                      formData.taxSettings?.mode === "per-item"
                         ? "btn-primary"
                         : "btn-outline"
                     }`}
@@ -146,8 +98,9 @@ const TaxSettings = () => {
                     Per Item
                   </button>
                   <button
+                    type="button"
                     className={`join-item btn btn-sm md:btn-md flex-1 ${
-                      formData.taxSettings.mode === "per-order"
+                      formData.taxSettings?.mode === "per-order"
                         ? "btn-primary"
                         : "btn-outline"
                     }`}
@@ -158,7 +111,7 @@ const TaxSettings = () => {
                 </div>
                 <label className="label">
                   <span className="label-text-alt">
-                    {formData.taxSettings.mode === "per-item"
+                    {formData.taxSettings?.mode === "per-item"
                       ? "Tax calculated individually for each item (supports custom rates)"
                       : "Single tax rate applied to order total"}
                   </span>
@@ -170,7 +123,7 @@ const TaxSettings = () => {
                   <input
                     type="checkbox"
                     className="checkbox checkbox-primary"
-                    checked={formData.taxSettings.includeInPrice}
+                    checked={formData.taxSettings?.includeInPrice || false}
                     onChange={(e) =>
                       handleTaxChange("includeInPrice", e.target.checked)
                     }
@@ -203,7 +156,7 @@ const TaxSettings = () => {
               <input
                 type="checkbox"
                 className="toggle toggle-primary"
-                checked={formData.serviceCharge.enabled}
+                checked={formData.serviceCharge?.enabled || false}
                 onChange={(e) =>
                   handleServiceChange("enabled", e.target.checked)
                 }
@@ -214,7 +167,7 @@ const TaxSettings = () => {
             </label>
           </div>
 
-          {formData.serviceCharge.enabled && (
+          {formData.serviceCharge?.enabled && (
             <div className="space-y-4 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-control">
@@ -224,7 +177,7 @@ const TaxSettings = () => {
                   <input
                     type="text"
                     className="input input-bordered"
-                    value={formData.serviceCharge.name}
+                    value={formData.serviceCharge?.name || ""}
                     onChange={(e) =>
                       handleServiceChange("name", e.target.value)
                     }
@@ -239,9 +192,12 @@ const TaxSettings = () => {
                   <input
                     type="number"
                     className="input input-bordered"
-                    value={formData.serviceCharge.rate}
+                    value={formData.serviceCharge?.rate || 0}
                     onChange={(e) =>
-                      handleServiceChange("rate", parseFloat(e.target.value))
+                      handleServiceChange(
+                        "rate",
+                        parseFloat(e.target.value) || 0
+                      )
                     }
                     min="0"
                     max="100"
@@ -256,7 +212,7 @@ const TaxSettings = () => {
                 </label>
                 <select
                   className="select select-bordered"
-                  value={formData.serviceCharge.applyTo}
+                  value={formData.serviceCharge?.applyTo || "all"}
                   onChange={(e) =>
                     handleServiceChange("applyTo", e.target.value)
                   }
@@ -269,18 +225,6 @@ const TaxSettings = () => {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Save Button */}
-      <div className="flex justify-end gap-2">
-        <button
-          className={`btn btn-primary ${loading ? "loading" : ""}`}
-          onClick={handleSave}
-          disabled={loading}
-        >
-          <Cog6ToothIcon className="w-5 h-5 mr-2" />
-          Save Settings
-        </button>
       </div>
     </div>
   );

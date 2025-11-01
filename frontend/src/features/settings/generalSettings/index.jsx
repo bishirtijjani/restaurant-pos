@@ -1,3 +1,4 @@
+// frontend/src/features/settings/generalSettings/index.jsx
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -5,14 +6,13 @@ import {
   Building2,
   DollarSign,
   AlertTriangle,
-  Receipt,
-  Mail,
   Globe,
   RotateCcw,
   Save,
   MapPin,
   Phone,
   Quote,
+  Mail,
 } from "lucide-react";
 import {
   fetchSettings,
@@ -53,6 +53,19 @@ const GeneralSettings = () => {
     taxRate: 0,
     emailNotifications: true,
     timezone: "Nigeria/Lagos",
+    taxSettings: {
+      enabled: true,
+      globalRate: 7.5,
+      name: "VAT",
+      mode: "per-item",
+      includeInPrice: false,
+    },
+    serviceCharge: {
+      enabled: false,
+      rate: 0,
+      name: "Service Charge",
+      applyTo: "dine-in",
+    },
   });
 
   const [hasChanges, setHasChanges] = useState(false);
@@ -63,7 +76,11 @@ const GeneralSettings = () => {
 
   useEffect(() => {
     if (settings) {
-      setFormData(settings);
+      setFormData({
+        ...settings,
+        taxSettings: settings.taxSettings || formData.taxSettings,
+        serviceCharge: settings.serviceCharge || formData.serviceCharge,
+      });
     }
   }, [settings]);
 
@@ -96,6 +113,22 @@ const GeneralSettings = () => {
     setHasChanges(true);
   };
 
+  const handleTaxSettingsChange = (taxSettings) => {
+    setFormData((prev) => ({
+      ...prev,
+      taxSettings,
+    }));
+    setHasChanges(true);
+  };
+
+  const handleServiceChargeChange = (serviceCharge) => {
+    setFormData((prev) => ({
+      ...prev,
+      serviceCharge,
+    }));
+    setHasChanges(true);
+  };
+
   const handleSubmit = () => {
     dispatch(updateSettings(formData))
       .unwrap()
@@ -122,8 +155,25 @@ const GeneralSettings = () => {
     if (
       window.confirm("Are you sure you want to reset all settings to defaults?")
     ) {
-      dispatch(resetSettings());
-      setHasChanges(false);
+      dispatch(resetSettings())
+        .unwrap()
+        .then(() => {
+          setHasChanges(false);
+          dispatch(
+            showNotification({
+              message: "Settings reset to defaults successfully!",
+              status: 1,
+            })
+          );
+        })
+        .catch((error) => {
+          dispatch(
+            showNotification({
+              message: error.message || error,
+              status: 0,
+            })
+          );
+        });
     }
   };
 
@@ -356,7 +406,11 @@ const GeneralSettings = () => {
         </div>
 
         {/* Tax & Pricing */}
-        <TaxSettings />
+        <TaxSettings
+          formData={formData}
+          onTaxChange={handleTaxSettingsChange}
+          onServiceChange={handleServiceChargeChange}
+        />
 
         {/* System Settings */}
         <div className="card bg-base-100 shadow-lg">
@@ -425,7 +479,7 @@ const GeneralSettings = () => {
             ) : (
               <Save className="w-4 h-4" />
             )}
-            {loading ? "Saving..." : "Save Settings"}
+            {loading ? "Saving..." : "Save All Settings"}
           </button>
         </div>
       </div>

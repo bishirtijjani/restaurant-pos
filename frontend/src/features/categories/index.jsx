@@ -29,7 +29,7 @@ const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
   };
 
   return (
-    <div className="flex justify-between w-100 space-x-3">
+    <div className="flex justify-between flex-wrap gap-2 w-100 space-x-3">
       {/* Add SearchBar inside TopSideButtons */}
       <SearchBar
         searchText={searchQuery}
@@ -56,8 +56,7 @@ const Categories = () => {
   const categories = useSelector((state) => state.categories.categories || []);
   const status = useSelector((state) => state.categories.status);
   const error = useSelector((state) => state.categories.error);
-
-  const [searchQuery, setSearchQuery] = useState(""); // Search query state
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (status === "idle") {
@@ -73,59 +72,56 @@ const Categories = () => {
     )
   );
 
-  const CategoryRows = filteredCategories.map((categoryItem) => (
-    <tr className="border-spacing-x-3 border-collapse" key={categoryItem._id}>
-      <td className="border-2">{categoryItem.name}</td>
-      <td className="border-2">{categoryItem.description || "N/A"}</td>
-      {(checkRole("admin") || checkRole("manager")) && (
-        <td className="border-2">
-          <button
-            className="btn btn-sm text-white bg-primary min-w-[70px]"
-            onClick={() =>
-              dispatch(
-                openModal({
-                  title: "Edit Category",
-                  bodyType: MODAL_BODY_TYPES.EDIT_CATEGORY,
-                  extraObject: categoryItem,
-                })
-              )
-            }
-          >
-            <div className="flex items-center justify-center space-x-1">
-              <PencilSquareIcon className="w-5 h-5" />
-              <span className="hidden md:block">Edit</span>
-            </div>
-          </button>
-        </td>
-      )}
+  const CategoryCard = ({ categoryItem }) => (
+    <div className="card bg-base-100 shadow-xl mb-4 border border-base-content/30">
+      <div className="card-body">
+        <h2 className="card-title">{categoryItem.name}</h2>
+        <p>{categoryItem.description || "N/A"}</p>
 
-      {checkRole("admin") && (
-        <td className="border-2">
-          <button
-            className="btn btn-sm text-white btn-error min-w-[70px]"
-            onClick={() =>
-              dispatch(
-                openModal({
-                  title: "Delete Category ?",
-                  bodyType: MODAL_BODY_TYPES.CONFIRMATION,
-                  extraObject: {
-                    message: `Are you sure you want to delete the ${categoryItem.name} category ?`,
-                    type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_CATEGORY,
-                    id: categoryItem._id,
-                  },
-                })
-              )
-            }
-          >
-            <div className="flex items-center justify-center space-x-1">
-              <TrashIcon className="w-5 h-5" />
-              <span className="hidden md:block">Delete</span>
-            </div>
-          </button>
-        </td>
-      )}
-    </tr>
-  ));
+        <div className="card-actions mt-4 space-x-2">
+          {(checkRole("admin") || checkRole("manager")) && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() =>
+                dispatch(
+                  openModal({
+                    title: "Edit Category",
+                    bodyType: MODAL_BODY_TYPES.EDIT_CATEGORY,
+                    extraObject: categoryItem,
+                  })
+                )
+              }
+            >
+              <PencilSquareIcon className="w-5 h-5 mr-1" />
+              Edit
+            </button>
+          )}
+
+          {checkRole("admin") && (
+            <button
+              className="btn btn-error btn-sm"
+              onClick={() =>
+                dispatch(
+                  openModal({
+                    title: "Delete Category ?",
+                    bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+                    extraObject: {
+                      message: `Are you sure you want to delete the ${categoryItem.name} category ?`,
+                      type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_CATEGORY,
+                      id: categoryItem._id,
+                    },
+                  })
+                )
+              }
+            >
+              <TrashIcon className="w-5 h-5 mr-1" />
+              Delete
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <TitleCard
@@ -138,29 +134,17 @@ const Categories = () => {
       }
       topMargin="mt-2"
     >
-      <div className="overflow-x-auto w-full">
-        <table className="table table-zebra w-full table-pin-rows">
-          <thead className="border-b-4 border-primary text-md">
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.length > 0 ? (
-              CategoryRows
-            ) : error ? (
-              error.message
-            ) : (
-              <tr>
-                <td colSpan="3" className="text-center">
-                  No categories found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {/* Mobile view (card layout) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
+        {filteredCategories.length > 0 ? (
+          filteredCategories.map((categoryItem) => (
+            <CategoryCard key={categoryItem._id} categoryItem={categoryItem} />
+          ))
+        ) : error ? (
+          <div className="text-center p-4">{error.message}</div>
+        ) : (
+          <div className="text-center p-4">No categories found.</div>
+        )}
       </div>
     </TitleCard>
   );
