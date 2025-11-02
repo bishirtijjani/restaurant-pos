@@ -89,7 +89,7 @@ const OrderSchema = new mongoose.Schema(
     lastAction: {
       action: {
         type: String,
-        enum: ["create", "update", "edit", "complete", "cancel"],
+        enum: ["create", "update", "edit", "complete", "cancel, bump, recall"],
         default: null,
       },
       performedBy: {

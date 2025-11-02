@@ -21,7 +21,7 @@ const Customers = lazy(() => import("../pages/protected/Customers"));
 const GeneralSettings = lazy(() =>
   import("../pages/protected/GeneralSettings")
 );
-
+const KDS = lazy(() => import("../pages/protected/KDS"));
 const routes = [
   {
     path: "/dashboard", // the url
@@ -76,9 +76,14 @@ const routes = [
     component: Customers,
   },
   {
+    path: "/kds",
+    component: KDS,
+  },
+  {
     path: "/pos",
     component: POS,
   },
+
   {
     path: "/404",
     component: Page404,

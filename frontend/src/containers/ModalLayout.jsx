@@ -21,6 +21,7 @@ import AddCustomerModalBody from "../features/customers/components/AddCustomerMo
 import EditCustomerModalBody from "../features/customers/components/EditCustomerModalBody";
 import ViewMenuItemModalBody from "../features/menuItems/components/ViewMenuItemModalBody";
 import { X } from "lucide-react";
+import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
     (state) => state.modal
@@ -145,6 +146,14 @@ function ModalLayout() {
                     extraObject={extraObject}
                   />
                 ),
+
+                [MODAL_BODY_TYPES.KDS_SETTINGS]: (
+                  <KDSSettingsModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+
                 [MODAL_BODY_TYPES.PAYMENT_CONFIRMATION]: (
                   <PaymentConfirmationModalBody
                     closeModal={close}

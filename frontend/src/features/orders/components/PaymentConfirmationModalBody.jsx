@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { createOrder, fetchOrders } from "../ordersSlice";
 import { showNotification } from "../../common/headerSlice";
 import { openModal } from "../../common/modalSlice";
@@ -17,6 +17,10 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
 
   // Calculate total amount from the order details
   const orderTotal = extraObject.totalAmount || 0;
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "₦";
 
   const [paymentDetails, setPaymentDetails] = useState({
     paymentMethod: "cash",
@@ -147,7 +151,8 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
       <div className="modal-body">
         <div className="mt-4">
           <h3 className="text-lg font-semibold mb-4">
-            Order Total: ₦{orderTotal.toLocaleString()}
+            Order Total: {currency}
+            {orderTotal.toLocaleString()}
           </h3>
 
           <div className="mb-4">

@@ -84,7 +84,7 @@ const AnalyticsDashboard = () => {
   // console.log("menuItemPerformance: ", menuItemPerformance);
   // console.log("peakHoursAnalysis: ", peakHoursAnalysis);
   // console.log("expenseAnalysis: ", expenseAnalysis);
-  console.log("staffPerformance: ", staffPerformance);
+  // console.log("staffPerformance: ", staffPerformance);
   // console.log("profitabilityReport: ", profitabilityReport);
 
   // State for active tab

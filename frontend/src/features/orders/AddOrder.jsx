@@ -83,6 +83,11 @@ const CategoryFilter = ({ activeCategory, setActiveCategory, categories }) => {
 
 // Component for a single menu item
 const MenuItem = ({ item, addToCart }) => {
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "₦";
+
   const renderIcon = () => {
     switch (item.category) {
       case "Coffee":
@@ -120,7 +125,8 @@ const MenuItem = ({ item, addToCart }) => {
         <h3 className="font-medium text-lg">{item.name}</h3>
         <div className="flex justify-between items-center mt-2">
           <span className="text-primary font-semibold">
-            ₦{item.price.toFixed(2)}
+            {currency}
+            {parseFloat(item.price).toFixed(2)}
           </span>
           <button className="btn btn-sm btn-primary btn-circle">
             <PlusCircle size={16} />
@@ -132,63 +138,73 @@ const MenuItem = ({ item, addToCart }) => {
 };
 
 // Component for a cart item
-const CartItem = ({ item, updateQuantity }) => (
-  <div className="flex items-center justify-between border-b border-base-300 pb-3 mb-3">
-    <div className="flex items-center">
-      <div className="w-12 h-12 rounded-md bg-base-200 flex items-center justify-center mr-3">
-        {item.image ? (
-          <img
-            src={item.image}
-            alt={item.name}
-            className="w-12 h-12 rounded-md object-cover"
-          />
-        ) : (
-          <div className="text-muted">
-            {item.category === "Coffee" && <Coffee size={24} />}
-            {item.category === "Pizza" && <Pizza size={24} />}
-            {item.category === "Salad" && <Salad size={24} />}
-            {item.category === "Sandwich" && <Sandwich size={24} />}
-            {item.category === "Dessert" && <Cake size={24} />}
-          </div>
-        )}
+const CartItem = ({ item, updateQuantity }) => {
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "₦";
+
+  return (
+    <div className="flex items-center justify-between border-b border-base-300 pb-3 mb-3">
+      <div className="flex items-center">
+        <div className="w-12 h-12 rounded-md bg-base-200 flex items-center justify-center mr-3">
+          {item.image ? (
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-12 h-12 rounded-md object-cover"
+            />
+          ) : (
+            <div className="text-muted">
+              {item.category === "Coffee" && <Coffee size={24} />}
+              {item.category === "Pizza" && <Pizza size={24} />}
+              {item.category === "Salad" && <Salad size={24} />}
+              {item.category === "Sandwich" && <Sandwich size={24} />}
+              {item.category === "Dessert" && <Cake size={24} />}
+            </div>
+          )}
+        </div>
+        <div>
+          <h4 className="font-medium">{item.name}</h4>
+          <p className="text-primary font-semibold">
+            {currency}
+            {parseFloat(item.price).toFixed(2)}
+          </p>
+        </div>
       </div>
-      <div>
-        <h4 className="font-medium">{item.name}</h4>
-        <p className="text-primary font-semibold">₦{item.price.toFixed(2)}</p>
+      <div className="flex items-center space-x-2">
+        <button
+          className="btn btn-sm btn-circle btn-ghost"
+          onClick={(e) => {
+            e.stopPropagation();
+            updateQuantity(item._id, item.quantity - 1);
+          }}
+        >
+          <MinusCircle size={16} />
+        </button>
+        <span className="w-6 text-center font-medium">{item.quantity}</span>
+        <button
+          className="btn btn-sm btn-circle btn-ghost"
+          onClick={(e) => {
+            e.stopPropagation();
+            updateQuantity(item._id, item.quantity + 1);
+          }}
+        >
+          <PlusCircle size={16} />
+        </button>
+        <button
+          className="btn btn-sm btn-circle btn-ghost text-error ml-2"
+          onClick={(e) => {
+            e.stopPropagation();
+            updateQuantity(item._id, 0);
+          }}
+        >
+          <X size={16} />
+        </button>
       </div>
     </div>
-    <div className="flex items-center space-x-2">
-      <button
-        className="btn btn-sm btn-circle btn-ghost"
-        onClick={(e) => {
-          e.stopPropagation();
-          updateQuantity(item._id, item.quantity - 1);
-        }}
-      >
-        <MinusCircle size={16} />
-      </button>
-      <span className="w-6 text-center font-medium">{item.quantity}</span>
-      <button
-        className="btn btn-sm btn-circle btn-ghost"
-        onClick={(e) => {
-          e.stopPropagation();
-          updateQuantity(item._id, item.quantity + 1);
-        }}
-      >
-        <PlusCircle size={16} />
-      </button>
-      <button
-        className="btn btn-sm btn-circle btn-ghost text-error ml-2"
-        onClick={(e) => {
-          e.stopPropagation();
-          updateQuantity(item._id, 0);
-        }}
-      >
-        <X size={16} />
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 // Component for the empty cart state
 const EmptyCart = () => (
@@ -204,6 +220,7 @@ const OrderSummary = ({ cart, orderType, packagingFee, deliveryFee }) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
+  const currency = settings?.currency?.symbol || "₦";
 
   // Calculate with tax
   const calculateWithTax = () => {
@@ -278,14 +295,20 @@ const OrderSummary = ({ cart, orderType, packagingFee, deliveryFee }) => {
       {taxData.packaging > 0 && (
         <div className="flex justify-between text-sm opacity-70">
           <span>Packaging</span>
-          <span>₦{taxData.packaging.toFixed(2)}</span>
+          <span>
+            {currency}
+            {taxData.packaging.toFixed(2)}
+          </span>
         </div>
       )}
 
       {taxData.delivery > 0 && (
         <div className="flex justify-between text-sm opacity-70">
           <span>Delivery</span>
-          <span>₦{taxData.delivery.toFixed(2)}</span>
+          <span>
+            {currency}
+            {taxData.delivery.toFixed(2)}
+          </span>
         </div>
       )}
     </div>
@@ -347,6 +370,10 @@ const CustomerDetailsForm = ({ customerDetails, setCustomerDetails }) => (
 // Main POS component
 export default function POS() {
   const dispatch = useDispatch();
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "₦";
   const menuItems = useSelector((state) => state.menuItems.menuItems);
   const menuItemsStatus = useSelector((state) => state.menuItems.status);
   const menuItemsError = useSelector((state) => state.menuItems.error);
@@ -636,7 +663,8 @@ export default function POS() {
               onClick={handleCheckout}
               disabled={cart.length === 0}
             >
-              Pay ₦{calculateTotal().toFixed(2)}
+              Pay {currency}
+              {calculateTotal().toFixed(2)}
             </button>
           </div>
         </div>

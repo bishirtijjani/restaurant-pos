@@ -48,7 +48,9 @@ const Receipt = ({ extraObject }) => {
     customerPhone: orderData.customerDetails?.phone || "",
     customerAddress: orderData.customerDetails?.address || "",
     items: orderData.orderItems || orderData.menuItems || [],
-    subtotal: orderData.subtotal || 0,
+    subtotal: orderData.taxBreakdown.subtotal || 0,
+    serviceCharge: orderData.taxBreakdown.serviceCharge || 0,
+    tax: orderData.taxBreakdown.totalTax || 0,
     packagingFee: orderData.packagingFee || 0,
     deliveryFee: orderData.deliveryFee || 0,
     totalAmount: orderData.totalAmount || 0,
@@ -240,6 +242,22 @@ const Receipt = ({ extraObject }) => {
                     {parseFloat(receipt.subtotal).toFixed(2)}
                   </td>
                 </tr>
+                <tr className="border-b">
+                  <td>Tax {`(${settings?.taxSettings?.name})`}:</td>
+                  <td className="text-right">
+                    {settings?.currency?.symbol}
+                    {parseFloat(receipt.tax).toFixed(2)}
+                  </td>
+                </tr>
+                {receipt.serviceCharge > 0 && (
+                  <tr className="border-b">
+                    <td>Service Charge:</td>
+                    <td className="text-right">
+                      {settings?.currency?.symbol}
+                      {parseFloat(receipt.serviceCharge).toFixed(2)}
+                    </td>
+                  </tr>
+                )}
 
                 {receipt.packagingFee > 0 && (
                   <tr className="border-b">
@@ -436,6 +454,26 @@ const ReceiptPDF = ({ receipt, settings }) => (
             {parseFloat(receipt.subtotal).toFixed(2)}
           </Text>
         </View>
+
+        {receipt.tax > 0 && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Tax:</Text>
+            <Text style={styles.value}>
+              {settings?.currency?.symbol}
+              {parseFloat(receipt.tax).toFixed(2)}
+            </Text>
+          </View>
+        )}
+
+        {receipt.serviceCharge > 0 && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Service Charge:</Text>
+            <Text style={styles.value}>
+              {settings?.currency?.symbol}
+              {parseFloat(receipt.serviceCharge).toFixed(2)}
+            </Text>
+          </View>
+        )}
 
         {receipt.packagingFee > 0 && (
           <View style={styles.row}>

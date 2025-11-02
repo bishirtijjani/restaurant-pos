@@ -10,8 +10,10 @@ const TaxBreakdown = ({ taxBreakdown, settings }) => {
   const { subtotal, totalTax, serviceCharge, items } = taxBreakdown;
   const total = subtotal + totalTax + serviceCharge;
 
+  const currency = settings?.currency?.symbol || "₦";
+
   const formatCurrency = (amount) =>
-    `₦${(amount || 0).toLocaleString(undefined, {
+    `${currency}${(amount || 0).toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;

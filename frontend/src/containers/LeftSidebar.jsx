@@ -70,16 +70,8 @@ function LeftSidebar() {
     <div className="drawer-side z-30 border-r border-base-200">
       <label htmlFor="left-sidebar-drawer" className="drawer-overlay"></label>
       <ul className="menu w-70 min-h-full bg-base-100 text-base-content p-0">
-        {/* Mobile Close Button */}
-        <button
-          className="btn btn-ghost btn-circle bg-base-200 fixed top-4 right-4 z-50 lg:hidden shadow-md"
-          onClick={closeSidebar}
-        >
-          <XMarkIcon className="w-5 h-5 text-error" />
-        </button>
-
         {/* Logo Section */}
-        <li className="sticky top-0 bg-base-100 py-3 z-40 border-b border-base-300 shadow-sm">
+        <li className="sticky flex  flex-row justify-between top-0 bg-base-100 py-3 z-40 border-b border-base-300 shadow-sm">
           <Link to="/dashboard" className="">
             <a href="/">
               <img
@@ -92,6 +84,13 @@ function LeftSidebar() {
               Restaurant
             </span>
           </Link>
+          {/* Mobile Close Button */}
+          <button
+            className="btn btn-ghost btn-circle bg-base-200 mx-3  lg:hidden shadow-md"
+            onClick={closeSidebar}
+          >
+            <XMarkIcon className="w-5 h-5 text-error" />
+          </button>
         </li>
 
         {/* Sidebar Items */}

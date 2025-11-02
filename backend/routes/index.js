@@ -12,5 +12,6 @@ router.use("/suppliers", require("./supplierRoutes"));
 router.use("/orders", require("./orderRoutes"));
 router.use("/analytics", require("./analyticsRoutes"));
 router.use("/expenses", require("./expenseRoutes"));
+router.use("/kds", require("./kdsRoutes"));
 
 module.exports = router;

@@ -13,6 +13,7 @@ import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
 import IdentificationIcon from "@heroicons/react/24/outline/IdentificationIcon";
 import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import PlusCircleIcon from "@heroicons/react/24/outline/PlusCircleIcon";
+import { Monitor } from "lucide-react";
 
 const iconClasses = `h-6 w-6`;
 const submenuIconClasses = `h-6 w-6`;
@@ -22,6 +23,11 @@ export const adminRoutes = [
     path: "/app/dashboard",
     icon: <Squares2X2Icon className={iconClasses} />,
     name: "Dashboard",
+  },
+  {
+    path: "/app/kds",
+    icon: <Monitor className={iconClasses} />,
+    name: "Kitchen Display",
   },
   {
     path: "/app/categories",

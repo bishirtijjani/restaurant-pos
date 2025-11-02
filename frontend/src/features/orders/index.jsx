@@ -165,6 +165,10 @@ const OrderFilters = ({ currentFilters, applyFilters, clearFilters }) => {
 
 const OrderCard = ({ order }) => {
   const dispatch = useDispatch();
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "₦";
 
   // Format date for better readability
   const formatDate = (dateString) => {
@@ -208,7 +212,8 @@ const OrderCard = ({ order }) => {
           <div className="flex justify-between items-center">
             <span className="text-base-content/70 text-sm">Total Amount</span>
             <span className="font-semibold text-base">
-              ₦{order.totalAmount?.toLocaleString()}
+              {currency}
+              {order.totalAmount?.toLocaleString()}
             </span>
           </div>
           <div className="flex justify-between items-center mt-1">

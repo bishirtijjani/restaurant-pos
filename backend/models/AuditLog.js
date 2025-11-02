@@ -7,7 +7,16 @@ const auditLogSchema = new mongoose.Schema({
   action: {
     type: String,
     required: true,
-    enum: ["create", "edit", "update", "delete", "adjustStock", "roleChange"],
+    enum: [
+      "create",
+      "edit",
+      "update",
+      "delete",
+      "adjustStock",
+      "roleChange",
+      "bump",
+      "recall",
+    ],
   },
   oldValue: { type: Object, default: null }, // Stores previous values (for edits)
   newValue: { type: Object, default: null }, // Stores new values (for edits)
