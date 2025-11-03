@@ -21,6 +21,7 @@ const OrderCard = ({ order, settings }) => {
   const dispatch = useDispatch();
   const [expanded, setExpanded] = useState(false);
   const [bumping, setBumping] = useState(false);
+  const [updatingItems, setUpdatingItems] = useState({});
 
   const orderAge = Math.floor((new Date() - new Date(order.createdAt)) / 60000);
   const priority =
@@ -81,16 +82,29 @@ const OrderCard = ({ order, settings }) => {
     }
   };
 
-  const handleItemToggle = async (itemId, currentStatus) => {
+  const handleItemToggle = async (item) => {
+    // Use the subdocument _id
+    const itemId = item._id;
+    const currentStatus = item.itemStatus || "pending";
     const newStatus = currentStatus === "completed" ? "preparing" : "completed";
+
+    setUpdatingItems((prev) => ({ ...prev, [itemId]: true }));
+
     try {
       await dispatch(
         updateOrderItemStatus({
           orderId: order._id,
-          itemId,
+          itemId: itemId,
           status: newStatus,
         })
       ).unwrap();
+
+      dispatch(
+        showNotification({
+          message: `Item marked as ${newStatus}`,
+          status: 1,
+        })
+      );
     } catch (error) {
       dispatch(
         showNotification({
@@ -98,6 +112,8 @@ const OrderCard = ({ order, settings }) => {
           status: 0,
         })
       );
+    } finally {
+      setUpdatingItems((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -180,8 +196,9 @@ const OrderCard = ({ order, settings }) => {
                   className="flex items-start justify-between gap-2 group"
                 >
                   <button
-                    onClick={() => handleItemToggle(item._id, item.itemStatus)}
-                    className="flex-1 flex items-start gap-2 text-left hover:bg-base-200/50 p-2 rounded transition-colors"
+                    onClick={() => handleItemToggle(item)}
+                    disabled={updatingItems[item._id]}
+                    className="flex-1 flex items-start gap-2 text-left hover:bg-base-200/50 p-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex-shrink-0 mt-1">
                       <div
@@ -189,7 +206,7 @@ const OrderCard = ({ order, settings }) => {
                           item.itemStatus === "completed"
                             ? "bg-success border-success"
                             : "border-base-300 group-hover:border-success"
-                        }`}
+                        } ${updatingItems[item._id] ? "animate-pulse" : ""}`}
                       >
                         {item.itemStatus === "completed" && (
                           <CheckCircle className="w-4 h-4 text-success-content" />

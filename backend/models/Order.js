@@ -1,3 +1,4 @@
+// backend/models/Order.js
 const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema(
@@ -16,7 +17,7 @@ const OrderSchema = new mongoose.Schema(
       name: { type: String, default: "Walk-in" },
       phone: { type: String, required: false },
       email: { type: String, required: false },
-      address: { type: String, required: false }, // For delivery orders
+      address: { type: String, required: false },
     },
     orderType: {
       type: String,
@@ -30,11 +31,16 @@ const OrderSchema = new mongoose.Schema(
           ref: "MenuItem",
           required: true,
         },
-        name: { type: String, required: true }, // Store the name at time of order
-        price: { type: Number, required: true }, // Store the price at time of order
+        name: { type: String, required: true },
+        price: { type: Number, required: true },
         quantity: { type: Number, required: true, default: 1 },
-        customizations: { type: String }, // Special instructions or modifications
+        customizations: { type: String },
         subtotal: { type: Number, required: true },
+        itemStatus: {
+          type: String,
+          enum: ["pending", "preparing", "ready", "completed", "cancelled"],
+          default: "pending",
+        },
       },
     ],
     servedBy: {
@@ -58,7 +64,7 @@ const OrderSchema = new mongoose.Schema(
     },
     discount: { type: Number, default: 0 },
     amountPaid: { type: Number, required: true, default: 0 },
-    balance: { type: Number, default: 0 }, // For unpaid or partially paid orders
+    balance: { type: Number, default: 0 },
     paymentMethod: {
       type: String,
       enum: ["cash", "card", "Transfer"],
@@ -89,7 +95,15 @@ const OrderSchema = new mongoose.Schema(
     lastAction: {
       action: {
         type: String,
-        enum: ["create", "update", "edit", "complete", "cancel, bump, recall"],
+        enum: [
+          "create",
+          "update",
+          "edit",
+          "complete",
+          "cancel",
+          "bump",
+          "recall",
+        ],
         default: null,
       },
       performedBy: {
@@ -106,7 +120,6 @@ const OrderSchema = new mongoose.Schema(
 
 // Generate a unique order number before saving
 OrderSchema.pre("save", async function (next) {
-  // Only generate a number for new orders
   if (this.isNew) {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const count = await this.constructor.countDocuments({
@@ -115,7 +128,6 @@ OrderSchema.pre("save", async function (next) {
         $lt: new Date(new Date().setHours(23, 59, 59, 999)),
       },
     });
-    // Format: [Date][3-digit sequential number] - e.g. 20250407001
     this.orderNumber = `${dateStr}${(count + 1).toString().padStart(3, "0")}`;
   }
   next();
@@ -124,14 +136,10 @@ OrderSchema.pre("save", async function (next) {
 // Middleware to auto-compute estimated ready time based on menu items
 OrderSchema.pre("save", async function (next) {
   if (this.isNew || this.isModified("orderItems")) {
-    // Only update for new orders or when items change
-
-    // Get the maximum preparation time of all items
     const maxPrepTime = Math.max(
       ...this.orderItems.map((item) => item.preparationTime || 15),
-      15 // Default to 15 minutes if no preparation time found
+      15
     );
-
     this.estimatedReadyTime = new Date(Date.now() + maxPrepTime * 60 * 1000);
   }
   next();

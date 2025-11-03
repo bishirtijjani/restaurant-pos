@@ -1,5 +1,5 @@
 // frontend/src/features/kds/index.jsx
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   RefreshCw,
@@ -38,6 +38,9 @@ const KDS = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [manualRefresh, setManualRefresh] = useState(false);
   const [previousOrderCount, setPreviousOrderCount] = useState(0);
+
+  // Ref for the fullscreen container
+  const kdsContainerRef = useRef(null);
 
   // Load saved settings from localStorage
   useEffect(() => {
@@ -112,14 +115,28 @@ const KDS = () => {
     };
   }, []);
 
+  // Fullscreen change detection
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
   // Fullscreen toggle
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await kdsContainerRef.current?.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.error("Error toggling fullscreen:", error);
     }
   };
 
@@ -161,9 +178,14 @@ const KDS = () => {
   }
 
   return (
-    <div className="min-h-screen bg-base-200 flex flex-col">
+    <div
+      ref={kdsContainerRef}
+      className={`min-h-screen bg-base-200 flex flex-col ${
+        isFullscreen ? "fullscreen-mode" : ""
+      }`}
+    >
       {/* Header */}
-      <div className="navbar bg-base-100 shadow-lg top-0">
+      <div className="navbar bg-base-100 shadow-lg sticky top-0 z-50">
         <div className="flex-1">
           <h1 className="text-2xl font-bold ml-4">Kitchen Display</h1>
           <div className="ml-4 flex items-center gap-2">
@@ -206,7 +228,6 @@ const KDS = () => {
           </button>
 
           {/* Settings */}
-
           <button
             className="btn btn-ghost btn-circle"
             title="KDS Settings"

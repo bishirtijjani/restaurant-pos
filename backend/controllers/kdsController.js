@@ -71,7 +71,7 @@ exports.getKDSOrders = async (req, res) => {
   }
 };
 
-// Update order item status
+// Update order item status - FIXED to work with subdocument _id
 exports.updateOrderItemStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -85,6 +85,7 @@ exports.updateOrderItemStatus = async (req, res) => {
       });
     }
 
+    // Find the item by its subdocument _id
     const item = order.orderItems.id(itemId);
     if (!item) {
       return res.status(404).json({
@@ -93,6 +94,7 @@ exports.updateOrderItemStatus = async (req, res) => {
       });
     }
 
+    // Update item status
     item.itemStatus = status;
 
     // Check if all items are ready/completed
@@ -107,9 +109,17 @@ exports.updateOrderItemStatus = async (req, res) => {
 
     await order.save();
 
+    // Populate before sending
+    await order.populate(
+      "orderItems.menuItemId",
+      "name category preparationTime"
+    );
+    await order.populate("servedBy", "fullname");
+
     res.json({
       success: true,
       data: order,
+      message: "Item status updated successfully",
     });
   } catch (error) {
     console.error("Error updating order item status:", error);
@@ -149,6 +159,13 @@ exports.bumpOrder = async (req, res) => {
     };
 
     await order.save();
+
+    // Populate before sending
+    await order.populate(
+      "orderItems.menuItemId",
+      "name category preparationTime"
+    );
+    await order.populate("servedBy", "fullname");
 
     res.json({
       success: true,
@@ -263,6 +280,13 @@ exports.recallOrder = async (req, res) => {
     };
 
     await order.save();
+
+    // Populate before sending
+    await order.populate(
+      "orderItems.menuItemId",
+      "name category preparationTime"
+    );
+    await order.populate("servedBy", "fullname");
 
     res.json({
       success: true,

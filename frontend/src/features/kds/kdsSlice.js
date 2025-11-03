@@ -79,19 +79,34 @@ export const updateOrderItemStatus = createAsyncThunk(
   }
 );
 
+// Load settings from localStorage
+const loadSettingsFromStorage = () => {
+  try {
+    const savedSettings = localStorage.getItem("kdsSettings");
+    if (savedSettings) {
+      return JSON.parse(savedSettings);
+    }
+  } catch (error) {
+    console.error("Error loading KDS settings:", error);
+  }
+  return null;
+};
+
+const defaultSettings = {
+  soundEnabled: true,
+  soundVolume: 0.7,
+  autoRefresh: true,
+  refreshInterval: 30,
+  columns: 3,
+  fontSize: "medium",
+  colorScheme: "default",
+};
+
 const initialState = {
   orders: [],
   stations: [],
   currentStation: null,
-  settings: {
-    soundEnabled: true,
-    soundVolume: 0.7,
-    autoRefresh: true,
-    refreshInterval: 30, // seconds
-    columns: 3,
-    fontSize: "medium",
-    colorScheme: "default",
-  },
+  settings: loadSettingsFromStorage() || defaultSettings,
   loading: false,
   error: null,
   lastUpdate: null,
@@ -106,13 +121,21 @@ const kdsSlice = createSlice({
     },
     updateSettings: (state, action) => {
       state.settings = { ...state.settings, ...action.payload };
-      localStorage.setItem("kdsSettings", JSON.stringify(state.settings));
+      try {
+        localStorage.setItem("kdsSettings", JSON.stringify(state.settings));
+      } catch (error) {
+        console.error("Error saving KDS settings:", error);
+      }
     },
     playSound: (state) => {
       if (state.settings.soundEnabled) {
-        const audio = new Audio("/notification.mp3");
-        audio.volume = state.settings.soundVolume;
-        audio.play().catch((e) => console.error("Sound play failed:", e));
+        try {
+          const audio = new Audio("/notification.mp3");
+          audio.volume = state.settings.soundVolume;
+          audio.play().catch((e) => console.error("Sound play failed:", e));
+        } catch (error) {
+          console.error("Error playing sound:", error);
+        }
       }
     },
     clearError: (state) => {
@@ -138,18 +161,36 @@ const kdsSlice = createSlice({
       })
 
       // Fetch stations
+      .addCase(fetchStations.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(fetchStations.fulfilled, (state, action) => {
+        state.loading = false;
         state.stations = action.payload.data;
+      })
+      .addCase(fetchStations.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
 
       // Bump order
+      .addCase(bumpOrder.pending, (state) => {
+        state.error = null;
+      })
       .addCase(bumpOrder.fulfilled, (state, action) => {
+        // Remove the bumped order from the list
         state.orders = state.orders.filter(
           (order) => order._id !== action.payload.data._id
         );
       })
+      .addCase(bumpOrder.rejected, (state, action) => {
+        state.error = action.payload;
+      })
 
       // Recall order
+      .addCase(recallOrder.pending, (state) => {
+        state.error = null;
+      })
       .addCase(recallOrder.fulfilled, (state, action) => {
         const index = state.orders.findIndex(
           (order) => order._id === action.payload.data._id
@@ -158,8 +199,14 @@ const kdsSlice = createSlice({
           state.orders[index] = action.payload.data;
         }
       })
+      .addCase(recallOrder.rejected, (state, action) => {
+        state.error = action.payload;
+      })
 
       // Update item status
+      .addCase(updateOrderItemStatus.pending, (state) => {
+        state.error = null;
+      })
       .addCase(updateOrderItemStatus.fulfilled, (state, action) => {
         const index = state.orders.findIndex(
           (order) => order._id === action.payload.data._id
@@ -167,6 +214,9 @@ const kdsSlice = createSlice({
         if (index !== -1) {
           state.orders[index] = action.payload.data;
         }
+      })
+      .addCase(updateOrderItemStatus.rejected, (state, action) => {
+        state.error = action.payload;
       });
   },
 });

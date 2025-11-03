@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Hide scrollbars in fullscreen mode */
+.fullscreen-mode:fullscreen {
+  overflow: hidden;
+}
+
+/* Ensure fullscreen content takes full viewport */
+.fullscreen-mode:fullscreen .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Optional: Adjust padding in fullscreen */
+.fullscreen-mode:fullscreen {
+  padding: 0;
+}
+
+/* Make sure the grid is properly sized in fullscreen */
+.fullscreen-mode:fullscreen .flex-1 {
+  height: calc(100vh - 64px); /* Subtract navbar height */
+}
