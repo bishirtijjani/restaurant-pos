@@ -62,7 +62,7 @@ export const updateOrderStatus = createAsyncThunk(
   "orders/updateOrderStatus",
   async ({ id, orderStatus, reason }, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`${API_URL}/${id}/status`, {
+      const response = await axios.put(`${API_URL}/${id}/status`, {
         orderStatus,
         reason,
       });
@@ -75,15 +75,11 @@ export const updateOrderStatus = createAsyncThunk(
 
 export const updatePayment = createAsyncThunk(
   "orders/updatePayment",
-  async (
-    { id, amountPaid, paymentMethod, tip, reason },
-    { rejectWithValue }
-  ) => {
+  async ({ id, amountPaid, paymentMethod, reason }, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`${API_URL}/${id}/payment`, {
+      const response = await axios.put(`${API_URL}/${id}/payment`, {
         amountPaid,
         paymentMethod,
-        tip,
         reason,
       });
       return response.data;
@@ -97,7 +93,9 @@ export const cancelOrder = createAsyncThunk(
   "orders/cancelOrder",
   async ({ id, reason }, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`${API_URL}/${id}/cancel`, { reason });
+      const response = await axios.delete(`${API_URL}/${id}`, {
+        data: { reason },
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

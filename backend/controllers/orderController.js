@@ -340,7 +340,7 @@ const getOrderById = async (req, res) => {
 // Update order status
 const updateOrderStatus = async (req, res) => {
   try {
-    const { orderStatus } = req.body;
+    const { orderStatus, reason } = req.body;
 
     if (!orderStatus) {
       return res.status(400).json({
@@ -366,7 +366,7 @@ const updateOrderStatus = async (req, res) => {
     // Handle status-specific updates
     if (orderStatus === "ready") {
       order.actualReadyTime = new Date();
-    } else if (orderStatus === "completed") {
+    } else if (orderStatus === "completed" || orderStatus === "served") {
       order.completedAt = new Date();
     }
 
@@ -374,10 +374,14 @@ const updateOrderStatus = async (req, res) => {
       action: "update",
       performedBy: req.user.id,
       createdAt: new Date(),
-      reason: req.body.reason || `Updated order status to ${orderStatus}`,
+      reason: reason || `Updated order status to ${orderStatus}`,
     };
 
     await order.save();
+
+    // Populate before sending
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
 
     // Log the action
     await logAction(
@@ -413,7 +417,7 @@ const updateOrderStatus = async (req, res) => {
 // Update payment information
 const updatePayment = async (req, res) => {
   try {
-    const { amountPaid, paymentMethod } = req.body;
+    const { amountPaid, paymentMethod, reason } = req.body;
 
     if (amountPaid === undefined) {
       return res.status(400).json({
@@ -435,17 +439,18 @@ const updatePayment = async (req, res) => {
     const oldOrder = { ...order.toObject() };
 
     // Update payment details
-    order.amountPaid = amountPaid;
+    const newAmountPaid = parseFloat(amountPaid);
+    order.amountPaid = newAmountPaid;
     if (paymentMethod) order.paymentMethod = paymentMethod;
 
     // Recalculate balance and update payment status
     const totalDue = order.totalAmount;
 
-    if (amountPaid >= totalDue) {
+    if (newAmountPaid >= totalDue) {
       order.balance = 0;
       order.paymentStatus = "paid";
-    } else if (amountPaid > 0) {
-      order.balance = totalDue - amountPaid;
+    } else if (newAmountPaid > 0) {
+      order.balance = totalDue - newAmountPaid;
       order.paymentStatus = "partial";
     } else {
       order.balance = totalDue;
@@ -456,10 +461,14 @@ const updatePayment = async (req, res) => {
       action: "update",
       performedBy: req.user.id,
       createdAt: new Date(),
-      reason: req.body.reason || "Updated payment information",
+      reason: reason || "Updated payment information",
     };
 
     await order.save();
+
+    // Populate before sending
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
 
     // Log the action
     await logAction(
@@ -541,6 +550,10 @@ const cancelOrder = async (req, res) => {
     };
 
     await order.save();
+
+    // Populate before sending
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
 
     // Log the action
     await logAction(

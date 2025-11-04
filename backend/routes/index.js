@@ -13,5 +13,6 @@ router.use("/orders", require("./orderRoutes"));
 router.use("/analytics", require("./analyticsRoutes"));
 router.use("/expenses", require("./expenseRoutes"));
 router.use("/kds", require("./kdsRoutes"));
+router.use("/onboarding", require("./onboardingRoutes"));
 
 module.exports = router;

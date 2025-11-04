@@ -185,7 +185,7 @@ const KDS = () => {
       }`}
     >
       {/* Header */}
-      <div className="navbar bg-base-100 shadow-lg sticky top-0 z-50">
+      <div className="navbar bg-base-100 shadow-lg">
         <div className="flex-1">
           <h1 className="text-2xl font-bold ml-4">Kitchen Display</h1>
           <div className="ml-4 flex items-center gap-2">

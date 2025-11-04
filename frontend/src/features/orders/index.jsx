@@ -32,7 +32,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 const statusColors = {
-  new: "badge-info",
+  pending: "badge-info",
   preparing: "badge-warning",
   ready: "badge-success",
   served: "badge-primary",
@@ -48,7 +48,7 @@ const paymentColors = {
 
 const OrderFilters = ({ currentFilters, applyFilters, clearFilters }) => {
   const statusOptions = [
-    "new",
+    "pending",
     "preparing",
     "ready",
     "served",
@@ -170,7 +170,6 @@ const OrderCard = ({ order }) => {
   );
   const currency = settings?.currency?.symbol || "₦";
 
-  // Format date for better readability
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
@@ -182,6 +181,61 @@ const OrderCard = ({ order }) => {
     }).format(date);
   };
 
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      await dispatch(
+        updateOrderStatus({
+          id: order._id,
+          orderStatus: newStatus,
+          reason: `Status updated to ${newStatus}`,
+        })
+      ).unwrap();
+
+      dispatch(
+        showNotification({
+          message: `Order #${order.orderNumber} marked as ${newStatus}`,
+          status: 1,
+        })
+      );
+      dispatch(fetchOrders());
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.message || "Failed to update order status",
+          status: 0,
+        })
+      );
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (window.confirm("Are you sure you want to cancel this order?")) {
+      try {
+        await dispatch(
+          cancelOrder({
+            id: order._id,
+            reason: "Order cancelled by staff",
+          })
+        ).unwrap();
+
+        dispatch(
+          showNotification({
+            message: `Order #${order.orderNumber} cancelled successfully`,
+            status: 1,
+          })
+        );
+        dispatch(fetchOrders());
+      } catch (error) {
+        dispatch(
+          showNotification({
+            message: error.message || "Failed to cancel order",
+            status: 0,
+          })
+        );
+      }
+    }
+  };
+
   return (
     <div className="card bg-base-100 shadow-md hover:shadow-lg transition-all duration-300 border border-base-200">
       <div className="card-body p-4">
@@ -189,9 +243,9 @@ const OrderCard = ({ order }) => {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-lg">#{order.orderNumber}</h3>
-              <Badge className={statusColors[order.orderStatus]}>
+              <span className={`badge ${statusColors[order.orderStatus]}`}>
                 {order.orderStatus}
-              </Badge>
+              </span>
             </div>
             <p className="text-sm flex items-center gap-1 text-base-content/70 mt-1">
               <UserCircleIcon className="w-4 h-4" />
@@ -224,7 +278,7 @@ const OrderCard = ({ order }) => {
           </div>
         </div>
 
-        <div className="card-actions justify-end mt-2">
+        <div className="card-actions justify-end mt-2 flex-wrap gap-2">
           <button
             className="btn btn-sm btn-outline btn-primary"
             onClick={() =>
@@ -233,86 +287,75 @@ const OrderCard = ({ order }) => {
                   title: `Order #${order.orderNumber}`,
                   bodyType: MODAL_BODY_TYPES.ORDER_DETAILS,
                   extraObject: order,
+                  size: "lg",
                 })
               )
             }
           >
-            <EyeIcon className="w-4 h-4 mr-1" /> View Details
+            <EyeIcon className="w-4 h-4 mr-1" /> View
           </button>
 
           {order.orderStatus !== "cancelled" &&
             order.orderStatus !== "completed" && (
-              <div className="dropdown dropdown-end">
-                <label tabIndex={0} className="btn btn-sm">
-                  Actions
-                </label>
-                <ul
-                  tabIndex={0}
-                  className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-10"
+              <>
+                {order.orderStatus === "pending" && (
+                  <button
+                    className="btn btn-sm btn-info"
+                    onClick={() => handleStatusUpdate("preparing")}
+                  >
+                    Start Preparing
+                  </button>
+                )}
+
+                {order.orderStatus === "preparing" && (
+                  <button
+                    className="btn btn-sm btn-success"
+                    onClick={() => handleStatusUpdate("ready")}
+                  >
+                    Mark Ready
+                  </button>
+                )}
+
+                {order.orderStatus === "ready" && (
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleStatusUpdate("served")}
+                  >
+                    Mark Served
+                  </button>
+                )}
+
+                {order.orderStatus === "served" && (
+                  <button
+                    className="btn btn-sm btn-neutral"
+                    onClick={() => handleStatusUpdate("completed")}
+                  >
+                    Complete
+                  </button>
+                )}
+
+                <button
+                  className="btn btn-sm btn-outline"
+                  onClick={() =>
+                    dispatch(
+                      openModal({
+                        title: "Update Payment",
+                        bodyType: MODAL_BODY_TYPES.UPDATE_PAYMENT,
+                        extraObject: order,
+                      })
+                    )
+                  }
                 >
-                  {order.orderStatus !== "ready" && (
-                    <li>
-                      <a
-                        onClick={() =>
-                          dispatch(
-                            updateOrderStatus({
-                              id: order._id,
-                              orderStatus: "ready",
-                            })
-                          )
-                        }
-                      >
-                        Mark as Ready
-                      </a>
-                    </li>
-                  )}
-                  {order.orderStatus !== "served" && (
-                    <li>
-                      <a
-                        onClick={() =>
-                          dispatch(
-                            updateOrderStatus({
-                              id: order._id,
-                              orderStatus: "served",
-                            })
-                          )
-                        }
-                      >
-                        Mark as Served
-                      </a>
-                    </li>
-                  )}
-                  <li>
-                    <a
-                      onClick={() =>
-                        dispatch(
-                          openModal({
-                            title: "Update Payment",
-                            bodyType: MODAL_BODY_TYPES.UPDATE_PAYMENT,
-                            extraObject: order,
-                          })
-                        )
-                      }
-                    >
-                      Update Payment
-                    </a>
-                  </li>
-                  <li className="text-error">
-                    <a
-                      onClick={() =>
-                        dispatch(
-                          cancelOrder({
-                            id: order._id,
-                            reason: "Customer request",
-                          })
-                        )
-                      }
-                    >
-                      Cancel Order
-                    </a>
-                  </li>
-                </ul>
-              </div>
+                  <CurrencyDollarIcon className="w-4 h-4" />
+                </button>
+
+                <button
+                  className="btn btn-sm btn-error btn-outline"
+                  onClick={handleCancelOrder}
+                >
+                  <XCircleIcon className="w-4 h-4" />
+                </button>
+              </>
             )}
         </div>
       </div>

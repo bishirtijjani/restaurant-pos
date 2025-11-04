@@ -77,8 +77,15 @@ const OrderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ["new", "preparing", "ready", "served", "completed", "cancelled"],
-      default: "new",
+      enum: [
+        "pending",
+        "preparing",
+        "ready",
+        "served",
+        "completed",
+        "cancelled",
+      ],
+      default: "pending",
     },
     estimatedReadyTime: {
       type: Date,

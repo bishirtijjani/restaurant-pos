@@ -22,6 +22,8 @@ import EditCustomerModalBody from "../features/customers/components/EditCustomer
 import ViewMenuItemModalBody from "../features/menuItems/components/ViewMenuItemModalBody";
 import { X } from "lucide-react";
 import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
+import OrderDetailsModalBody from "../features/orders/components/OrderDetailsModalBody";
+import UpdatePaymentModalBody from "../features/orders/components/UpdatePaymentModalBody";
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
     (state) => state.modal
@@ -134,6 +136,20 @@ function ModalLayout() {
                     extraObject={extraObject}
                   />
                 ),
+                [MODAL_BODY_TYPES.ORDER_DETAILS]: (
+                  <OrderDetailsModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+
+                [MODAL_BODY_TYPES.UPDATE_PAYMENT]: (
+                  <UpdatePaymentModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+
                 [MODAL_BODY_TYPES.ADD_EXPENSE]: (
                   <AddExpenseModalBody
                     closeModal={close}
