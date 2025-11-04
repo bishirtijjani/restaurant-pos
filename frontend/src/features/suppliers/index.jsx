@@ -26,7 +26,7 @@ import {
   UserCheck,
   Clock,
 } from "lucide-react";
-import { checkRole } from "../../utils/helpers";
+import { checkRole } from "../../utils/Helpers";
 
 const TopSideButtons = ({ onRefresh, onAddNew }) => {
   return (

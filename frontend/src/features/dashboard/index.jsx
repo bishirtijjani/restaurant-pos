@@ -9,7 +9,7 @@ import {
 import { addNotification } from "../common/rightDrawerSlice"; // For adding notifications to the notifications list
 import { updateNotificationsCount } from "../common/headerSlice"; // For updating the notifications count
 import { fetchDashboardData } from "./dashboardSlice";
-import { getToken, isTokenExpired } from "../../utils/helpers";
+import { getToken, isTokenExpired } from "../../utils/Helpers";
 import {
   BarChart,
   Bar,
@@ -31,7 +31,7 @@ import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import BanknotesIcon from "@heroicons/react/24/outline/BanknotesIcon";
 import TruckIcon from "@heroicons/react/24/outline/TruckIcon";
 import { Link, useNavigate } from "react-router-dom";
-import { checkRole } from "../../utils/helpers";
+import { checkRole } from "../../utils/Helpers";
 import StatCard from "./components/StatCard";
 
 const Dashboard = () => {

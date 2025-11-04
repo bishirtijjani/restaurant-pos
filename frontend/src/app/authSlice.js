@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { isTokenExpired } from "../utils/helpers";
+import { isTokenExpired } from "../utils/Helpers";
 
 // Initial state for authentication
 const initialState = {

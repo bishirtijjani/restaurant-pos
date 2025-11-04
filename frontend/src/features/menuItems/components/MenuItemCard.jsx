@@ -14,7 +14,7 @@ import PhotoIcon from "@heroicons/react/24/outline/PhotoIcon";
 import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 
-import { checkRole } from "../../../utils/helpers";
+import { checkRole } from "../../../utils/Helpers";
 
 // Clock icon component
 const ClockIcon = () => (

@@ -10,6 +10,8 @@ import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
 import { NavLink, Routes, Link, useLocation } from "react-router-dom";
 import UserCircleIcon from "@heroicons/react/24/outline/UserCircleIcon";
 import { RefreshCw, Paintbrush, PaletteIcon } from "lucide-react";
+import { getTourId } from "../utils/Helpers";
+import TourTriggerButton from "../features/onboarding/components/TourTriggerButton";
 
 function Header() {
   const dispatch = useDispatch();
@@ -49,8 +51,6 @@ function Header() {
   }
 
   return (
-    // navbar fixed  flex-none justify-between bg-base-300  z-10 shadow-md
-
     <>
       <div className="navbar sticky top-0 bg-base-100  z-10 shadow-md flex justify-between">
         {/* Menu toogle for mobile view or small screen */}
@@ -75,6 +75,9 @@ function Header() {
         </button>
 
         <div className="flex-none ">
+          {getTourId() && (
+            <TourTriggerButton tourId={getTourId()} className="mr-2" />
+          )}
           {/* Theme selection dropdown */}
           <div className="dropdown dropdown-end">
             <div

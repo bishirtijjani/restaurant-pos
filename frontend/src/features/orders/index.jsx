@@ -14,7 +14,7 @@ import {
   clearFilters,
 } from "./ordersSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
-import { checkRole } from "../../utils/helpers";
+import { checkRole } from "../../utils/Helpers";
 import SearchBar from "../../components/Input/SearchBar";
 import { showNotification } from "../common/headerSlice";
 import Badge from "./components/Badge";

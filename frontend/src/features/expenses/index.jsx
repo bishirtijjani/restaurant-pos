@@ -26,7 +26,7 @@ import {
   SortAsc,
   SortDesc,
 } from "lucide-react";
-import { checkRole } from "../../utils/helpers";
+import { checkRole } from "../../utils/Helpers";
 
 const TopSideButtons = () => {
   const dispatch = useDispatch();

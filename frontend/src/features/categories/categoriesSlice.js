@@ -1,6 +1,6 @@
 import axios from "axios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { getToken } from "../../utils/helpers";
+import { getToken } from "../../utils/Helpers";
 
 const initialState = {
   categories: [],

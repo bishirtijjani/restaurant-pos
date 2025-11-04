@@ -22,7 +22,7 @@ import FunnelIcon from "@heroicons/react/24/outline/FunnelIcon";
 import PhotoIcon from "@heroicons/react/24/outline/PhotoIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
-import { checkRole } from "../../utils/helpers";
+import { checkRole } from "../../utils/Helpers";
 import SearchBar from "../../components/Input/SearchBar";
 import { showNotification } from "../common/headerSlice";
 import MenuItemCard from "./components/MenuItemCard";

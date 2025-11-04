@@ -12,7 +12,7 @@ import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
 import PlusCircleIcon from "@heroicons/react/24/outline/PlusCircleIcon";
-import { checkRole } from "../../utils/helpers";
+import { checkRole } from "../../utils/Helpers";
 import SearchBar from "../../components/Input/SearchBar";
 
 const TopSideButtons = ({ searchQuery, setSearchQuery }) => {

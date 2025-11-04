@@ -7,9 +7,13 @@ import { removeNotificationMessage } from "../features/common/headerSlice"; // R
 import { ToastContainer, toast } from "react-toastify"; // For displaying toast notifications
 import "react-toastify/dist/ReactToastify.css"; // Styles for toast notifications
 import ModalLayout from "./ModalLayout"; // Dynamic modal container
+import OnboardingTour from "../features/onboarding/OnboardingTour";
+import { useLocation } from "react-router-dom";
+import { getTourId } from "../utils/Helpers";
 
 function Layout() {
   const dispatch = useDispatch();
+  const location = useLocation();
 
   // Access notification message and status from Redux store
   const { newNotificationMessage, newNotificationStatus } = useSelector(
@@ -46,6 +50,9 @@ function Layout() {
 
       {/* Modal layout container */}
       <ModalLayout />
+
+      {/* Onboarding tour component */}
+      <OnboardingTour tourId={getTourId()} />
     </>
   );
 }

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { getToken } from "../utils/helpers";
+import { getToken } from "../utils/Helpers";
 
 // Helper to check if the token is expired
 const isTokenExpired = (token) => {
@@ -42,7 +42,6 @@ const checkAuth = () => {
 
   // Set up Axios defaults and interceptors if a token exists
   if (TOKEN) {
-
     axios.interceptors.request.use(
       (config) => {
         document.body.classList.add("loading-indicator");
