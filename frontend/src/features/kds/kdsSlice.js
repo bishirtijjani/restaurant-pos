@@ -33,14 +33,16 @@ export const fetchStations = createAsyncThunk(
   }
 );
 
-// Bump order
-export const bumpOrder = createAsyncThunk(
-  "kds/bumpOrder",
-  async ({ orderId, reason }, { rejectWithValue }) => {
+export const updateKDSOrderStatus = createAsyncThunk(
+  "kds/updateOrderStatus",
+  async ({ orderId, action }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/orders/${orderId}/bump`, {
-        reason,
-      });
+      const response = await axios.patch(
+        `${API_URL}/orders/${orderId}/status`,
+        {
+          action, // 'start' or 'complete'
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -56,22 +58,6 @@ export const recallOrder = createAsyncThunk(
       const response = await axios.post(`${API_URL}/orders/${orderId}/recall`, {
         reason,
       });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-// Update order item status
-export const updateOrderItemStatus = createAsyncThunk(
-  "kds/updateItemStatus",
-  async ({ orderId, itemId, status }, { rejectWithValue }) => {
-    try {
-      const response = await axios.patch(
-        `${API_URL}/orders/${orderId}/item-status`,
-        { itemId, status }
-      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -173,17 +159,29 @@ const kdsSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Bump order
-      .addCase(bumpOrder.pending, (state) => {
+      // update order status
+      .addCase(updateKDSOrderStatus.pending, (state) => {
         state.error = null;
       })
-      .addCase(bumpOrder.fulfilled, (state, action) => {
-        // Remove the bumped order from the list
-        state.orders = state.orders.filter(
-          (order) => order._id !== action.payload.data._id
-        );
+      .addCase(updateKDSOrderStatus.fulfilled, (state, action) => {
+        const updatedOrder = action.payload.data;
+
+        // If order was completed (ready), remove it from active view
+        if (updatedOrder.orderStatus === "ready") {
+          state.orders = state.orders.filter(
+            (order) => order._id !== updatedOrder._id
+          );
+        } else {
+          // Update the order in the list
+          const index = state.orders.findIndex(
+            (order) => order._id === updatedOrder._id
+          );
+          if (index !== -1) {
+            state.orders[index] = updatedOrder;
+          }
+        }
       })
-      .addCase(bumpOrder.rejected, (state, action) => {
+      .addCase(updateKDSOrderStatus.rejected, (state, action) => {
         state.error = action.payload;
       })
 
@@ -200,22 +198,6 @@ const kdsSlice = createSlice({
         }
       })
       .addCase(recallOrder.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-
-      // Update item status
-      .addCase(updateOrderItemStatus.pending, (state) => {
-        state.error = null;
-      })
-      .addCase(updateOrderItemStatus.fulfilled, (state, action) => {
-        const index = state.orders.findIndex(
-          (order) => order._id === action.payload.data._id
-        );
-        if (index !== -1) {
-          state.orders[index] = action.payload.data;
-        }
-      })
-      .addCase(updateOrderItemStatus.rejected, (state, action) => {
         state.error = action.payload;
       });
   },

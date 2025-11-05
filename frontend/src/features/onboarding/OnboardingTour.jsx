@@ -104,19 +104,22 @@ const OnboardingTour = ({ tourId }) => {
           ...tour.styles?.options,
           primaryColor: "hsl(var(--p))",
           textColor: "hsl(var(--bc))",
-          backgroundColor: "rgba(var(--b1-rgb), 1)",
-          arrowColor: "hsl(var(--b1))",
+          backgroundColor: "#ffffff", // ✅ Solid white fallback
+          arrowColor: "#ffffff",
           overlayColor: "rgba(0, 0, 0, 0.5)",
+          zIndex: 10000,
         },
         tooltip: {
           borderRadius: "1rem",
           padding: "1.5rem",
+          backgroundColor: "#ffffff", // ✅ Solid background
+          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)", // Add shadow for better visibility
         },
         tooltipContent: {
           padding: "0.5rem 0",
         },
         buttonNext: {
-          backgroundColor: "hsl(var(--p))",
+          backgroundColor: "#000000",
           borderRadius: "0.5rem",
           padding: "0.5rem 1.5rem",
         },

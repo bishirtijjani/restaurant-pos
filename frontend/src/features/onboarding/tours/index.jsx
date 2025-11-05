@@ -1,5 +1,5 @@
 import { initialSetupTour } from "./initialSetupTour";
-import { menuItemsTour } from "./menuItemsTour";
+import { menuItemsTour } from "./MenuItemsTour";
 
 // Registry of all tours
 export const TOURS = {

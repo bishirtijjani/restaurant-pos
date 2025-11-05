@@ -9,6 +9,8 @@ import {
   Wifi,
   WifiOff,
   Settings,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   fetchKDSOrders,
@@ -38,24 +40,18 @@ const KDS = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [manualRefresh, setManualRefresh] = useState(false);
   const [previousOrderCount, setPreviousOrderCount] = useState(0);
+  const [showCompleted, setShowCompleted] = useState(false);
 
-  // Ref for the fullscreen container
   const kdsContainerRef = useRef(null);
 
-  // Load saved settings from localStorage
   useEffect(() => {
     const savedSettings = localStorage.getItem("kdsSettings");
-    if (savedSettings) {
-      // Settings are already loaded in the slice initialState
-    }
   }, []);
 
-  // Fetch stations on mount
   useEffect(() => {
     dispatch(fetchStations());
   }, [dispatch]);
 
-  // Set initial station
   useEffect(() => {
     if (stations.length > 0 && !currentStation) {
       const savedStationId = localStorage.getItem("kdsCurrentStation");
@@ -64,44 +60,54 @@ const KDS = () => {
     }
   }, [stations, currentStation]);
 
-  // Fetch orders
   const fetchOrders = useCallback(() => {
     if (currentStation) {
       const stationId =
         currentStation.type === "all" ? "all" : currentStation._id;
-      dispatch(fetchKDSOrders({ stationId }));
+      dispatch(fetchKDSOrders({ stationId, showCompleted }));
     }
-  }, [dispatch, currentStation]);
+  }, [dispatch, currentStation, showCompleted]);
 
-  // Initial fetch
   useEffect(() => {
     if (currentStation) {
       fetchOrders();
     }
-  }, [currentStation, fetchOrders]);
+  }, [currentStation, showCompleted, fetchOrders]);
 
-  // Auto refresh
   useEffect(() => {
-    if (!settings.autoRefresh) return;
+    if (!settings.autoRefresh || showCompleted) return;
 
     const interval = setInterval(() => {
       fetchOrders();
     }, settings.refreshInterval * 1000);
 
     return () => clearInterval(interval);
-  }, [settings.autoRefresh, settings.refreshInterval, fetchOrders]);
+  }, [
+    settings.autoRefresh,
+    settings.refreshInterval,
+    showCompleted,
+    fetchOrders,
+  ]);
 
-  // Play sound for new orders
   useEffect(() => {
-    if (orders.length > previousOrderCount && previousOrderCount > 0) {
+    if (
+      orders.length > previousOrderCount &&
+      previousOrderCount > 0 &&
+      !showCompleted
+    ) {
       if (settings.soundEnabled) {
         dispatch(playSound());
       }
     }
     setPreviousOrderCount(orders.length);
-  }, [orders.length, previousOrderCount, settings.soundEnabled, dispatch]);
+  }, [
+    orders.length,
+    previousOrderCount,
+    settings.soundEnabled,
+    showCompleted,
+    dispatch,
+  ]);
 
-  // Online/offline detection
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -115,7 +121,6 @@ const KDS = () => {
     };
   }, []);
 
-  // Fullscreen change detection
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(Boolean(document.fullscreenElement));
@@ -127,7 +132,6 @@ const KDS = () => {
     };
   }, []);
 
-  // Fullscreen toggle
   const toggleFullscreen = async () => {
     try {
       if (!document.fullscreenElement) {
@@ -140,14 +144,12 @@ const KDS = () => {
     }
   };
 
-  // Manual refresh
   const handleManualRefresh = () => {
     setManualRefresh(true);
     fetchOrders();
     setTimeout(() => setManualRefresh(false), 1000);
   };
 
-  // Station change handler
   const handleStationChange = (stationId) => {
     const station =
       stationId === "all"
@@ -160,7 +162,6 @@ const KDS = () => {
     }
   };
 
-  // Grid columns class
   const getGridColumns = () => {
     const cols = settings.columns;
     return {
@@ -185,7 +186,7 @@ const KDS = () => {
       }`}
     >
       {/* Header */}
-      <div className="navbar bg-base-100 shadow-lg">
+      <div className="navbar bg-base-100 shadow-lg sticky top-0 z-50">
         <div className="flex-1">
           <h1 className="text-2xl font-bold ml-4">Kitchen Display</h1>
           <div className="ml-4 flex items-center gap-2">
@@ -208,11 +209,28 @@ const KDS = () => {
             onStationChange={handleStationChange}
           />
 
+          {/* Show Completed Toggle */}
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className={`btn btn-ghost btn-circle ${
+              showCompleted ? "btn-active" : ""
+            }`}
+            title={
+              showCompleted ? "Hide Completed Orders" : "Show Completed Orders"
+            }
+          >
+            {showCompleted ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+
           {/* Order Count */}
           <div className="badge badge-primary badge-lg gap-2">
             <span className="font-bold">{orders.length}</span>
             <span className="hidden md:inline">
-              {orders.length === 1 ? "Order" : "Orders"}
+              {showCompleted
+                ? "Completed"
+                : orders.length === 1
+                ? "Order"
+                : "Orders"}
             </span>
           </div>
 
@@ -273,14 +291,26 @@ const KDS = () => {
         </div>
       )}
 
+      {/* Status Indicator */}
+      {showCompleted && (
+        <div className="alert alert-info mx-4 mt-4">
+          <Eye size={20} />
+          <span>Viewing completed orders ready for serving</span>
+        </div>
+      )}
+
       {/* Orders Grid */}
       <div className="flex-1 overflow-auto p-4">
         {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="text-6xl mb-4">🍽️</div>
-            <h2 className="text-2xl font-bold mb-2">No Active Orders</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              {showCompleted ? "No Completed Orders" : "No Active Orders"}
+            </h2>
             <p className="text-base-content/70 mb-4">
-              New orders will appear here automatically
+              {showCompleted
+                ? "Completed orders will appear here"
+                : "New orders will appear here automatically"}
             </p>
             {currentStation && currentStation.type !== "all" && (
               <p className="text-sm opacity-60">
@@ -291,7 +321,12 @@ const KDS = () => {
         ) : (
           <div className={`grid ${getGridColumns()} gap-4 auto-rows-max`}>
             {orders.map((order) => (
-              <OrderCard key={order._id} order={order} settings={settings} />
+              <OrderCard
+                key={order._id}
+                order={order}
+                settings={settings}
+                isCompletedView={showCompleted}
+              />
             ))}
           </div>
         )}

@@ -1,4 +1,3 @@
-// backend/routes/kdsRoutes.js
 const express = require("express");
 const router = express.Router();
 const kdsController = require("../controllers/kdsController");
@@ -7,11 +6,10 @@ const authMiddleware = require("../middleware/authMiddleware");
 // Order routes
 router.get("/orders/:stationId", authMiddleware, kdsController.getKDSOrders);
 router.patch(
-  "/orders/:orderId/item-status",
+  "/orders/:orderId/status",
   authMiddleware,
-  kdsController.updateOrderItemStatus
+  kdsController.updateKDSOrderStatus
 );
-router.post("/orders/:orderId/bump", authMiddleware, kdsController.bumpOrder);
 router.post(
   "/orders/:orderId/recall",
   authMiddleware,

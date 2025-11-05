@@ -1,4 +1,3 @@
-// frontend/src/features/kds/components/OrderCard.jsx
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import {
@@ -11,17 +10,17 @@ import {
   RotateCcw,
   ChevronDown,
   ChevronUp,
+  PlayCircle,
 } from "lucide-react";
-import { bumpOrder, recallOrder, updateOrderItemStatus } from "../kdsSlice";
+import { updateKDSOrderStatus, recallOrder } from "../kdsSlice";
 import OrderTimer from "./OrderTimer";
 import { getOrderColor, groupItemsByCategory } from "../kdsUtils";
 import { showNotification } from "../../common/headerSlice";
 
-const OrderCard = ({ order, settings }) => {
+const OrderCard = ({ order, settings, isCompletedView = false }) => {
   const dispatch = useDispatch();
   const [expanded, setExpanded] = useState(false);
-  const [bumping, setBumping] = useState(false);
-  const [updatingItems, setUpdatingItems] = useState({});
+  const [processing, setProcessing] = useState(false);
 
   const orderAge = Math.floor((new Date() - new Date(order.createdAt)) / 60000);
   const priority =
@@ -30,29 +29,51 @@ const OrderCard = ({ order, settings }) => {
 
   const groupedItems = groupItemsByCategory(order.orderItems);
 
-  const handleBump = async () => {
-    if (window.confirm("Mark this order as complete?")) {
-      setBumping(true);
-      try {
-        await dispatch(
-          bumpOrder({ orderId: order._id, reason: "Completed in kitchen" })
-        ).unwrap();
-        dispatch(
-          showNotification({
-            message: `Order #${order.orderNumber} completed`,
-            status: 1,
-          })
-        );
-      } catch (error) {
-        dispatch(
-          showNotification({
-            message: error.message || "Failed to bump order",
-            status: 0,
-          })
-        );
-      } finally {
-        setBumping(false);
-      }
+  const handleStart = async () => {
+    setProcessing(true);
+    try {
+      await dispatch(
+        updateKDSOrderStatus({ orderId: order._id, action: "start" })
+      ).unwrap();
+      dispatch(
+        showNotification({
+          message: `Order #${order.orderNumber} started`,
+          status: 1,
+        })
+      );
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.message || "Failed to start order",
+          status: 0,
+        })
+      );
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleComplete = async () => {
+    setProcessing(true);
+    try {
+      await dispatch(
+        updateKDSOrderStatus({ orderId: order._id, action: "complete" })
+      ).unwrap();
+      dispatch(
+        showNotification({
+          message: `Order #${order.orderNumber} completed and ready`,
+          status: 1,
+        })
+      );
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.message || "Failed to complete order",
+          status: 0,
+        })
+      );
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -62,7 +83,7 @@ const OrderCard = ({ order, settings }) => {
         await dispatch(
           recallOrder({
             orderId: order._id,
-            reason: "Recalled for modification",
+            reason: "Recalled from completed orders",
           })
         ).unwrap();
         dispatch(
@@ -79,41 +100,6 @@ const OrderCard = ({ order, settings }) => {
           })
         );
       }
-    }
-  };
-
-  const handleItemToggle = async (item) => {
-    // Use the subdocument _id
-    const itemId = item._id;
-    const currentStatus = item.itemStatus || "pending";
-    const newStatus = currentStatus === "completed" ? "preparing" : "completed";
-
-    setUpdatingItems((prev) => ({ ...prev, [itemId]: true }));
-
-    try {
-      await dispatch(
-        updateOrderItemStatus({
-          orderId: order._id,
-          itemId: itemId,
-          status: newStatus,
-        })
-      ).unwrap();
-
-      dispatch(
-        showNotification({
-          message: `Item marked as ${newStatus}`,
-          status: 1,
-        })
-      );
-    } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.message || "Failed to update item status",
-          status: 0,
-        })
-      );
-    } finally {
-      setUpdatingItems((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -143,6 +129,17 @@ const OrderCard = ({ order, settings }) => {
               )}
               {order.orderType === "takeaway" && (
                 <span className="badge badge-warning badge-sm">Takeaway</span>
+              )}
+              {order.orderStatus === "pending" && (
+                <span className="badge badge-error badge-sm">New</span>
+              )}
+              {order.orderStatus === "preparing" && (
+                <span className="badge badge-warning badge-sm">
+                  In Progress
+                </span>
+              )}
+              {order.orderStatus === "ready" && (
+                <span className="badge badge-success badge-sm">Ready</span>
               )}
             </div>
             <OrderTimer
@@ -179,6 +176,13 @@ const OrderCard = ({ order, settings }) => {
               <span className="text-xs">{order.customerDetails.address}</span>
             </div>
           )}
+          {order.table && order.table !== "Takeaway" && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold">
+                Table: {order.table}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Order Items */}
@@ -193,46 +197,21 @@ const OrderCard = ({ order, settings }) => {
               {items.map((item) => (
                 <div
                   key={item._id}
-                  className="flex items-start justify-between gap-2 group"
+                  className="flex items-start justify-between gap-2"
                 >
-                  <button
-                    onClick={() => handleItemToggle(item)}
-                    disabled={updatingItems[item._id]}
-                    className="flex-1 flex items-start gap-2 text-left hover:bg-base-200/50 p-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="flex-shrink-0 mt-1">
-                      <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                          item.itemStatus === "completed"
-                            ? "bg-success border-success"
-                            : "border-base-300 group-hover:border-success"
-                        } ${updatingItems[item._id] ? "animate-pulse" : ""}`}
-                      >
-                        {item.itemStatus === "completed" && (
-                          <CheckCircle className="w-4 h-4 text-success-content" />
-                        )}
-                      </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {item.quantity}x {item.name}
+                      </span>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`font-medium ${
-                            item.itemStatus === "completed"
-                              ? "line-through opacity-50"
-                              : ""
-                          }`}
-                        >
-                          {item.quantity}x {item.name}
-                        </span>
+                    {expanded && item.customizations && (
+                      <div className="text-xs opacity-70 mt-1 flex items-start gap-1">
+                        <MessageSquare className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                        <span>{item.customizations}</span>
                       </div>
-                      {expanded && item.customizations && (
-                        <div className="text-xs opacity-70 mt-1 flex items-start gap-1">
-                          <MessageSquare className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                          <span>{item.customizations}</span>
-                        </div>
-                      )}
-                    </div>
-                  </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -251,25 +230,39 @@ const OrderCard = ({ order, settings }) => {
 
         {/* Actions */}
         <div className="flex gap-2 pt-2 border-t">
-          {order.orderStatus === "ready" ? (
-            <button
-              onClick={handleRecall}
-              className="btn btn-outline btn-warning flex-1"
-            >
+          {isCompletedView ? (
+            <button onClick={handleRecall} className="btn btn-warning flex-1">
               <RotateCcw size={18} />
               Recall
             </button>
           ) : (
-            <button
-              onClick={handleBump}
-              disabled={bumping}
-              className={`btn btn-success flex-1 text-white ${
-                bumping ? "loading" : ""
-              }`}
-            >
-              <CheckCircle size={18} />
-              {bumping ? "Bumping..." : "Bump"}
-            </button>
+            <>
+              {order.orderStatus === "pending" && (
+                <button
+                  onClick={handleStart}
+                  disabled={processing}
+                  className={`btn btn-info flex-1 text-white ${
+                    processing ? "loading" : ""
+                  }`}
+                >
+                  <PlayCircle size={18} />
+                  {processing ? "Starting..." : "Start"}
+                </button>
+              )}
+
+              {order.orderStatus === "preparing" && (
+                <button
+                  onClick={handleComplete}
+                  disabled={processing}
+                  className={`btn btn-success flex-1 text-white ${
+                    processing ? "loading" : ""
+                  }`}
+                >
+                  <CheckCircle size={18} />
+                  {processing ? "Completing..." : "Ready"}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

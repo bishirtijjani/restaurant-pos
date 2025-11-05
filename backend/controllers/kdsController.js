@@ -3,11 +3,10 @@ const Order = require("../models/Order");
 const KDSStation = require("../models/KDSStation");
 const MenuItem = require("../models/MenuItem");
 
-// Get orders for KDS station
 exports.getKDSOrders = async (req, res) => {
   try {
     const { stationId } = req.params;
-    const { status } = req.query;
+    const { status, showCompleted } = req.query;
 
     let station = null;
     let categoryFilter = {};
@@ -21,15 +20,21 @@ exports.getKDSOrders = async (req, res) => {
         });
       }
 
-      // If station has specific categories, filter by them
       if (station.categories && station.categories.length > 0) {
         categoryFilter = { "orderItems.category": { $in: station.categories } };
       }
     }
 
-    // Build query
+    // Build query - show active orders or completed if requested
+    let orderStatuses;
+    if (showCompleted === "true") {
+      orderStatuses = ["ready"]; // Only show completed (ready) orders when viewing completed
+    } else {
+      orderStatuses = status ? [status] : ["pending", "preparing"];
+    }
+
     const query = {
-      orderStatus: { $in: status ? [status] : ["new", "preparing", "ready"] },
+      orderStatus: { $in: orderStatuses },
       ...categoryFilter,
     };
 
@@ -71,11 +76,11 @@ exports.getKDSOrders = async (req, res) => {
   }
 };
 
-// Update order item status - FIXED to work with subdocument _id
-exports.updateOrderItemStatus = async (req, res) => {
+// Update order status in KDS (Start = preparing, Complete = ready)
+exports.updateKDSOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { itemId, status } = req.body;
+    const { action } = req.body; // action: 'start' or 'complete'
 
     const order = await Order.findById(orderId);
     if (!order) {
@@ -85,31 +90,30 @@ exports.updateOrderItemStatus = async (req, res) => {
       });
     }
 
-    // Find the item by its subdocument _id
-    const item = order.orderItems.id(itemId);
-    if (!item) {
-      return res.status(404).json({
-        success: false,
-        message: "Order item not found",
-      });
-    }
-
-    // Update item status
-    item.itemStatus = status;
-
-    // Check if all items are ready/completed
-    const allReady = order.orderItems.every(
-      (item) => item.itemStatus === "ready" || item.itemStatus === "completed"
-    );
-
-    if (allReady && order.orderStatus !== "ready") {
+    if (action === "start") {
+      order.orderStatus = "preparing";
+      order.lastAction = {
+        action: "update",
+        performedBy: req.user.id,
+        createdAt: new Date(),
+        reason: "Order started in kitchen",
+      };
+    } else if (action === "complete") {
       order.orderStatus = "ready";
       order.actualReadyTime = new Date();
+      order.orderItems.forEach((item) => {
+        item.itemStatus = "ready";
+      });
+      order.lastAction = {
+        action: "update",
+        performedBy: req.user.id,
+        createdAt: new Date(),
+        reason: "Order completed in kitchen",
+      };
     }
 
     await order.save();
 
-    // Populate before sending
     await order.populate(
       "orderItems.menuItemId",
       "name category preparationTime"
@@ -118,11 +122,13 @@ exports.updateOrderItemStatus = async (req, res) => {
 
     res.json({
       success: true,
+      message: `Order ${
+        action === "start" ? "started" : "completed"
+      } successfully`,
       data: order,
-      message: "Item status updated successfully",
     });
   } catch (error) {
-    console.error("Error updating order item status:", error);
+    console.error("Error updating KDS order status:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -130,8 +136,8 @@ exports.updateOrderItemStatus = async (req, res) => {
   }
 };
 
-// Bump order (mark as complete)
-exports.bumpOrder = async (req, res) => {
+// Recall order (move from ready back to preparing)
+exports.recallOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { reason } = req.body;
@@ -144,23 +150,30 @@ exports.bumpOrder = async (req, res) => {
       });
     }
 
-    // Mark all items as completed
+    // Can only recall ready orders
+    if (order.orderStatus !== "ready") {
+      return res.status(400).json({
+        success: false,
+        message: "Can only recall orders that are marked as ready",
+      });
+    }
+
+    order.orderStatus = "preparing";
     order.orderItems.forEach((item) => {
-      item.itemStatus = "completed";
+      if (item.itemStatus === "ready") {
+        item.itemStatus = "preparing";
+      }
     });
 
-    order.orderStatus = "ready";
-    order.actualReadyTime = new Date();
     order.lastAction = {
-      action: "bump",
+      action: "recall",
       performedBy: req.user.id,
       createdAt: new Date(),
-      reason: reason || "Order completed in kitchen",
+      reason: reason || "Order recalled from ready",
     };
 
     await order.save();
 
-    // Populate before sending
     await order.populate(
       "orderItems.menuItemId",
       "name category preparationTime"
@@ -169,11 +182,11 @@ exports.bumpOrder = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Order bumped successfully",
+      message: "Order recalled successfully",
       data: order,
     });
   } catch (error) {
-    console.error("Error bumping order:", error);
+    console.error("Error recalling order:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -244,57 +257,6 @@ exports.updateStation = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating station:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// Recall order (move back to preparing)
-exports.recallOrder = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { reason } = req.body;
-
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    order.orderStatus = "preparing";
-    order.orderItems.forEach((item) => {
-      if (item.itemStatus === "completed") {
-        item.itemStatus = "preparing";
-      }
-    });
-
-    order.lastAction = {
-      action: "recall",
-      performedBy: req.user.id,
-      createdAt: new Date(),
-      reason: reason || "Order recalled",
-    };
-
-    await order.save();
-
-    // Populate before sending
-    await order.populate(
-      "orderItems.menuItemId",
-      "name category preparationTime"
-    );
-    await order.populate("servedBy", "fullname");
-
-    res.json({
-      success: true,
-      message: "Order recalled successfully",
-      data: order,
-    });
-  } catch (error) {
-    console.error("Error recalling order:", error);
     res.status(500).json({
       success: false,
       message: error.message,
