@@ -24,6 +24,7 @@ import { X } from "lucide-react";
 import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
 import OrderDetailsModalBody from "../features/orders/components/OrderDetailsModalBody";
 import UpdatePaymentModalBody from "../features/orders/components/UpdatePaymentModalBody";
+import StationManagementModalBody from "../features/kdsStations/components/StationManagementModalBody";
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
     (state) => state.modal
@@ -145,6 +146,19 @@ function ModalLayout() {
 
                 [MODAL_BODY_TYPES.UPDATE_PAYMENT]: (
                   <UpdatePaymentModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+
+                [MODAL_BODY_TYPES.ADD_KDS_STATION]: (
+                  <StationManagementModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_KDS_STATION]: (
+                  <StationManagementModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />

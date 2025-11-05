@@ -12,12 +12,11 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { fetchKDSOrders, playSound } from "./kdsSlice";
 import {
-  fetchKDSOrders,
   fetchStations,
   setCurrentStation,
-  playSound,
-} from "./kdsSlice";
+} from "../kdsStations/kdsStationsSlice";
 import OrderCard from "./components/OrderCard";
 import StationSelector from "./components/StationSelector";
 import SuspenseContent from "../../containers/SuspenseContent";
@@ -26,15 +25,12 @@ import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 
 const KDS = () => {
   const dispatch = useDispatch();
-  const {
-    orders,
-    stations,
-    currentStation,
-    settings,
-    loading,
-    error,
-    lastUpdate,
-  } = useSelector((state) => state.kds);
+  const { orders, settings, loading, error, lastUpdate } = useSelector(
+    (state) => state.kds
+  );
+  const { stations, currentStation } = useSelector(
+    (state) => state.kdsStations
+  );
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);

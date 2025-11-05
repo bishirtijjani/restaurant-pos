@@ -30,6 +30,11 @@ export const adminRoutes = [
     name: "Kitchen Display",
   },
   {
+    path: "/app/stations",
+    icon: <Monitor className="h-6 w-6" />,
+    name: "Station Management",
+  },
+  {
     path: "/app/categories",
     icon: <TableCellsIcon className={iconClasses} />,
     name: "Product Categories",

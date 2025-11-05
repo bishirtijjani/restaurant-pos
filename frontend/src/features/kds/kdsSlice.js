@@ -29,19 +29,6 @@ export const fetchKDSOrders = createAsyncThunk(
   }
 );
 
-// Fetch stations
-export const fetchStations = createAsyncThunk(
-  "kds/fetchStations",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${API_URL}/stations`);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
 export const updateKDSOrderStatus = createAsyncThunk(
   "kds/updateOrderStatus",
   async ({ orderId, action }, { rejectWithValue }) => {
@@ -99,8 +86,6 @@ const defaultSettings = {
 
 const initialState = {
   orders: [],
-  stations: [],
-  currentStation: null,
   settings: loadSettingsFromStorage() || defaultSettings,
   loading: false,
   error: null,
@@ -111,9 +96,6 @@ const kdsSlice = createSlice({
   name: "kds",
   initialState,
   reducers: {
-    setCurrentStation: (state, action) => {
-      state.currentStation = action.payload;
-    },
     updateSettings: (state, action) => {
       state.settings = { ...state.settings, ...action.payload };
       try {
@@ -139,6 +121,7 @@ const kdsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
       // Fetch orders
       .addCase(fetchKDSOrders.pending, (state) => {
         state.loading = true;
@@ -147,23 +130,9 @@ const kdsSlice = createSlice({
       .addCase(fetchKDSOrders.fulfilled, (state, action) => {
         state.loading = false;
         state.orders = action.payload.data;
-        // state.currentStation = action.payload.station;
         state.lastUpdate = new Date().toISOString();
       })
       .addCase(fetchKDSOrders.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // Fetch stations
-      .addCase(fetchStations.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchStations.fulfilled, (state, action) => {
-        state.loading = false;
-        state.stations = action.payload.data;
-      })
-      .addCase(fetchStations.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -212,7 +181,6 @@ const kdsSlice = createSlice({
   },
 });
 
-export const { setCurrentStation, updateSettings, playSound, clearError } =
-  kdsSlice.actions;
+export const { updateSettings, playSound, clearError } = kdsSlice.actions;
 
 export default kdsSlice.reducer;

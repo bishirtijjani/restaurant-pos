@@ -14,6 +14,7 @@ import expensesReducer from "../features/expenses/expensesSlice";
 import analyticsReducer from "../features/analytics/analyticsSlice";
 import generalSettingsReducer from "../features/settings/generalSettings/generalSettingsSlice";
 import kdsReducer from "../features/kds/kdsSlice";
+import kdsStationsReducer from "../features/kdsStations/kdsStationsSlice";
 import onboardingReducer from "../features/onboarding/onboardingSlice";
 
 const combinedReducer = {
@@ -32,6 +33,7 @@ const combinedReducer = {
   analytics: analyticsReducer,
   generalSettings: generalSettingsReducer,
   kds: kdsReducer,
+  kdsStations: kdsStationsReducer,
   onboarding: onboardingReducer,
 };
 

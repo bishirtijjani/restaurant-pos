@@ -7,10 +7,8 @@ const {
   getCurrencies,
 } = require("../controllers/generalSettingsController");
 
-const authMiddleware = require("../middleware/authMiddleware");
-
-router.get("/", authMiddleware, getSettings);
-router.put("/", authMiddleware, updateSettings);
-router.post("/reset", authMiddleware, resetSettings);
+router.get("/", getSettings);
+router.put("/", updateSettings);
+router.post("/reset", resetSettings);
 
 module.exports = router;

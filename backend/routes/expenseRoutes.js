@@ -7,12 +7,11 @@ const {
   updateExpense,
   deleteExpense,
 } = require("../controllers/expenseController");
-const authMiddleware = require("../middleware/authMiddleware");
 
-router.post("/", authMiddleware, createExpense);
-router.get("/", authMiddleware, getAllExpenses);
-router.get("/:id", authMiddleware, getExpenseById);
-router.put("/:id", authMiddleware, updateExpense);
-router.delete("/:id", authMiddleware, deleteExpense);
+router.post("/", createExpense);
+router.get("/", getAllExpenses);
+router.get("/:id", getExpenseById);
+router.put("/:id", updateExpense);
+router.delete("/:id", deleteExpense);
 
 module.exports = router;

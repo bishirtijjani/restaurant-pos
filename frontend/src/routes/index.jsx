@@ -22,6 +22,8 @@ const GeneralSettings = lazy(() =>
   import("../pages/protected/GeneralSettings")
 );
 const KDS = lazy(() => import("../pages/protected/KDS"));
+const KDSStations = lazy(() => import("../pages/protected/KDSStations"));
+
 const routes = [
   {
     path: "/dashboard", // the url
@@ -78,6 +80,10 @@ const routes = [
   {
     path: "/kds",
     component: KDS,
+  },
+  {
+    path: "/stations",
+    component: KDSStations,
   },
   {
     path: "/pos",
