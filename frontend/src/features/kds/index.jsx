@@ -1,5 +1,5 @@
 // frontend/src/features/kds/index.jsx
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   RefreshCw,
@@ -41,44 +41,75 @@ const KDS = () => {
   const [manualRefresh, setManualRefresh] = useState(false);
   const [previousOrderCount, setPreviousOrderCount] = useState(0);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const kdsContainerRef = useRef(null);
+  const fetchTimeoutRef = useRef(null);
 
-  useEffect(() => {
-    const savedSettings = localStorage.getItem("kdsSettings");
-  }, []);
-
+  // Initialize stations - only once
   useEffect(() => {
     dispatch(fetchStations());
   }, [dispatch]);
 
+  // Set initial station once stations are loaded
   useEffect(() => {
     if (stations.length > 0 && !currentStation) {
       const savedStationId = localStorage.getItem("kdsCurrentStation");
       const stationId = savedStationId || "all";
-      handleStationChange(stationId);
-    }
-  }, [stations, currentStation]);
 
-  const fetchOrders = useCallback(() => {
-    if (currentStation) {
+      const station =
+        stationId === "all"
+          ? { name: "All Stations", type: "all" }
+          : stations.find((s) => s._id === stationId);
+
+      if (station) {
+        dispatch(setCurrentStation(station));
+      }
+    }
+  }, [stations, currentStation, dispatch]);
+
+  // Fetch orders when station or showCompleted changes
+  useEffect(() => {
+    if (!currentStation) return;
+
+    // Clear any pending fetch
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+
+    const stationId =
+      currentStation.type === "all" ? "all" : currentStation._id;
+
+    dispatch(fetchKDSOrders({ stationId, showCompleted }))
+      .unwrap()
+      .then(() => {
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch orders:", err);
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
+        }
+      });
+  }, [currentStation, showCompleted, dispatch]); // Only these dependencies
+
+  // Auto-refresh effect - separate from main fetch
+  useEffect(() => {
+    if (
+      !settings.autoRefresh ||
+      showCompleted ||
+      !currentStation ||
+      isInitialLoad
+    ) {
+      return;
+    }
+
+    const interval = setInterval(() => {
       const stationId =
         currentStation.type === "all" ? "all" : currentStation._id;
       dispatch(fetchKDSOrders({ stationId, showCompleted }));
-    }
-  }, [dispatch, currentStation, showCompleted]);
-
-  useEffect(() => {
-    if (currentStation) {
-      fetchOrders();
-    }
-  }, [currentStation, showCompleted, fetchOrders]);
-
-  useEffect(() => {
-    if (!settings.autoRefresh || showCompleted) return;
-
-    const interval = setInterval(() => {
-      fetchOrders();
     }, settings.refreshInterval * 1000);
 
     return () => clearInterval(interval);
@@ -86,10 +117,15 @@ const KDS = () => {
     settings.autoRefresh,
     settings.refreshInterval,
     showCompleted,
-    fetchOrders,
+    currentStation,
+    isInitialLoad,
+    dispatch,
   ]);
 
+  // Sound notification for new orders
   useEffect(() => {
+    if (isInitialLoad) return; // Don't play sound on initial load
+
     if (
       orders.length > previousOrderCount &&
       previousOrderCount > 0 &&
@@ -102,12 +138,13 @@ const KDS = () => {
     setPreviousOrderCount(orders.length);
   }, [
     orders.length,
-    previousOrderCount,
-    settings.soundEnabled,
+    isInitialLoad,
     showCompleted,
+    settings.soundEnabled,
     dispatch,
   ]);
 
+  // Online/Offline listeners
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -121,6 +158,7 @@ const KDS = () => {
     };
   }, []);
 
+  // Fullscreen change listener
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(Boolean(document.fullscreenElement));
@@ -145,8 +183,12 @@ const KDS = () => {
   };
 
   const handleManualRefresh = () => {
+    if (!currentStation) return;
+
     setManualRefresh(true);
-    fetchOrders();
+    const stationId =
+      currentStation.type === "all" ? "all" : currentStation._id;
+    dispatch(fetchKDSOrders({ stationId, showCompleted }));
     setTimeout(() => setManualRefresh(false), 1000);
   };
 
@@ -174,7 +216,8 @@ const KDS = () => {
     }[cols];
   };
 
-  if (loading && !orders.length) {
+  // Show loader only during initial load
+  if (isInitialLoad && loading) {
     return <SuspenseContent />;
   }
 
@@ -241,6 +284,7 @@ const KDS = () => {
               manualRefresh ? "animate-spin" : ""
             }`}
             title="Refresh Orders"
+            disabled={!currentStation}
           >
             <RefreshCw size={20} />
           </button>

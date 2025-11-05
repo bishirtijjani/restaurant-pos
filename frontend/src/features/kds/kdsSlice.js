@@ -4,12 +4,18 @@ import axios from "axios";
 
 const API_URL = "/api/kds";
 
-// Fetch orders for KDS
 export const fetchKDSOrders = createAsyncThunk(
   "kds/fetchOrders",
-  async ({ stationId, status }, { rejectWithValue }) => {
+  async ({ stationId, showCompleted }, { rejectWithValue }) => {
     try {
-      const query = status ? `?status=${status}` : "";
+      const params = new URLSearchParams();
+      if (showCompleted) {
+        params.append("status", "ready");
+      } else {
+        params.append("status", "pending,preparing");
+      }
+
+      const query = params.toString() ? `?${params.toString()}` : "";
       const response = await axios.get(
         `${API_URL}/orders/${stationId}${query}`
       );
@@ -138,7 +144,7 @@ const kdsSlice = createSlice({
       .addCase(fetchKDSOrders.fulfilled, (state, action) => {
         state.loading = false;
         state.orders = action.payload.data;
-        state.currentStation = action.payload.station;
+        // state.currentStation = action.payload.station;
         state.lastUpdate = new Date().toISOString();
       })
       .addCase(fetchKDSOrders.rejected, (state, action) => {
