@@ -23,8 +23,21 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
   const [processing, setProcessing] = useState(false);
 
   const orderAge = Math.floor((new Date() - new Date(order.createdAt)) / 60000);
+
+  // Determine priority based on order age and status
+  // completed orders get 'completed' priority if age >= 15 mins
+  // otherwise use normal priority logic
+  // completed orders are visually distinct
+  // completed orders are not considered for warning/critical states
+  // to avoid confusion with active orders
   const priority =
-    orderAge >= 15 ? "critical" : orderAge >= 10 ? "warning" : "normal";
+    orderAge >= 15
+      ? order.orderStatus == "ready" || "completed"
+        ? "completed"
+        : "critical"
+      : orderAge >= 10
+      ? "warning"
+      : "normal";
   const cardColor = getOrderColor(priority, settings.colorScheme);
 
   const groupedItems = groupItemsByCategory(order.orderItems);

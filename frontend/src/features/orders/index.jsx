@@ -468,6 +468,7 @@ const Orders = () => {
           {filteredOrders.map((order) => (
             <OrderCard key={order._id} order={order} />
           ))}
+          {console.log(filteredOrders)}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-base-300">

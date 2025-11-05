@@ -28,6 +28,7 @@ export const getOrderColor = (priority, colorScheme = "default") => {
       normal: "bg-base-100 border-base-300",
       warning: "bg-warning/10 border-warning",
       critical: "bg-error/10 border-error animate-pulse",
+      completed: "bg-success/10 border-success",
     },
     colorblind: {
       normal: "bg-base-100 border-base-300",

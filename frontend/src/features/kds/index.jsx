@@ -49,6 +49,7 @@ const KDS = () => {
   // Initialize stations - only once
   useEffect(() => {
     dispatch(fetchStations());
+    console.log(" Fetching KDS Stations on mount: ", stations);
   }, [dispatch]);
 
   // Set initial station once stations are loaded
@@ -80,9 +81,18 @@ const KDS = () => {
     const stationId =
       currentStation.type === "all" ? "all" : currentStation._id;
 
+    // Log to debug
+    console.log(
+      "Fetching orders for station:",
+      stationId,
+      "showCompleted:",
+      showCompleted
+    );
+
     dispatch(fetchKDSOrders({ stationId, showCompleted }))
       .unwrap()
-      .then(() => {
+      .then((result) => {
+        console.log("Orders fetched:", result.data?.length || 0);
         if (isInitialLoad) {
           setIsInitialLoad(false);
         }
@@ -93,8 +103,7 @@ const KDS = () => {
           setIsInitialLoad(false);
         }
       });
-  }, [currentStation, showCompleted, dispatch]); // Only these dependencies
-
+  }, [currentStation, showCompleted, dispatch]);
   // Auto-refresh effect - separate from main fetch
   useEffect(() => {
     if (
@@ -224,9 +233,7 @@ const KDS = () => {
   return (
     <div
       ref={kdsContainerRef}
-      className={`min-h-screen bg-base-200 flex flex-col ${
-        isFullscreen ? "fullscreen-mode" : ""
-      }`}
+      className="min-h-screen bg-base-200 flex flex-col"
     >
       {/* Header */}
       <div className="navbar bg-base-100 shadow-lg sticky top-0 z-50">
@@ -253,17 +260,19 @@ const KDS = () => {
           />
 
           {/* Show Completed Toggle */}
-          <button
-            onClick={() => setShowCompleted(!showCompleted)}
-            className={`btn btn-ghost btn-circle ${
-              showCompleted ? "btn-active" : ""
-            }`}
-            title={
-              showCompleted ? "Hide Completed Orders" : "Show Completed Orders"
-            }
-          >
-            {showCompleted ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
+          <div className="form-control">
+            <label className="label cursor-pointer gap-2 px-4">
+              <span className="label-text hidden md:inline">
+                {showCompleted ? "Completed" : "Active"}
+              </span>
+              <input
+                type="checkbox"
+                className="toggle toggle-primary"
+                checked={showCompleted}
+                onChange={(e) => setShowCompleted(e.target.checked)}
+              />
+            </label>
+          </div>
 
           {/* Order Count */}
           <div className="badge badge-primary badge-lg gap-2">

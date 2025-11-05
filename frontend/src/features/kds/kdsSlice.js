@@ -10,12 +10,15 @@ export const fetchKDSOrders = createAsyncThunk(
     try {
       const params = new URLSearchParams();
       if (showCompleted) {
-        params.append("status", "ready");
+        params.append("status", "completed");
+        params.append("showCompleted", showCompleted);
       } else {
         params.append("status", "pending,preparing");
+        params.append("showCompleted", false);
       }
 
       const query = params.toString() ? `?${params.toString()}` : "";
+      console.log("Fetching KDS Orders with query:", query); // Debug log
       const response = await axios.get(
         `${API_URL}/orders/${stationId}${query}`
       );

@@ -193,8 +193,10 @@ const createOrder = async (req, res) => {
         quantity: item.quantity,
         customizations: item.customizations,
         subtotal: item.subtotal,
+        itemStatus: "pending",
       })),
       servedBy: req.user.id,
+      orderStatus: "pending",
 
       // Tax breakdown
       taxBreakdown: {

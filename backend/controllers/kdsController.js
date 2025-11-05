@@ -7,6 +7,14 @@ exports.getKDSOrders = async (req, res) => {
   try {
     const { stationId } = req.params;
     const { status, showCompleted } = req.query;
+    console.log(
+      "Fetching KDS Orders for station:",
+      stationId,
+      "with showCompleted:",
+      showCompleted,
+      "and status: ",
+      status
+    ); // Debug log
 
     let station = null;
     let categoryFilter = {};
@@ -28,9 +36,9 @@ exports.getKDSOrders = async (req, res) => {
     // Build query - show active orders or completed if requested
     let orderStatuses;
     if (showCompleted === "true") {
-      orderStatuses = ["ready"]; // Only show completed (ready) orders when viewing completed
+      orderStatuses = ["ready"]; // Only show completed (ready) orders
     } else {
-      orderStatuses = status ? [status] : ["pending", "preparing"];
+      orderStatuses = ["pending", "preparing"]; // Show active orders
     }
 
     const query = {
@@ -38,10 +46,14 @@ exports.getKDSOrders = async (req, res) => {
       ...categoryFilter,
     };
 
+    console.log("KDS Query:", JSON.stringify(query)); // Debug log
+
     const orders = await Order.find(query)
       .populate("orderItems.menuItemId", "name category preparationTime")
       .populate("servedBy", "fullname")
       .sort({ createdAt: 1 });
+
+    console.log("Orders found:", orders.length); // Debug log
 
     // Filter items by station categories if applicable
     const filteredOrders = orders
