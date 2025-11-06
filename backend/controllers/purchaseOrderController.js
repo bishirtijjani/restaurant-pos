@@ -74,13 +74,8 @@ exports.getPurchaseOrderById = async (req, res) => {
 // Create purchase order
 exports.createPurchaseOrder = async (req, res) => {
   try {
-    const {
-      supplier,
-      expectedDeliveryDate,
-      items,
-      notes,
-      invoiceNumber,
-    } = req.body;
+    const { supplier, expectedDeliveryDate, items, notes, invoiceNumber } =
+      req.body;
 
     // Validate required fields
     if (!supplier || !items || items.length === 0) {
@@ -385,3 +380,123 @@ exports.receivePurchaseOrder = async (req, res) => {
       message: "Purchase order received successfully",
       data: populatedOrder,
     });
+  } catch (error) {
+    console.error("Error receiving purchase order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to receive purchase order",
+      error: error.message,
+    });
+  }
+};
+
+// Cancel purchase order
+exports.cancelPurchaseOrder = async (req, res) => {
+  try {
+    const { reason } = req.body;
+
+    const order = await PurchaseOrder.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Purchase order not found",
+      });
+    }
+
+    if (order.status === "received") {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot cancel a received purchase order",
+      });
+    }
+
+    const oldOrder = { ...order.toObject() };
+
+    order.status = "cancelled";
+    await order.save();
+
+    // Log the action
+    await logAction(
+      req.user.id,
+      "PurchaseOrder",
+      req.params.id,
+      "cancel",
+      oldOrder,
+      order,
+      reason || `Cancelled purchase order: ${order.orderNumber}`
+    );
+
+    const populatedOrder = await PurchaseOrder.findById(order._id)
+      .populate("supplier", "name phone email")
+      .populate("items.inventoryItem", "name unit")
+      .populate("createdBy", "fullname");
+
+    res.status(200).json({
+      success: true,
+      message: "Purchase order cancelled successfully",
+      data: populatedOrder,
+    });
+  } catch (error) {
+    console.error("Error cancelling purchase order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to cancel purchase order",
+      error: error.message,
+    });
+  }
+};
+
+// Update payment status
+exports.updatePaymentStatus = async (req, res) => {
+  try {
+    const { paymentStatus, amountPaid, paymentMethod } = req.body;
+
+    const order = await PurchaseOrder.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Purchase order not found",
+      });
+    }
+
+    const oldOrder = { ...order.toObject() };
+
+    if (paymentStatus) order.paymentStatus = paymentStatus;
+    if (amountPaid !== undefined) order.amountPaid = amountPaid;
+    if (paymentMethod) order.paymentMethod = paymentMethod;
+
+    await order.save();
+
+    // Log the action
+    await logAction(
+      req.user.id,
+      "PurchaseOrder",
+      req.params.id,
+      "update",
+      oldOrder,
+      order,
+      `Updated payment for purchase order: ${order.orderNumber}`
+    );
+
+    const populatedOrder = await PurchaseOrder.findById(order._id)
+      .populate("supplier", "name phone email")
+      .populate("items.inventoryItem", "name unit");
+
+    res.status(200).json({
+      success: true,
+      message: "Payment status updated successfully",
+      data: populatedOrder,
+    });
+  } catch (error) {
+    console.error("Error updating payment status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update payment status",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = exports;

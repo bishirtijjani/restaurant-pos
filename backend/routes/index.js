@@ -5,7 +5,7 @@ const router = express.Router();
 // does not need authMiddleware
 router.use("/auth", require("./authRoutes"));
 
-// all subsequent routes need autMiddleware
+// all subsequent routes need authMiddleware
 router.use(authMiddleware);
 
 router.use("/users", require("./userRoutes"));
@@ -21,5 +21,8 @@ router.use("/expenses", require("./expenseRoutes"));
 router.use("/kds", require("./kdsRoutes"));
 router.use("/stations", require("./kdsStationRoutes"));
 router.use("/onboarding", require("./onboardingRoutes"));
+router.use("/inventory", require("./inventoryRoutes"));
+router.use("/purchase-orders", require("./purchaseOrderRoutes"));
+router.use("/stock-adjustments", require("./stockAdjustmentRoutes"));
 
 module.exports = router;
