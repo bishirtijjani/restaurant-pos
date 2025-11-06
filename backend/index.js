@@ -24,14 +24,23 @@ connectToDB();
 // API routes
 app.use("/api", require("./routes/index"));
 
-// Serve static files from React build
+// Serve static files from React build (only if the build exists)
 const frontendPath = path.join(__dirname, "../frontend/dist"); // adjust path if needed
-app.use(express.static(frontendPath));
+const indexHtml = path.join(frontendPath, "index.html");
 
-// Fallback for SPA routing
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
+if (fs.existsSync(frontendPath) && fs.existsSync(indexHtml)) {
+  app.use(express.static(frontendPath));
+
+  // Fallback for SPA routing (only for non-API routes)
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) return next();
+    res.sendFile(indexHtml);
+  });
+} else {
+  console.warn(
+    `Frontend build not found at ${frontendPath}. Skipping static file serving. Run the frontend build (e.g. cd frontend && npm run build) or adjust the path.`
+  );
+}
 
 // Error handler (put this after routes)
 app.use((err, req, res, next) => {

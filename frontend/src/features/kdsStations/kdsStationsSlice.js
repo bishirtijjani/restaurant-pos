@@ -1,14 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "/api/kds";
+const API_URL = "/api/stations";
 
 // Fetch stations
 export const fetchStations = createAsyncThunk(
   "kds/fetchStations",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/stations`);
+      const response = await axios.get(`${API_URL}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -21,7 +21,7 @@ export const createStation = createAsyncThunk(
   "kds/createStation",
   async (stationData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/stations`, stationData);
+      const response = await axios.post(`${API_URL}`, stationData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -34,10 +34,7 @@ export const updateStation = createAsyncThunk(
   "kds/updateStation",
   async ({ id, ...stationData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(
-        `${API_URL}/stations/${id}`,
-        stationData
-      );
+      const response = await axios.put(`${API_URL}/${id}`, stationData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -50,7 +47,7 @@ export const deleteStation = createAsyncThunk(
   "kds/deleteStation",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`${API_URL}/stations/${id}`);
+      const response = await axios.delete(`${API_URL}/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
