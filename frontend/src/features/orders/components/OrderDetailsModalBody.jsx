@@ -14,7 +14,7 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   if (!order) {
     return <div className="p-4">Order not found</div>;

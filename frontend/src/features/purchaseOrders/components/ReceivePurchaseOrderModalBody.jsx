@@ -16,7 +16,7 @@ const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   const [receivedItems, setReceivedItems] = useState(
     order.items.map((item) => ({

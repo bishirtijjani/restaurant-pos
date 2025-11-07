@@ -171,7 +171,7 @@ const SearchAndFilters = ({
 };
 
 const InventoryCard = ({ item, onEdit, onDelete, onLink, settings }) => {
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
   const stockPercentage = item.minStockLevel
     ? (item.currentStock / item.minStockLevel) * 100
     : 100;
@@ -296,7 +296,7 @@ const InventoryCard = ({ item, onEdit, onDelete, onLink, settings }) => {
 };
 
 const InventoryTable = ({ items, onEdit, onDelete, onLink, settings }) => {
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   return (
     <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg">

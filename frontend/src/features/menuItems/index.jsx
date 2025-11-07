@@ -287,7 +287,7 @@ const MenuItems = () => {
                     {groupedItems[category].map((item) => (
                       <tr key={item._id} className="hover">
                         <td className="font-medium">{item.name}</td>
-                        <td>₦{item.price?.toLocaleString()}</td>
+                        <td>${item.price?.toLocaleString()}</td>
                         <td>{item.itemCode || "-"}</td>
                         <td>{item.preparationTime} mins</td>
                         <td>

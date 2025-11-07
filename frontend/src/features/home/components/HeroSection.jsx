@@ -135,7 +135,7 @@ export default function HeroSection() {
                         Revenue
                       </div>
                       <div className="text-base-content text-xl lg:text-2xl font-bold">
-                        ₦485K
+                        $485K
                       </div>
                       <div className="text-success text-xs">Peak hours</div>
                     </div>

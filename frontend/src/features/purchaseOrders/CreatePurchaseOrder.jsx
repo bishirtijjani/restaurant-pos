@@ -32,7 +32,7 @@ const CreatePurchaseOrder = () => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   const [formData, setFormData] = useState({
     supplier: "",

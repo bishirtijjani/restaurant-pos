@@ -108,7 +108,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 center justify-center">
         <StatCard
           title="Total Inventory Value"
-          value={`₦ ${stats?.totalInventoryValue.toLocaleString({
+          value={`$ ${stats?.totalInventoryValue.toLocaleString({
             maximumSignificantDigits: 3,
           })}`}
           icon={ChartBarIcon}
@@ -128,7 +128,7 @@ const Dashboard = () => {
           title="Total Sales Today"
           value={
             stats?.todaysSales
-              ? `₦ ${stats?.todaysSales
+              ? `$ ${stats?.todaysSales
                   .reduce((acc, sale) => acc + sale.totalAmount, 0)
                   .toLocaleString()}`
               : 0
@@ -392,7 +392,7 @@ const Dashboard = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-medium">
-                      ₦{activity.totalAmount.toLocaleString()}
+                      ${activity.totalAmount.toLocaleString()}
                     </p>
                     <p className="text-sm opacity-70">
                       {new Date(activity.createdAt).toLocaleString()}

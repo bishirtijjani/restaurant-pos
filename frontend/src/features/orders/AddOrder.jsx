@@ -86,7 +86,7 @@ const MenuItem = ({ item, addToCart }) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   const renderIcon = () => {
     switch (item.category) {
@@ -142,7 +142,7 @@ const CartItem = ({ item, updateQuantity }) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   return (
     <div className="flex items-center justify-between border-b border-base-300 pb-3 mb-3">
@@ -220,7 +220,7 @@ const OrderSummary = ({ cart, orderType, packagingFee, deliveryFee }) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   // Calculate with tax
   const calculateWithTax = () => {
@@ -373,7 +373,7 @@ export default function POS() {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
   const menuItems = useSelector((state) => state.menuItems.menuItems);
   const menuItemsStatus = useSelector((state) => state.menuItems.status);
   const menuItemsError = useSelector((state) => state.menuItems.error);

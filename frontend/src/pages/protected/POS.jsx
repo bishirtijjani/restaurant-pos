@@ -83,7 +83,7 @@ const MenuItem = ({ item, addToCart }) => (
       <h3 className="font-medium text-lg">{item.name}</h3>
       <div className="flex justify-between items-center mt-2">
         <span className="text-primary font-semibold">
-          ₦{item.price.toFixed(2)}
+          ${item.price.toFixed(2)}
         </span>
         <button className="btn btn-sm btn-primary btn-circle">
           <PlusCircle size={16} />
@@ -104,7 +104,7 @@ const CartItem = ({ item, updateQuantity }) => (
       />
       <div>
         <h4 className="font-medium">{item.name}</h4>
-        <p className="text-primary font-semibold">₦{item.price.toFixed(2)}</p>
+        <p className="text-primary font-semibold">${item.price.toFixed(2)}</p>
       </div>
     </div>
     <div className="flex items-center space-x-2">
@@ -177,7 +177,7 @@ const OrderSummary = ({
     <div className="bg-base-200 rounded-lg p-4 mb-4">
       <div className="flex justify-between mb-2">
         <span>Subtotal</span>
-        <span>₦{calculateSubtotal().toFixed(2)}</span>
+        <span>${calculateSubtotal().toFixed(2)}</span>
       </div>
 
       {orderType === "takeaway" && (
@@ -193,7 +193,7 @@ const OrderSummary = ({
               min="0"
             />
           </div>
-          <span>₦{parseFloat(packagingFee || 0).toFixed(2)}</span>
+          <span>${parseFloat(packagingFee || 0).toFixed(2)}</span>
         </div>
       )}
 
@@ -211,7 +211,7 @@ const OrderSummary = ({
                 min="0"
               />
             </div>
-            <span>₦{parseFloat(packagingFee || 0).toFixed(2)}</span>
+            <span>${parseFloat(packagingFee || 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between mb-2 text-info">
             <div className="flex items-center">
@@ -225,7 +225,7 @@ const OrderSummary = ({
                 min="0"
               />
             </div>
-            <span>₦{parseFloat(deliveryFee || 0).toFixed(2)}</span>
+            <span>${parseFloat(deliveryFee || 0).toFixed(2)}</span>
           </div>
         </>
       )}
@@ -234,7 +234,7 @@ const OrderSummary = ({
 
       <div className="flex justify-between font-bold text-lg">
         <span>Total</span>
-        <span>₦{calculateTotal().toFixed(2)}</span>
+        <span>${calculateTotal().toFixed(2)}</span>
       </div>
     </div>
   );
@@ -455,7 +455,7 @@ export default function POS() {
               onClick={() => setShowPayment(true)}
               disabled={cart.length === 0}
             >
-              Pay ₦{calculateTotal().toFixed(2)}
+              Pay ${calculateTotal().toFixed(2)}
             </button>
           </div>
         </div>

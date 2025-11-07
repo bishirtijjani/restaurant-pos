@@ -11,7 +11,7 @@ function UpdatePaymentModalBody({ extraObject }) {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");

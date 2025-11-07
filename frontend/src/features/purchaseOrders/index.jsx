@@ -140,7 +140,7 @@ const PurchaseOrderCard = ({
   onCancel,
   settings,
 }) => {
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   const formatDate = (dateString) => {
     if (!dateString) return "Not set";

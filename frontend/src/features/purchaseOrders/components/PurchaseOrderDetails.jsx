@@ -53,7 +53,7 @@ const PurchaseOrderDetails = () => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   useEffect(() => {
     if (id) {

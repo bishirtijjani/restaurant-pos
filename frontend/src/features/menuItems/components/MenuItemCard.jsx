@@ -96,7 +96,7 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
             {item.name}
           </h2>
           <div className="text-lg font-bold text-primary">
-            ₦{item.price?.toLocaleString()}
+            ${item.price?.toLocaleString()}
           </div>
         </div>
 

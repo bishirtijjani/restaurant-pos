@@ -136,7 +136,7 @@ const SearchAndFilters = ({
 };
 
 const AdjustmentCard = ({ adjustment, onView, settings }) => {
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
   const typeConfig = ADJUSTMENT_TYPES[adjustment.type];
   const TypeIcon = typeConfig?.icon || AlertCircle;
 

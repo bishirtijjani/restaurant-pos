@@ -168,7 +168,7 @@ const OrderCard = ({ order }) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -504,7 +504,7 @@ const Orders = () => {
                     </span>
                   </td>
                   <td className="font-medium">
-                    ₦{order.totalAmount?.toLocaleString()}
+                    ${order.totalAmount?.toLocaleString()}
                   </td>
                   <td className="text-sm">
                     {new Date(order.createdAt).toLocaleTimeString()}

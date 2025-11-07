@@ -20,7 +20,7 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "₦";
+  const currency = settings?.currency?.symbol || "$";
 
   const [paymentDetails, setPaymentDetails] = useState({
     paymentMethod: "cash",
@@ -186,10 +186,10 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
 
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">
-              Amount Received (₦)
+              Amount Received ($)
               {paymentDetails.isPartialPayment && (
                 <span className="text-gray-500 ml-2">
-                  (Must be less than ₦{orderTotal.toLocaleString()})
+                  (Must be less than ${orderTotal.toLocaleString()})
                 </span>
               )}
             </label>
@@ -208,7 +208,7 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
               <label className="block text-sm font-medium mb-2">Balance</label>
               <input
                 type="text"
-                value={`₦${paymentDetails.balance.toLocaleString()}`}
+                value={`$${paymentDetails.balance.toLocaleString()}`}
                 className="input input-bordered w-full"
                 disabled
               />
@@ -222,7 +222,7 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
               </label>
               <input
                 type="text"
-                value={`₦${paymentDetails.change.toLocaleString()}`}
+                value={`$${paymentDetails.change.toLocaleString()}`}
                 className="input input-bordered w-full"
                 disabled
               />

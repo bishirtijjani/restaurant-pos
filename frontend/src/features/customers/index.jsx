@@ -128,7 +128,7 @@ const Customers = () => {
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Address</th>
-                <th>Debt Limit (₦)</th>
+                <th>Debt Limit ($)</th>
                 <th>Created At</th>
                 <th>Edit</th>
                 <th>Delete</th>

@@ -127,7 +127,7 @@ function EditCustomerModalBody({ closeModal, extraObject }) {
         </div>
         <div className="mt-4">
           <label htmlFor="debtLimit" className="block text-sm font-medium">
-            Debt Limit (₦)
+            Debt Limit ($)
           </label>
           <input
             type="number"
