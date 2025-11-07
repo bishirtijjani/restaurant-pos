@@ -1,0 +1,298 @@
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  createStockAdjustment,
+  fetchStockAdjustments,
+} from "../stockAdjustmentsSlice";
+import { fetchInventoryItems } from "../../inventory/inventorySlice";
+import { closeModal } from "../../common/modalSlice";
+import { showNotification } from "../../common/headerSlice";
+import ErrorText from "../../../components/Typography/ErrorText";
+
+const ADJUSTMENT_TYPES = [
+  { value: "addition", label: "Addition (Add Stock)" },
+  { value: "subtraction", label: "Subtraction (Remove Stock)" },
+  { value: "correction", label: "Correction (Set Exact Amount)" },
+];
+
+const REASONS = [
+  { value: "wastage", label: "Wastage" },
+  { value: "damage", label: "Damage" },
+  { value: "theft", label: "Theft" },
+  { value: "return", label: "Return" },
+  { value: "donation", label: "Donation" },
+  { value: "correction", label: "Stock Correction" },
+  { value: "stock_take", label: "Stock Take" },
+  { value: "other", label: "Other" },
+];
+
+const AddStockAdjustmentModalBody = () => {
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.stockAdjustments);
+  const inventoryItems = useSelector((state) => state.inventory.items || []);
+
+  const [formData, setFormData] = useState({
+    inventoryItem: "",
+    type: "",
+    reason: "",
+    quantity: "",
+    notes: "",
+  });
+
+  const [errors, setErrors] = useState({});
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchInventoryItems());
+  }, [dispatch]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "inventoryItem") {
+      const item = inventoryItems.find((i) => i._id === value);
+      setSelectedItem(item);
+    }
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.inventoryItem) newErrors.inventoryItem = "Item is required";
+    if (!formData.type) newErrors.type = "Type is required";
+    if (!formData.reason) newErrors.reason = "Reason is required";
+
+    const quantity = parseFloat(formData.quantity);
+    if (!formData.quantity || quantity <= 0) {
+      newErrors.quantity = "Valid quantity is required";
+    }
+
+    // For subtraction, check if enough stock
+    if (formData.type === "subtraction" && selectedItem) {
+      if (quantity > selectedItem.currentStock) {
+        newErrors.quantity = `Cannot subtract ${quantity}. Only ${selectedItem.currentStock} available.`;
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    try {
+      await dispatch(
+        createStockAdjustment({
+          ...formData,
+          quantity: parseFloat(formData.quantity),
+        })
+      ).unwrap();
+
+      dispatch(
+        showNotification({
+          message: "Stock adjustment created successfully",
+          status: 1,
+        })
+      );
+      dispatch(fetchStockAdjustments());
+      dispatch(closeModal());
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.message || "Failed to create adjustment",
+          status: 0,
+        })
+      );
+    }
+  };
+
+  const getNewStockPreview = () => {
+    if (!selectedItem || !formData.quantity || !formData.type) return null;
+
+    const quantity = parseFloat(formData.quantity);
+    const current = selectedItem.currentStock;
+    let newStock;
+
+    switch (formData.type) {
+      case "addition":
+        newStock = current + quantity;
+        break;
+      case "subtraction":
+        newStock = current - quantity;
+        break;
+      case "correction":
+        newStock = quantity;
+        break;
+      default:
+        return null;
+    }
+
+    return (
+      <div className="alert alert-info mt-4">
+        <div className="flex flex-col w-full">
+          <div className="flex justify-between">
+            <span>Current Stock:</span>
+            <span className="font-semibold">
+              {current} {selectedItem.unit}
+            </span>
+          </div>
+          <div className="flex justify-between mt-1">
+            <span>New Stock:</span>
+            <span className="font-semibold text-primary">
+              {newStock} {selectedItem.unit}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Inventory Item *</span>
+        </label>
+        <select
+          name="inventoryItem"
+          value={formData.inventoryItem}
+          onChange={handleChange}
+          className={`select select-bordered ${
+            errors.inventoryItem ? "select-error" : ""
+          }`}
+        >
+          <option value="">Select item</option>
+          {inventoryItems.map((item) => (
+            <option key={item._id} value={item._id}>
+              {item.name} - Current: {item.currentStock} {item.unit}
+            </option>
+          ))}
+        </select>
+        {errors.inventoryItem && <ErrorText>{errors.inventoryItem}</ErrorText>}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Adjustment Type *</span>
+          </label>
+          <select
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            className={`select select-bordered ${
+              errors.type ? "select-error" : ""
+            }`}
+          >
+            <option value="">Select type</option>
+            {ADJUSTMENT_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+          {errors.type && <ErrorText>{errors.type}</ErrorText>}
+        </div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Reason *</span>
+          </label>
+          <select
+            name="reason"
+            value={formData.reason}
+            onChange={handleChange}
+            className={`select select-bordered ${
+              errors.reason ? "select-error" : ""
+            }`}
+          >
+            <option value="">Select reason</option>
+            {REASONS.map((reason) => (
+              <option key={reason.value} value={reason.value}>
+                {reason.label}
+              </option>
+            ))}
+          </select>
+          {errors.reason && <ErrorText>{errors.reason}</ErrorText>}
+        </div>
+      </div>
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">
+            Quantity * {selectedItem && `(${selectedItem.unit})`}
+          </span>
+        </label>
+        <input
+          type="number"
+          name="quantity"
+          value={formData.quantity}
+          onChange={handleChange}
+          className={`input input-bordered ${
+            errors.quantity ? "input-error" : ""
+          }`}
+          placeholder={
+            formData.type === "correction"
+              ? "Enter exact stock quantity"
+              : "Enter quantity to adjust"
+          }
+          min="0"
+          step="0.01"
+        />
+        {errors.quantity && <ErrorText>{errors.quantity}</ErrorText>}
+        {formData.type === "correction" && (
+          <label className="label">
+            <span className="label-text-alt">
+              This will set the stock to exactly this amount
+            </span>
+          </label>
+        )}
+      </div>
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Notes (Optional)</span>
+        </label>
+        <textarea
+          name="notes"
+          value={formData.notes}
+          onChange={handleChange}
+          className="textarea textarea-bordered"
+          rows="3"
+          placeholder="Additional notes about this adjustment..."
+        />
+      </div>
+
+      {getNewStockPreview()}
+
+      <div className="modal-action">
+        <button
+          type="button"
+          onClick={() => dispatch(closeModal())}
+          className="btn btn-outline"
+          disabled={loading}
+        >
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="loading loading-spinner loading-sm"></span>
+              Creating...
+            </>
+          ) : (
+            "Create Adjustment"
+          )}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default AddStockAdjustmentModalBody;

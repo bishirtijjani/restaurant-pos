@@ -23,6 +23,17 @@ const GeneralSettings = lazy(() =>
 );
 const KDS = lazy(() => import("../pages/protected/KDS"));
 const KDSStations = lazy(() => import("../pages/protected/KDSStations"));
+const Inventory = lazy(() => import("../pages/protected/Inventory"));
+const StockAdjustments = lazy(() =>
+  import("../pages/protected/StockAdjustments")
+);
+const PurchaseOrders = lazy(() => import("../pages/protected/PurchaseOrders"));
+const CreatePurchaseOrder = lazy(() =>
+  import("../pages/protected/CreatePurchaseOrder")
+);
+const PurchaseOrderDetails = lazy(() =>
+  import("../pages/protected/PurchaseOrderDetails")
+);
 
 const routes = [
   {
@@ -60,6 +71,26 @@ const routes = [
   {
     path: "/orders/add-new",
     component: AddOrder,
+  },
+  {
+    path: "/inventory",
+    component: Inventory,
+  },
+  {
+    path: "/purchase-orders",
+    component: PurchaseOrders,
+  },
+  {
+    path: "/purchase-orders/new",
+    component: CreatePurchaseOrder,
+  },
+  {
+    path: "/purchase-orders/:id",
+    component: PurchaseOrderDetails,
+  },
+  {
+    path: "/stock-adjustments",
+    component: StockAdjustments,
   },
   {
     path: "/suppliers",

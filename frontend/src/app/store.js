@@ -16,6 +16,9 @@ import generalSettingsReducer from "../features/settings/generalSettings/general
 import kdsReducer from "../features/kds/kdsSlice";
 import kdsStationsReducer from "../features/kdsStations/kdsStationsSlice";
 import onboardingReducer from "../features/onboarding/onboardingSlice";
+import stockAdjustmentsReducer from "../features/stockAdjustments/stockAdjustmentsSlice";
+import inventoryReducer from "../features/inventory/inventorySlice";
+import purchaseOrdersReducer from "../features/purchaseOrders/purchaseOrdersSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -35,6 +38,9 @@ const combinedReducer = {
   kds: kdsReducer,
   kdsStations: kdsStationsReducer,
   onboarding: onboardingReducer,
+  stockAdjustments: stockAdjustmentsReducer,
+  inventory: inventoryReducer,
+  purchaseOrders: purchaseOrdersReducer,
 };
 
 export default configureStore({

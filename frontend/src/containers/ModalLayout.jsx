@@ -1,30 +1,53 @@
 import { MODAL_BODY_TYPES } from "../utils/globalConstantUtil";
 import { useSelector, useDispatch } from "react-redux";
 import { closeModal } from "../features/common/modalSlice";
+import { X } from "lucide-react";
+
 import ConfirmationModalBody from "../features/common/components/ConfirmationModalBody";
+
 import SessionExpiredModalBody from "../features/common/components/SessionExpiredModalBody";
+
 import ViewUserModalBody from "../features/users/components/ViewUserModalBody";
 import EditUserModalBody from "../features/users/components/EditUserModalBody";
 import AddUserModalBody from "../features/users/components/AddUserModalBody";
+
 import AddMenuItemModalBody from "../features/menuItems/components/AddMenuItemModalBody";
 import EditMenuItemModalBody from "../features/menuItems/components/EditMenuItemModalBody";
+
 import AddCategoryModalBody from "../features/categories/components/AddCategoryModalBody";
 import EditCategoryModalBody from "../features/categories/components/EditCategoryModalBody";
+
 import AddSupplierModalBody from "../features/suppliers/components/AddSupplierModalBody";
 import EditSupplierModalBody from "../features/suppliers/components/EditSupplierModalBody";
+
 import AddOrderModalBody from "../features/orders/components/AddOrderModalBody";
 import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
 import Receipt from "../features/common/components/Receipt";
+
 import AddExpenseModalBody from "../features/expenses/components/AddExpenseModalBody";
 import EditExpenseModalBody from "../features/expenses/components/EditExpenseModalBody";
+
 import AddCustomerModalBody from "../features/customers/components/AddCustomerModalBody";
 import EditCustomerModalBody from "../features/customers/components/EditCustomerModalBody";
+
 import ViewMenuItemModalBody from "../features/menuItems/components/ViewMenuItemModalBody";
-import { X } from "lucide-react";
+
 import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
+
 import OrderDetailsModalBody from "../features/orders/components/OrderDetailsModalBody";
 import UpdatePaymentModalBody from "../features/orders/components/UpdatePaymentModalBody";
+
 import StationManagementModalBody from "../features/kdsStations/components/StationManagementModalBody";
+
+import AddStockAdjustmentModalBody from "../features/stockAdjustments/components/AddStockAdjustmentModalBody";
+import ViewStockAdjustmentModalBody from "../features/stockAdjustments/components/ViewStockAdjustmentModalBody";
+
+import ReceivePurchaseOrderModalBody from "../features/purchaseOrders/components/ReceivePurchaseOrderModalBody";
+
+import AddInventoryModalBody from "../features/inventory/components/AddInventoryModalBody";
+import EditInventoryModalBody from "../features/inventory/components/EditInventoryModalBody";
+import LinkMenuItemsModalBody from "../features/inventory/components/LinkMenuItemsModalBody";
+
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
     (state) => state.modal
@@ -77,6 +100,7 @@ function ModalLayout() {
                     extraObject={extraObject}
                   />
                 ),
+
                 [MODAL_BODY_TYPES.ADD_NEW_CUSTOMER]: (
                   <AddCustomerModalBody
                     closeModal={close}
@@ -89,6 +113,7 @@ function ModalLayout() {
                     extraObject={extraObject}
                   />
                 ),
+
                 [MODAL_BODY_TYPES.ADD_NEW_MENU_ITEM]: (
                   <AddMenuItemModalBody
                     closeModal={close}
@@ -107,6 +132,7 @@ function ModalLayout() {
                     extraObject={extraObject}
                   />
                 ),
+
                 [MODAL_BODY_TYPES.ADD_NEW_CATEGORY]: (
                   <AddCategoryModalBody
                     closeModal={close}
@@ -119,6 +145,7 @@ function ModalLayout() {
                     extraObject={extraObject}
                   />
                 ),
+
                 [MODAL_BODY_TYPES.ADD_NEW_SUPPLIER]: (
                   <AddSupplierModalBody
                     closeModal={close}
@@ -131,6 +158,7 @@ function ModalLayout() {
                     extraObject={extraObject}
                   />
                 ),
+
                 [MODAL_BODY_TYPES.ADD_ORDER]: (
                   <AddOrderModalBody
                     closeModal={close}
@@ -179,6 +207,45 @@ function ModalLayout() {
 
                 [MODAL_BODY_TYPES.KDS_SETTINGS]: (
                   <KDSSettingsModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+
+                [MODAL_BODY_TYPES.ADD_STOCK_ADJUSTMENT]: (
+                  <AddStockAdjustmentModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.VIEW_STOCK_ADJUSTMENT]: (
+                  <ViewStockAdjustmentModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+
+                [MODAL_BODY_TYPES.RECEIVE_PURCHASE_ORDER]: (
+                  <ReceivePurchaseOrderModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+
+                [MODAL_BODY_TYPES.ADD_INVENTORY_ITEM]: (
+                  <AddInventoryModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_INVENTORY_ITEM]: (
+                  <EditInventoryModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.LINK_MENU_ITEMS]: (
+                  <LinkMenuItemsModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />

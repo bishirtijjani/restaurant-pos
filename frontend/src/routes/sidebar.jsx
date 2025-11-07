@@ -13,7 +13,8 @@ import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
 import IdentificationIcon from "@heroicons/react/24/outline/IdentificationIcon";
 import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import PlusCircleIcon from "@heroicons/react/24/outline/PlusCircleIcon";
-import { Monitor } from "lucide-react";
+import { FileText, Monitor, Package } from "lucide-react";
+import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 
 const iconClasses = `h-6 w-6`;
 const submenuIconClasses = `h-6 w-6`;
@@ -44,10 +45,33 @@ export const adminRoutes = [
     icon: <TagIcon className={iconClasses} />,
     name: "Menu Items",
   },
+
   {
     path: "/app/suppliers",
     icon: <TruckIcon className={iconClasses} />,
     name: "Suppliers",
+  },
+  {
+    path: "",
+    icon: <Package className="h-6 w-6" />,
+    name: "Inventory",
+    submenu: [
+      {
+        path: "/app/inventory",
+        icon: <Package className="h-6 w-6" />,
+        name: "Inventory Items",
+      },
+      {
+        path: "/app/purchase-orders",
+        icon: <FileText className="h-6 w-6" />,
+        name: "Purchase Orders",
+      },
+      {
+        path: "/app/stock-adjustments",
+        icon: <ClipboardDocumentListIcon className="h-6 w-6" />,
+        name: "Stock Adjustments",
+      },
+    ],
   },
   {
     path: "/app/expenses",
