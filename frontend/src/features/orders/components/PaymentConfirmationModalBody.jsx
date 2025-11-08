@@ -5,11 +5,14 @@ import { showNotification } from "../../common/headerSlice";
 import { openModal } from "../../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { closeModal } from "../../common/modalSlice";
+import { closeRightDrawer } from "../../common/rightDrawerSlice";
 import { useNavigate } from "react-router-dom";
 
 import ErrorText from "../../../components/Typography/ErrorText";
 
-function PaymentConfirmationModalBody({ extraObject = {} }) {
+function PaymentConfirmationModalBody(props) {
+  console.log(props);
+  const extraObject = props.extraObject || props;
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
@@ -130,6 +133,7 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
 
         dispatch(fetchOrders());
         dispatch(closeModal());
+        dispatch(closeRightDrawer());
 
         dispatch(
           openModal({
@@ -242,7 +246,8 @@ function PaymentConfirmationModalBody({ extraObject = {} }) {
           Complete Order
         </button>
         <button
-          onClick={() => dispatch(closeModal())}
+          // onClick={() => dispatch(closeModal())}
+          onClick={() => dispatch(closeRightDrawer())}
           className="btn btn-error"
         >
           Cancel

@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import NotificationBodyRightDrawer from "../features/common/components/NotificationBodyRightDrawer";
 import { closeRightDrawer } from "../features/common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
+import AddOrder from "../features/orders/AddOrder";
+import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
 
 function RightSidebar() {
   const { isOpen, bodyType, extraObject, header } = useSelector(
@@ -49,6 +51,15 @@ function RightSidebar() {
                 {
                   [RIGHT_DRAWER_TYPES.NOTIFICATION]: (
                     <NotificationBodyRightDrawer
+                      {...extraObject}
+                      closeRightDrawer={close}
+                    />
+                  ),
+                  [RIGHT_DRAWER_TYPES.ADD_ORDER]: (
+                    <AddOrder {...extraObject} closeRightDrawer={close} />
+                  ),
+                  [RIGHT_DRAWER_TYPES.CONFIRM_PAYMENT]: (
+                    <PaymentConfirmationModalBody
                       {...extraObject}
                       closeRightDrawer={close}
                     />

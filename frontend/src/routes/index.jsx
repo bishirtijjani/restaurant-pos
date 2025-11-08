@@ -69,7 +69,7 @@ const routes = [
     component: Orders,
   },
   {
-    path: "/orders/add-new",
+    path: "/orders/new",
     component: AddOrder,
   },
   {

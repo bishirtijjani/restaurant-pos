@@ -53,6 +53,8 @@ export const MODAL_BODY_TYPES = Object.freeze({
 export const RIGHT_DRAWER_TYPES = Object.freeze({
   NOTIFICATION: "NOTIFICATION",
   CALENDAR_EVENTS: "CALENDAR_EVENTS",
+  ADD_ORDER: "ADD_ORDER",
+  DEFAULT: "",
 });
 
 export const CONFIRMATION_MODAL_CLOSE_TYPES = Object.freeze({

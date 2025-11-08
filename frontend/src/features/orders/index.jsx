@@ -30,6 +30,8 @@ import {
   UserCircleIcon,
   AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
+import { Plus, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const statusColors = {
   pending: "badge-info",
@@ -363,6 +365,31 @@ const OrderCard = ({ order }) => {
   );
 };
 
+const TopSideButtons = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {(checkRole("admin") || checkRole("manager")) && (
+        <button
+          onClick={() => navigate("/app/orders/new")}
+          className="btn btn-primary btn-sm lg:btn-md gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">New Order</span>
+        </button>
+      )}
+      <button
+        onClick={() => window.location.reload()}
+        className="btn btn-ghost btn-sm lg:btn-md gap-2"
+      >
+        <RefreshCw className="w-4 h-4" />
+        <span className="hidden sm:inline">Refresh</span>
+      </button>
+    </div>
+  );
+};
+
 const Orders = () => {
   const dispatch = useDispatch();
   const { orders, loading, error, filters } = useSelector(
@@ -399,7 +426,11 @@ const Orders = () => {
   if (loading) return <SuspenseContent />;
 
   return (
-    <TitleCard title="Orders Management" topMargin="mt-2">
+    <TitleCard
+      title="Orders Management"
+      TopSideButtons={<TopSideButtons />}
+      topMargin="mt-2"
+    >
       <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
         <SearchBar
           searchText={searchQuery}

@@ -13,10 +13,18 @@ process.on("uncaughtException", (error) => {
   process.exit(1);
 });
 
+// Error handling for unhandled promise rejections
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
+
+const corsOptions = require("./config/corsOptions");
+
 // Middleware
 dotenv.config();
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Database connection
 connectToDB();

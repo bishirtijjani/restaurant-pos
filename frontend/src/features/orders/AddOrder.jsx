@@ -19,11 +19,15 @@ import {
   User,
 } from "lucide-react";
 import { openModal } from "../common/modalSlice";
-import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
+import {
+  MODAL_BODY_TYPES,
+  RIGHT_DRAWER_TYPES,
+} from "../../utils/globalConstantUtil";
 import { fetchAllMenuItems } from "../menuItems/menuItemsSlice";
 import { fetchAllCategories } from "../categories/categoriesSlice";
 import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 import TaxBreakdown from "./components/TaxBreakdown";
+import { openRightDrawer } from "../common/rightDrawerSlice";
 
 // Component for the order type selector
 const OrderTypeSelector = ({ orderType, setOrderType }) => (
@@ -510,13 +514,21 @@ export default function POS() {
 
     // Open payment confirmation modal with order details
     dispatch(
-      openModal({
+      openRightDrawer({
         title: "Payment Confirmation",
-        bodyType: MODAL_BODY_TYPES.PAYMENT_CONFIRMATION,
+        bodyType: RIGHT_DRAWER_TYPES.CONFIRM_PAYMENT,
         extraObject: orderPayload,
-        size: "lg",
+        // size: "lg",
       })
     );
+    // dispatch(
+    //   openModal({
+    //     title: "Payment Confirmation",
+    //     bodyType: MODAL_BODY_TYPES.PAYMENT_CONFIRMATION,
+    //     extraObject: orderPayload,
+    //     size: "lg",
+    //   })
+    // );
   };
 
   // Update customer details when order type changes
