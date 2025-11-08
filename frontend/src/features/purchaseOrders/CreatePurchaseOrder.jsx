@@ -110,6 +110,8 @@ const CreatePurchaseOrder = () => {
     return (parseFloat(quantity) || 0) * (parseFloat(unitPrice) || 0);
   };
 
+  // Note: Total is calculated on the server side for security
+  // This is just for display preview
   const calculateTotal = () => {
     return formData.items.reduce((total, item) => {
       return total + calculateItemSubtotal(item.quantity, item.unitPrice);

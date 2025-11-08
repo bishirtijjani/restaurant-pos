@@ -1,5 +1,4 @@
-// frontend/src/features/kds/index.jsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   RefreshCw,
@@ -22,6 +21,7 @@ import StationSelector from "./components/StationSelector";
 import SuspenseContent from "../../containers/SuspenseContent";
 import { openModal } from "../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
+import useWebSocket from "../common/hooks/useWebSocket";
 
 const KDS = () => {
   const dispatch = useDispatch();
@@ -35,20 +35,17 @@ const KDS = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [manualRefresh, setManualRefresh] = useState(false);
-  const [previousOrderCount, setPreviousOrderCount] = useState(0);
   const [showCompleted, setShowCompleted] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const kdsContainerRef = useRef(null);
-  const fetchTimeoutRef = useRef(null);
 
-  // Initialize stations - only once
+  // Initialize stations
   useEffect(() => {
     dispatch(fetchStations());
-    console.log(" Fetching KDS Stations on mount: ", stations);
   }, [dispatch]);
 
-  // Set initial station once stations are loaded
+  // Set initial station
   useEffect(() => {
     if (stations.length > 0 && !currentStation) {
       const savedStationId = localStorage.getItem("kdsCurrentStation");
@@ -65,30 +62,64 @@ const KDS = () => {
     }
   }, [stations, currentStation, dispatch]);
 
-  // Fetch orders when station or showCompleted changes
+  // WebSocket message handler
+  const handleWebSocketMessage = useCallback(
+    (data) => {
+      const { type, data: orderData } = data;
+
+      console.log("WebSocket message received:", type);
+
+      switch (type) {
+        case "order:created":
+          // Play sound for new orders
+          if (settings.soundEnabled && !showCompleted) {
+            dispatch(playSound());
+          }
+          // Refresh orders
+          if (currentStation) {
+            const stationId =
+              currentStation.type === "all" ? "all" : currentStation._id;
+            dispatch(fetchKDSOrders({ stationId, showCompleted }));
+          }
+          break;
+
+        case "order:updated":
+        case "order:statusChanged":
+        case "order:recalled":
+        case "order:cancelled":
+          // Refresh orders for any status change
+          if (currentStation) {
+            const stationId =
+              currentStation.type === "all" ? "all" : currentStation._id;
+            dispatch(fetchKDSOrders({ stationId, showCompleted }));
+          }
+          break;
+
+        default:
+          break;
+      }
+    },
+    [currentStation, showCompleted, settings.soundEnabled, dispatch]
+  );
+
+  // WebSocket connection
+  const { isConnected: wsConnected } = useWebSocket(handleWebSocketMessage, {
+    stationId: currentStation?.type === "all" ? "all" : currentStation?._id,
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 10,
+    enabled: !!currentStation, // Only connect when station is selected
+  });
+
+  // Initial fetch
   useEffect(() => {
     if (!currentStation) return;
-
-    // Clear any pending fetch
-    if (fetchTimeoutRef.current) {
-      clearTimeout(fetchTimeoutRef.current);
-    }
 
     const stationId =
       currentStation.type === "all" ? "all" : currentStation._id;
 
-    // Log to debug
-    console.log(
-      "Fetching orders for station:",
-      stationId,
-      "showCompleted:",
-      showCompleted
-    );
-
     dispatch(fetchKDSOrders({ stationId, showCompleted }))
       .unwrap()
-      .then((result) => {
-        console.log("Orders fetched:", result.data?.length || 0);
+      .then(() => {
         if (isInitialLoad) {
           setIsInitialLoad(false);
         }
@@ -99,55 +130,7 @@ const KDS = () => {
           setIsInitialLoad(false);
         }
       });
-  }, [currentStation, showCompleted, dispatch]);
-  // Auto-refresh effect - separate from main fetch
-  useEffect(() => {
-    if (
-      !settings.autoRefresh ||
-      showCompleted ||
-      !currentStation ||
-      isInitialLoad
-    ) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      const stationId =
-        currentStation.type === "all" ? "all" : currentStation._id;
-      dispatch(fetchKDSOrders({ stationId, showCompleted }));
-    }, settings.refreshInterval * 1000);
-
-    return () => clearInterval(interval);
-  }, [
-    settings.autoRefresh,
-    settings.refreshInterval,
-    showCompleted,
-    currentStation,
-    isInitialLoad,
-    dispatch,
-  ]);
-
-  // Sound notification for new orders
-  useEffect(() => {
-    if (isInitialLoad) return; // Don't play sound on initial load
-
-    if (
-      orders.length > previousOrderCount &&
-      previousOrderCount > 0 &&
-      !showCompleted
-    ) {
-      if (settings.soundEnabled) {
-        dispatch(playSound());
-      }
-    }
-    setPreviousOrderCount(orders.length);
-  }, [
-    orders.length,
-    isInitialLoad,
-    showCompleted,
-    settings.soundEnabled,
-    dispatch,
-  ]);
+  }, [currentStation, showCompleted, dispatch, isInitialLoad]);
 
   // Online/Offline listeners
   useEffect(() => {
@@ -221,7 +204,6 @@ const KDS = () => {
     }[cols];
   };
 
-  // Show loader only during initial load
   if (isInitialLoad && loading) {
     return <SuspenseContent />;
   }
@@ -236,26 +218,24 @@ const KDS = () => {
         <div className="flex-1">
           <h1 className="text-2xl font-bold ml-4">Kitchen Display</h1>
           <div className="ml-4 flex items-center gap-2">
-            {isOnline ? (
+            {wsConnected && isOnline ? (
               <Wifi size={16} className="text-success" />
             ) : (
               <WifiOff size={16} className="text-error" />
             )}
             <span className="text-sm opacity-70">
-              {isOnline ? "Online" : "Offline"}
+              {wsConnected && isOnline ? "Live" : "Offline"}
             </span>
           </div>
         </div>
 
         <div className="flex-none gap-2">
-          {/* Station Selector */}
           <StationSelector
             stations={stations}
             currentStation={currentStation}
             onStationChange={handleStationChange}
           />
 
-          {/* Show Completed Toggle */}
           <div className="form-control">
             <label className="label cursor-pointer gap-2 px-4">
               <span className="label-text hidden md:inline">
@@ -270,7 +250,6 @@ const KDS = () => {
             </label>
           </div>
 
-          {/* Order Count */}
           <div className="badge badge-primary badge-lg gap-2">
             <span className="font-bold">{orders.length}</span>
             <span className="hidden md:inline">
@@ -282,7 +261,6 @@ const KDS = () => {
             </span>
           </div>
 
-          {/* Refresh Button */}
           <button
             onClick={handleManualRefresh}
             className={`btn btn-ghost btn-circle ${
@@ -294,7 +272,6 @@ const KDS = () => {
             <RefreshCw size={20} />
           </button>
 
-          {/* Settings */}
           <button
             className="btn btn-ghost btn-circle"
             title="KDS Settings"
@@ -311,7 +288,6 @@ const KDS = () => {
             <Settings size={20} />
           </button>
 
-          {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
             className="btn btn-ghost btn-circle"
@@ -320,7 +296,6 @@ const KDS = () => {
             {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
           </button>
 
-          {/* Last Update */}
           {lastUpdate && (
             <div className="hidden lg:block text-xs opacity-70">
               Last updated: {new Date(lastUpdate).toLocaleTimeString()}
