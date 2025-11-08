@@ -1,20 +1,12 @@
-// backend/controllers/kdsController.js
 const Order = require("../models/Order");
 const KDSStation = require("../models/KDSStation");
 const MenuItem = require("../models/MenuItem");
+const { notifyKDS } = require("../utils/webSocket");
 
 exports.getKDSOrders = async (req, res) => {
   try {
     const { stationId } = req.params;
-    const { status, showCompleted } = req.query;
-    console.log(
-      "Fetching KDS Orders for station:",
-      stationId,
-      "with showCompleted:",
-      showCompleted,
-      "and status: ",
-      status
-    ); // Debug log
+    const { showCompleted } = req.query;
 
     let station = null;
     let categoryFilter = {};
@@ -33,12 +25,11 @@ exports.getKDSOrders = async (req, res) => {
       }
     }
 
-    // Build query - show active orders or completed if requested
     let orderStatuses;
     if (showCompleted === "true") {
-      orderStatuses = ["ready"]; // Only show completed (ready) orders
+      orderStatuses = ["ready"];
     } else {
-      orderStatuses = ["pending", "preparing"]; // Show active orders
+      orderStatuses = ["pending", "preparing"];
     }
 
     const query = {
@@ -46,16 +37,11 @@ exports.getKDSOrders = async (req, res) => {
       ...categoryFilter,
     };
 
-    console.log("KDS Query:", JSON.stringify(query)); // Debug log
-
     const orders = await Order.find(query)
       .populate("orderItems.menuItemId", "name category preparationTime")
       .populate("servedBy", "fullname")
       .sort({ createdAt: 1 });
 
-    console.log("Orders found:", orders.length); // Debug log
-
-    // Filter items by station categories if applicable
     const filteredOrders = orders
       .map((order) => {
         if (station && station.categories && station.categories.length > 0) {
@@ -88,11 +74,10 @@ exports.getKDSOrders = async (req, res) => {
   }
 };
 
-// Update order status in KDS (Start = preparing, Complete = ready)
 exports.updateKDSOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { action } = req.body; // action: 'start' or 'complete'
+    const { action } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
@@ -132,6 +117,9 @@ exports.updateKDSOrderStatus = async (req, res) => {
     );
     await order.populate("servedBy", "fullname");
 
+    // Notify KDS via WebSocket
+    notifyKDS("order:statusChanged", order);
+
     res.json({
       success: true,
       message: `Order ${
@@ -148,7 +136,6 @@ exports.updateKDSOrderStatus = async (req, res) => {
   }
 };
 
-// Recall order (move from ready back to preparing)
 exports.recallOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -162,7 +149,6 @@ exports.recallOrder = async (req, res) => {
       });
     }
 
-    // Can only recall ready orders
     if (order.orderStatus !== "ready") {
       return res.status(400).json({
         success: false,
@@ -191,6 +177,9 @@ exports.recallOrder = async (req, res) => {
       "name category preparationTime"
     );
     await order.populate("servedBy", "fullname");
+
+    // Notify KDS via WebSocket
+    notifyKDS("order:recalled", order);
 
     res.json({
       success: true,

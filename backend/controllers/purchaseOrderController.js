@@ -71,7 +71,7 @@ exports.getPurchaseOrderById = async (req, res) => {
   }
 };
 
-// Create purchase order
+// Create purchase order with SERVER-SIDE calculation
 exports.createPurchaseOrder = async (req, res) => {
   try {
     const { supplier, expectedDeliveryDate, items, notes, invoiceNumber } =
@@ -81,7 +81,7 @@ exports.createPurchaseOrder = async (req, res) => {
     if (!supplier || !items || items.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Supplier and items are required",
+        message: "Supplier and at least one item are required",
       });
     }
 
@@ -94,32 +94,55 @@ exports.createPurchaseOrder = async (req, res) => {
       });
     }
 
-    // Process items and calculate total
+    // Process items and calculate total SERVER-SIDE
     let totalAmount = 0;
     const processedItems = [];
 
     for (const item of items) {
+      // Validate inventory item exists
       const inventoryItem = await InventoryItem.findById(item.inventoryItem);
       if (!inventoryItem) {
         return res.status(404).json({
           success: false,
-          message: `Inventory item ${item.inventoryItem} not found`,
+          message: `Inventory item not found`,
         });
       }
 
-      const subtotal = item.quantity * item.unitPrice;
+      // Parse and validate quantities
+      const quantity = parseFloat(item.quantity);
+      const unitPrice = parseFloat(item.unitPrice);
+
+      if (isNaN(quantity) || quantity <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid quantity for ${inventoryItem.name}`,
+        });
+      }
+
+      if (isNaN(unitPrice) || unitPrice < 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid unit price for ${inventoryItem.name}`,
+        });
+      }
+
+      // Calculate subtotal on SERVER
+      const subtotal = Math.round(quantity * unitPrice * 100) / 100;
       totalAmount += subtotal;
 
       processedItems.push({
         inventoryItem: item.inventoryItem,
         name: inventoryItem.name,
-        quantity: item.quantity,
+        quantity,
         unit: inventoryItem.unit,
-        unitPrice: item.unitPrice,
+        unitPrice,
         subtotal,
         receivedQuantity: 0,
       });
     }
+
+    // Round total to 2 decimal places
+    totalAmount = Math.round(totalAmount * 100) / 100;
 
     const purchaseOrder = await PurchaseOrder.create({
       supplier,
@@ -163,7 +186,7 @@ exports.createPurchaseOrder = async (req, res) => {
   }
 };
 
-// Update purchase order
+// Update purchase order with SERVER-SIDE calculation
 exports.updatePurchaseOrder = async (req, res) => {
   try {
     const order = await PurchaseOrder.findById(req.params.id);
@@ -185,7 +208,7 @@ exports.updatePurchaseOrder = async (req, res) => {
 
     const oldOrder = { ...order.toObject() };
 
-    // If items are being updated, recalculate total
+    // If items are being updated, recalculate total SERVER-SIDE
     if (req.body.items) {
       let totalAmount = 0;
       const processedItems = [];
@@ -195,24 +218,42 @@ exports.updatePurchaseOrder = async (req, res) => {
         if (!inventoryItem) {
           return res.status(404).json({
             success: false,
-            message: `Inventory item ${item.inventoryItem} not found`,
+            message: `Inventory item not found`,
           });
         }
 
-        const subtotal = item.quantity * item.unitPrice;
+        const quantity = parseFloat(item.quantity);
+        const unitPrice = parseFloat(item.unitPrice);
+
+        if (isNaN(quantity) || quantity <= 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid quantity for ${inventoryItem.name}`,
+          });
+        }
+
+        if (isNaN(unitPrice) || unitPrice < 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid unit price for ${inventoryItem.name}`,
+          });
+        }
+
+        const subtotal = Math.round(quantity * unitPrice * 100) / 100;
         totalAmount += subtotal;
 
         processedItems.push({
           inventoryItem: item.inventoryItem,
           name: inventoryItem.name,
-          quantity: item.quantity,
+          quantity,
           unit: inventoryItem.unit,
-          unitPrice: item.unitPrice,
+          unitPrice,
           subtotal,
           receivedQuantity: item.receivedQuantity || 0,
         });
       }
 
+      totalAmount = Math.round(totalAmount * 100) / 100;
       req.body.items = processedItems;
       req.body.totalAmount = totalAmount;
     }
@@ -338,14 +379,30 @@ exports.receivePurchaseOrder = async (req, res) => {
       );
 
       if (orderItem) {
-        orderItem.receivedQuantity = receivedItem.receivedQuantity;
+        const receivedQty = parseFloat(receivedItem.receivedQuantity);
+
+        if (isNaN(receivedQty) || receivedQty < 0) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid received quantity",
+          });
+        }
+
+        if (receivedQty > orderItem.quantity) {
+          return res.status(400).json({
+            success: false,
+            message: `Received quantity cannot exceed ordered quantity for ${orderItem.name}`,
+          });
+        }
+
+        orderItem.receivedQuantity = receivedQty;
 
         // Update inventory stock
         const inventoryItem = await InventoryItem.findById(
           orderItem.inventoryItem
         );
         if (inventoryItem) {
-          inventoryItem.currentStock += receivedItem.receivedQuantity;
+          inventoryItem.currentStock += receivedQty;
           inventoryItem.lastRestockDate = new Date();
           await inventoryItem.save();
         }
@@ -355,7 +412,11 @@ exports.receivePurchaseOrder = async (req, res) => {
     order.status = "received";
     order.actualDeliveryDate = actualDeliveryDate || new Date();
     order.paymentStatus = paymentStatus || order.paymentStatus;
-    order.amountPaid = amountPaid || order.amountPaid;
+
+    const paidAmount = parseFloat(amountPaid);
+    if (!isNaN(paidAmount) && paidAmount >= 0) {
+      order.amountPaid = paidAmount;
+    }
 
     await order.save();
 
@@ -394,6 +455,13 @@ exports.receivePurchaseOrder = async (req, res) => {
 exports.cancelPurchaseOrder = async (req, res) => {
   try {
     const { reason } = req.body;
+
+    if (!reason || reason.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Cancellation reason is required",
+      });
+    }
 
     const order = await PurchaseOrder.findById(req.params.id);
 
@@ -464,7 +532,24 @@ exports.updatePaymentStatus = async (req, res) => {
     const oldOrder = { ...order.toObject() };
 
     if (paymentStatus) order.paymentStatus = paymentStatus;
-    if (amountPaid !== undefined) order.amountPaid = amountPaid;
+
+    if (amountPaid !== undefined) {
+      const paidAmount = parseFloat(amountPaid);
+      if (isNaN(paidAmount) || paidAmount < 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid amount paid",
+        });
+      }
+      if (paidAmount > order.totalAmount) {
+        return res.status(400).json({
+          success: false,
+          message: "Amount paid cannot exceed total amount",
+        });
+      }
+      order.amountPaid = paidAmount;
+    }
+
     if (paymentMethod) order.paymentMethod = paymentMethod;
 
     await order.save();

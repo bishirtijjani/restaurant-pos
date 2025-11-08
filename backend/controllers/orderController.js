@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const MenuItem = require("../models/MenuItem");
 const GeneralSettings = require("../models/GeneralSettings");
 const logAction = require("../utils/logAction");
+const { notifyKDS } = require("../utils/webSocket");
 
 // Function to generate unique order numbers
 const generateOrderNumber = async () => {
@@ -24,18 +25,15 @@ const calculateOrderTax = (orderItems, settings, orderType) => {
   let totalTax = 0;
   const itemTaxes = [];
 
-  // Calculate subtotal and per-item taxes
   orderItems.forEach((item) => {
     const itemSubtotal = item.price * item.quantity;
     subtotal += itemSubtotal;
 
     if (taxSettings?.enabled) {
-      // Check if item has custom tax, otherwise use global rate
       const taxRate = item.customTax?.enabled
         ? item.customTax.rate
         : taxSettings.globalRate;
 
-      // Calculate tax based on mode
       if (taxSettings.mode === "per-item") {
         const taxAmount = (itemSubtotal * taxRate) / 100;
         totalTax += taxAmount;
@@ -50,12 +48,10 @@ const calculateOrderTax = (orderItems, settings, orderType) => {
     }
   });
 
-  // Per-order tax calculation (applies global rate to entire subtotal)
   if (taxSettings?.enabled && taxSettings.mode === "per-order") {
     totalTax = (subtotal * taxSettings.globalRate) / 100;
   }
 
-  // Service charge calculation
   let serviceChargeAmount = 0;
   if (serviceCharge?.enabled) {
     const shouldApply =
@@ -90,9 +86,6 @@ const createOrder = async (req, res) => {
       note,
     } = req.body.order;
 
-    console.log("Creating order with data:", req.body);
-
-    // Validate that we have order items
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
       return res.status(400).json({
         success: false,
@@ -100,7 +93,6 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Fetch general settings for tax calculation
     const settings = await GeneralSettings.findOne();
     if (!settings) {
       return res.status(500).json({
@@ -109,11 +101,9 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Process each order item, fetching current details from the database
     const processedItems = [];
 
     for (const item of orderItems) {
-      // Fetch the current menu item details from the database
       const menuItem = await MenuItem.findById(item.menuItemId);
       if (!menuItem) {
         return res.status(404).json({
@@ -122,7 +112,6 @@ const createOrder = async (req, res) => {
         });
       }
 
-      // Check if item is available
       if (!menuItem.isAvailable) {
         return res.status(400).json({
           success: false,
@@ -130,14 +119,10 @@ const createOrder = async (req, res) => {
         });
       }
 
-      // Calculate subtotal for this item
       const quantity = item.quantity || 1;
       const subtotal = menuItem.price * quantity;
-
-      // Add preparation time if available from the menu item
       const preparationTime = menuItem.preparationTime || 15;
 
-      // Add to processed items with tax information
       processedItems.push({
         menuItemId: menuItem._id,
         name: menuItem.name,
@@ -150,24 +135,20 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Calculate tax breakdown
     const taxCalculation = calculateOrderTax(
       processedItems,
       settings,
       orderType || "dine-in"
     );
 
-    // Add packaging and delivery fees to total
     const packagingAmount =
       orderType === "dine-in" ? 0 : parseFloat(packagingFee) || 0;
 
     const deliveryAmount =
       orderType === "delivery" ? parseFloat(deliveryFee) || 0 : 0;
 
-    // Calculate final total
     const finalTotal = taxCalculation.total + packagingAmount + deliveryAmount;
 
-    // Determine payment status
     let paymentStatus = "pending";
     let balance = finalTotal;
     const paidAmount = parseFloat(amountPaid) || 0;
@@ -180,7 +161,6 @@ const createOrder = async (req, res) => {
       balance = finalTotal - paidAmount;
     }
 
-    // Create the order
     const newOrder = new Order({
       orderNumber: await generateOrderNumber(),
       table: table || "Takeaway",
@@ -197,32 +177,20 @@ const createOrder = async (req, res) => {
       })),
       servedBy: req.user.id,
       orderStatus: "pending",
-
-      // Tax breakdown
       taxBreakdown: {
         items: taxCalculation.itemTaxes,
         totalTax: taxCalculation.totalTax,
         serviceCharge: taxCalculation.serviceCharge,
         subtotal: taxCalculation.subtotal,
       },
-
-      // Additional fees
       packagingFee: packagingAmount,
       deliveryFee: deliveryAmount,
-
-      // Totals
       totalAmount: finalTotal,
       amountPaid: paidAmount,
       balance,
-
-      // Payment details
       paymentMethod: paymentMethod || "cash",
       paymentStatus,
-
-      // Additional info
       note: note || "",
-
-      // Action tracking
       lastAction: {
         action: "create",
         performedBy: req.user.id,
@@ -232,7 +200,6 @@ const createOrder = async (req, res) => {
 
     await newOrder.save();
 
-    // Log the action
     await logAction(
       req.user.id,
       "Order",
@@ -243,10 +210,12 @@ const createOrder = async (req, res) => {
       `Created new order #${newOrder.orderNumber}`
     );
 
-    // Populate order details for response
     const populatedOrder = await Order.findById(newOrder._id)
       .populate("servedBy", "fullname")
       .populate("orderItems.menuItemId", "name category");
+
+    // Notify KDS via WebSocket
+    notifyKDS("order:created", populatedOrder);
 
     return res.status(201).json({
       success: true,
@@ -268,22 +237,18 @@ const getAllOrders = async (req, res) => {
   try {
     const { status, orderType, startDate, endDate, paymentStatus } = req.query;
 
-    // Simple filter object
     let filter = {};
 
-    // Add filters conditionally
     if (status) filter.orderStatus = status;
     if (orderType) filter.orderType = orderType;
     if (paymentStatus) filter.paymentStatus = paymentStatus;
 
-    // Date range filtering
     if (startDate || endDate) {
       filter.createdAt = {};
       if (startDate) filter.createdAt.$gte = new Date(startDate);
       if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
 
-    // Simple find without pagination
     const orders = await Order.find(filter)
       .populate("servedBy", "fullname")
       .populate("lastAction.performedBy", "fullname")
@@ -360,12 +325,10 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Store old state for logging
     const oldOrder = { ...order.toObject() };
 
     order.orderStatus = orderStatus;
 
-    // Handle status-specific updates
     if (orderStatus === "ready") {
       order.actualReadyTime = new Date();
     } else if (orderStatus === "completed" || orderStatus === "served") {
@@ -381,11 +344,9 @@ const updateOrderStatus = async (req, res) => {
 
     await order.save();
 
-    // Populate before sending
     await order.populate("servedBy", "fullname");
     await order.populate("orderItems.menuItemId", "name category");
 
-    // Log the action
     await logAction(
       req.user.id,
       "Order",
@@ -395,6 +356,9 @@ const updateOrderStatus = async (req, res) => {
       order,
       `Updated order #${order.orderNumber} status to ${orderStatus}`
     );
+
+    // Notify KDS via WebSocket
+    notifyKDS("order:updated", order);
 
     return res.status(200).json({
       success: true,
@@ -437,15 +401,12 @@ const updatePayment = async (req, res) => {
       });
     }
 
-    // Store old state for logging
     const oldOrder = { ...order.toObject() };
 
-    // Update payment details
     const newAmountPaid = parseFloat(amountPaid);
     order.amountPaid = newAmountPaid;
     if (paymentMethod) order.paymentMethod = paymentMethod;
 
-    // Recalculate balance and update payment status
     const totalDue = order.totalAmount;
 
     if (newAmountPaid >= totalDue) {
@@ -468,11 +429,9 @@ const updatePayment = async (req, res) => {
 
     await order.save();
 
-    // Populate before sending
     await order.populate("servedBy", "fullname");
     await order.populate("orderItems.menuItemId", "name category");
 
-    // Log the action
     await logAction(
       req.user.id,
       "Order",
@@ -524,7 +483,6 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Only allow cancellation of orders that haven't been completed
     if (order.orderStatus === "completed") {
       return res.status(400).json({
         success: false,
@@ -532,18 +490,14 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Store old state for logging
     const oldOrder = { ...order.toObject() };
 
-    // Update order status
     order.orderStatus = "cancelled";
 
-    // Update all items to cancelled
     order.orderItems.forEach((item) => {
       item.itemStatus = "cancelled";
     });
 
-    // Update last action
     order.lastAction = {
       action: "cancel",
       performedBy: req.user.id,
@@ -553,11 +507,9 @@ const cancelOrder = async (req, res) => {
 
     await order.save();
 
-    // Populate before sending
     await order.populate("servedBy", "fullname");
     await order.populate("orderItems.menuItemId", "name category");
 
-    // Log the action
     await logAction(
       req.user.id,
       "Order",
@@ -567,6 +519,9 @@ const cancelOrder = async (req, res) => {
       order,
       `Cancelled order #${order.orderNumber}: ${reason}`
     );
+
+    // Notify KDS via WebSocket
+    notifyKDS("order:cancelled", order);
 
     return res.status(200).json({
       success: true,
