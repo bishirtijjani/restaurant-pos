@@ -1,4 +1,4 @@
-export const menuItemsTour = {
+export const MenuItemsTour = {
   id: "menu-items",
   title: "Managing Menu Items",
   description: "Learn how to add, edit, and organize your menu",

@@ -1,6 +1,6 @@
 import { Store, Settings, UtensilsCrossed, PackagePlus } from "lucide-react";
 
-export const initialSetupTour = {
+export const InitialSetupTour = {
   id: "initial-setup",
   title: "Welcome to Your Restaurant Management System! 🎉",
   description: "Let's get you set up in just a few minutes",

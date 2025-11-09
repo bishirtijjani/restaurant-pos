@@ -1,10 +1,10 @@
-import { initialSetupTour } from "./initialSetupTour";
-import { menuItemsTour } from "./MenuItemsTour";
+import { InitialSetupTour } from "./InitialSetupTour";
+import { MenuItemsTour } from "./MenuItemsTour";
 
 // Registry of all tours
 export const TOURS = {
-  "initial-setup": initialSetupTour,
-  "menu-items": menuItemsTour,
+  "initial-setup": InitialSetupTour,
+  "menu-items": MenuItemsTour,
 };
 
 // Helper to get tour by ID
