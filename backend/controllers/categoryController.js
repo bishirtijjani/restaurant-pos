@@ -4,15 +4,6 @@ const logAction = require("../utils/logAction");
 
 // Get all categories
 exports.getCategories = async (req, res) => {
-  if (
-    req.user.role !== "admin" &&
-    req.user.role !== "manager" &&
-    req.user.role !== "staff"
-  ) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
   try {
     const categories = await Category.find().sort({ createdAt: -1 });
     res.status(200).json(categories);
@@ -23,15 +14,6 @@ exports.getCategories = async (req, res) => {
 
 // Get a category by ID
 exports.getCategoryById = async (req, res) => {
-  if (
-    req.user.role !== "admin" &&
-    req.user.role !== "manager" &&
-    req.user.role !== "staff"
-  ) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
   try {
     const category = await Category.findById(req.params.id);
     if (!category)
@@ -44,12 +26,6 @@ exports.getCategoryById = async (req, res) => {
 
 // Create a new category
 exports.createCategory = async (req, res) => {
-  if (req.user.role !== "admin" && req.user.role !== "manager") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   const duplicateCategory = await Category.findOne({ name: req.body.name });
   if (duplicateCategory) {
     return res.status(400).json({ message: "This category already exists" });
@@ -82,11 +58,6 @@ exports.createCategory = async (req, res) => {
 
 // Update a category
 exports.updateCategory = async (req, res) => {
-  if (req.user.role !== "admin" && req.user.role !== "manager") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
   try {
     const { name, description } = req.body;
 
@@ -121,11 +92,6 @@ exports.updateCategory = async (req, res) => {
 
 // Delete a category and disassociate menuItems
 exports.deleteCategory = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
   const categoryId = req.params.id;
 
   try {

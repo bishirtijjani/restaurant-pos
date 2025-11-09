@@ -4,15 +4,6 @@ const logAction = require("../utils/logAction");
 
 // Get all menu items
 const getAllMenuItems = async (req, res) => {
-  if (
-    req.user.role !== "admin" &&
-    req.user.role !== "manager" &&
-    req.user.role !== "staff"
-  ) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
   try {
     const menuItems = await MenuItem.find().sort({ category: 1, name: 1 });
     res.status(200).json(menuItems);
@@ -46,11 +37,6 @@ const getMenuItemById = async (req, res) => {
 
 // Add a new menu item
 const addNewMenuItem = async (req, res) => {
-  if (req.user.role !== "admin" && req.user.role !== "manager") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to add a menu item." });
-  }
   const {
     name,
     category,
@@ -126,11 +112,6 @@ const addNewMenuItem = async (req, res) => {
 
 // Update an existing menu item
 const updateMenuItem = async (req, res) => {
-  if (req.user.role !== "admin" && req.user.role !== "manager") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
   const { id } = req.params;
   const {
     name,
@@ -242,11 +223,6 @@ const updateMenuItem = async (req, res) => {
 
 // Delete a menu item
 const deleteMenuItem = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
   const { id } = req.params;
 
   try {
@@ -286,16 +262,6 @@ const deleteMenuItem = async (req, res) => {
 
 // Toggle menu item availability
 const toggleAvailability = async (req, res) => {
-  if (
-    req.user.role !== "admin" &&
-    req.user.role !== "manager" &&
-    req.user.role !== "staff"
-  ) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   const { id } = req.params;
 
   try {

@@ -4,11 +4,15 @@ const {
   getSettings,
   updateSettings,
   resetSettings,
-  getCurrencies,
 } = require("../controllers/generalSettingsController");
+const authMiddleware = require("../middleware/authMiddleware");
+const roleMiddleware = require("../middleware/roleMiddleware");
+
+// Apply auth middleware to all routes
+router.use(authMiddleware);
 
 router.get("/", getSettings);
-router.put("/", updateSettings);
-router.post("/reset", resetSettings);
+router.put("/", roleMiddleware("admin"), updateSettings);
+router.post("/reset", roleMiddleware("admin"), resetSettings);
 
 module.exports = router;

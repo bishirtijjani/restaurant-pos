@@ -4,12 +4,6 @@ const logAction = require("../utils/logAction"); // Import log function
 
 // Create a new supplier
 exports.createSupplier = async (req, res) => {
-  if (req.user.role !== "admin" && req.user.role !== "manager") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const { name, phone, email, address } = req.body;
 
@@ -51,16 +45,6 @@ exports.createSupplier = async (req, res) => {
 
 // Get all suppliers
 exports.getAllSuppliers = async (req, res) => {
-  if (
-    req.user.role !== "admin" &&
-    req.user.role !== "manager" &&
-    req.user.role !== "staff"
-  ) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const suppliers = await Supplier.find()
       .populate("lastAction.performedBy", "fullname")
@@ -79,16 +63,6 @@ exports.getAllSuppliers = async (req, res) => {
 
 // Get a supplier by ID
 exports.getSupplierById = async (req, res) => {
-  if (
-    req.user.role !== "admin" &&
-    req.user.role !== "manager" &&
-    req.user.role !== "staff"
-  ) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const { id } = req.params;
 
@@ -112,12 +86,6 @@ exports.getSupplierById = async (req, res) => {
 
 // Update a supplier
 exports.updateSupplier = async (req, res) => {
-  if (req.user.role !== "admin" && req.user.role !== "manager") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const { id } = req.params;
     const { name, phone, email, address } = req.body;
@@ -162,12 +130,6 @@ exports.updateSupplier = async (req, res) => {
 
 // Delete a supplier
 exports.deleteSupplier = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const { id } = req.params;
 

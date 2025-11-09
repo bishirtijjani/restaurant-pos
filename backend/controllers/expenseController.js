@@ -3,12 +3,6 @@ const logAction = require("../utils/logAction");
 
 // Add a new expense
 const createExpense = async (req, res) => {
-  if (req.user.role !== "admin" && req.user.role !== "manager") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const { date, category, amount, description, paymentMethod, invoice } =
       req.body;
@@ -60,16 +54,6 @@ const createExpense = async (req, res) => {
 
 // Get all expenses
 const getAllExpenses = async (req, res) => {
-  if (
-    req.user.role !== "admin" &&
-    req.user.role !== "manager" &&
-    req.user.role !== "staff"
-  ) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const expenses = await Expense.find().sort({ createdAt: -1 });
     res.status(200).json(expenses);
@@ -80,16 +64,6 @@ const getAllExpenses = async (req, res) => {
 
 // Get a single expense by ID
 const getExpenseById = async (req, res) => {
-  if (
-    req.user.role !== "admin" &&
-    req.user.role !== "manager" &&
-    req.user.role !== "staff"
-  ) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const { id } = req.params;
     const expense = await Expense.findById(id);
@@ -104,12 +78,6 @@ const getExpenseById = async (req, res) => {
 
 // Update an expense
 const updateExpense = async (req, res) => {
-  if (req.user.role !== "admin" && req.user.role !== "manager") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const { id } = req.params;
     const updatedData = req.body;
@@ -144,12 +112,6 @@ const updateExpense = async (req, res) => {
 
 // Delete an expense
 const deleteExpense = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to perform this action." });
-  }
-
   try {
     const { id } = req.params;
     const expenseToDelete = await Expense.findById(id);

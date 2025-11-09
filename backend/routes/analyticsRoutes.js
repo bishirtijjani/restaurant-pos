@@ -1,7 +1,15 @@
 const express = require("express");
 const analyticsController = require("../controllers/analyticsController");
+const authMiddleware = require("../middleware/authMiddleware");
+const roleMiddleware = require("../middleware/roleMiddleware");
 
 const router = express.Router();
+
+// All analytics routes are protected and restricted to specific roles
+router.use(
+  authMiddleware,
+  roleMiddleware("admin", "manager", "accountant")
+);
 
 // Analytics routes
 router.get("/overview", analyticsController.getOverviewStats);

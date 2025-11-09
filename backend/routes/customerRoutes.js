@@ -6,22 +6,43 @@ const {
   updateCustomer,
   deleteCustomer,
 } = require("../controllers/customerController");
+const authMiddleware = require("../middleware/authMiddleware");
+const roleMiddleware = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
+// Apply auth middleware to all routes
+router.use(authMiddleware);
+
 // Route to fetch all customers
-router.get("/", getAllCustomers);
+router.get(
+  "/",
+  roleMiddleware("admin", "manager", "cashier", "waiter"),
+  getAllCustomers
+);
 
 // Route to fetch a single customer by ID
-router.get("/:id", getCustomerById);
+router.get(
+  "/:id",
+  roleMiddleware("admin", "manager", "cashier", "waiter"),
+  getCustomerById
+);
 
 // Route to create a new customer
-router.post("/", createCustomer);
+router.post(
+  "/",
+  roleMiddleware("admin", "manager", "cashier"),
+  createCustomer
+);
 
 // Route to update customer details
-router.put("/:id", updateCustomer);
+router.put(
+  "/:id",
+  roleMiddleware("admin", "manager", "cashier"),
+  updateCustomer
+);
 
 // Route to delete a customer
-router.delete("/:id", deleteCustomer);
+router.delete("/:id", roleMiddleware("admin"), deleteCustomer);
 
 module.exports = router;
