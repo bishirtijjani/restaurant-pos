@@ -1,6 +1,18 @@
 const StockAdjustment = require("../models/StockAdjustment");
 const InventoryItem = require("../models/InventoryItem");
 
+// Generate adjustment number
+const generateAdjustmentNumber = async () => {
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const count = await StockAdjustment.countDocuments({
+    createdAt: {
+      $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+      $lt: new Date(new Date().setHours(23, 59, 59, 999)),
+    },
+  });
+  return `ADJ${dateStr}${(count + 1).toString().padStart(3, "0")}`;
+};
+
 // Get all stock adjustments
 exports.getAllStockAdjustments = async (req, res) => {
   try {
@@ -70,7 +82,6 @@ exports.createStockAdjustment = async (req, res) => {
   try {
     const { inventoryItem, type, reason, quantity, notes } = req.body;
 
-    // Validate required fields
     if (!inventoryItem || !type || !reason || quantity === undefined) {
       return res.status(400).json({
         success: false,
@@ -78,7 +89,6 @@ exports.createStockAdjustment = async (req, res) => {
       });
     }
 
-    // Get inventory item
     const item = await InventoryItem.findById(inventoryItem);
     if (!item) {
       return res.status(404).json({
@@ -90,7 +100,6 @@ exports.createStockAdjustment = async (req, res) => {
     const previousStock = item.currentStock;
     let newStock;
 
-    // Calculate new stock based on adjustment type
     switch (type) {
       case "addition":
         newStock = previousStock + quantity;
@@ -105,7 +114,7 @@ exports.createStockAdjustment = async (req, res) => {
         }
         break;
       case "correction":
-        newStock = quantity; // Direct correction to specific amount
+        newStock = quantity;
         break;
       default:
         return res.status(400).json({
@@ -114,8 +123,10 @@ exports.createStockAdjustment = async (req, res) => {
         });
     }
 
-    // Create adjustment record
+    const adjustmentNumber = await generateAdjustmentNumber();
+
     const adjustment = await StockAdjustment.create({
+      adjustmentNumber,
       inventoryItem,
       type,
       reason,
@@ -128,7 +139,6 @@ exports.createStockAdjustment = async (req, res) => {
       performedBy: req.user.id,
     });
 
-    // Update inventory item stock
     item.currentStock = newStock;
     await item.save();
 

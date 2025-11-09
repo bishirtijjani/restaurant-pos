@@ -1,10 +1,23 @@
-const roleMiddleware = (roles) => {
+// backend/middleware/roleMiddleware.js
+const roleMiddleware = (...allowedRoles) => {
   return (req, res, next) => {
-    const userRole = req.user.role; // Assuming req.user is set after authentication
-    if (roles.includes(userRole)) {
-      return next();
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
     }
-    return res.status(403).json({ message: "Access denied" });
+
+    const userRole = req.user.role;
+
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied. Required role(s): ${allowedRoles.join(", ")}`,
+      });
+    }
+
+    next();
   };
 };
 

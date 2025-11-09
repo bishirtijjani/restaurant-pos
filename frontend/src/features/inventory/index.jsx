@@ -77,7 +77,7 @@ const TopSideButtons = () => {
             className="btn btn-secondary btn-sm lg:btn-md gap-2"
           >
             <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">Create PO</span>
+            <span className="hidden sm:inline">Order Stock</span>
           </button>
         </>
       )}

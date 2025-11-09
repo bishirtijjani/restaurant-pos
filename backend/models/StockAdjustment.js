@@ -55,21 +55,32 @@ const stockAdjustmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Generate adjustment number
+// Generate adjustment number - FIXED VERSION
 stockAdjustmentSchema.pre("save", async function (next) {
-  if (this.isNew && !this.adjustmentNumber) {
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const count = await this.constructor.countDocuments({
-      createdAt: {
-        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        $lt: new Date(new Date().setHours(23, 59, 59, 999)),
-      },
-    });
-    this.adjustmentNumber = `ADJ${dateStr}${(count + 1)
-      .toString()
-      .padStart(3, "0")}`;
+  try {
+    if (this.isNew && !this.adjustmentNumber) {
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+      // Use the model directly from mongoose.models
+      const StockAdjustment =
+        mongoose.models.StockAdjustment || this.constructor;
+
+      const count = await StockAdjustment.countDocuments({
+        createdAt: {
+          $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          $lt: new Date(new Date().setHours(23, 59, 59, 999)),
+        },
+      });
+
+      this.adjustmentNumber = `ADJ${dateStr}${(count + 1)
+        .toString()
+        .padStart(3, "0")}`;
+    }
+    next();
+  } catch (error) {
+    console.error("Error in pre-save hook:", error);
+    next(error);
   }
-  next();
 });
 
 module.exports = mongoose.model("StockAdjustment", stockAdjustmentSchema);
