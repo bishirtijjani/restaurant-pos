@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import FormattedNumberInput from "../../components/Input/FormattedNumberInput";
 import {
   ShoppingBag,
   UtensilsCrossed,
@@ -213,7 +214,14 @@ const EmptyCart = () => (
 );
 
 // Component for order summary
-const OrderSummary = ({ cart, orderType, packagingFee, deliveryFee }) => {
+const OrderSummary = ({
+  cart,
+  orderType,
+  packagingFee,
+  setPackagingFee,
+  deliveryFee,
+  setDeliveryFee,
+}) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
@@ -289,23 +297,35 @@ const OrderSummary = ({ cart, orderType, packagingFee, deliveryFee }) => {
         settings={settings}
       />
 
-      {taxData.packaging > 0 && (
-        <div className="flex justify-between text-sm opacity-70">
-          <span>Packaging</span>
-          <span>
-            {currency}
-            {taxData.packaging.toFixed(2)}
-          </span>
+      {orderType !== "dine-in" && (
+        <div className="flex items-center justify-between">
+          <label htmlFor="packagingFee" className="text-sm">
+            Packaging Fee ({currency})
+          </label>
+          <FormattedNumberInput
+            id="packagingFee"
+            name="packagingFee"
+            value={packagingFee}
+            onChange={(e) => setPackagingFee(e.target.value)}
+            className="input input-bordered input-sm w-24"
+            min={0}
+          />
         </div>
       )}
 
-      {taxData.delivery > 0 && (
-        <div className="flex justify-between text-sm opacity-70">
-          <span>Delivery</span>
-          <span>
-            {currency}
-            {taxData.delivery.toFixed(2)}
-          </span>
+      {orderType === "delivery" && (
+        <div className="flex items-center justify-between">
+          <label htmlFor="deliveryFee" className="text-sm">
+            Delivery Fee ({currency})
+          </label>
+          <FormattedNumberInput
+            id="deliveryFee"
+            name="deliveryFee"
+            value={deliveryFee}
+            onChange={(e) => setDeliveryFee(e.target.value)}
+            className="input input-bordered input-sm w-24"
+            min={0}
+          />
         </div>
       )}
     </div>
@@ -593,8 +613,8 @@ export default function POS() {
             {orderType === "dine-in" && (
               <div className="flex items-center">
                 <span className="mr-2">Table:</span>
-                <input
-                  type="number"
+                <FormattedNumberInput
+                  name="tableNumber"
                   className="input input-bordered input-sm w-16"
                   value={tableNumber}
                   onChange={(e) => setTableNumber(e.target.value)}

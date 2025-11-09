@@ -13,6 +13,7 @@ import {
   setFilters,
   clearFilters,
 } from "./ordersSlice";
+import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
 import { checkRole } from "../../utils/Helpers";
 import SearchBar from "../../components/Input/SearchBar";
@@ -48,7 +49,12 @@ const paymentColors = {
   paid: "text-success",
 };
 
-const OrderFilters = ({ currentFilters, applyFilters, clearFilters }) => {
+const OrderFilters = ({
+  currentFilters,
+  applyFilters,
+  clearFilters,
+  currency,
+}) => {
   const statusOptions = [
     "pending",
     "preparing",
@@ -121,7 +127,8 @@ const OrderFilters = ({ currentFilters, applyFilters, clearFilters }) => {
           </label>
           <div className="dropdown dropdown-hover">
             <label tabIndex={0} className="btn btn-sm btn-outline min-w-36">
-              <CurrencyDollarIcon className="w-4 h-4 mr-2" />
+              <span className="font-bold mr-2  ">{currency}</span>
+
               {currentFilters.paymentStatus || "All"}
             </label>
             <ul
@@ -165,12 +172,8 @@ const OrderFilters = ({ currentFilters, applyFilters, clearFilters }) => {
   );
 };
 
-const OrderCard = ({ order }) => {
+const OrderCard = ({ order, currency }) => {
   const dispatch = useDispatch();
-  const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
-  );
-  const currency = settings?.currency?.symbol || "$";
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -257,7 +260,7 @@ const OrderCard = ({ order }) => {
           <div
             className={`badge ${paymentColors[order.paymentStatus]} gap-1 p-3`}
           >
-            <CurrencyDollarIcon className="w-4 h-4" />
+            <span className="font-bold">{currency}</span>
             {order.paymentStatus}
           </div>
         </div>
@@ -397,8 +400,13 @@ const Orders = () => {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("grid");
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "$";
 
   useEffect(() => {
+    if (!settings) dispatch(fetchSettings());
     dispatch(fetchOrders(filters));
     console.log(orders);
   }, [dispatch, filters]);
@@ -472,6 +480,7 @@ const Orders = () => {
         currentFilters={filters}
         applyFilters={(newFilters) => dispatch(setFilters(newFilters))}
         clearFilters={() => dispatch(clearFilters())}
+        currency={currency}
       />
 
       {error ? (
@@ -497,7 +506,7 @@ const Orders = () => {
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOrders.map((order) => (
-            <OrderCard key={order._id} order={order} />
+            <OrderCard key={order._id} order={order} currency={currency} />
           ))}
           {console.log(filteredOrders)}
         </div>

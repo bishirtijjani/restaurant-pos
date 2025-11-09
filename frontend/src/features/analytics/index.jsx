@@ -26,7 +26,7 @@ import {
   PiggyBank,
   ShoppingBag,
 } from "lucide-react";
-
+import { formatCurrency } from "../../utils/numberFormat";
 import { format } from "date-fns";
 
 import {
@@ -76,17 +76,6 @@ const AnalyticsDashboard = () => {
   const staffPerformance = useSelector(selectStaffPerformance);
   const profitabilityReport = useSelector(selectProfitabilityReport);
 
-  // console.log("dateRange: ", dateRange);
-  // console.log("selectedRange: ", selectedRange);
-  // console.log("overviewStats: ", overviewStats);
-  // console.log("salesTrends: ", salesTrends);
-  // console.log("salesByCategory: ", salesByCategory);
-  // console.log("menuItemPerformance: ", menuItemPerformance);
-  // console.log("peakHoursAnalysis: ", peakHoursAnalysis);
-  // console.log("expenseAnalysis: ", expenseAnalysis);
-  // console.log("staffPerformance: ", staffPerformance);
-  // console.log("profitabilityReport: ", profitabilityReport);
-
   // State for active tab
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -122,14 +111,6 @@ const AnalyticsDashboard = () => {
   useEffect(() => {
     fetchAllData();
   }, []);
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 0,
-    }).format(value || 0);
-  };
 
   // Loading state render
   if (
@@ -227,7 +208,6 @@ const AnalyticsDashboard = () => {
           Staff Performance
         </a>
       </div>
-
       {/* Tab Content */}
       <div className="mt-4">
         {activeTab === "overview" && (
@@ -235,7 +215,6 @@ const AnalyticsDashboard = () => {
             overviewStats={overviewStats.data}
             salesTrends={salesTrends.data}
             salesByCategory={salesByCategory.data}
-            formatCurrency={formatCurrency}
           />
         )}
 
@@ -244,30 +223,22 @@ const AnalyticsDashboard = () => {
             salesTrends={salesTrends.data}
             salesByCategory={salesByCategory.data}
             peakHoursAnalysis={peakHoursAnalysis.data}
-            formatCurrency={formatCurrency}
           />
         )}
 
         {activeTab === "menu" && (
-          <MenuPerformanceTab
-            menuItemPerformance={menuItemPerformance.data}
-            formatCurrency={formatCurrency}
-          />
+          <MenuPerformanceTab menuItemPerformance={menuItemPerformance.data} />
         )}
 
         {activeTab === "expenses" && (
           <ExpensesTab
             expenseAnalysis={expenseAnalysis.data}
             profitabilityReport={profitabilityReport.data}
-            formatCurrency={formatCurrency}
           />
         )}
 
         {activeTab === "staff" && (
-          <StaffPerformanceTab
-            staffPerformance={staffPerformance.data}
-            formatCurrency={formatCurrency}
-          />
+          <StaffPerformanceTab staffPerformance={staffPerformance.data} />
         )}
       </div>
     </div>
@@ -275,12 +246,7 @@ const AnalyticsDashboard = () => {
 };
 
 // Component for the Overview Tab
-const OverviewTab = ({
-  overviewStats,
-  salesTrends,
-  salesByCategory,
-  formatCurrency,
-}) => {
+const OverviewTab = ({ overviewStats, salesTrends, salesByCategory }) => {
   if (!overviewStats) return <div>No data available</div>;
 
   return (
@@ -426,12 +392,7 @@ const OverviewTab = ({
 };
 
 // Component for the Sales Tab
-const SalesTab = ({
-  salesTrends,
-  salesByCategory,
-  peakHoursAnalysis,
-  formatCurrency,
-}) => {
+const SalesTab = ({ salesTrends, salesByCategory, peakHoursAnalysis }) => {
   return (
     <div>
       {/* Sales by Category */}
@@ -543,7 +504,7 @@ const SalesTab = ({
 };
 
 // Component for the Menu Performance Tab
-const MenuPerformanceTab = ({ menuItemPerformance, formatCurrency }) => {
+const MenuPerformanceTab = ({ menuItemPerformance }) => {
   if (!menuItemPerformance) return <div>No data available</div>;
 
   return (
@@ -599,11 +560,7 @@ const MenuPerformanceTab = ({ menuItemPerformance, formatCurrency }) => {
 };
 
 // Component for the Expenses Tab
-const ExpensesTab = ({
-  expenseAnalysis,
-  profitabilityReport,
-  formatCurrency,
-}) => {
+const ExpensesTab = ({ expenseAnalysis, profitabilityReport }) => {
   if (!expenseAnalysis || !profitabilityReport)
     return <div>No data available</div>;
 
@@ -758,7 +715,7 @@ const ExpensesTab = ({
 };
 
 // Component for the Staff Performance Tab
-const StaffPerformanceTab = ({ staffPerformance, formatCurrency }) => {
+const StaffPerformanceTab = ({ staffPerformance }) => {
   if (!staffPerformance) return <div>No data available</div>;
 
   return (

@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from "react";
+import FormattedNumberInput from "../../components/Input/FormattedNumberInput";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import TitleCard from "../../components/Cards/TitleCard";
-import { showNotification } from "../common/headerSlice";
-import {
-  createPurchaseOrder,
-  clearError,
-  clearSuccess,
-} from "./purchaseOrdersSlice";
 import { fetchInventoryItems } from "../inventory/inventorySlice";
+import { createPurchaseOrder } from "./purchaseOrdersSlice";
 import { fetchAllSuppliers } from "../suppliers/suppliersSlice";
+import { useNavigate } from "react-router-dom";
+import { showNotification } from "../common/headerSlice";
+import { clearError, clearSuccess } from "./purchaseOrdersSlice";
+import TitleCard from "../../components/Cards/TitleCard";
+
 import {
   Plus,
   Trash2,
@@ -20,6 +19,7 @@ import {
   Calendar,
 } from "lucide-react";
 import ErrorText from "../../components/Typography/ErrorText";
+import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 
 const CreatePurchaseOrder = () => {
   const dispatch = useDispatch();
@@ -32,7 +32,6 @@ const CreatePurchaseOrder = () => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "$";
 
   const [formData, setFormData] = useState({
     supplier: "",
@@ -51,6 +50,10 @@ const CreatePurchaseOrder = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
+    if (!settings) {
+      dispatch(fetchSettings());
+    }
+
     dispatch(fetchInventoryItems());
     dispatch(fetchAllSuppliers());
   }, [dispatch]);
@@ -68,6 +71,8 @@ const CreatePurchaseOrder = () => {
       dispatch(clearError());
     }
   }, [success, message, error, dispatch, navigate]);
+
+  const currency = settings?.currency.symbol || "$";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -171,7 +176,9 @@ const CreatePurchaseOrder = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Supplier *</span>
+              <span className="text-danger label-text font-medium">
+                Supplier *
+              </span>
             </label>
             <select
               name="supplier"
@@ -276,7 +283,9 @@ const CreatePurchaseOrder = () => {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="form-control md:col-span-2">
                       <label className="label">
-                        <span className="label-text">Inventory Item *</span>
+                        <span className="text-danger label-text">
+                          Inventory Item *
+                        </span>
                       </label>
                       <select
                         value={item.inventoryItem}
@@ -310,8 +319,7 @@ const CreatePurchaseOrder = () => {
                           Quantity * ({selectedItem?.unit || "unit"})
                         </span>
                       </label>
-                      <input
-                        type="number"
+                      <FormattedNumberInput
                         value={item.quantity}
                         onChange={(e) =>
                           handleItemChange(index, "quantity", e.target.value)
@@ -334,8 +342,7 @@ const CreatePurchaseOrder = () => {
                           Unit Price * ({currency})
                         </span>
                       </label>
-                      <input
-                        type="number"
+                      <FormattedNumberInput
                         value={item.unitPrice}
                         onChange={(e) =>
                           handleItemChange(index, "unitPrice", e.target.value)

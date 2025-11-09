@@ -1,9 +1,20 @@
+import store from "../app/store";
+
 // frontend/src/utils/numberFormat.js
-export const formatCurrency = (amount, currencySymbol = "$") => {
-  if (!amount && amount !== 0) return `${currencySymbol}0.00`;
+export const formatCurrency = (amount, currencySymbol) => {
+  // read settings synchronously from the store instead of using hooks
+  const state = store.getState();
+  const settings = state.generalSettings?.generalSettings;
+  const symbol =
+    currencySymbol ||
+    settings?.currency?.symbol ||
+    settings?.currencySymbol ||
+    "$";
+
+  if (amount === undefined || amount === null) return `${symbol}0.00`;
   const number = parseFloat(amount);
-  if (isNaN(number)) return `${currencySymbol}0.00`;
-  return `${currencySymbol}${number.toLocaleString("en-US", {
+  if (isNaN(number)) return `${symbol}0.00`;
+  return `${symbol}${number.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;

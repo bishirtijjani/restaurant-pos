@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+
 import ErrorText from "../../../components/Typography/ErrorText";
 import { addCustomer, fetchAllCustomers } from "../customersSlice";
 import { showNotification } from "../../common/headerSlice";
@@ -16,6 +17,10 @@ function AddCustomerModalBody({ closeModal }) {
   });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "$";
 
   const handleInputChange = (e) => {
     setCustomer({ ...customer, [e.target.name]: e.target.value });
@@ -129,7 +134,7 @@ function AddCustomerModalBody({ closeModal }) {
         {/* Debt Limit with Formatted Input */}
         <div className="mt-4">
           <label htmlFor="debtLimit" className="block text-sm font-medium">
-            Debt Limit ($)
+            Debt Limit ({currency})
           </label>
           <FormattedNumberInput
             id="debtLimit"

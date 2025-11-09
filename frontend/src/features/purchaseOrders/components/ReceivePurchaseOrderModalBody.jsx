@@ -1,12 +1,4 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  receivePurchaseOrder,
-  fetchPurchaseOrders,
-} from "../purchaseOrdersSlice";
-import { closeModal } from "../../common/modalSlice";
-import { showNotification } from "../../common/headerSlice";
-import ErrorText from "../../../components/Typography/ErrorText";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { Package, Calendar, DollarSign, Check } from "lucide-react";
 
 const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
@@ -184,8 +176,7 @@ const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
                         Received Quantity ({item.unit})
                       </span>
                     </label>
-                    <input
-                      type="number"
+                    <FormattedNumberInput
                       value={receivedItem?.receivedQuantity || ""}
                       onChange={(e) =>
                         handleReceivedQuantityChange(item._id, e.target.value)
@@ -254,8 +245,7 @@ const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
             <label className="label">
               <span className="label-text">Amount Paid ({currency})</span>
             </label>
-            <input
-              type="number"
+            <FormattedNumberInput
               name="amountPaid"
               value={paymentData.amountPaid}
               onChange={handlePaymentChange}

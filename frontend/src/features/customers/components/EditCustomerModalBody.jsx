@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { updateCustomer, fetchAllCustomers } from "../customersSlice";
 import { showNotification } from "../../common/headerSlice";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
 
 function EditCustomerModalBody({ closeModal, extraObject }) {
   const dispatch = useDispatch();
@@ -16,6 +17,10 @@ function EditCustomerModalBody({ closeModal, extraObject }) {
   });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings.currency.symbol || "$";
 
   useEffect(() => {
     if (extraObject) {
@@ -128,7 +133,7 @@ function EditCustomerModalBody({ closeModal, extraObject }) {
         </div>
         <div className="mt-4">
           <label htmlFor="debtLimit" className="block text-sm font-medium">
-            Debt Limit ($)
+            Debt Limit ({currency})
           </label>
           <FormattedNumberInput
             id="debtLimit"

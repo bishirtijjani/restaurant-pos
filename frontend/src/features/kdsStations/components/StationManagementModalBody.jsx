@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { Monitor, Plus, X } from "lucide-react";
 import {
   createStation,
@@ -294,8 +293,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
               <label className="label">
                 <span className="label-text">Warning Time</span>
               </label>
-              <input
-                type="number"
+              <FormattedNumberInput
                 value={formData.timingSettings.warningTime}
                 onChange={(e) =>
                   setFormData({
@@ -316,8 +314,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
               <label className="label">
                 <span className="label-text">Critical Time</span>
               </label>
-              <input
-                type="number"
+              <FormattedNumberInput
                 value={formData.timingSettings.criticalTime}
                 onChange={(e) =>
                   setFormData({

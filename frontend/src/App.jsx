@@ -1,4 +1,5 @@
 import React, { lazy, useEffect } from "react"; // React imports for components and lifecycle hooks
+import { useSelector, useDispatch } from "react-redux"; // Redux hook to access the store state
 import "./App.css"; // Importing global styles
 import {
   BrowserRouter as Router, // For enabling routing in the app
@@ -9,6 +10,7 @@ import {
 import { themeChange } from "theme-change"; // Library for dynamic theme switching
 import checkAuth from "./app/auth"; // Function to check if the user is authenticated
 import initializeApp from "./app/init"; // Custom app initialization function
+import { fetchSettings } from "./features/settings/generalSettings/generalSettingsSlice";
 
 // Importing pages as lazy-loaded components for performance optimization
 const Layout = lazy(() => import("./containers/Layout")); // Main app layout (protected)
@@ -25,10 +27,17 @@ initializeApp();
 const token = checkAuth();
 
 function App() {
+  const dispatch = useDispatch();
+
   useEffect(() => {
     // Initialize theme-change functionality with Daisy UI
     themeChange(true); // Passing false means themes won't auto-detect
   }, []); // Empty dependency array ensures this runs only once when the component mounts
+
+  useEffect(() => {
+    // Fetch general settings on app load
+    dispatch(fetchSettings());
+  }, []);
 
   return (
     <>

@@ -6,6 +6,8 @@ import { fetchAllSuppliers } from "../../suppliers/suppliersSlice";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
 
 const CATEGORIES = [
   "Raw Materials",
@@ -21,6 +23,10 @@ const EditInventoryModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.inventory);
   const suppliers = useSelector((state) => state.suppliers.suppliers || []);
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "$";
   const item = extraObject;
 
   const [formData, setFormData] = useState({
@@ -39,6 +45,9 @@ const EditInventoryModalBody = ({ extraObject }) => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
+    if (!settings) {
+      dispatch(fetchSettings());
+    }
     dispatch(fetchAllSuppliers());
 
     if (item) {
@@ -202,8 +211,7 @@ const EditInventoryModalBody = ({ extraObject }) => {
           <label className="label">
             <span className="label-text">Minimum Stock Level</span>
           </label>
-          <input
-            type="number"
+          <FormattedNumberInput
             name="minStockLevel"
             value={formData.minStockLevel}
             onChange={handleChange}
@@ -216,10 +224,9 @@ const EditInventoryModalBody = ({ extraObject }) => {
         {/* Cost Price */}
         <div className="form-control">
           <label className="label">
-            <span className="label-text">Cost Price *</span>
+            <span className="label-text">Cost Price ({currency}) *</span>
           </label>
-          <input
-            type="number"
+          <FormattedNumberInput
             name="costPrice"
             value={formData.costPrice}
             onChange={handleChange}

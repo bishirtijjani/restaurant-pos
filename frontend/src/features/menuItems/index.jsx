@@ -22,6 +22,7 @@ import FunnelIcon from "@heroicons/react/24/outline/FunnelIcon";
 import PhotoIcon from "@heroicons/react/24/outline/PhotoIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
+import { formatCurrency } from "../../utils/numberFormat";
 import { checkRole } from "../../utils/Helpers";
 import SearchBar from "../../components/Input/SearchBar";
 import { showNotification } from "../common/headerSlice";
@@ -178,16 +179,13 @@ const MenuItems = () => {
 
   // Extract unique categories
   const categories = [
-    ...new Set(menuItems.map((item) => item.category)),
+    ...new Set(menuItems.map((item) => item.category || "Uncategorized")),
   ].sort();
 
   const handleToggleAvailability = (id) => {
     return dispatch(toggleMenuItemAvailability(id));
   };
 
-  if (status === "loading") return <SuspenseContent />;
-
-  // Filter menu items based on search query and selected category
   const filteredMenuItems = menuItems.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -204,10 +202,11 @@ const MenuItems = () => {
   // Group menu items by category
   const groupedItems = {};
   filteredMenuItems.forEach((item) => {
-    if (!groupedItems[item.category]) {
-      groupedItems[item.category] = [];
+    const cat = item.category || "Uncategorized";
+    if (!groupedItems[cat]) {
+      groupedItems[cat] = [];
     }
-    groupedItems[item.category].push(item);
+    groupedItems[cat].push(item);
   });
 
   // Error display component
@@ -287,7 +286,8 @@ const MenuItems = () => {
                     {groupedItems[category].map((item) => (
                       <tr key={item._id} className="hover">
                         <td className="font-medium">{item.name}</td>
-                        <td>${item.price?.toLocaleString()}</td>
+                        <td>{item.category || "Uncategorized"}</td>
+                        <td>{formatCurrency(item.price)}</td>
                         <td>{item.itemCode || "-"}</td>
                         <td>{item.preparationTime} mins</td>
                         <td>

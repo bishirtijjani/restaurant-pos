@@ -15,6 +15,8 @@ const EditMenuItemModalBody = ({ extraObject }) => {
   const { categories, loading: categoriesLoading } = useSelector(
     (state) => state.categories
   );
+  const { settings } = useSelector((state) => state.generalSettings);
+  const currency = settings?.currency?.symbol || "$";
   const menuItem = extraObject;
 
   // Fetch categories when component mounts
@@ -255,7 +257,7 @@ const EditMenuItemModalBody = ({ extraObject }) => {
           {/* Selling Price field */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Selling Price</span>
+              <span className="label-text">Selling Price ({currency})</span>
               <span className="label-text-alt text-error">{errors.price}</span>
             </label>
             <FormattedNumberInput
@@ -274,7 +276,9 @@ const EditMenuItemModalBody = ({ extraObject }) => {
           {/* Cost Price field (optional) */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Cost Price (optional)</span>
+              <span className="label-text">
+                Cost Price ({currency}) (optional)
+              </span>
               <span className="label-text-alt text-error">
                 {errors.costPrice}
               </span>

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import TitleCard from "../../components/Cards/TitleCard";
 import SuspenseContent from "../../containers/SuspenseContent";
 import { openModal } from "../common/modalSlice";
+import { formatCurrency } from "../../utils/numberFormat";
 import { showNotification } from "../common/headerSlice";
 import {
   MODAL_BODY_TYPES,
@@ -170,8 +171,7 @@ const SearchAndFilters = ({
   );
 };
 
-const InventoryCard = ({ item, onEdit, onDelete, onLink, settings }) => {
-  const currency = settings?.currency?.symbol || "$";
+const InventoryCard = ({ item, onEdit, onDelete, onLink }) => {
   const stockPercentage = item.minStockLevel
     ? (item.currentStock / item.minStockLevel) * 100
     : 100;
@@ -258,8 +258,7 @@ const InventoryCard = ({ item, onEdit, onDelete, onLink, settings }) => {
           <div className="flex justify-between items-center pt-2 border-t">
             <span className="text-sm opacity-70">Cost Price</span>
             <span className="font-semibold text-primary">
-              {currency}
-              {item.costPrice.toLocaleString()}
+              {formatCurrency(item.costPrice)}
             </span>
           </div>
 
@@ -295,9 +294,7 @@ const InventoryCard = ({ item, onEdit, onDelete, onLink, settings }) => {
   );
 };
 
-const InventoryTable = ({ items, onEdit, onDelete, onLink, settings }) => {
-  const currency = settings?.currency?.symbol || "$";
-
+const InventoryTable = ({ items, onEdit, onDelete, onLink }) => {
   return (
     <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg">
       <table className="table table-zebra w-full">
@@ -339,8 +336,7 @@ const InventoryTable = ({ items, onEdit, onDelete, onLink, settings }) => {
                   </div>
                 </td>
                 <td className="font-semibold text-primary">
-                  {currency}
-                  {item.costPrice.toLocaleString()}
+                  {formatCurrency(item.costPrice)}
                 </td>
                 <td>
                   {item.supplier?.name || (
@@ -398,9 +394,6 @@ const InventoryManagement = () => {
   const dispatch = useDispatch();
   const { items, loading, error, success, message } = useSelector(
     (state) => state.inventory
-  );
-  const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
   );
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -536,7 +529,6 @@ const InventoryManagement = () => {
               onEdit={handleEdit}
               onDelete={handleDelete}
               onLink={handleLink}
-              settings={settings}
             />
           ))}
         </div>
@@ -546,7 +538,6 @@ const InventoryManagement = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onLink={handleLink}
-          settings={settings}
         />
       )}
     </TitleCard>

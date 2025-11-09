@@ -7,7 +7,6 @@ import {
 } from "../../utils/globalConstantUtil";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllExpenses } from "./expensesSlice";
-import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
 import {
   Search,
@@ -27,6 +26,7 @@ import {
   SortDesc,
 } from "lucide-react";
 import { checkRole } from "../../utils/Helpers";
+import { formatCurrency } from "../../utils/numberFormat";
 
 const TopSideButtons = () => {
   const dispatch = useDispatch();
@@ -267,13 +267,7 @@ const SearchAndFilters = ({
   );
 };
 
-const ExpenseTable = ({
-  expenses,
-  sortField,
-  sortDirection,
-  onSort,
-  settings,
-}) => {
+const ExpenseTable = ({ expenses, sortField, sortDirection, onSort }) => {
   const dispatch = useDispatch();
 
   const formatDate = (dateString) => {
@@ -309,9 +303,7 @@ const ExpenseTable = ({
             <th>#</th>
             <SortableHeader field="invoice">Ref/Invoice No.</SortableHeader>
             <SortableHeader field="category">Category</SortableHeader>
-            <SortableHeader field="amount">
-              Amount ({settings.currency.symbol})
-            </SortableHeader>
+            <SortableHeader field="amount">Amount</SortableHeader>
             <SortableHeader field="date">Date</SortableHeader>
             <th>Payment</th>
             <th>Last Action</th>
@@ -332,7 +324,7 @@ const ExpenseTable = ({
               </td>
               <td>
                 <div className="font-semibold text-primary">
-                  {expense.amount.toLocaleString()}
+                  {formatCurrency(expense.amount)}
                 </div>
               </td>
               <td>{formatDate(expense.date)}</td>
@@ -413,9 +405,6 @@ const Expenses = () => {
   const expenses = useSelector((state) => state.expenses.expenses || []);
   const status = useSelector((state) => state.expenses.status);
   const error = useSelector((state) => state.expenses.error);
-  const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
-  );
 
   // Filter and search states
   const [searchQuery, setSearchQuery] = useState("");
@@ -426,7 +415,6 @@ const Expenses = () => {
   const [sortDirection, setSortDirection] = useState("desc");
 
   useEffect(() => {
-    dispatch(fetchSettings());
     if (status === "idle") {
       dispatch(fetchAllExpenses());
     }
@@ -602,15 +590,13 @@ const Expenses = () => {
             <div className="stat">
               <div className="stat-title">Total</div>
               <div className="stat-value text-lg text-primary">
-                {settings.currency.symbol}
-                {totalAmount.toLocaleString()}
+                {formatCurrency(totalAmount)}
               </div>
             </div>
             <div className="stat">
               <div className="stat-title">Average</div>
               <div className="stat-value text-lg text-secondary">
-                {settings.currency.symbol}
-                {avgAmount.toLocaleString()}
+                {formatCurrency(avgAmount)}
               </div>
             </div>
           </div>
@@ -624,15 +610,13 @@ const Expenses = () => {
         <div className="stat bg-base-200 rounded-lg">
           <div className="stat-title">Total Amount</div>
           <div className="stat-value text-lg text-primary">
-            {settings.currency.symbol}
-            {totalAmount.toLocaleString()}
+            {formatCurrency(totalAmount)}
           </div>
         </div>
         <div className="stat bg-base-200 rounded-lg">
           <div className="stat-title">Average</div>
           <div className="stat-value text-lg text-secondary">
-            {settings.currency.symbol}
-            {avgAmount.toLocaleString()}
+            {formatCurrency(avgAmount)}
           </div>
         </div>
       </div>
@@ -660,7 +644,6 @@ const Expenses = () => {
           sortField={sortField}
           sortDirection={sortDirection}
           onSort={handleSort}
-          settings={settings}
         />
       ) : error ? (
         <div className="text-center py-12">

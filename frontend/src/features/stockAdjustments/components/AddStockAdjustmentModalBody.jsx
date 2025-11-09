@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import { closeModal } from "../../common/modalSlice";
+import { showNotification } from "../../common/headerSlice";
+import ErrorText from "../../../components/Typography/ErrorText";
+import { fetchInventoryItems } from "../../inventory/inventorySlice";
 import {
   createStockAdjustment,
   fetchStockAdjustments,
 } from "../stockAdjustmentsSlice";
-import { fetchInventoryItems } from "../../inventory/inventorySlice";
-import { closeModal } from "../../common/modalSlice";
-import { showNotification } from "../../common/headerSlice";
-import ErrorText from "../../../components/Typography/ErrorText";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 const ADJUSTMENT_TYPES = [
   { value: "addition", label: "Addition (Add Stock)" },
@@ -135,16 +136,17 @@ const AddStockAdjustmentModalBody = () => {
 
     return (
       <div className="alert alert-info mt-4">
-        <div className="flex flex-col w-full">
-          <div className="flex justify-between">
-            <span>Current Stock:</span>
+        <div>
+          <div>
+            <span>Current Stock: </span>
             <span className="font-semibold">
+              {" "}
               {current} {selectedItem.unit}
             </span>
           </div>
-          <div className="flex justify-between mt-1">
-            <span>New Stock:</span>
-            <span className="font-semibold text-primary">
+          <div className="">
+            <span>New Stock: </span>
+            <span className="font-semibold text-lg ">
               {newStock} {selectedItem.unit}
             </span>
           </div>
@@ -229,8 +231,7 @@ const AddStockAdjustmentModalBody = () => {
             Quantity * {selectedItem && `(${selectedItem.unit})`}
           </span>
         </label>
-        <input
-          type="number"
+        <FormattedNumberInput
           name="quantity"
           value={formData.quantity}
           onChange={handleChange}

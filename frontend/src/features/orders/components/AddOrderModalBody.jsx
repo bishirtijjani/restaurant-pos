@@ -1,9 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchAllMenuItems } from "../../menuItems/menuItemsSlice";
-import { fetchAllCustomers } from "../../customers/customersSlice";
-import { showNotification } from "../../common/headerSlice";
-import { openModal } from "../../common/modalSlice";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
 import ErrorText from "../../../components/Typography/ErrorText";
@@ -65,6 +60,8 @@ function AddOrderModalBody({ closeModal }) {
   const { customers, loading: customersLoading } = useSelector(
     (state) => state.customers
   );
+  const { settings } = useSelector((state) => state.generalSettings);
+  const currency = settings?.currency?.symbol || "$";
 
   const [order, setOrder] = useState({
     customerId: "",
@@ -389,8 +386,7 @@ function AddOrderModalBody({ closeModal }) {
                 <td className="border border-gray-400 px-4 py-2 text-center">
                   {prod.unitsInPack > 1 ? (
                     <div>
-                      <input
-                        type="number"
+                      <FormattedNumberInput
                         id={`packQuantity-${index}`}
                         name="packQuantity"
                         value={prod.packQuantity}
@@ -413,8 +409,7 @@ function AddOrderModalBody({ closeModal }) {
                 </td>
                 <td className="border border-gray-400 px-4 py-2 text-right">
                   {prod.unitsInPack > 1 ? (
-                    <input
-                      type="number"
+                    <FormattedNumberInput
                       id={`packPrice-${index}`}
                       value={prod.packPrice}
                       className="input input-bordered w-full text-right"
@@ -425,8 +420,7 @@ function AddOrderModalBody({ closeModal }) {
                   )}
                 </td>
                 <td className="border border-gray-400 px-4 py-2 text-center">
-                  <input
-                    type="number"
+                  <FormattedNumberInput
                     id={`unitQuantity-${index}`}
                     name="unitQuantity"
                     value={prod.unitQuantity}
@@ -444,8 +438,7 @@ function AddOrderModalBody({ closeModal }) {
                   )}
                 </td>
                 <td className="border border-gray-400 px-4 py-2 text-right">
-                  <input
-                    type="number"
+                  <FormattedNumberInput
                     id={`unitPrice-${index}`}
                     value={prod.unitPrice}
                     className="input input-bordered w-full text-right"
@@ -453,8 +446,7 @@ function AddOrderModalBody({ closeModal }) {
                   />
                 </td>
                 <td className="border border-gray-400 px-4 py-2 text-right">
-                  <input
-                    type="number"
+                  <FormattedNumberInput
                     id={`totalAmount-${index}`}
                     value={prod.totalAmount}
                     className="input input-bordered w-full text-right"

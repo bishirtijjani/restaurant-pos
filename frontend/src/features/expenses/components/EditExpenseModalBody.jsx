@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { showNotification } from "../../common/headerSlice";
 import { updateExpense, fetchAllExpenses } from "../expensesSlice";
@@ -10,6 +10,10 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "$";
   const [expense, setExpense] = useState({
     date: "",
     category: "",
@@ -120,7 +124,7 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
       {/* Amount */}
       <div className="mt-4">
         <label htmlFor="amount" className="block text-sm font-medium">
-          Amount
+          Amount ({currency})
         </label>
         <FormattedNumberInput
           id="amount"

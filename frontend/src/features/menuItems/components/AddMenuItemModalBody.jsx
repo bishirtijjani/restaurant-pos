@@ -11,6 +11,8 @@ const AddMenuItemModalBody = () => {
   const { categories, loading: categoriesLoading } = useSelector(
     (state) => state.categories
   );
+  const { settings } = useSelector((state) => state.generalSettings);
+  const currency = settings?.currency?.symbol || "$";
 
   useEffect(() => {
     dispatch(fetchAllCategories());
@@ -220,7 +222,7 @@ const AddMenuItemModalBody = () => {
           {/* Selling Price field with FormattedNumberInput */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Selling Price</span>
+              <span className="label-text">Selling Price ({currency})</span>
               <span className="label-text-alt text-error">{errors.price}</span>
             </label>
             <FormattedNumberInput
@@ -239,7 +241,9 @@ const AddMenuItemModalBody = () => {
           {/* Cost Price field with FormattedNumberInput */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Cost Price (optional)</span>
+              <span className="label-text">
+                Cost Price ({currency}) (optional)
+              </span>
               <span className="label-text-alt text-error">
                 {errors.costPrice}
               </span>

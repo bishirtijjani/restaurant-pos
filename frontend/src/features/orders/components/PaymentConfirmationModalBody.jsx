@@ -1,8 +1,4 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { createOrder, fetchOrders } from "../ordersSlice";
-import { showNotification } from "../../common/headerSlice";
-import { openModal } from "../../common/modalSlice";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { closeModal } from "../../common/modalSlice";
 import { closeRightDrawer } from "../../common/rightDrawerSlice";
@@ -190,15 +186,15 @@ function PaymentConfirmationModalBody(props) {
 
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">
-              Amount Received ($)
+              Amount Received ({currency})
               {paymentDetails.isPartialPayment && (
                 <span className="text-gray-500 ml-2">
-                  (Must be less than ${orderTotal.toLocaleString()})
+                  (Must be less than {currency}
+                  {orderTotal.toLocaleString()})
                 </span>
               )}
             </label>
-            <input
-              type="number"
+            <FormattedNumberInput
               name="amountReceived"
               value={paymentDetails.amountReceived}
               onChange={handleInputChange}
@@ -210,9 +206,8 @@ function PaymentConfirmationModalBody(props) {
           {paymentDetails.balance > 0 && (
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">Balance</label>
-              <input
-                type="text"
-                value={`$${paymentDetails.balance.toLocaleString()}`}
+              <FormattedNumberInput
+                value={paymentDetails.balance}
                 className="input input-bordered w-full"
                 disabled
               />
@@ -224,9 +219,8 @@ function PaymentConfirmationModalBody(props) {
               <label className="block text-sm font-medium mb-2">
                 Change Due
               </label>
-              <input
-                type="text"
-                value={`$${paymentDetails.change.toLocaleString()}`}
+              <FormattedNumberInput
+                value={paymentDetails.change}
                 className="input input-bordered w-full"
                 disabled
               />

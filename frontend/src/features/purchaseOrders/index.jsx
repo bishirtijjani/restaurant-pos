@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import TitleCard from "../../components/Cards/TitleCard";
 import SuspenseContent from "../../containers/SuspenseContent";
+import { formatCurrency } from "../../utils/numberFormat";
 import { openModal } from "../common/modalSlice";
 import { showNotification } from "../common/headerSlice";
 import {
@@ -138,10 +139,7 @@ const PurchaseOrderCard = ({
   onApprove,
   onReceive,
   onCancel,
-  settings,
 }) => {
-  const currency = settings?.currency?.symbol || "$";
-
   const formatDate = (dateString) => {
     if (!dateString) return "Not set";
     return new Date(dateString).toLocaleDateString();
@@ -198,8 +196,7 @@ const PurchaseOrderCard = ({
           <div className="flex justify-between items-center">
             <span className="text-base-content/70 text-sm">Total Amount</span>
             <span className="font-semibold text-lg text-primary">
-              {currency}
-              {order.totalAmount?.toLocaleString()}
+              {formatCurrency(order.totalAmount)}
             </span>
           </div>
 
@@ -276,9 +273,6 @@ const PurchaseOrdersManagement = () => {
     (state) => state.purchaseOrders
   );
   const suppliers = useSelector((state) => state.suppliers.suppliers || []);
-  const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
-  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -413,7 +407,6 @@ const PurchaseOrdersManagement = () => {
               onApprove={handleApprove}
               onReceive={handleReceive}
               onCancel={handleCancel}
-              settings={settings}
             />
           ))}
         </div>

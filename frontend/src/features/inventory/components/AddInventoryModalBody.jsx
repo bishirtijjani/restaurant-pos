@@ -5,6 +5,8 @@ import { fetchAllSuppliers } from "../../suppliers/suppliersSlice";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
 
 const CATEGORIES = [
   "Raw Materials",
@@ -20,6 +22,10 @@ const AddInventoryModalBody = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.inventory);
   const suppliers = useSelector((state) => state.suppliers.suppliers || []);
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "$";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -36,6 +42,9 @@ const AddInventoryModalBody = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
+    if (!settings) {
+      dispatch(fetchSettings());
+    }
     dispatch(fetchAllSuppliers());
   }, [dispatch]);
 
@@ -173,8 +182,7 @@ const AddInventoryModalBody = () => {
           <label className="label">
             <span className="label-text">Current Stock</span>
           </label>
-          <input
-            type="number"
+          <FormattedNumberInput
             name="currentStock"
             value={formData.currentStock}
             onChange={handleChange}
@@ -189,8 +197,7 @@ const AddInventoryModalBody = () => {
           <label className="label">
             <span className="label-text">Minimum Stock Level</span>
           </label>
-          <input
-            type="number"
+          <FormattedNumberInput
             name="minStockLevel"
             value={formData.minStockLevel}
             onChange={handleChange}
@@ -203,10 +210,9 @@ const AddInventoryModalBody = () => {
         {/* Cost Price */}
         <div className="form-control">
           <label className="label">
-            <span className="label-text">Cost Price *</span>
+            <span className="label-text">Cost Price ({currency}) *</span>
           </label>
-          <input
-            type="number"
+          <FormattedNumberInput
             name="costPrice"
             value={formData.costPrice}
             onChange={handleChange}

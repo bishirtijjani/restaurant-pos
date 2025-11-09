@@ -1,7 +1,4 @@
-import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { updatePayment, fetchOrders } from "../ordersSlice";
-import { showNotification } from "../../common/headerSlice";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { closeModal } from "../../common/modalSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 
@@ -102,8 +99,7 @@ function UpdatePaymentModalBody({ extraObject }) {
                 New Total Amount Paid ({currency})
               </span>
             </label>
-            <input
-              type="number"
+            <FormattedNumberInput
               name="amountPaid"
               value={paymentData.amountPaid}
               onChange={handleInputChange}

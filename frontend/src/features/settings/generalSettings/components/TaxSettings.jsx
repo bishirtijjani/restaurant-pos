@@ -1,5 +1,4 @@
-// frontend/src/features/settings/generalSettings/components/TaxSettings.jsx
-import React from "react";
+import FormattedNumberInput from "../../../../components/Input/FormattedNumberInput";
 import {
   ReceiptPercentIcon,
   CurrencyDollarIcon,
@@ -62,8 +61,7 @@ const TaxSettings = ({ formData, onTaxChange, onServiceChange }) => {
                   <label className="label">
                     <span className="label-text">Global Tax Rate (%)</span>
                   </label>
-                  <input
-                    type="number"
+                  <FormattedNumberInput
                     className="input input-bordered"
                     value={formData.taxSettings?.globalRate || 0}
                     onChange={(e) =>
@@ -189,8 +187,7 @@ const TaxSettings = ({ formData, onTaxChange, onServiceChange }) => {
                   <label className="label">
                     <span className="label-text">Rate (%)</span>
                   </label>
-                  <input
-                    type="number"
+                  <FormattedNumberInput
                     className="input input-bordered"
                     value={formData.serviceCharge?.rate || 0}
                     onChange={(e) =>

@@ -20,7 +20,7 @@ function ActiveIndicator({ path }) {
 
 function renderSidebarRoutes(routes) {
   return routes.map((route, index) => (
-    <li key={index} className="mx-3 my-1 relative">
+    <li key={index} className="mx-2 my-1 relative">
       {route.submenu ? (
         <SidebarSubmenu {...route} />
       ) : (
@@ -28,7 +28,7 @@ function renderSidebarRoutes(routes) {
           end
           to={route.path}
           className={({ isActive }) =>
-            `flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+            `flex items-center gap-2 py-2 rounded-lg transition-all duration-200 ${
               isActive ? "bg-base-200 font-semibold" : "hover:bg-base-200"
             }`
           }
@@ -94,10 +94,10 @@ function LeftSidebar() {
         </li>
 
         {/* Sidebar Items */}
-        <div className="mt-4 space-y-2 px-4">{SidebarContent}</div>
+        <div className="mt-4 space-y-2 px-2">{SidebarContent}</div>
 
         {/* Logout Button */}
-        <li className="mt-auto px-4 py-6">
+        <li className="mt-auto px-2 py-6">
           <a
             className="w-full btn bg-error text-white hover:bg-error/90 shadow-md flex items-center justify-center gap-2"
             onClick={logoutUser}

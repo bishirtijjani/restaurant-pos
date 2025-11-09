@@ -1,6 +1,7 @@
-// frontend/src/features/settings/generalSettings/index.jsx
-import React, { useState, useEffect } from "react";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
 import {
   Settings,
   Building2,
@@ -377,8 +378,7 @@ const GeneralSettings = () => {
                     Low Stock Alert Threshold
                   </span>
                 </label>
-                <input
-                  type="number"
+                <FormattedNumberInput
                   name="lowStockAlert"
                   value={formData.lowStockAlert}
                   onChange={handleInputChange}

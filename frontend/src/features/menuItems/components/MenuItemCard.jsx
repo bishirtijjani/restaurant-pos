@@ -13,7 +13,7 @@ import XCircleIcon from "@heroicons/react/24/outline/XCircleIcon";
 import PhotoIcon from "@heroicons/react/24/outline/PhotoIcon";
 import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
-
+import { formatCurrency } from "../../../utils/numberFormat";
 import { checkRole } from "../../../utils/Helpers";
 
 // Clock icon component
@@ -96,7 +96,7 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
             {item.name}
           </h2>
           <div className="text-lg font-bold text-primary">
-            ${item.price?.toLocaleString()}
+            {formatCurrency(item.price)}
           </div>
         </div>
 

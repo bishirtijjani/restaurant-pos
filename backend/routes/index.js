@@ -10,7 +10,7 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 // all subsequent routes need authMiddleware
 router.use(authMiddleware);
 
-router.use("/users", adminMiddleware, require("./userRoutes"));
+router.use("/users", require("./userRoutes"));
 router.use("/general-settings", require("./generalSettingsRoutes"));
 router.use("/customers", require("./customerRoutes"));
 router.use("/categories", require("./categoryRoutes"));
