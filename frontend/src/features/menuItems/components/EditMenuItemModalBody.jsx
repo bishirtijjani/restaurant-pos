@@ -8,6 +8,7 @@ import TextAreaInput from "../../../components/Input/TextAreaInput";
 import SelectBox from "../../../components/Input/SelectBox";
 import ToggleInput from "../../../components/Input/ToggleInput";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 
 const EditMenuItemModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
@@ -257,16 +258,15 @@ const EditMenuItemModalBody = ({ extraObject }) => {
               <span className="label-text">Selling Price</span>
               <span className="label-text-alt text-error">{errors.price}</span>
             </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Enter Selling price"
-              className="input input-bordered w-full"
+            <FormattedNumberInput
+              name="price"
               value={formData.price}
               onChange={(e) =>
                 updateFormValue({ updateType: "price", value: e.target.value })
               }
+              className="input input-bordered w-full"
+              placeholder="Enter Selling price"
+              min={0}
               required
             />
           </div>
@@ -279,12 +279,8 @@ const EditMenuItemModalBody = ({ extraObject }) => {
                 {errors.costPrice}
               </span>
             </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Enter cost price"
-              className="input input-bordered w-full"
+            <FormattedNumberInput
+              name="costPrice"
               value={formData.costPrice}
               onChange={(e) =>
                 updateFormValue({
@@ -292,6 +288,9 @@ const EditMenuItemModalBody = ({ extraObject }) => {
                   value: e.target.value,
                 })
               }
+              className="input input-bordered w-full"
+              placeholder="Enter cost price"
+              min={0}
             />
           </div>
 

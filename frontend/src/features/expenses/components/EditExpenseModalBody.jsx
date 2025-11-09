@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { showNotification } from "../../common/headerSlice";
 import { updateExpense, fetchAllExpenses } from "../expensesSlice";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 
 function EditExpenseModalBody({ closeModal, extraObject }) {
   const expenseData = extraObject;
@@ -121,14 +122,14 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
         <label htmlFor="amount" className="block text-sm font-medium">
           Amount
         </label>
-        <input
-          type="number"
+        <FormattedNumberInput
           id="amount"
           name="amount"
           value={expense.amount}
           onChange={handleInputChange}
           className="input input-bordered w-full mt-2"
-          placeholder="Enter Amount"
+          placeholder="Enter Amount..."
+          min={0}
         />
       </div>
 

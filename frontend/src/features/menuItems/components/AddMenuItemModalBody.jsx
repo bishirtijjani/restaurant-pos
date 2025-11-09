@@ -4,6 +4,7 @@ import { addMenuItem } from "../menuItemsSlice";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 
 const AddMenuItemModalBody = () => {
   const dispatch = useDispatch();
@@ -11,7 +12,6 @@ const AddMenuItemModalBody = () => {
     (state) => state.categories
   );
 
-  // Fetch categories when component mounts
   useEffect(() => {
     dispatch(fetchAllCategories());
   }, [dispatch]);
@@ -42,7 +42,6 @@ const AddMenuItemModalBody = () => {
       [updateType]: value,
     });
 
-    // Clear error when field is updated
     if (errors[updateType]) {
       setErrors({
         ...errors,
@@ -55,7 +54,6 @@ const AddMenuItemModalBody = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
     if (!validTypes.includes(file.type)) {
       setErrors({
@@ -65,7 +63,6 @@ const AddMenuItemModalBody = () => {
       return;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       setErrors({
         ...errors,
@@ -74,7 +71,6 @@ const AddMenuItemModalBody = () => {
       return;
     }
 
-    // Clear any previous errors
     if (errors.image) {
       setErrors({
         ...errors,
@@ -82,7 +78,6 @@ const AddMenuItemModalBody = () => {
       });
     }
 
-    // Create file reader to convert image to base64
     const reader = new FileReader();
     reader.onload = () => {
       setImagePreview(reader.result);
@@ -135,10 +130,8 @@ const AddMenuItemModalBody = () => {
     setIsSubmitting(true);
 
     try {
-      // Prepare data for submission
       const menuItemData = {
         ...formData,
-        // Just pass the category ID, the backend will handle the relationship
         price: parseFloat(formData.price),
         costPrice: formData.costPrice ? parseFloat(formData.costPrice) : 0,
         preparationTime: formData.preparationTime
@@ -146,7 +139,6 @@ const AddMenuItemModalBody = () => {
           : 15,
       };
 
-      // Dispatch the addMenuItem thunk
       const resultAction = await dispatch(addMenuItem(menuItemData));
 
       if (addMenuItem.fulfilled.match(resultAction)) {
@@ -225,27 +217,26 @@ const AddMenuItemModalBody = () => {
             </select>
           </div>
 
-          {/* Selling Price field */}
+          {/* Selling Price field with FormattedNumberInput */}
           <div className="form-control">
             <label className="label">
               <span className="label-text">Selling Price</span>
               <span className="label-text-alt text-error">{errors.price}</span>
             </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Enter Selling price"
-              className="input input-bordered w-full"
+            <FormattedNumberInput
+              name="price"
               value={formData.price}
               onChange={(e) =>
                 updateFormValue({ updateType: "price", value: e.target.value })
               }
+              className="input input-bordered w-full"
+              placeholder="Enter Selling price"
+              min={0}
               required
             />
           </div>
 
-          {/* Cost Price field (optional) */}
+          {/* Cost Price field with FormattedNumberInput */}
           <div className="form-control">
             <label className="label">
               <span className="label-text">Cost Price (optional)</span>
@@ -253,12 +244,8 @@ const AddMenuItemModalBody = () => {
                 {errors.costPrice}
               </span>
             </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Enter cost price"
-              className="input input-bordered w-full"
+            <FormattedNumberInput
+              name="costPrice"
               value={formData.costPrice}
               onChange={(e) =>
                 updateFormValue({
@@ -266,6 +253,9 @@ const AddMenuItemModalBody = () => {
                   value: e.target.value,
                 })
               }
+              className="input input-bordered w-full"
+              placeholder="Enter cost price"
+              min={0}
             />
           </div>
 

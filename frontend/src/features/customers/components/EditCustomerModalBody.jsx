@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { updateCustomer, fetchAllCustomers } from "../customersSlice";
 import { showNotification } from "../../common/headerSlice";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 
 function EditCustomerModalBody({ closeModal, extraObject }) {
   const dispatch = useDispatch();
@@ -129,15 +130,14 @@ function EditCustomerModalBody({ closeModal, extraObject }) {
           <label htmlFor="debtLimit" className="block text-sm font-medium">
             Debt Limit ($)
           </label>
-          <input
-            type="number"
+          <FormattedNumberInput
             id="debtLimit"
             name="debtLimit"
             value={customer.debtLimit}
             onChange={handleInputChange}
             className="input input-bordered w-full mt-2"
             placeholder="Enter Debt Limit"
-            min="0"
+            min={0}
           />
         </div>
         {/* Error Message */}

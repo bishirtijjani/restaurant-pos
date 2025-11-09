@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updatePayment, fetchOrders } from "../ordersSlice";
 import { showNotification } from "../../common/headerSlice";

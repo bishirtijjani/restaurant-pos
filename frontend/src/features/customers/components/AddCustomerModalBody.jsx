@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { addCustomer, fetchAllCustomers } from "../customersSlice";
 import { showNotification } from "../../common/headerSlice";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 
 function AddCustomerModalBody({ closeModal }) {
   const dispatch = useDispatch();
@@ -11,7 +12,7 @@ function AddCustomerModalBody({ closeModal }) {
     email: "",
     phone: "",
     address: "",
-    debtLimit: 0,
+    debtLimit: "",
   });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -25,11 +26,18 @@ function AddCustomerModalBody({ closeModal }) {
     // Validate form fields
     if (!customer.fullname.trim())
       return setErrorMessage("Full name is required!");
-    if (customer.debtLimit < 0)
+
+    const debtLimitNum = parseFloat(customer.debtLimit) || 0;
+    if (debtLimitNum < 0)
       return setErrorMessage("Debt limit cannot be negative!");
 
     setLoading(true);
-    dispatch(addCustomer(customer))
+    dispatch(
+      addCustomer({
+        ...customer,
+        debtLimit: debtLimitNum,
+      })
+    )
       .unwrap()
       .then(() => {
         dispatch(
@@ -117,21 +125,23 @@ function AddCustomerModalBody({ closeModal }) {
             placeholder="Enter Full Address"
           />
         </div>
+
+        {/* Debt Limit with Formatted Input */}
         <div className="mt-4">
           <label htmlFor="debtLimit" className="block text-sm font-medium">
             Debt Limit ($)
           </label>
-          <input
-            type="number"
+          <FormattedNumberInput
             id="debtLimit"
             name="debtLimit"
             value={customer.debtLimit}
             onChange={handleInputChange}
             className="input input-bordered w-full mt-2"
             placeholder="Enter Debt Limit"
-            min="0"
+            min={0}
           />
         </div>
+
         {/* Error Message */}
         {errorMessage && (
           <ErrorText styleClass="mt-16">{errorMessage}</ErrorText>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   ShoppingBag,
@@ -13,16 +13,9 @@ import {
   Salad,
   Sandwich,
   Cake,
-  CreditCard,
-  DollarSign,
-  Receipt,
   User,
 } from "lucide-react";
-import { openModal } from "../common/modalSlice";
-import {
-  MODAL_BODY_TYPES,
-  RIGHT_DRAWER_TYPES,
-} from "../../utils/globalConstantUtil";
+import { RIGHT_DRAWER_TYPES } from "../../utils/globalConstantUtil";
 import { fetchAllMenuItems } from "../menuItems/menuItemsSlice";
 import { fetchAllCategories } from "../categories/categoriesSlice";
 import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
@@ -379,11 +372,7 @@ export default function POS() {
   );
   const currency = settings?.currency?.symbol || "$";
   const menuItems = useSelector((state) => state.menuItems.menuItems);
-  const menuItemsStatus = useSelector((state) => state.menuItems.status);
-  const menuItemsError = useSelector((state) => state.menuItems.error);
   const categories = useSelector((state) => state.categories.categories);
-  const categoriesStatus = useSelector((state) => state.categories.status);
-  const categoriesError = useSelector((state) => state.categories.error);
 
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
