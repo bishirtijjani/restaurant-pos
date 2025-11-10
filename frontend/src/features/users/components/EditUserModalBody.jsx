@@ -120,6 +120,7 @@ function EditUserModalBody({ closeModal, extraObject }) {
               id="password"
               name="password"
               value={user.password}
+              autoComplete=""
               onChange={handleInputChange}
               className="input input-bordered w-full mt-2"
               placeholder="Enter new password or leave blank to keep existing"
@@ -150,9 +151,13 @@ function EditUserModalBody({ closeModal, extraObject }) {
             onChange={handleInputChange}
             className="select select-bordered w-full mt-2"
           >
-            <option value="staff">Staff</option>
-            <option value="manager">Manager</option>
             <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="cashier">Cashier</option>
+            <option value="waiter">Waiter</option>
+            <option value="kitchen">Kitchen</option>
+            <option value="accountant">Accountant</option>
+            <option value="staff">Staff</option>
           </select>
         </div>
 

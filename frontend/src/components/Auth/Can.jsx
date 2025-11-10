@@ -1,4 +1,4 @@
-import { useAuth } from "../../utils/permissions";
+import { useAuth } from "../../utils/permission";
 
 /**
  * Simple wrapper - only renders if user can perform action

@@ -59,29 +59,31 @@ const updateUser = async (req, res) => {
   const { id } = req.params;
   const { fullname, email, role, password } = req.body;
   try {
-    const oldUser = await User.findById(id); // Get existing user details
+    const oldUser = await User.findById(id);
     if (!oldUser) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { fullname, email, role, password },
-      { new: true, runValidators: true }
-    );
+    // Update fields
+    if (fullname) oldUser.fullname = fullname;
+    if (email) oldUser.email = email;
+    if (role) oldUser.role = role;
+    if (password) oldUser.password = password;
 
-    // Log action
+    const updatedUser = await oldUser.save();
+
     await logAction(
       req.user.id,
       "User",
       id,
       "edit",
-      oldUser,
-      updatedUser,
+      oldUser.toObject(),
+      updatedUser.toObject(),
       "User details updated"
     );
+    console.log(updatedUser);
 
     res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
@@ -89,7 +91,6 @@ const updateUser = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to update user" });
   }
 };
-
 // Delete a user
 const deleteUser = async (req, res) => {
   const { id } = req.params;

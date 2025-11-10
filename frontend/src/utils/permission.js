@@ -47,6 +47,7 @@ export const CAN = {
 
 // Simple permission check
 export const can = (action, userRole) => {
+  if (!userRole) return false; // Add this safety check
   return CAN[action]?.includes(userRole) || false;
 };
 
@@ -61,3 +62,34 @@ export const useAuth = () => {
     isManager: userRole === ROLES.MANAGER,
   };
 };
+
+// ============ HOW TO USE ===========
+// In any component that needs protection:
+// import { useAuth } from "../../utils/permission";
+
+// function MyComponent() {
+//   const { can } = useAuth();
+
+//   return (
+//     <>
+//       {can('editMenu') && (
+//         <button>Edit Menu</button>
+//       )}
+
+//       {can('deleteMenu') && (
+//         <button>Delete</button>
+//       )}
+//     </>
+//   );
+// }
+
+// === OR USING THE Can COMPONENT === :
+// import Can from "../../components/Auth/Can";
+
+// <Can do="editMenu">
+//   <button>Edit Menu</button>
+// </Can>
+
+// <Can do="deleteMenu">
+//   <button>Delete</button>
+// </Can>

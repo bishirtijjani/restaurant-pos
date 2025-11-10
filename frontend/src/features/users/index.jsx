@@ -58,6 +58,14 @@ const getRoleIcon = (role) => {
       return <Crown className="w-4 h-4" />;
     case "manager":
       return <Shield className="w-4 h-4" />;
+    case "cashier":
+      return <Settings className="w-4 h-4" />;
+    case "waiter":
+      return <Calendar className="w-4 h-4" />;
+    case "kitchen":
+      return <Settings className="w-4 h-4" />;
+    case "accountant":
+      return <User className="w-4 h-4" />;
     case "staff":
       return <UserCheck className="w-4 h-4" />;
     default:
@@ -71,6 +79,14 @@ const getRoleBadgeClass = (role) => {
       return "badge-error";
     case "manager":
       return "badge-warning";
+    case "cashier":
+      return "badge-success";
+    case "waiter":
+      return "badge-accent";
+    case "kitchen":
+      return "badge-neutral";
+    case "accountant":
+      return "badge-primary";
     case "staff":
       return "badge-info";
     default:
@@ -100,7 +116,7 @@ const UserCard = ({ user, onEdit, onDelete }) => (
                 )} badge-sm gap-1`}
               >
                 {getRoleIcon(user.role)}
-                {user.role?.charAt(0).toUpperCase()} **
+                {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
               </div>
             </div>
           </div>
@@ -323,6 +339,10 @@ const SearchAndFilters = ({
             <option value="">All Roles</option>
             <option value="admin">Admin</option>
             <option value="manager">Manager</option>
+            <option value="cashier">Cashier</option>
+            <option value="waiter">Waiter</option>
+            <option value="kitchen">Kitchen</option>
+            <option value="accountant">Accountant</option>
             <option value="staff">Staff</option>
           </select>
         </div>

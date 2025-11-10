@@ -8,7 +8,15 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["admin", "manager", "cashier", "waiter", "kitchen", "accountant", "staff"],
+      enum: [
+        "admin",
+        "manager",
+        "cashier",
+        "waiter",
+        "kitchen",
+        "accountant",
+        "staff",
+      ],
       required: true,
       default: "staff",
     },
@@ -21,7 +29,7 @@ const userSchema = new mongoose.Schema(
     lastAction: {
       action: {
         type: String,
-        enum: ["create", "update", "delete"],
+        enum: ["create", "update", "edit", "delete"],
         default: null,
       },
       performedBy: {

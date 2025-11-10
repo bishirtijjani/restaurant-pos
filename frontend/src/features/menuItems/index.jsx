@@ -23,10 +23,10 @@ import PhotoIcon from "@heroicons/react/24/outline/PhotoIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
 import { formatCurrency } from "../../utils/numberFormat";
-import { checkRole } from "../../utils/Helpers";
 import SearchBar from "../../components/Input/SearchBar";
 import { showNotification } from "../common/headerSlice";
 import MenuItemCard from "./components/MenuItemCard";
+import Can from "../../components/Auth/Can";
 
 const TopSideButtons = ({
   searchQuery,
@@ -141,14 +141,12 @@ const TopSideButtons = ({
 
       <div className="flex items-center gap-2 shrink-0">
         {/* for admin and manager only */}
-        {(checkRole("admin") || checkRole("manager")) && (
-          <button
-            onClick={openAddNewMenuItem}
-            className="btn btn-primary btn-sm md:btn-md"
-          >
-            <PlusCircleIcon className="w-5 h-5 mr-1" /> New Item
-          </button>
-        )}
+        <button
+          onClick={openAddNewMenuItem}
+          className="btn btn-primary btn-sm md:btn-md"
+        >
+          <PlusCircleIcon className="w-5 h-5 mr-1" /> New Item
+        </button>
         <button
           onClick={() => dispatch(fetchAllMenuItems())}
           className="btn btn-outline btn-sm md:btn-md"
@@ -332,8 +330,7 @@ const MenuItems = () => {
                                 <CheckCircleIcon className="w-5 h-5 text-success" />
                               )}
                             </button>
-
-                            {(checkRole("admin") || checkRole("manager")) && (
+                            <Can do="editMenu">
                               <button
                                 className="btn btn-sm btn-ghost tooltip"
                                 data-tip="Edit Item"
@@ -349,9 +346,9 @@ const MenuItems = () => {
                               >
                                 <PencilSquareIcon className="w-5 h-5" />
                               </button>
-                            )}
+                            </Can>
 
-                            {checkRole("admin") && (
+                            <Can do="deleteMenu">
                               <button
                                 className="btn btn-sm btn-ghost tooltip"
                                 data-tip="Delete Item"
@@ -371,7 +368,7 @@ const MenuItems = () => {
                               >
                                 <TrashIcon className="w-5 h-5 text-error" />
                               </button>
-                            )}
+                            </Can>
                           </div>
                         </td>
                       </tr>
@@ -397,22 +394,21 @@ const MenuItems = () => {
       <div className="mx-auto w-16 h-16 mb-4 text-base-content/50">{icon}</div>
       <h3 className="text-xl font-semibold mb-2">{message}</h3>
       <p className="text-base-content/70 mb-6">{helpText}</p>
-      {(checkRole("admin") || checkRole("manager")) && (
-        <button
-          onClick={() =>
-            dispatch(
-              openModal({
-                title: "Add New Menu Item",
-                bodyType: MODAL_BODY_TYPES.ADD_NEW_MENU_ITEM,
-                size: "xl",
-              })
-            )
-          }
-          className="btn btn-primary"
-        >
-          <PlusCircleIcon className="w-5 h-5 mr-2" /> Add Menu Item
-        </button>
-      )}
+
+      <button
+        onClick={() =>
+          dispatch(
+            openModal({
+              title: "Add New Menu Item",
+              bodyType: MODAL_BODY_TYPES.ADD_NEW_MENU_ITEM,
+              size: "xl",
+            })
+          )
+        }
+        className="btn btn-primary"
+      >
+        <PlusCircleIcon className="w-5 h-5 mr-2" /> Add Menu Item
+      </button>
     </div>
   );
 

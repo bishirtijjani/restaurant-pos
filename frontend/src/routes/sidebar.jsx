@@ -131,14 +131,24 @@ export const managerRoutes = [
     name: "Dashboard",
   },
   {
+    path: "/app/kds",
+    icon: <Monitor className={iconClasses} />,
+    name: "Kitchen Display",
+  },
+  {
+    path: "/app/stations",
+    icon: <Monitor className={submenuIconClasses} />,
+    name: "Station Management",
+  },
+  {
     path: "/app/categories",
     icon: <Shapes className={iconClasses} />,
     name: "Product Categories",
   },
   {
-    path: "/app/products",
+    path: "/app/menu-items",
     icon: <Tag className={iconClasses} />,
-    name: "Products",
+    name: "Menu Items",
   },
   {
     path: "/app/suppliers",
@@ -146,19 +156,53 @@ export const managerRoutes = [
     name: "Suppliers",
   },
   {
+    path: "",
+    icon: <Package className={`${iconClasses} inline`} />,
+    name: "Inventory",
+    submenu: [
+      {
+        path: "/app/inventory",
+        icon: <Package className={submenuIconClasses} />,
+        name: "Inventory Items",
+      },
+      {
+        path: "/app/purchase-orders",
+        icon: <FileText className={submenuIconClasses} />,
+        name: "Purchase Orders",
+      },
+      {
+        path: "/app/stock-adjustments",
+        icon: <ClipboardList className={submenuIconClasses} />,
+        name: "Stock Adjustments",
+      },
+    ],
+  },
+  {
     path: "/app/expenses",
     icon: <FileText className={iconClasses} />,
     name: "Expenses",
   },
   {
-    path: "/app/orders",
-    icon: <ShoppingCart className={iconClasses} />,
+    path: "",
+    icon: <ShoppingCart className={`${iconClasses} inline`} />,
     name: "Orders",
+    submenu: [
+      {
+        path: "/app/orders",
+        icon: <ShoppingCart className={submenuIconClasses} />,
+        name: "View All Orders",
+      },
+      {
+        path: "/app/orders/new",
+        icon: <PlusCircle className={submenuIconClasses} />,
+        name: "Add New Order",
+      },
+    ],
   },
   {
-    path: "/app/analytics",
-    icon: <BarChart className={iconClasses} />,
-    name: "Analytics",
+    path: "/app/customers",
+    icon: <Users className={iconClasses} />,
+    name: "Customers",
   },
   {
     path: "",
@@ -166,14 +210,155 @@ export const managerRoutes = [
     name: "Settings",
     submenu: [
       {
-        path: "/app/settings-profile",
+        path: "/app/settings/profile",
         icon: <User className={submenuIconClasses} />,
         name: "Profile",
       },
+    ],
+  },
+];
+
+export const cashierRoutes = [
+  {
+    path: "/app/dashboard",
+    icon: <LayoutDashboard className={iconClasses} />,
+    name: "Dashboard",
+  },
+  {
+    path: "",
+    icon: <ShoppingCart className={`${iconClasses} inline`} />,
+    name: "Orders",
+    submenu: [
       {
-        path: "/app/settings-pin",
-        icon: <KeyRound className={iconClasses} />,
-        name: "Change PIN",
+        path: "/app/orders",
+        icon: <ShoppingCart className={submenuIconClasses} />,
+        name: "View Orders",
+      },
+      {
+        path: "/app/orders/new",
+        icon: <PlusCircle className={submenuIconClasses} />,
+        name: "Add New Order",
+      },
+    ],
+  },
+  {
+    path: "/app/customers",
+    icon: <Users className={iconClasses} />,
+    name: "Customers",
+  },
+  {
+    path: "/app/expenses",
+    icon: <FileText className={iconClasses} />,
+    name: "Expenses",
+  },
+  {
+    path: "",
+    icon: <Settings className={`${iconClasses} inline`} />,
+    name: "Settings",
+    submenu: [
+      {
+        path: "/app/settings/profile",
+        icon: <User className={submenuIconClasses} />,
+        name: "Profile",
+      },
+    ],
+  },
+];
+
+export const waiterRoutes = [
+  {
+    path: "/app/dashboard",
+    icon: <LayoutDashboard className={iconClasses} />,
+    name: "Dashboard",
+  },
+  {
+    path: "",
+    icon: <ShoppingCart className={`${iconClasses} inline`} />,
+    name: "Orders",
+    submenu: [
+      {
+        path: "/app/orders/new",
+        icon: <PlusCircle className={submenuIconClasses} />,
+        name: "Add New Order",
+      },
+    ],
+  },
+  {
+    path: "/app/customers",
+    icon: <Users className={iconClasses} />,
+    name: "Customers",
+  },
+  {
+    path: "",
+    icon: <Settings className={`${iconClasses} inline`} />,
+    name: "Settings",
+    submenu: [
+      {
+        path: "/app/settings/profile",
+        icon: <User className={submenuIconClasses} />,
+        name: "Profile",
+      },
+    ],
+  },
+];
+
+export const kitchenRoutes = [
+  {
+    path: "/app/dashboard",
+    icon: <LayoutDashboard className={iconClasses} />,
+    name: "Dashboard",
+  },
+  {
+    path: "/app/kds",
+    icon: <Monitor className={iconClasses} />,
+    name: "Kitchen Display",
+  },
+  {
+    path: "",
+    icon: <Settings className={`${iconClasses} inline`} />,
+    name: "Settings",
+    submenu: [
+      {
+        path: "/app/settings/profile",
+        icon: <User className={submenuIconClasses} />,
+        name: "Profile",
+      },
+    ],
+  },
+];
+
+export const accountantRoutes = [
+  {
+    path: "/app/dashboard",
+    icon: <LayoutDashboard className={iconClasses} />,
+    name: "Dashboard",
+  },
+  {
+    path: "",
+    icon: <Package className={`${iconClasses} inline`} />,
+    name: "Inventory",
+    submenu: [
+      {
+        path: "/app/purchase-orders",
+        icon: <FileText className={submenuIconClasses} />,
+        name: "Purchase Orders",
+      },
+    ],
+  },
+  {
+    path: "/app/expenses",
+    icon: <FileText className={iconClasses} />,
+    name: "Expenses",
+  },
+  {
+    path: "",
+    icon: <Settings className={`${iconClasses} inline`} />,
+    name: "Settings",
+    submenu: [
+      {
+        path: "/app/settings/profile",
+        icon: <User className={submenuIconClasses} />,
+        name: "Profile",
       },
     ],
   },
@@ -186,14 +371,16 @@ export const staffRoutes = [
     name: "Dashboard",
   },
   {
-    path: "/app/products",
-    icon: <Tag className={iconClasses} />,
-    name: "Products",
-  },
-  {
-    path: "/app/orders",
-    icon: <ShoppingCart className={iconClasses} />,
+    path: "",
+    icon: <ShoppingCart className={`${iconClasses} inline`} />,
     name: "Orders",
+    submenu: [
+      {
+        path: "/app/orders",
+        icon: <ShoppingCart className={submenuIconClasses} />,
+        name: "View Orders",
+      },
+    ],
   },
   {
     path: "",
@@ -201,14 +388,9 @@ export const staffRoutes = [
     name: "Settings",
     submenu: [
       {
-        path: "/app/settings-profile",
+        path: "/app/settings/profile",
         icon: <User className={submenuIconClasses} />,
         name: "Profile",
-      },
-      {
-        path: "/app/settings-pin",
-        icon: <KeyRound className={iconClasses} />,
-        name: "Change PIN",
       },
     ],
   },
