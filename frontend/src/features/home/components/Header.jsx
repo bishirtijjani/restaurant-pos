@@ -79,7 +79,11 @@ const Header = () => {
           <div className="hidden lg:flex items-center gap-4">
             {/* Light and dark theme selection toggle */}
             <label className="swap swap-rotate">
-              <input type="checkbox" className="theme-controller" />
+              <input
+                type="checkbox"
+                className="theme-controller"
+                data-toggle-theme="dark,light"
+              />
               <SunIcon
                 data-set-theme="light"
                 data-act-class="ACTIVECLASS"
@@ -149,19 +153,23 @@ const Header = () => {
                 {/* Mobile: Theme Toggle */}
                 <div className="flex items-center justify-between py-2">
                   <span className="text-base-content">Theme</span>
-                  <label className="swap swap-rotate">
-                    <input type="checkbox" className="theme-controller" />
-                    <SunIcon
-                      data-set-theme="light"
-                      data-act-class="ACTIVECLASS"
-                      className="swap-off fill-current w-6 h-6"
-                    />
-                    <MoonIcon
-                      data-set-theme="dark"
-                      data-act-class="ACTIVECLASS"
-                      className="swap-on fill-current w-6 h-6"
-                    />
-                  </label>
+                                    <label className="swap swap-rotate">
+                                      <input
+                                        type="checkbox"
+                                        className="theme-controller"
+                                        data-toggle-theme="dark,light"
+                                      />
+                                      <SunIcon
+                                        data-set-theme="light"
+                                        data-act-class="ACTIVECLASS"
+                                        className="swap-off fill-current w-6 h-6"
+                                      />
+                                      <MoonIcon
+                                        data-set-theme="dark"
+                                        data-act-class="ACTIVECLASS"
+                                        className="swap-on fill-current w-6 h-6"
+                                      />
+                                    </label>
                 </div>
 
                 <Link

@@ -25,11 +25,11 @@ export default function HeroSection() {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 bg-primary/20 text-primary font-bold px-3 py-1.5 lg:px-4 lg:py-2 rounded-full text-xs lg:text-sm backdrop-blur-sm border border-primary/30">
                 <ChefHat className="w-3 h-3 lg:w-4 lg:h-4" />
-                Built for Restaurant Success
+                Built for Growing Restaurant
               </div>
 
               {/* Main Headline */}
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-base-content leading-tight text-center lg:tezt-left">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-base-content leading-tight text-center lg:text-left">
                 Stop Losing Money to
                 <span className="text-transparent bg-gradient-to-r from-primary to-secondary bg-clip-text">
                   {" "}

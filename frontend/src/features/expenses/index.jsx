@@ -1,3 +1,4 @@
+// frontend/src/features/expenses/index.jsx
 import React, { useEffect, useState, useMemo } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
 import { openModal } from "../common/modalSlice";
@@ -10,26 +11,25 @@ import { fetchAllExpenses } from "./expensesSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
 import {
   Search,
+  Filter,
   Plus,
   RefreshCw,
   Edit3,
   Trash2,
-  Filter,
   Calendar,
   DollarSign,
   Tag,
-  User,
-  FileText,
-  ChevronDown,
   X,
   SortAsc,
   SortDesc,
 } from "lucide-react";
-import { checkRole } from "../../utils/Helpers";
+import { useAuth } from "../../utils/permission";
+import Can from "../../components/Auth/Can";
 import { formatCurrency } from "../../utils/numberFormat";
 
 const TopSideButtons = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
 
   const openAddNewExpense = () => {
     dispatch(
@@ -43,19 +43,19 @@ const TopSideButtons = () => {
 
   return (
     <div className="flex gap-2">
-      {(checkRole("admin") || checkRole("manager")) && (
+      <Can do="createExpenses">
         <button
           onClick={openAddNewExpense}
-          className="btn btn-primary flex-nowrap"
+          className="btn btn-primary flex-nowrap btn-sm lg:btn-md"
         >
           <Plus className="h-4 w-4" />
-          Add Expense
+          <span className="hidden sm:inline">Add Expense</span>
         </button>
-      )}
+      </Can>
 
       <button
         onClick={() => location.reload()}
-        className="btn btn-ghost flex-nowrap"
+        className="btn btn-ghost flex-nowrap btn-sm lg:btn-md"
       >
         <RefreshCw className="h-4 w-4" />
         <span className="hidden sm:inline">Refresh</span>
@@ -83,7 +83,6 @@ const SearchAndFilters = ({
   return (
     <div className="bg-base-100 border-b border-base-300 -mx-6 px-6 py-4 mb-6">
       <div className="space-y-4">
-        {/* Search Bar and Filter Toggle */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-base-content/60" />
@@ -101,7 +100,7 @@ const SearchAndFilters = ({
               onClick={() => setShowFilters(!showFilters)}
               className={`btn ${
                 hasActiveFilters ? "btn-primary" : "btn-outline"
-              } flex-nowrap`}
+              } flex-nowrap btn-sm lg:btn-md`}
             >
               <Filter className="h-4 w-4" />
               Filters
@@ -119,7 +118,7 @@ const SearchAndFilters = ({
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="btn btn-ghost flex-nowrap"
+                className="btn btn-ghost flex-nowrap btn-sm lg:btn-md"
                 title="Clear all filters"
               >
                 <X className="h-4 w-4" />
@@ -129,7 +128,6 @@ const SearchAndFilters = ({
           </div>
         </div>
 
-        {/* Advanced Filters Panel */}
         {showFilters && (
           <div className="bg-base-200/30 rounded-xl p-4 border border-base-300/50">
             <div className="flex justify-between items-center mb-4">
@@ -150,7 +148,6 @@ const SearchAndFilters = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Category Filter */}
               <div className="form-control">
                 <label className="label pb-1">
                   <span className="label-text font-medium text-sm flex items-center gap-1">
@@ -172,7 +169,6 @@ const SearchAndFilters = ({
                 </select>
               </div>
 
-              {/* Payment Method Filter */}
               <div className="form-control">
                 <label className="label pb-1">
                   <span className="label-text font-medium text-sm flex items-center gap-1">
@@ -194,7 +190,6 @@ const SearchAndFilters = ({
                 </select>
               </div>
 
-              {/* Date Range Filter */}
               <div className="form-control">
                 <label className="label pb-1">
                   <span className="label-text font-medium text-sm flex items-center gap-1">
@@ -217,7 +212,6 @@ const SearchAndFilters = ({
               </div>
             </div>
 
-            {/* Active Filters Summary */}
             {hasActiveFilters && (
               <div className="mt-4 pt-3 border-t border-base-300/50">
                 <div className="flex flex-wrap items-center gap-2">
@@ -269,6 +263,7 @@ const SearchAndFilters = ({
 
 const ExpenseTable = ({ expenses, sortField, sortDirection, onSort }) => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -307,7 +302,7 @@ const ExpenseTable = ({ expenses, sortField, sortDirection, onSort }) => {
             <SortableHeader field="date">Date</SortableHeader>
             <th>Payment</th>
             <th>Last Action</th>
-            <th>Actions</th>
+            {(can("editExpenses") || can("deleteExpenses")) && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -320,7 +315,7 @@ const ExpenseTable = ({ expenses, sortField, sortDirection, onSort }) => {
                 </div>
               </td>
               <td>
-                <span className={`badge`}>{expense.category}</span>
+                <span className="badge">{expense.category}</span>
               </td>
               <td>
                 <div className="font-semibold text-primary">
@@ -351,47 +346,49 @@ const ExpenseTable = ({ expenses, sortField, sortDirection, onSort }) => {
                   </span>
                 )}
               </td>
-              <td>
-                <div className="flex gap-1">
-                  {(checkRole("admin") || checkRole("manager")) && (
-                    <button
-                      className="btn btn-ghost btn-xs"
-                      onClick={() =>
-                        dispatch(
-                          openModal({
-                            title: "Edit Expense",
-                            bodyType: MODAL_BODY_TYPES.EDIT_EXPENSE,
-                            extraObject: expense,
-                          })
-                        )
-                      }
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                  )}
+              {(can("editExpenses") || can("deleteExpenses")) && (
+                <td>
+                  <div className="flex gap-1">
+                    <Can do="editExpenses">
+                      <button
+                        className="btn btn-ghost btn-xs"
+                        onClick={() =>
+                          dispatch(
+                            openModal({
+                              title: "Edit Expense",
+                              bodyType: MODAL_BODY_TYPES.EDIT_EXPENSE,
+                              extraObject: expense,
+                            })
+                          )
+                        }
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
+                    </Can>
 
-                  {checkRole("admin") && (
-                    <button
-                      className="btn btn-ghost btn-xs text-error hover:bg-error hover:text-error-content"
-                      onClick={() =>
-                        dispatch(
-                          openModal({
-                            title: "Delete Expense?",
-                            bodyType: MODAL_BODY_TYPES.CONFIRMATION,
-                            extraObject: {
-                              message: `Are you sure you want to delete this expense`,
-                              type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_EXPENSE,
-                              id: expense._id,
-                            },
-                          })
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </td>
+                    <Can do="deleteExpenses">
+                      <button
+                        className="btn btn-ghost btn-xs text-error hover:bg-error hover:text-error-content"
+                        onClick={() =>
+                          dispatch(
+                            openModal({
+                              title: "Delete Expense?",
+                              bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+                              extraObject: {
+                                message: `Are you sure you want to delete this expense`,
+                                type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_EXPENSE,
+                                id: expense._id,
+                              },
+                            })
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </Can>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -402,11 +399,11 @@ const ExpenseTable = ({ expenses, sortField, sortDirection, onSort }) => {
 
 const Expenses = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const expenses = useSelector((state) => state.expenses.expenses || []);
   const status = useSelector((state) => state.expenses.status);
   const error = useSelector((state) => state.expenses.error);
 
-  // Filter and search states
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
@@ -420,7 +417,6 @@ const Expenses = () => {
     }
   }, [dispatch, status]);
 
-  // Get unique categories and payment methods for filters
   const { categories, paymentMethods } = useMemo(() => {
     const cats = [...new Set(expenses.map((e) => e.category))].filter(Boolean);
     const methods = [...new Set(expenses.map((e) => e.paymentMethod))].filter(
@@ -429,10 +425,8 @@ const Expenses = () => {
     return { categories: cats, paymentMethods: methods };
   }, [expenses]);
 
-  // Filter and search logic
   const filteredAndSearchedExpenses = useMemo(() => {
     let filtered = expenses.filter((expense) => {
-      // Search filter
       const searchText = [
         expense._id,
         expense.category,
@@ -446,16 +440,11 @@ const Expenses = () => {
         .toLowerCase();
 
       const matchesSearch = searchText.includes(searchQuery.toLowerCase());
-
-      // Category filter
       const matchesCategory =
         !categoryFilter || expense.category === categoryFilter;
-
-      // Payment method filter
       const matchesPayment =
         !paymentMethodFilter || expense.paymentMethod === paymentMethodFilter;
 
-      // Date range filter
       let matchesDate = true;
       if (dateRange) {
         const expenseDate = new Date(expense.date);
@@ -499,30 +488,25 @@ const Expenses = () => {
       return matchesSearch && matchesCategory && matchesPayment && matchesDate;
     });
 
-    // Sort the filtered results
     filtered.sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
 
-      // Handle nested properties
       if (sortField === "createdBy") {
         aVal = a.createdBy?.fullname || "";
         bVal = b.createdBy?.fullname || "";
       }
 
-      // Handle dates
       if (sortField === "date" || sortField === "createdAt") {
         aVal = new Date(aVal);
         bVal = new Date(bVal);
       }
 
-      // Handle numbers
       if (sortField === "amount") {
         aVal = Number(aVal) || 0;
         bVal = Number(bVal) || 0;
       }
 
-      // Handle strings
       if (typeof aVal === "string") {
         aVal = aVal.toLowerCase();
         bVal = bVal.toLowerCase();
@@ -563,7 +547,6 @@ const Expenses = () => {
     }
   };
 
-  // Calculate summary stats
   const totalAmount = filteredAndSearchedExpenses.reduce(
     (sum, expense) => sum + (expense.amount || 0),
     0
@@ -574,6 +557,24 @@ const Expenses = () => {
       : 0;
 
   if (status === "loading") return <SuspenseContent />;
+
+  if (!can("viewExpenses")) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to view expenses.
+              </p>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
 
   return (
     <TitleCard
@@ -605,7 +606,6 @@ const Expenses = () => {
       TopSideButtons={<TopSideButtons />}
       topMargin="mt-2"
     >
-      {/* Mobile Summary Stats */}
       <div className="md:hidden grid grid-cols-2 gap-4 mb-6">
         <div className="stat bg-base-200 rounded-lg">
           <div className="stat-title">Total Amount</div>
@@ -621,7 +621,6 @@ const Expenses = () => {
         </div>
       </div>
 
-      {/* Search and Filters Section */}
       <SearchAndFilters
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -637,7 +636,6 @@ const Expenses = () => {
         paymentMethods={paymentMethods}
       />
 
-      {/* Content */}
       {filteredAndSearchedExpenses.length > 0 ? (
         <ExpenseTable
           expenses={filteredAndSearchedExpenses}
