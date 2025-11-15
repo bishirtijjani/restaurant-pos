@@ -1,57 +1,59 @@
-import PageContent from "./PageContent"; // Main content of the page
-import LeftSidebar from "./LeftSidebar"; // Left navigation sidebar
-import { useSelector, useDispatch } from "react-redux"; // Redux hooks for state management
-import RightSidebar from "./RightSidebar"; // Right sidebar for notifications or secondary content
-import { useEffect } from "react"; // React hook for side effects
-import { removeNotificationMessage } from "../features/common/headerSlice"; // Redux action to clear notification messages
-import { ToastContainer, toast } from "react-toastify"; // For displaying toast notifications
-import "react-toastify/dist/ReactToastify.css"; // Styles for toast notifications
-import ModalLayout from "./ModalLayout"; // Dynamic modal container
+import PageContent from "./PageContent";
+import LeftSidebar from "./LeftSidebar";
+import { useSelector, useDispatch } from "react-redux";
+import RightSidebar from "./RightSidebar";
+import { useEffect } from "react";
+import { removeNotificationMessage } from "../features/common/headerSlice";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ModalLayout from "./ModalLayout";
 import OnboardingTour from "../features/onboarding/OnboardingTour";
 import { useLocation } from "react-router-dom";
 import { getTourId } from "../utils/Helpers";
+import { getCurrentUser } from "../app/authSlice";
 
 function Layout() {
   const dispatch = useDispatch();
   const location = useLocation();
+  const user = useSelector((state) => state.auth.user);
 
-  // Access notification message and status from Redux store
   const { newNotificationMessage, newNotificationStatus } = useSelector(
-    (state) => state.header // Accessing the `header` slice of the Redux state
+    (state) => state.header
   );
 
   useEffect(() => {
-    // Display a toast notification if there is a new message
-    if (newNotificationMessage !== "") {
-      if (newNotificationStatus === 1) toast.success(newNotificationMessage); // Success message
-      if (newNotificationStatus === 0) toast.error(newNotificationMessage); // Error message
-      dispatch(removeNotificationMessage()); // Clear the notification after showing it
+    // Ensure user is loaded when layout mounts
+    if (!user) {
+      dispatch(getCurrentUser());
     }
-  }, [newNotificationMessage, newNotificationStatus, dispatch]); // Dependencies to trigger this effect
+  }, [dispatch, user]);
+
+  useEffect(() => {
+    if (newNotificationMessage !== "") {
+      if (newNotificationStatus === 1) toast.success(newNotificationMessage);
+      if (newNotificationStatus === 0) toast.error(newNotificationMessage);
+      dispatch(removeNotificationMessage());
+    }
+  }, [newNotificationMessage, newNotificationStatus, dispatch]);
 
   return (
     <>
-      {/* Left drawer - Contains the page content and left sidebar */}
       <div className="drawer lg:drawer-open">
         <input
           id="left-sidebar-drawer"
           type="checkbox"
-          className="drawer-toggle" // Toggles the visibility of the left sidebar
+          className="drawer-toggle"
         />
-        <PageContent /> {/* Displays the main page content */}
-        <LeftSidebar /> {/* The left sidebar for navigation */}
+        <PageContent />
+        <LeftSidebar />
       </div>
 
-      {/* Right drawer - Contains secondary content, like notifications */}
       <RightSidebar />
 
-      {/* Toast notification container */}
       <ToastContainer />
 
-      {/* Modal layout container */}
       <ModalLayout />
 
-      {/* Onboarding tour component */}
       <OnboardingTour tourId={getTourId()} />
     </>
   );

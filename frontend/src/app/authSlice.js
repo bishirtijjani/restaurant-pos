@@ -66,17 +66,14 @@ export const getCurrentUser = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       if (!token || isTokenExpired(token)) {
+        localStorage.removeItem("token");
         window.location.href = "/login";
-        return;
+        return rejectWithValue("Token expired or missing");
       }
 
-      const response = await axios.get("/api/auth/me", {
-        headers: {
-          Authorization: `${token}`,
-        },
-      });
+      const response = await axios.get("/api/auth/me");
 
-      return response.data.user; // Return user data
+      return response.data.user;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch user data"
@@ -93,11 +90,7 @@ export const updateUserProfile = createAsyncThunk(
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token available");
 
-      const response = await axios.put("/api/auth/update", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.put("/api/auth/update", formData);
 
       return response.data.user; // Return updated user data
     } catch (error) {

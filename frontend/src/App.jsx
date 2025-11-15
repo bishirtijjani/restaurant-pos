@@ -1,47 +1,52 @@
-import React, { lazy, useEffect } from "react"; // React imports for components and lifecycle hooks
-import { useSelector, useDispatch } from "react-redux"; // Redux hook to access the store state
-import "./App.css"; // Importing global styles
+import React, { lazy, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import "./App.css";
 import {
-  BrowserRouter as Router, // For enabling routing in the app
-  Route, // Defines individual routes
-  Routes, // Groups multiple Route components
-  Navigate, // Redirects users to a specific route
-} from "react-router-dom"; // Routing library for React
-import { themeChange } from "theme-change"; // Library for dynamic theme switching
-import checkAuth from "./app/auth"; // Function to check if the user is authenticated
-import initializeApp from "./app/init"; // Custom app initialization function
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import { themeChange } from "theme-change";
+import checkAuth from "./app/auth";
+import initializeApp from "./app/init";
 import { fetchSettings } from "./features/settings/generalSettings/generalSettingsSlice";
+import { getCurrentUser } from "./app/authSlice";
 
-// Importing pages as lazy-loaded components for performance optimization
-const Layout = lazy(() => import("./containers/Layout")); // Main app layout (protected)
-const Login = lazy(() => import("./pages/Login")); // Login page
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword")); // Password recovery page
-const ResetPassword = lazy(() => import("./pages/ResetPassword")); // Password recovery page
-const Register = lazy(() => import("./pages/Register")); // User registration page
-const Home = lazy(() => import("./pages/Home")); // Home page
+const Layout = lazy(() => import("./containers/Layout"));
+const Login = lazy(() => import("./pages/Login"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Register = lazy(() => import("./pages/Register"));
+const Home = lazy(() => import("./pages/Home"));
 
-// Initialize global app configurations
 initializeApp();
 
-// Check if the user is authenticated and retrieve their token
 const token = checkAuth();
 
 function App() {
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
+  const authToken = useSelector((state) => state.auth.token);
 
   useEffect(() => {
-    // Initialize theme-change functionality with Daisy UI
-    themeChange(true); // Passing false means themes won't auto-detect
-  }, []); // Empty dependency array ensures this runs only once when the component mounts
-
-  useEffect(() => {
-    // Fetch general settings on app load
-    dispatch(fetchSettings());
+    themeChange(false);
   }, []);
+
+  useEffect(() => {
+    dispatch(fetchSettings());
+  }, [dispatch]);
+
+  useEffect(() => {
+    // Fetch current user if we have a token but no user data
+    const storedToken = localStorage.getItem("token");
+    if (storedToken && !user) {
+      dispatch(getCurrentUser());
+    }
+  }, [dispatch, user]);
 
   return (
     <>
-      {/* Router provides navigation between different pages */}
       <Router>
         <Routes>
           {/* Public routes */}
@@ -51,17 +56,14 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/home" element={<Home />} />
 
-          {/* Protected routes - place additional protected routes here */}
+          {/* Protected routes */}
           <Route path="/app/*" element={<Layout />} />
 
-          {/* Catch-all route for undefined paths such as /hello */}
+          {/* Catch-all route */}
           <Route
             path="/*"
             element={
-              <Navigate
-                to={token ? "/app/dashboard" : "/login"} // Changed "/Home" to "/home" to match the defined route
-                replace
-              />
+              <Navigate to={token ? "/app/dashboard" : "/login"} replace />
             }
           />
         </Routes>
