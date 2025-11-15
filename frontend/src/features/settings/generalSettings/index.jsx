@@ -1,7 +1,7 @@
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
+import TitleCard from "../../../components/Cards/TitleCard";
 import {
   Settings,
   Building2,
@@ -29,9 +29,11 @@ import {
 import { showNotification } from "../../common/headerSlice";
 import CurrencySelect from "./components/CurrencySelect";
 import TaxSettings from "./components/TaxSettings";
+import { useAuth } from "../../../utils/permission";
 
 const GeneralSettings = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const settings = useSelector(selectSettings);
   const loading = useSelector(selectSettingsLoading);
   const error = useSelector(selectSettingsError);
@@ -186,6 +188,26 @@ const GeneralSettings = () => {
     { value: "America/Los_Angeles", label: "Pacific Time" },
     { value: "UTC", label: "UTC" },
   ];
+
+  // Check if user has permission to edit settings
+  if (!can("editGeneralSettings")) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to edit general settings. Only
+                administrators can modify these settings.
+              </p>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

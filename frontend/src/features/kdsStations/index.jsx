@@ -12,9 +12,12 @@ import { openModal } from "../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { showNotification } from "../common/headerSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
+import { useAuth } from "../../utils/permission";
+import Can from "../../components/Auth/Can";
 
 const StationsManagement = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const { stations, loading } = useSelector((state) => state.kdsStations);
   const [showInactive, setShowInactive] = useState(true);
 
@@ -24,6 +27,16 @@ const StationsManagement = () => {
   }, [dispatch]);
 
   const handleToggleActive = async (station) => {
+    if (!can("editStations")) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to modify stations",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     try {
       await dispatch(
         updateStation({
@@ -52,6 +65,16 @@ const StationsManagement = () => {
   };
 
   const handleDelete = (station) => {
+    if (!can("deleteStations")) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to delete stations",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     dispatch(
       openModal({
         title: "Delete Station",
@@ -84,12 +107,72 @@ const StationsManagement = () => {
     );
   };
 
+  const handleEdit = (station) => {
+    if (!can("editStations")) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to edit stations",
+          status: 0,
+        })
+      );
+      return;
+    }
+
+    dispatch(
+      openModal({
+        title: "Edit Station",
+        bodyType: MODAL_BODY_TYPES.EDIT_KDS_STATION,
+        extraObject: { station },
+        size: "lg",
+      })
+    );
+  };
+
+  const handleAddNew = () => {
+    if (!can("createStations")) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to create stations",
+          status: 0,
+        })
+      );
+      return;
+    }
+
+    dispatch(
+      openModal({
+        title: "Create New Station",
+        bodyType: MODAL_BODY_TYPES.ADD_KDS_STATION,
+        size: "lg",
+      })
+    );
+  };
+
   // Separate active and inactive stations
   const activeStations = stations.filter((s) => s.isActive);
   const inactiveStations = stations.filter((s) => !s.isActive);
   const displayStations = showInactive ? stations : activeStations;
 
   if (loading) return <SuspenseContent />;
+
+  // Check if user has permission to view stations
+  if (!can("viewStations")) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to view kitchen stations.
+              </p>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
 
   return (
     <TitleCard
@@ -109,20 +192,14 @@ const StationsManagement = () => {
               {inactiveStations.length})
             </button>
           )}
-          <button
-            className="btn btn-primary btn-sm gap-2"
-            onClick={() =>
-              dispatch(
-                openModal({
-                  title: "Create New Station",
-                  bodyType: MODAL_BODY_TYPES.ADD_KDS_STATION,
-                  size: "lg",
-                })
-              )
-            }
-          >
-            <Plus size={16} /> Add Station
-          </button>
+          <Can do="createStations">
+            <button
+              className="btn btn-primary btn-sm gap-2"
+              onClick={handleAddNew}
+            >
+              <Plus size={16} /> Add Station
+            </button>
+          </Can>
         </div>
       }
     >
@@ -155,20 +232,11 @@ const StationsManagement = () => {
           <p className="text-base-content/70 mb-4">
             Create your first kitchen station to get started
           </p>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() =>
-              dispatch(
-                openModal({
-                  title: "Create New Station",
-                  bodyType: MODAL_BODY_TYPES.ADD_KDS_STATION,
-                  size: "lg",
-                })
-              )
-            }
-          >
-            <Plus size={16} /> Create Station
-          </button>
+          <Can do="createStations">
+            <button className="btn btn-primary btn-sm" onClick={handleAddNew}>
+              <Plus size={16} /> Create Station
+            </button>
+          </Can>
         </div>
       ) : (
         <div className="space-y-6">
@@ -186,7 +254,8 @@ const StationsManagement = () => {
                     station={station}
                     onToggleActive={handleToggleActive}
                     onDelete={handleDelete}
-                    dispatch={dispatch}
+                    onEdit={handleEdit}
+                    can={can}
                   />
                 ))}
               </div>
@@ -207,7 +276,8 @@ const StationsManagement = () => {
                     station={station}
                     onToggleActive={handleToggleActive}
                     onDelete={handleDelete}
-                    dispatch={dispatch}
+                    onEdit={handleEdit}
+                    can={can}
                     inactive
                   />
                 ))}
@@ -225,7 +295,8 @@ const StationCard = ({
   station,
   onToggleActive,
   onDelete,
-  dispatch,
+  onEdit,
+  can,
   inactive,
 }) => {
   return (
@@ -293,42 +364,41 @@ const StationCard = ({
 
         {/* Actions */}
         <div className="card-actions justify-between mt-3 pt-3 border-t">
-          <button
-            onClick={() => onToggleActive(station)}
-            className={`btn btn-sm gap-1 ${
-              inactive ? "btn-success" : "btn-warning"
-            }`}
-            title={inactive ? "Activate Station" : "Deactivate Station"}
-          >
-            <Power size={14} />
-            {inactive ? "Activate" : "Deactivate"}
-          </button>
+          <Can do="editStations">
+            <button
+              onClick={() => onToggleActive(station)}
+              className={`btn btn-sm gap-1 ${
+                inactive ? "btn-success" : "btn-warning"
+              }`}
+              title={inactive ? "Activate Station" : "Deactivate Station"}
+            >
+              <Power size={14} />
+              {inactive ? "Activate" : "Deactivate"}
+            </button>
+          </Can>
 
-          <div className="flex gap-1">
-            <button
-              onClick={() =>
-                dispatch(
-                  openModal({
-                    title: "Edit Station",
-                    bodyType: MODAL_BODY_TYPES.EDIT_KDS_STATION,
-                    extraObject: { station },
-                    size: "lg",
-                  })
-                )
-              }
-              className="btn btn-ghost btn-sm btn-square"
-              title="Edit"
-            >
-              <Edit size={16} />
-            </button>
-            <button
-              onClick={() => onDelete(station)}
-              className="btn btn-ghost btn-sm btn-square text-error"
-              title="Delete"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
+          {(can("editStations") || can("deleteStations")) && (
+            <div className="flex gap-1">
+              <Can do="editStations">
+                <button
+                  onClick={() => onEdit(station)}
+                  className="btn btn-ghost btn-sm btn-square"
+                  title="Edit"
+                >
+                  <Edit size={16} />
+                </button>
+              </Can>
+              <Can do="deleteStations">
+                <button
+                  onClick={() => onDelete(station)}
+                  className="btn btn-ghost btn-sm btn-square text-error"
+                  title="Delete"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </Can>
+            </div>
+          )}
         </div>
       </div>
     </div>

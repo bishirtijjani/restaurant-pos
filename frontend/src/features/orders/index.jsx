@@ -15,7 +15,6 @@ import {
 } from "./ordersSlice";
 import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
-import { checkRole } from "../../utils/Helpers";
 import SearchBar from "../../components/Input/SearchBar";
 import { showNotification } from "../common/headerSlice";
 import Badge from "./components/Badge";
@@ -33,6 +32,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { Plus, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../utils/permission";
+import Can from "../../components/Auth/Can";
 
 const statusColors = {
   pending: "badge-info",
@@ -127,8 +128,7 @@ const OrderFilters = ({
           </label>
           <div className="dropdown dropdown-hover">
             <label tabIndex={0} className="btn btn-sm btn-outline min-w-36">
-              <span className="font-bold mr-2  ">{currency}</span>
-
+              <span className="font-bold mr-2">{currency}</span>
               {currentFilters.paymentStatus || "All"}
             </label>
             <ul
@@ -172,8 +172,15 @@ const OrderFilters = ({
   );
 };
 
-const OrderCard = ({ order, currency }) => {
-  const dispatch = useDispatch();
+const OrderCard = ({
+  order,
+  currency,
+  onViewDetails,
+  onUpdateStatus,
+  onUpdatePayment,
+  onCancel,
+}) => {
+  const { can } = useAuth();
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -186,60 +193,8 @@ const OrderCard = ({ order, currency }) => {
     }).format(date);
   };
 
-  const handleStatusUpdate = async (newStatus) => {
-    try {
-      await dispatch(
-        updateOrderStatus({
-          id: order._id,
-          orderStatus: newStatus,
-          reason: `Status updated to ${newStatus}`,
-        })
-      ).unwrap();
-
-      dispatch(
-        showNotification({
-          message: `Order #${order.orderNumber} marked as ${newStatus}`,
-          status: 1,
-        })
-      );
-      dispatch(fetchOrders());
-    } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.message || "Failed to update order status",
-          status: 0,
-        })
-      );
-    }
-  };
-
-  const handleCancelOrder = async () => {
-    if (window.confirm("Are you sure you want to cancel this order?")) {
-      try {
-        await dispatch(
-          cancelOrder({
-            id: order._id,
-            reason: "Order cancelled by staff",
-          })
-        ).unwrap();
-
-        dispatch(
-          showNotification({
-            message: `Order #${order.orderNumber} cancelled successfully`,
-            status: 1,
-          })
-        );
-        dispatch(fetchOrders());
-      } catch (error) {
-        dispatch(
-          showNotification({
-            message: error.message || "Failed to cancel order",
-            status: 0,
-          })
-        );
-      }
-    }
-  };
+  const canUpdateStatus = can("editOrders");
+  const canCancelOrder = can("cancelOrders");
 
   return (
     <div className="card bg-base-100 shadow-md hover:shadow-lg transition-all duration-300 border border-base-200">
@@ -284,82 +239,75 @@ const OrderCard = ({ order, currency }) => {
         </div>
 
         <div className="card-actions justify-end mt-2 flex-wrap gap-2">
-          <button
-            className="btn btn-sm btn-outline btn-primary"
-            onClick={() =>
-              dispatch(
-                openModal({
-                  title: `Order #${order.orderNumber}`,
-                  bodyType: MODAL_BODY_TYPES.ORDER_DETAILS,
-                  extraObject: order,
-                  size: "lg",
-                })
-              )
-            }
-          >
-            <EyeIcon className="w-4 h-4 mr-1" /> View
-          </button>
+          <Can do="viewOrders">
+            <button
+              className="btn btn-sm btn-outline btn-primary"
+              onClick={() => onViewDetails(order)}
+            >
+              <EyeIcon className="w-4 h-4 mr-1" /> View
+            </button>
+          </Can>
 
           {order.orderStatus !== "cancelled" &&
             order.orderStatus !== "completed" && (
               <>
-                {order.orderStatus === "pending" && (
-                  <button
-                    className="btn btn-sm btn-info"
-                    onClick={() => handleStatusUpdate("preparing")}
-                  >
-                    Start Preparing
-                  </button>
+                {canUpdateStatus && (
+                  <>
+                    {order.orderStatus === "pending" && (
+                      <button
+                        className="btn btn-sm btn-info"
+                        onClick={() => onUpdateStatus(order._id, "preparing")}
+                      >
+                        Start Preparing
+                      </button>
+                    )}
+
+                    {order.orderStatus === "preparing" && (
+                      <button
+                        className="btn btn-sm btn-success"
+                        onClick={() => onUpdateStatus(order._id, "ready")}
+                      >
+                        Mark Ready
+                      </button>
+                    )}
+
+                    {order.orderStatus === "ready" && (
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => onUpdateStatus(order._id, "served")}
+                      >
+                        Mark Served
+                      </button>
+                    )}
+
+                    {order.orderStatus === "served" && (
+                      <button
+                        className="btn btn-sm btn-neutral"
+                        onClick={() => onUpdateStatus(order._id, "completed")}
+                      >
+                        Complete
+                      </button>
+                    )}
+                  </>
                 )}
 
-                {order.orderStatus === "preparing" && (
+                <Can do="editOrders">
                   <button
-                    className="btn btn-sm btn-success"
-                    onClick={() => handleStatusUpdate("ready")}
+                    className="btn btn-sm btn-outline"
+                    onClick={() => onUpdatePayment(order)}
                   >
-                    Mark Ready
+                    <CurrencyDollarIcon className="w-4 h-4" />
+                  </button>
+                </Can>
+
+                {canCancelOrder && (
+                  <button
+                    className="btn btn-sm btn-error btn-outline"
+                    onClick={() => onCancel(order)}
+                  >
+                    <XCircleIcon className="w-4 h-4" />
                   </button>
                 )}
-
-                {order.orderStatus === "ready" && (
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={() => handleStatusUpdate("served")}
-                  >
-                    Mark Served
-                  </button>
-                )}
-
-                {order.orderStatus === "served" && (
-                  <button
-                    className="btn btn-sm btn-neutral"
-                    onClick={() => handleStatusUpdate("completed")}
-                  >
-                    Complete
-                  </button>
-                )}
-
-                <button
-                  className="btn btn-sm btn-outline"
-                  onClick={() =>
-                    dispatch(
-                      openModal({
-                        title: "Update Payment",
-                        bodyType: MODAL_BODY_TYPES.UPDATE_PAYMENT,
-                        extraObject: order,
-                      })
-                    )
-                  }
-                >
-                  <CurrencyDollarIcon className="w-4 h-4" />
-                </button>
-
-                <button
-                  className="btn btn-sm btn-error btn-outline"
-                  onClick={handleCancelOrder}
-                >
-                  <XCircleIcon className="w-4 h-4" />
-                </button>
               </>
             )}
         </div>
@@ -370,10 +318,11 @@ const OrderCard = ({ order, currency }) => {
 
 const TopSideButtons = () => {
   const navigate = useNavigate();
+  const { can } = useAuth();
 
   return (
     <div className="flex flex-wrap gap-2">
-      {(checkRole("admin") || checkRole("manager")) && (
+      <Can do="createOrders">
         <button
           onClick={() => navigate("/app/orders/new")}
           className="btn btn-primary btn-sm lg:btn-md gap-2"
@@ -381,7 +330,7 @@ const TopSideButtons = () => {
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">New Order</span>
         </button>
-      )}
+      </Can>
       <button
         onClick={() => window.location.reload()}
         className="btn btn-ghost btn-sm lg:btn-md gap-2"
@@ -395,6 +344,9 @@ const TopSideButtons = () => {
 
 const Orders = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { can } = useAuth();
+
   const { orders, loading, error, filters } = useSelector(
     (state) => state.orders
   );
@@ -405,11 +357,17 @@ const Orders = () => {
   );
   const currency = settings?.currency?.symbol || "$";
 
+  // Check permissions
+  const canViewOrders = can("viewOrders");
+  const canEditOrders = can("editOrders");
+  const canCancelOrders = can("cancelOrders");
+
   useEffect(() => {
     if (!settings) dispatch(fetchSettings());
-    dispatch(fetchOrders(filters));
-    console.log(orders);
-  }, [dispatch, filters]);
+    if (canViewOrders) {
+      dispatch(fetchOrders(filters));
+    }
+  }, [dispatch, filters, canViewOrders]);
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -431,7 +389,143 @@ const Orders = () => {
     return matchesSearch && matchesStatus && matchesPayment && matchesDate;
   });
 
+  const handleViewDetails = (order) => {
+    dispatch(
+      openModal({
+        title: `Order #${order.orderNumber}`,
+        bodyType: MODAL_BODY_TYPES.ORDER_DETAILS,
+        extraObject: order,
+        size: "lg",
+      })
+    );
+  };
+
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    if (!canEditOrders) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to update order status",
+          status: 0,
+        })
+      );
+      return;
+    }
+
+    try {
+      await dispatch(
+        updateOrderStatus({
+          id: orderId,
+          orderStatus: newStatus,
+          reason: `Status updated to ${newStatus}`,
+        })
+      ).unwrap();
+
+      dispatch(
+        showNotification({
+          message: `Order marked as ${newStatus}`,
+          status: 1,
+        })
+      );
+      dispatch(fetchOrders(filters));
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.message || "Failed to update order status",
+          status: 0,
+        })
+      );
+    }
+  };
+
+  const handleUpdatePayment = (order) => {
+    if (!canEditOrders) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to update payment",
+          status: 0,
+        })
+      );
+      return;
+    }
+
+    dispatch(
+      openModal({
+        title: "Update Payment",
+        bodyType: MODAL_BODY_TYPES.UPDATE_PAYMENT,
+        extraObject: order,
+      })
+    );
+  };
+
+  const handleCancelOrder = async (order) => {
+    if (!canCancelOrders) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to cancel orders",
+          status: 0,
+        })
+      );
+      return;
+    }
+
+    if (
+      window.confirm(
+        `Are you sure you want to cancel order #${order.orderNumber}?`
+      )
+    ) {
+      try {
+        await dispatch(
+          cancelOrder({
+            id: order._id,
+            reason: "Order cancelled by staff",
+          })
+        ).unwrap();
+
+        dispatch(
+          showNotification({
+            message: `Order #${order.orderNumber} cancelled successfully`,
+            status: 1,
+          })
+        );
+        dispatch(fetchOrders(filters));
+      } catch (error) {
+        dispatch(
+          showNotification({
+            message: error.message || "Failed to cancel order",
+            status: 0,
+          })
+        );
+      }
+    }
+  };
+
   if (loading) return <SuspenseContent />;
+
+  // Show access denied if user doesn't have permission
+  if (!canViewOrders) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to view orders. Please contact your
+                administrator if you believe this is an error.
+              </p>
+              <button
+                onClick={() => navigate("/app/dashboard")}
+                className="btn btn-primary"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
 
   return (
     <TitleCard
@@ -506,9 +600,16 @@ const Orders = () => {
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOrders.map((order) => (
-            <OrderCard key={order._id} order={order} currency={currency} />
+            <OrderCard
+              key={order._id}
+              order={order}
+              currency={currency}
+              onViewDetails={handleViewDetails}
+              onUpdateStatus={handleStatusUpdate}
+              onUpdatePayment={handleUpdatePayment}
+              onCancel={handleCancelOrder}
+            />
           ))}
-          {console.log(filteredOrders)}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-base-300">
@@ -544,31 +645,27 @@ const Orders = () => {
                     </span>
                   </td>
                   <td className="font-medium">
-                    ${order.totalAmount?.toLocaleString()}
+                    {currency}
+                    {order.totalAmount?.toLocaleString()}
                   </td>
                   <td className="text-sm">
                     {new Date(order.createdAt).toLocaleTimeString()}
                   </td>
                   <td className="text-right">
                     <div className="flex justify-end gap-1">
-                      <button
-                        className="btn btn-ghost btn-sm btn-square"
-                        onClick={() =>
-                          dispatch(
-                            openModal({
-                              title: `Order #${order.orderNumber}`,
-                              bodyType: MODAL_BODY_TYPES.ORDER_DETAILS,
-                              extraObject: order,
-                            })
-                          )
-                        }
-                        title="View Details"
-                      >
-                        <EyeIcon className="w-4 h-4" />
-                      </button>
+                      <Can do="viewOrders">
+                        <button
+                          className="btn btn-ghost btn-sm btn-square"
+                          onClick={() => handleViewDetails(order)}
+                          title="View Details"
+                        >
+                          <EyeIcon className="w-4 h-4" />
+                        </button>
+                      </Can>
 
                       {order.orderStatus !== "cancelled" &&
-                        order.orderStatus !== "completed" && (
+                        order.orderStatus !== "completed" &&
+                        (canEditOrders || canCancelOrders) && (
                           <div className="dropdown dropdown-end">
                             <label
                               tabIndex={0}
@@ -593,69 +690,52 @@ const Orders = () => {
                               tabIndex={0}
                               className="dropdown-content z-10 menu menu-sm p-2 shadow bg-base-100 rounded-box w-48"
                             >
-                              {order.orderStatus !== "ready" && (
+                              {canEditOrders && (
+                                <>
+                                  {order.orderStatus !== "ready" && (
+                                    <li>
+                                      <a
+                                        onClick={() =>
+                                          handleStatusUpdate(order._id, "ready")
+                                        }
+                                      >
+                                        Mark as Ready
+                                      </a>
+                                    </li>
+                                  )}
+                                  {order.orderStatus !== "served" && (
+                                    <li>
+                                      <a
+                                        onClick={() =>
+                                          handleStatusUpdate(
+                                            order._id,
+                                            "served"
+                                          )
+                                        }
+                                      >
+                                        Mark as Served
+                                      </a>
+                                    </li>
+                                  )}
+                                  <li>
+                                    <a
+                                      onClick={() => handleUpdatePayment(order)}
+                                    >
+                                      Update Payment
+                                    </a>
+                                  </li>
+                                </>
+                              )}
+                              {canCancelOrders && (
                                 <li>
                                   <a
-                                    onClick={() =>
-                                      dispatch(
-                                        updateOrderStatus({
-                                          id: order._id,
-                                          orderStatus: "ready",
-                                        })
-                                      )
-                                    }
+                                    className="text-error"
+                                    onClick={() => handleCancelOrder(order)}
                                   >
-                                    Mark as Ready
+                                    Cancel Order
                                   </a>
                                 </li>
                               )}
-                              {order.orderStatus !== "served" && (
-                                <li>
-                                  <a
-                                    onClick={() =>
-                                      dispatch(
-                                        updateOrderStatus({
-                                          id: order._id,
-                                          orderStatus: "served",
-                                        })
-                                      )
-                                    }
-                                  >
-                                    Mark as Served
-                                  </a>
-                                </li>
-                              )}
-                              <li>
-                                <a
-                                  onClick={() =>
-                                    dispatch(
-                                      openModal({
-                                        title: "Update Payment",
-                                        bodyType:
-                                          MODAL_BODY_TYPES.UPDATE_PAYMENT,
-                                        extraObject: order,
-                                      })
-                                    )
-                                  }
-                                >
-                                  Update Payment
-                                </a>
-                              </li>
-                              <li>
-                                <a
-                                  className="text-error"
-                                  onClick={() =>
-                                    dispatch(
-                                      cancelOrder({
-                                        id: order._id,
-                                        reason: "Customer request",
-                                      })
-                                    )
-                                  }
-                                >
-                                  Cancel Order
-                                </a>
-                              </li>
                             </ul>
                           </div>
                         )}

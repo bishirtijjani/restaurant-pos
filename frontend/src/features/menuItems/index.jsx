@@ -27,6 +27,7 @@ import SearchBar from "../../components/Input/SearchBar";
 import { showNotification } from "../common/headerSlice";
 import MenuItemCard from "./components/MenuItemCard";
 import Can from "../../components/Auth/Can";
+import { useAuth } from "../../utils/permission";
 
 const TopSideButtons = ({
   searchQuery,
@@ -38,6 +39,7 @@ const TopSideButtons = ({
   setViewMode,
 }) => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
 
   const openAddNewMenuItem = () => {
     dispatch(
@@ -140,13 +142,14 @@ const TopSideButtons = ({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        {/* for admin and manager only */}
-        <button
-          onClick={openAddNewMenuItem}
-          className="btn btn-primary btn-sm md:btn-md"
-        >
-          <PlusCircleIcon className="w-5 h-5 mr-1" /> New Item
-        </button>
+        <Can do="editMenu">
+          <button
+            onClick={openAddNewMenuItem}
+            className="btn btn-primary btn-sm md:btn-md"
+          >
+            <PlusCircleIcon className="w-5 h-5 mr-1" /> New Item
+          </button>
+        </Can>
         <button
           onClick={() => dispatch(fetchAllMenuItems())}
           className="btn btn-outline btn-sm md:btn-md"
@@ -161,6 +164,7 @@ const TopSideButtons = ({
 
 const MenuItems = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const menuItems = useSelector((state) => state.menuItems.menuItems || []);
   const status = useSelector((state) => state.menuItems.status);
   const error = useSelector((state) => state.menuItems.error);
@@ -315,21 +319,26 @@ const MenuItems = () => {
                               <InformationCircleIcon className="w-5 h-5" />
                             </button>
 
-                            <button
-                              className="btn btn-sm btn-ghost tooltip"
-                              data-tip={
-                                item.isAvailable
-                                  ? "Mark Unavailable"
-                                  : "Mark Available"
-                              }
-                              onClick={() => handleToggleAvailability(item._id)}
-                            >
-                              {item.isAvailable ? (
-                                <XCircleIcon className="w-5 h-5 text-error" />
-                              ) : (
-                                <CheckCircleIcon className="w-5 h-5 text-success" />
-                              )}
-                            </button>
+                            {can("viewMenu") && (
+                              <button
+                                className="btn btn-sm btn-ghost tooltip"
+                                data-tip={
+                                  item.isAvailable
+                                    ? "Mark Unavailable"
+                                    : "Mark Available"
+                                }
+                                onClick={() =>
+                                  handleToggleAvailability(item._id)
+                                }
+                              >
+                                {item.isAvailable ? (
+                                  <XCircleIcon className="w-5 h-5 text-error" />
+                                ) : (
+                                  <CheckCircleIcon className="w-5 h-5 text-success" />
+                                )}
+                              </button>
+                            )}
+
                             <Can do="editMenu">
                               <button
                                 className="btn btn-sm btn-ghost tooltip"
@@ -390,27 +399,49 @@ const MenuItems = () => {
 
   // Empty state component
   const EmptyState = ({ message, icon, helpText }) => (
-    <div className="text-center py-16 bg-base-200 bg-opacity-50 rounded-lg">
+    <div className="text-center py-16 bg-base-200 rounded-lg">
       <div className="mx-auto w-16 h-16 mb-4 text-base-content/50">{icon}</div>
       <h3 className="text-xl font-semibold mb-2">{message}</h3>
-      <p className="text-base-content/70 mb-6">{helpText}</p>
-
-      <button
-        onClick={() =>
-          dispatch(
-            openModal({
-              title: "Add New Menu Item",
-              bodyType: MODAL_BODY_TYPES.ADD_NEW_MENU_ITEM,
-              size: "xl",
-            })
-          )
-        }
-        className="btn btn-primary"
-      >
-        <PlusCircleIcon className="w-5 h-5 mr-2" /> Add Menu Item
-      </button>
+      <p className="text-base-content/70 max-w-md mx-auto mt-2">{helpText}</p>
+      <Can do="editMenu">
+        <button
+          onClick={() =>
+            dispatch(
+              openModal({
+                title: "Add New Menu Item",
+                bodyType: MODAL_BODY_TYPES.ADD_NEW_MENU_ITEM,
+                size: "xl",
+              })
+            )
+          }
+          className="btn btn-primary mt-4"
+        >
+          <PlusCircleIcon className="w-5 h-5 mr-2" /> Add Menu Item
+        </button>
+      </Can>
     </div>
   );
+
+  if (status === "loading") return <SuspenseContent />;
+
+  // Access check
+  if (!can("viewMenu")) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to view menu items.
+              </p>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
 
   return (
     <TitleCard title="Menu Items" topMargin="mt-2">

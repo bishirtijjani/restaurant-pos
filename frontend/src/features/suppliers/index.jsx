@@ -8,9 +8,10 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSuppliers } from "./suppliersSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
+import { useAuth } from "../../utils/permission";
+import Can from "../../components/Auth/Can";
 import {
   Search,
-  Filter,
   PlusCircle,
   RefreshCw,
   Edit3,
@@ -20,253 +21,276 @@ import {
   Mail,
   Phone,
   MapPin,
-  Building2,
   Calendar,
-  User,
-  UserCheck,
   Clock,
+  UserCheck,
 } from "lucide-react";
-import { checkRole } from "../../utils/Helpers";
 
 const TopSideButtons = ({ onRefresh, onAddNew }) => {
   return (
     <div className="flex flex-wrap gap-2">
-      {checkRole("admin", "manager") && (
-        <>
-          <button
-            onClick={onAddNew}
-            className="btn btn-primary btn-sm lg:btn-md gap-2"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Add Supplier</span>
-          </button>
-          <button
-            onClick={onRefresh}
-            className="btn btn-ghost btn-sm lg:btn-md gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-        </>
-      )}
+      <Can do="editInventory">
+        <button
+          onClick={onAddNew}
+          className="btn btn-primary btn-sm lg:btn-md gap-2"
+        >
+          <PlusCircle className="w-4 h-4" />
+          <span className="hidden sm:inline">Add Supplier</span>
+        </button>
+      </Can>
+      <button
+        onClick={onRefresh}
+        className="btn btn-ghost btn-sm lg:btn-md gap-2"
+      >
+        <RefreshCw className="w-4 h-4" />
+        <span className="hidden sm:inline">Refresh</span>
+      </button>
     </div>
   );
 };
 
-const SupplierCard = ({ supplier, onEdit, onDelete }) => (
-  <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300">
-    <div className="card-body p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="avatar placeholder">
-            <div className="bg-primary text-primary-content rounded-full w-12 h-12">
-              <span className="text-lg font-semibold">
-                {supplier.name.charAt(0).toUpperCase()}
-              </span>
+const SupplierCard = ({ supplier, onEdit, onDelete }) => {
+  const { can } = useAuth();
+
+  return (
+    <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300">
+      <div className="card-body p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="avatar placeholder">
+              <div className="bg-primary text-primary-content rounded-full w-12 h-12">
+                <span className="text-lg font-semibold">
+                  {supplier.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            </div>
+            <div>
+              <h3 className="card-title text-lg font-bold">{supplier.name}</h3>
+              <div className="badge badge-outline badge-sm">
+                ID: {supplier._id.slice(-6)}
+              </div>
             </div>
           </div>
-          <div>
-            <h3 className="card-title text-lg font-bold">{supplier.name}</h3>
-            <div className="badge badge-outline badge-sm">
-              ID: {supplier._id.slice(-6)}
+          <Can do="editInventory">
+            <div className="dropdown dropdown-end">
+              <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+              </div>
+              <ul
+                tabIndex={0}
+                className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
+              >
+                <li>
+                  <button
+                    onClick={() => onEdit(supplier)}
+                    className="text-primary"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => onDelete(supplier)}
+                    className="text-error"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </li>
+              </ul>
             </div>
-          </div>
-        </div>
-        <div className="dropdown dropdown-end">
-          <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
-          </div>
-          <ul
-            tabIndex={0}
-            className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
-          >
-            <li>
-              <button onClick={() => onEdit(supplier)} className="text-primary">
-                <Edit3 className="w-4 h-4" />
-                Edit
-              </button>
-            </li>
-            <li>
-              <button onClick={() => onDelete(supplier)} className="text-error">
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm">
-          <Phone className="w-4 h-4 text-secondary" />
-          <span className="font-medium">{supplier.phone}</span>
+          </Can>
         </div>
 
-        {supplier.email && (
+        <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm">
-            <Mail className="w-4 h-4 text-secondary" />
-            <span className="truncate">{supplier.email}</span>
+            <Phone className="w-4 h-4 text-secondary" />
+            <span className="font-medium">{supplier.phone}</span>
           </div>
-        )}
 
-        {supplier.address && (
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="w-4 h-4 text-secondary" />
-            <span className="truncate">{supplier.address}</span>
-          </div>
-        )}
-
-        <div className="flex items-center gap-2 text-sm text-base-content/70">
-          <Calendar className="w-4 h-4" />
-          <span>
-            Created: {new Date(supplier.createdAt).toLocaleDateString()}
-          </span>
-        </div>
-
-        {supplier.lastAction?.action && <div className="divider my-2"></div>}
-
-        {supplier.lastAction?.action && (
-          <div className="bg-base-200 rounded-lg p-3 space-y-2">
+          {supplier.email && (
             <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-info" />
-              <span className="font-semibold text-info">Last Action</span>
+              <Mail className="w-4 h-4 text-secondary" />
+              <span className="truncate">{supplier.email}</span>
             </div>
-            <div className="text-xs space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="badge badge-info badge-xs"></span>
-                <span className="capitalize">{supplier.lastAction.action}</span>
-              </div>
-              {supplier.lastAction.performedBy && (
-                <div className="flex items-center gap-2">
-                  <UserCheck className="w-3 h-3 text-success" />
-                  <span>By: {supplier.lastAction.performedBy.fullname}</span>
-                </div>
-              )}
-              {supplier.lastAction.reason && (
-                <div className="text-base-content/60">
-                  {supplier.lastAction.reason}
-                </div>
-              )}
-              {supplier.lastAction.createdAt && (
-                <div className="text-base-content/50">
-                  {new Date(supplier.lastAction.createdAt).toLocaleString()}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-);
+          )}
 
-const SupplierTable = ({ suppliers, onEdit, onDelete }) => (
-  <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg">
-    <table className="table table-zebra w-full">
-      <thead className="bg-primary text-primary-content">
-        <tr>
-          <th className="font-bold">Supplier</th>
-          <th className="font-bold">Contact</th>
-          <th className="font-bold">Address</th>
-          <th className="font-bold">Last Action</th>
-          <th className="font-bold">Created</th>
-          <th className="font-bold">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {suppliers.map((supplier) => (
-          <tr
-            key={supplier._id}
-            className="hover:bg-base-200 transition-colors"
-          >
-            <td>
-              <div className="flex items-center gap-3">
-                <div className="avatar placeholder">
-                  <div className="bg-primary text-primary-content rounded-full w-12 h-12">
-                    <span className="text-lg font-semibold">
-                      {supplier.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <div className="font-bold">{supplier.name}</div>
-                  <div className="text-sm opacity-70">
-                    ID: {supplier._id.slice(-6)}
-                  </div>
-                </div>
+          {supplier.address && (
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="w-4 h-4 text-secondary" />
+              <span className="truncate">{supplier.address}</span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 text-sm text-base-content/70">
+            <Calendar className="w-4 h-4" />
+            <span>
+              Created: {new Date(supplier.createdAt).toLocaleDateString()}
+            </span>
+          </div>
+
+          {supplier.lastAction?.action && <div className="divider my-2"></div>}
+
+          {supplier.lastAction?.action && (
+            <div className="bg-base-200 rounded-lg p-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-4 h-4 text-info" />
+                <span className="font-semibold text-info">Last Action</span>
               </div>
-            </td>
-            <td>
-              <div className="space-y-1">
-                <div className="flex items-center gap-1 text-sm">
-                  <Phone className="w-3 h-3" />
-                  {supplier.phone}
+              <div className="text-xs space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="badge badge-info badge-xs"></span>
+                  <span className="capitalize">
+                    {supplier.lastAction.action}
+                  </span>
                 </div>
-                {supplier.email && (
-                  <div className="flex items-center gap-1 text-sm opacity-70">
-                    <Mail className="w-3 h-3" />
-                    <span className="truncate max-w-[120px]">
-                      {supplier.email}
-                    </span>
+                {supplier.lastAction.performedBy && (
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="w-3 h-3 text-success" />
+                    <span>By: {supplier.lastAction.performedBy.fullname}</span>
+                  </div>
+                )}
+                {supplier.lastAction.reason && (
+                  <div className="text-base-content/60">
+                    {supplier.lastAction.reason}
+                  </div>
+                )}
+                {supplier.lastAction.createdAt && (
+                  <div className="text-base-content/50">
+                    {new Date(supplier.lastAction.createdAt).toLocaleString()}
                   </div>
                 )}
               </div>
-            </td>
-            <td>
-              <div className="flex items-center gap-1 text-sm">
-                <MapPin className="w-3 h-3" />
-                <span className="truncate max-w-[150px]">
-                  {supplier.address || "Not provided"}
-                </span>
-              </div>
-            </td>
-            <td>
-              {supplier.lastAction?.action ? (
-                <div className="space-y-1">
-                  <div className="badge badge-info badge-sm capitalize">
-                    {supplier.lastAction.action}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SupplierTable = ({ suppliers, onEdit, onDelete }) => {
+  const { can } = useAuth();
+
+  return (
+    <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg">
+      <table className="table table-zebra w-full">
+        <thead className="bg-primary text-primary-content">
+          <tr>
+            <th className="font-bold">Supplier</th>
+            <th className="font-bold">Contact</th>
+            <th className="font-bold">Address</th>
+            <th className="font-bold">Last Action</th>
+            <th className="font-bold">Created</th>
+            <Can do="editInventory">
+              <th className="font-bold">Actions</th>
+            </Can>
+          </tr>
+        </thead>
+        <tbody>
+          {suppliers.map((supplier) => (
+            <tr
+              key={supplier._id}
+              className="hover:bg-base-200 transition-colors"
+            >
+              <td>
+                <div className="flex items-center gap-3">
+                  <div className="avatar placeholder">
+                    <div className="bg-primary text-primary-content rounded-full w-12 h-12">
+                      <span className="text-lg font-semibold">
+                        {supplier.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
                   </div>
-                  {supplier.lastAction.performedBy && (
-                    <div className="text-xs text-base-content/70">
-                      By: {supplier.lastAction.performedBy.fullname}
+                  <div>
+                    <div className="font-bold">{supplier.name}</div>
+                    <div className="text-sm opacity-70">
+                      ID: {supplier._id.slice(-6)}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1 text-sm">
+                    <Phone className="w-3 h-3" />
+                    {supplier.phone}
+                  </div>
+                  {supplier.email && (
+                    <div className="flex items-center gap-1 text-sm opacity-70">
+                      <Mail className="w-3 h-3" />
+                      <span className="truncate max-w-[120px]">
+                        {supplier.email}
+                      </span>
                     </div>
                   )}
                 </div>
-              ) : (
-                <span className="text-base-content/50 text-sm">No action</span>
-              )}
-            </td>
-            <td>
-              <div className="text-sm">
-                {new Date(supplier.createdAt).toLocaleDateString()}
-              </div>
-            </td>
-            <td>
-              <div className="flex gap-2">
-                <button
-                  className="btn btn-primary btn-sm gap-1"
-                  onClick={() => onEdit(supplier)}
-                >
-                  <Edit3 className="w-4 h-4" />
-                  <span className="hidden lg:inline">Edit</span>
-                </button>
-                <button
-                  className="btn btn-error btn-sm gap-1"
-                  onClick={() => onDelete(supplier)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span className="hidden lg:inline">Delete</span>
-                </button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+              </td>
+              <td>
+                <div className="flex items-center gap-1 text-sm">
+                  <MapPin className="w-3 h-3" />
+                  <span className="truncate max-w-[150px]">
+                    {supplier.address || "Not provided"}
+                  </span>
+                </div>
+              </td>
+              <td>
+                {supplier.lastAction?.action ? (
+                  <div className="space-y-1">
+                    <div className="badge badge-info badge-sm capitalize">
+                      {supplier.lastAction.action}
+                    </div>
+                    {supplier.lastAction.performedBy && (
+                      <div className="text-xs text-base-content/70">
+                        By: {supplier.lastAction.performedBy.fullname}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-base-content/50 text-sm">
+                    No action
+                  </span>
+                )}
+              </td>
+              <td>
+                <div className="text-sm">
+                  {new Date(supplier.createdAt).toLocaleDateString()}
+                </div>
+              </td>
+              <Can do="editInventory">
+                <td>
+                  <div className="flex gap-2">
+                    <button
+                      className="btn btn-primary btn-sm gap-1"
+                      onClick={() => onEdit(supplier)}
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      <span className="hidden lg:inline">Edit</span>
+                    </button>
+                    <button
+                      className="btn btn-error btn-sm gap-1"
+                      onClick={() => onDelete(supplier)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="hidden lg:inline">Delete</span>
+                    </button>
+                  </div>
+                </td>
+              </Can>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 const SearchAndFilters = ({
   searchTerm,
@@ -280,7 +304,6 @@ const SearchAndFilters = ({
 }) => (
   <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
     <div className="flex flex-col lg:flex-row gap-4">
-      {/* Search Bar */}
       <div className="flex-1">
         <div className="form-control w-full">
           <label className="input input-bordered flex items-center gap-2 w-full">
@@ -296,7 +319,6 @@ const SearchAndFilters = ({
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="form-control">
           <select
@@ -327,7 +349,6 @@ const SearchAndFilters = ({
           </select>
         </div>
 
-        {/* View Toggle */}
         <div className="btn-group">
           <button
             className={`btn btn-sm ${
@@ -355,15 +376,15 @@ const SearchAndFilters = ({
 
 const Suppliers = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const suppliers = useSelector((state) => state.suppliers.suppliers || []);
   const status = useSelector((state) => state.suppliers.status);
   const error = useSelector((state) => state.suppliers.error);
 
-  // Local state for search and filters
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [actionFilter, setActionFilter] = useState("");
-  const [viewMode, setViewMode] = useState("card"); // "card" or "table"
+  const [viewMode, setViewMode] = useState("card");
 
   useEffect(() => {
     if (status === "idle") {
@@ -371,7 +392,6 @@ const Suppliers = () => {
     }
   }, [dispatch, status]);
 
-  // Filter and sort suppliers
   const filteredAndSortedSuppliers = useMemo(() => {
     let filtered = suppliers.filter((supplier) => {
       const matchesSearch =
@@ -398,7 +418,6 @@ const Suppliers = () => {
       return matchesSearch && matchesAction;
     });
 
-    // Sort the filtered results
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
@@ -466,7 +485,8 @@ const Suppliers = () => {
 
   if (status === "loading") return <SuspenseContent />;
 
-  if (!checkRole("admin", "manager")) {
+  // Authorization check using the proper permission system
+  if (!can("viewInventory")) {
     return (
       <TitleCard title="Access Denied" topMargin="mt-2">
         <div className="hero min-h-[400px]">
@@ -550,7 +570,7 @@ const Suppliers = () => {
                     ? "Try adjusting your search or filters"
                     : "Get started by adding your first supplier"}
                 </p>
-                {checkRole("admin", "manager") && (
+                <Can do="editInventory">
                   <button
                     onClick={handleAddNew}
                     className="btn btn-primary gap-2"
@@ -558,7 +578,7 @@ const Suppliers = () => {
                     <PlusCircle className="w-4 h-4" />
                     Add First Supplier
                   </button>
-                )}
+                </Can>
               </div>
             </div>
           </div>

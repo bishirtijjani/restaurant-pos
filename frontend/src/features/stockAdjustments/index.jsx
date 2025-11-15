@@ -11,11 +11,11 @@ import {
   clearSuccess,
 } from "./stockAdjustmentsSlice";
 import { fetchInventoryItems } from "../inventory/inventorySlice";
-import { checkRole } from "../../utils/Helpers";
+import { useAuth } from "../../utils/permission";
+import Can from "../../components/Auth/Can";
 import {
   ClipboardList,
   Search,
-  Filter,
   Plus,
   RefreshCw,
   TrendingUp,
@@ -52,7 +52,7 @@ const TopSideButtons = () => {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {(checkRole("admin") || checkRole("manager")) && (
+      <Can do="editInventory">
         <button
           onClick={() =>
             dispatch(
@@ -68,7 +68,7 @@ const TopSideButtons = () => {
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">New Adjustment</span>
         </button>
-      )}
+      </Can>
       <button
         onClick={() => window.location.reload()}
         className="btn btn-ghost btn-sm lg:btn-md gap-2"
@@ -136,7 +136,6 @@ const SearchAndFilters = ({
 };
 
 const AdjustmentCard = ({ adjustment, onView, settings }) => {
-  const currency = settings?.currency?.symbol || "$";
   const typeConfig = ADJUSTMENT_TYPES[adjustment.type];
   const TypeIcon = typeConfig?.icon || AlertCircle;
 
@@ -235,6 +234,7 @@ const AdjustmentCard = ({ adjustment, onView, settings }) => {
 
 const StockAdjustmentsManagement = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const { adjustments, loading, error, success, message } = useSelector(
     (state) => state.stockAdjustments
   );
@@ -298,6 +298,25 @@ const StockAdjustmentsManagement = () => {
 
   if (loading) return <SuspenseContent />;
 
+  // Authorization check using the proper permission system
+  if (!can("viewInventory")) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to view stock adjustments.
+              </p>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
+
   return (
     <TitleCard
       title={
@@ -328,11 +347,28 @@ const StockAdjustmentsManagement = () => {
           <h3 className="text-xl font-semibold mb-2">
             No stock adjustments found
           </h3>
-          <p className="text-base-content/70 max-w-md mx-auto">
+          <p className="text-base-content/70 max-w-md mx-auto mb-4">
             {searchQuery || typeFilter || itemFilter
               ? "Try adjusting your filters"
               : "Stock adjustments will appear here when you make changes to inventory"}
           </p>
+          <Can do="editInventory">
+            <button
+              onClick={() =>
+                dispatch(
+                  openModal({
+                    title: "New Stock Adjustment",
+                    bodyType: MODAL_BODY_TYPES.ADD_STOCK_ADJUSTMENT,
+                    size: "lg",
+                  })
+                )
+              }
+              className="btn btn-primary gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Create First Adjustment
+            </button>
+          </Can>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

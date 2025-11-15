@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { Monitor, Plus, X } from "lucide-react";
 import {
@@ -7,9 +9,11 @@ import {
 } from "../kdsStationsSlice";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
 import { showNotification } from "../../common/headerSlice";
+import { useAuth } from "../../../utils/permission";
 
 const StationManagementModalBody = ({ closeModal, extraObject }) => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const isEdit = !!extraObject?.station;
   const station = extraObject?.station || {};
 
@@ -43,6 +47,11 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
     dispatch(fetchAllCategories());
   }, [dispatch]);
 
+  // Check permissions
+  const canCreate = can("createKDSStations");
+  const canEdit = can("editKDSStations");
+  const hasPermission = isEdit ? canEdit : canCreate;
+
   const validate = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Station name is required";
@@ -55,6 +64,17 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!hasPermission) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to perform this action",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     if (!validate()) return;
 
     setLoading(true);
@@ -97,6 +117,16 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
   };
 
   const toggleCategory = (categoryName) => {
+    if (!hasPermission) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to modify categories",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       categories: prev.categories.includes(categoryName)
@@ -104,6 +134,29 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
         : [...prev.categories, categoryName],
     }));
   };
+
+  // Show permission denied message if user doesn't have access
+  if (!hasPermission) {
+    return (
+      <div className="modal-content">
+        <div className="hero min-h-[300px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-2xl font-bold text-error">Access Denied</h1>
+              <p className="py-4">
+                You do not have permission to {isEdit ? "edit" : "create"}{" "}
+                stations.
+              </p>
+              <button onClick={closeModal} className="btn btn-outline">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -128,6 +181,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                 errors.name ? "input-error" : ""
               }`}
               placeholder="e.g., Grill Station"
+              disabled={!hasPermission}
             />
             {errors.name && (
               <label className="label text-error text-xs">{errors.name}</label>
@@ -144,6 +198,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                 setFormData({ ...formData, type: e.target.value })
               }
               className="select select-bordered"
+              disabled={!hasPermission}
             >
               <option value="all">All Items</option>
               <option value="grill">Grill</option>
@@ -165,6 +220,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                   setFormData({ ...formData, isActive: e.target.checked })
                 }
                 className="checkbox checkbox-primary"
+                disabled={!hasPermission}
               />
               <span className="label-text">Active Station</span>
             </label>
@@ -193,6 +249,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                       ? "btn-primary"
                       : "btn-outline"
                   }`}
+                  disabled={!hasPermission}
                 >
                   {cat.name}
                 </button>
@@ -229,6 +286,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                   })
                 }
                 className="select select-bordered select-sm"
+                disabled={!hasPermission}
               >
                 {[1, 2, 3, 4, 5, 6].map((n) => (
                   <option key={n} value={n}>
@@ -254,6 +312,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                   })
                 }
                 className="select select-bordered select-sm"
+                disabled={!hasPermission}
               >
                 <option value="small">Small</option>
                 <option value="medium">Medium</option>
@@ -277,6 +336,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                   })
                 }
                 className="checkbox checkbox-sm"
+                disabled={!hasPermission}
               />
               <span className="label-text">Enable Sound Notifications</span>
             </label>
@@ -307,6 +367,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                 className="input input-bordered input-sm"
                 min="5"
                 max="30"
+                disabled={!hasPermission}
               />
             </div>
 
@@ -328,6 +389,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                 className="input input-bordered input-sm"
                 min="10"
                 max="60"
+                disabled={!hasPermission}
               />
             </div>
           </div>
@@ -341,7 +403,7 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
         </button>
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !hasPermission}
           className={`btn btn-primary ${loading ? "loading" : ""}`}
         >
           {isEdit ? "Update Station" : "Create Station"}

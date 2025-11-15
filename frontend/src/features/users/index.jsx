@@ -6,11 +6,12 @@ import {
   CONFIRMATION_MODAL_CLOSE_TYPES,
 } from "../../utils/globalConstantUtil";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUsers } from "./usersSlice"; // Assuming you have this slice
+import { fetchAllUsers } from "./usersSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
+import { useAuth } from "../../utils/permission";
+import Can from "../../components/Auth/Can";
 import {
   Search,
-  Filter,
   Plus,
   RefreshCw,
   Edit3,
@@ -25,29 +26,26 @@ import {
   UserCheck,
   Settings,
 } from "lucide-react";
-import { checkRole } from "../../utils/Helpers";
 
 const TopSideButtons = ({ onRefresh, onAddNew }) => {
   return (
     <div className="flex flex-wrap gap-2">
-      {checkRole("admin") && (
-        <>
-          <button
-            onClick={onAddNew}
-            className="btn btn-primary btn-sm lg:btn-md gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Add User</span>
-          </button>
-          <button
-            onClick={onRefresh}
-            className="btn btn-ghost btn-sm lg:btn-md gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-        </>
-      )}
+      <Can do="manageUsers">
+        <button
+          onClick={onAddNew}
+          className="btn btn-primary btn-sm lg:btn-md gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Add User</span>
+        </button>
+      </Can>
+      <button
+        onClick={onRefresh}
+        className="btn btn-ghost btn-sm lg:btn-md gap-2"
+      >
+        <RefreshCw className="w-4 h-4" />
+        <span className="hidden sm:inline">Refresh</span>
+      </button>
     </div>
   );
 };
@@ -94,195 +92,205 @@ const getRoleBadgeClass = (role) => {
   }
 };
 
-const UserCard = ({ user, onEdit, onDelete }) => (
-  <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300">
-    <div className="card-body p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="avatar placeholder">
-            <div className="bg-primary text-primary-content rounded-full w-12 h-12">
-              <User className="w-6 h-6" />
+const UserCard = ({ user, onEdit, onDelete }) => {
+  return (
+    <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300">
+      <div className="card-body p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="avatar placeholder">
+              <div className="bg-primary text-primary-content rounded-full w-12 h-12">
+                <User className="w-6 h-6" />
+              </div>
+            </div>
+            <div>
+              <h3 className="card-title text-lg font-bold">{user.fullname}</h3>
+              <div className="flex items-center gap-2">
+                <div className="badge badge-outline badge-sm">
+                  ID: {user._id.slice(-6)}
+                </div>
+                <div
+                  className={`badge ${getRoleBadgeClass(
+                    user.role
+                  )} badge-sm gap-1`}
+                >
+                  {getRoleIcon(user.role)}
+                  {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+                </div>
+              </div>
             </div>
           </div>
-          <div>
-            <h3 className="card-title text-lg font-bold">{user.fullname}</h3>
-            <div className="flex items-center gap-2">
-              <div className="badge badge-outline badge-sm">
-                ID: {user._id.slice(-6)}
+          <Can do="manageUsers">
+            <div className="dropdown dropdown-end">
+              <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
               </div>
-              <div
-                className={`badge ${getRoleBadgeClass(
-                  user.role
-                )} badge-sm gap-1`}
+              <ul
+                tabIndex={0}
+                className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
               >
-                {getRoleIcon(user.role)}
+                <li>
+                  <button onClick={() => onEdit(user)} className="text-primary">
+                    <Edit3 className="w-4 h-4" />
+                    Edit
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onDelete(user)} className="text-error">
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </Can>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Mail className="w-4 h-4 text-primary" />
+            <span className="truncate">{user.email}</span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm">
+            <Shield className="w-4 h-4 text-primary" />
+            <span>
+              Role:{" "}
+              <span
+                className={`font-bold ${
+                  user.role === "admin"
+                    ? "text-error"
+                    : user.role === "manager"
+                    ? "text-warning"
+                    : "text-info"
+                }`}
+              >
                 {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
-              </div>
-            </div>
-          </div>
-        </div>
-        {checkRole("admin") && (
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-              </svg>
-            </div>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
-            >
-              <li>
-                <button onClick={() => onEdit(user)} className="text-primary">
-                  <Edit3 className="w-4 h-4" />
-                  Edit
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onDelete(user)} className="text-error">
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
-              </li>
-            </ul>
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm">
-          <Mail className="w-4 h-4 text-primary" />
-          <span className="truncate">{user.email}</span>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm">
-          <Shield className="w-4 h-4 text-primary" />
-          <span>
-            Role:{" "}
-            <span
-              className={`font-bold ${
-                user.role === "admin"
-                  ? "text-error"
-                  : user.role === "manager"
-                  ? "text-warning"
-                  : "text-info"
-              }`}
-            >
-              {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+              </span>
             </span>
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-base-content/70">
-          <Calendar className="w-4 h-4" />
-          <span>Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
-        </div>
-
-        {user.lastAction?.action && (
-          <div className="flex items-center gap-2 text-sm text-base-content/70">
-            <Settings className="w-4 h-4" />
-            <span className="truncate">Last: {user.lastAction.action}</span>
           </div>
-        )}
+
+          <div className="flex items-center gap-2 text-sm text-base-content/70">
+            <Calendar className="w-4 h-4" />
+            <span>Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
+          </div>
+
+          {user.lastAction?.action && (
+            <div className="flex items-center gap-2 text-sm text-base-content/70">
+              <Settings className="w-4 h-4" />
+              <span className="truncate">Last: {user.lastAction.action}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-const UserTable = ({ users, onEdit, onDelete }) => (
-  <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg">
-    <table className="table table-zebra w-full">
-      <thead className="bg-primary text-primary-content">
-        <tr>
-          <th className="font-bold">User</th>
-          <th className="font-bold">Email</th>
-          <th className="font-bold">Role</th>
-          <th className="font-bold">Last Action</th>
-          <th className="font-bold">Joined</th>
-          {checkRole("admin") && <th className="font-bold">Actions</th>}
-        </tr>
-      </thead>
-      <tbody>
-        {users.map((user) => (
-          <tr key={user._id} className="hover:bg-base-200 transition-colors">
-            <td>
-              <div className="flex items-center gap-3">
-                <div className="avatar placeholder">
-                  <div className="bg-primary text-primary-content rounded-full w-10 h-10">
-                    <User className="w-5 h-5" />
-                  </div>
-                </div>
-                <div>
-                  <div className="font-bold">{user.fullname}</div>
-                  <div className="text-sm opacity-70">
-                    ID: {user._id.slice(-6)}
-                  </div>
-                </div>
-              </div>
-            </td>
-            <td>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-primary" />
-                <span className="truncate max-w-[200px]">{user.email}</span>
-              </div>
-            </td>
-            <td>
-              <div
-                className={`badge ${getRoleBadgeClass(
-                  user.role
-                )} font-bold gap-1`}
-              >
-                {getRoleIcon(user.role)}
-                {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
-              </div>
-            </td>
-            <td>
-              <div className="text-sm">
-                {user.lastAction?.action ? (
-                  <div className="flex items-center gap-1">
-                    <Settings className="w-3 h-3" />
-                    <span className="truncate max-w-[120px]">
-                      {user.lastAction.action}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-base-content/50">
-                    No recent activity
-                  </span>
-                )}
-              </div>
-            </td>
-            <td>
-              <div className="text-sm">
-                {new Date(user.createdAt).toLocaleDateString()}
-              </div>
-            </td>
-            {checkRole("admin") && (
+const UserTable = ({ users, onEdit, onDelete }) => {
+  return (
+    <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg">
+      <table className="table table-zebra w-full">
+        <thead className="bg-primary text-primary-content">
+          <tr>
+            <th className="font-bold">User</th>
+            <th className="font-bold">Email</th>
+            <th className="font-bold">Role</th>
+            <th className="font-bold">Last Action</th>
+            <th className="font-bold">Joined</th>
+            <Can do="manageUsers">
+              <th className="font-bold">Actions</th>
+            </Can>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user._id} className="hover:bg-base-200 transition-colors">
               <td>
-                <div className="flex gap-2">
-                  <button
-                    className="btn btn-primary btn-sm gap-1"
-                    onClick={() => onEdit(user)}
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    <span className="hidden lg:inline">Edit</span>
-                  </button>
-                  <button
-                    className="btn btn-error btn-sm gap-1"
-                    onClick={() => onDelete(user)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="hidden lg:inline">Delete</span>
-                  </button>
+                <div className="flex items-center gap-3">
+                  <div className="avatar placeholder">
+                    <div className="bg-primary text-primary-content rounded-full w-10 h-10">
+                      <User className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-bold">{user.fullname}</div>
+                    <div className="text-sm opacity-70">
+                      ID: {user._id.slice(-6)}
+                    </div>
+                  </div>
                 </div>
               </td>
-            )}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+              <td>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-primary" />
+                  <span className="truncate max-w-[200px]">{user.email}</span>
+                </div>
+              </td>
+              <td>
+                <div
+                  className={`badge ${getRoleBadgeClass(
+                    user.role
+                  )} font-bold gap-1`}
+                >
+                  {getRoleIcon(user.role)}
+                  {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+                </div>
+              </td>
+              <td>
+                <div className="text-sm">
+                  {user.lastAction?.action ? (
+                    <div className="flex items-center gap-1">
+                      <Settings className="w-3 h-3" />
+                      <span className="truncate max-w-[120px]">
+                        {user.lastAction.action}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-base-content/50">
+                      No recent activity
+                    </span>
+                  )}
+                </div>
+              </td>
+              <td>
+                <div className="text-sm">
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </div>
+              </td>
+              <Can do="manageUsers">
+                <td>
+                  <div className="flex gap-2">
+                    <button
+                      className="btn btn-primary btn-sm gap-1"
+                      onClick={() => onEdit(user)}
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      <span className="hidden lg:inline">Edit</span>
+                    </button>
+                    <button
+                      className="btn btn-error btn-sm gap-1"
+                      onClick={() => onDelete(user)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="hidden lg:inline">Delete</span>
+                    </button>
+                  </div>
+                </td>
+              </Can>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 const SearchAndFilters = ({
   searchTerm,
@@ -296,7 +304,6 @@ const SearchAndFilters = ({
 }) => (
   <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
     <div className="flex flex-col lg:flex-row gap-4">
-      {/* Search Bar */}
       <div className="flex-1">
         <div className="form-control w-full">
           <label className="input input-bordered flex items-center gap-2 w-full">
@@ -304,7 +311,7 @@ const SearchAndFilters = ({
             <input
               type="text"
               className="grow"
-              placeholder="Search users by name, phone, or email..."
+              placeholder="Search users by name or email..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -312,7 +319,6 @@ const SearchAndFilters = ({
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="form-control">
           <select
@@ -347,7 +353,6 @@ const SearchAndFilters = ({
           </select>
         </div>
 
-        {/* View Toggle */}
         <div className="btn-group">
           <button
             className={`btn btn-sm ${
@@ -375,11 +380,11 @@ const SearchAndFilters = ({
 
 const Users = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const users = useSelector((state) => state.users.users || []);
   const status = useSelector((state) => state.users.status);
   const error = useSelector((state) => state.users.error);
 
-  // Local state for search and filters
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
@@ -391,7 +396,6 @@ const Users = () => {
     }
   }, [dispatch, status]);
 
-  // Filter and sort users
   const filteredAndSortedUsers = useMemo(() => {
     let filtered = users.filter((user) => {
       const matchesSearch =
@@ -403,7 +407,6 @@ const Users = () => {
       return matchesSearch && matchesRole;
     });
 
-    // Sort the filtered results
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
@@ -469,7 +472,8 @@ const Users = () => {
 
   if (status === "loading") return <SuspenseContent />;
 
-  if (!checkRole("admin", "manager")) {
+  // Authorization check using the proper permission system
+  if (!can("manageUsers")) {
     return (
       <TitleCard title="Access Denied" topMargin="mt-2">
         <div className="hero min-h-[400px]">
@@ -551,7 +555,7 @@ const Users = () => {
                     ? "Try adjusting your search or filters"
                     : "Get started by adding your first user"}
                 </p>
-                {checkRole("admin") && (
+                <Can do="manageUsers">
                   <button
                     onClick={handleAddNew}
                     className="btn btn-primary gap-2"
@@ -559,7 +563,7 @@ const Users = () => {
                     <Plus className="w-4 h-4" />
                     Add First User
                   </button>
-                )}
+                </Can>
               </div>
             </div>
           </div>

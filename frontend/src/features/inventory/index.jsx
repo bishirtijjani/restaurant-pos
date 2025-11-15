@@ -17,7 +17,8 @@ import {
   clearError,
   clearSuccess,
 } from "./inventorySlice";
-import { checkRole } from "../../utils/Helpers";
+import { useAuth } from "../../utils/permission";
+import Can from "../../components/Auth/Can";
 import {
   Package,
   Search,
@@ -51,36 +52,35 @@ const UNITS = ["kg", "g", "L", "ml", "pcs", "pack", "box", "bag"];
 const TopSideButtons = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { can } = useAuth();
 
   return (
     <div className="flex flex-wrap gap-2">
-      {(checkRole("admin") || checkRole("manager")) && (
-        <>
-          <button
-            onClick={() =>
-              dispatch(
-                openModal({
-                  title: "Add Inventory Item",
-                  bodyType: MODAL_BODY_TYPES.ADD_INVENTORY_ITEM,
-                  size: "lg",
-                })
-              )
-            }
-            className="btn btn-primary btn-sm lg:btn-md gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Add Item</span>
-          </button>
+      <Can do="editInventory">
+        <button
+          onClick={() =>
+            dispatch(
+              openModal({
+                title: "Add Inventory Item",
+                bodyType: MODAL_BODY_TYPES.ADD_INVENTORY_ITEM,
+                size: "lg",
+              })
+            )
+          }
+          className="btn btn-primary btn-sm lg:btn-md gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Add Item</span>
+        </button>
 
-          <button
-            onClick={() => navigate("/app/purchase-orders/new")}
-            className="btn btn-secondary btn-sm lg:btn-md gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">Order Stock</span>
-          </button>
-        </>
-      )}
+        <button
+          onClick={() => navigate("/app/purchase-orders/new")}
+          className="btn btn-secondary btn-sm lg:btn-md gap-2"
+        >
+          <FileText className="w-4 h-4" />
+          <span className="hidden sm:inline">Order Stock</span>
+        </button>
+      </Can>
 
       <button
         onClick={() => window.location.reload()}
@@ -172,6 +172,7 @@ const SearchAndFilters = ({
 };
 
 const InventoryCard = ({ item, onEdit, onDelete, onLink }) => {
+  const { can } = useAuth();
   const stockPercentage = item.minStockLevel
     ? (item.currentStock / item.minStockLevel) * 100
     : 100;
@@ -192,36 +193,50 @@ const InventoryCard = ({ item, onEdit, onDelete, onLink }) => {
               </div>
             )}
           </div>
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-              </svg>
+          {(can("editInventory") || can("viewInventory")) && (
+            <div className="dropdown dropdown-end">
+              <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+              </div>
+              <ul
+                tabIndex={0}
+                className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40"
+              >
+                <Can do="editInventory">
+                  <li>
+                    <button
+                      onClick={() => onEdit(item)}
+                      className="text-primary"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      Edit
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => onLink(item)} className="text-info">
+                      <LinkIcon className="w-4 h-4" />
+                      Link Menu
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onDelete(item)}
+                      className="text-error"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </li>
+                </Can>
+              </ul>
             </div>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40"
-            >
-              <li>
-                <button onClick={() => onEdit(item)} className="text-primary">
-                  <Edit3 className="w-4 h-4" />
-                  Edit
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onLink(item)} className="text-info">
-                  <LinkIcon className="w-4 h-4" />
-                  Link Menu
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onDelete(item)} className="text-error">
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
-              </li>
-            </ul>
-          </div>
+          )}
         </div>
 
         {/* Category */}
@@ -295,6 +310,8 @@ const InventoryCard = ({ item, onEdit, onDelete, onLink }) => {
 };
 
 const InventoryTable = ({ items, onEdit, onDelete, onLink }) => {
+  const { can } = useAuth();
+
   return (
     <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg">
       <table className="table table-zebra w-full">
@@ -306,7 +323,7 @@ const InventoryTable = ({ items, onEdit, onDelete, onLink }) => {
             <th>Cost Price</th>
             <th>Supplier</th>
             <th>Status</th>
-            <th>Actions</th>
+            {(can("editInventory") || can("viewInventory")) && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -356,31 +373,35 @@ const InventoryTable = ({ items, onEdit, onDelete, onLink }) => {
                     </div>
                   )}
                 </td>
-                <td>
-                  <div className="flex gap-1">
-                    <button
-                      className="btn btn-ghost btn-xs"
-                      onClick={() => onEdit(item)}
-                      title="Edit"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      className="btn btn-ghost btn-xs text-info"
-                      onClick={() => onLink(item)}
-                      title="Link Menu Items"
-                    >
-                      <LinkIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      className="btn btn-ghost btn-xs text-error"
-                      onClick={() => onDelete(item)}
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+                {(can("editInventory") || can("viewInventory")) && (
+                  <td>
+                    <div className="flex gap-1">
+                      <Can do="editInventory">
+                        <button
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => onEdit(item)}
+                          title="Edit"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-xs text-info"
+                          onClick={() => onLink(item)}
+                          title="Link Menu Items"
+                        >
+                          <LinkIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-xs text-error"
+                          onClick={() => onDelete(item)}
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </Can>
+                    </div>
+                  </td>
+                )}
               </tr>
             );
           })}
@@ -392,6 +413,7 @@ const InventoryTable = ({ items, onEdit, onDelete, onLink }) => {
 
 const InventoryManagement = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const { items, loading, error, success, message } = useSelector(
     (state) => state.inventory
   );
@@ -485,6 +507,24 @@ const InventoryManagement = () => {
 
   if (loading) return <SuspenseContent />;
 
+  if (!can("viewInventory")) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to view inventory.
+              </p>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
+
   return (
     <TitleCard
       title={
@@ -519,6 +559,23 @@ const InventoryManagement = () => {
               ? "Try adjusting your filters"
               : "Start by adding your first inventory item"}
           </p>
+          <Can do="editInventory">
+            <button
+              onClick={() =>
+                dispatch(
+                  openModal({
+                    title: "Add Inventory Item",
+                    bodyType: MODAL_BODY_TYPES.ADD_INVENTORY_ITEM,
+                    size: "lg",
+                  })
+                )
+              }
+              className="btn btn-primary mt-4 gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add First Item
+            </button>
+          </Can>
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

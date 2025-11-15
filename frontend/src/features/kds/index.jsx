@@ -22,9 +22,12 @@ import SuspenseContent from "../../containers/SuspenseContent";
 import { openModal } from "../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import useWebSocket from "../common/hooks/useWebSocket";
+import TitleCard from "../../components/Cards/TitleCard";
+import { useAuth } from "../../utils/permission";
 
 const KDS = () => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const { orders, settings, loading, error, lastUpdate } = useSelector(
     (state) => state.kds
   );
@@ -40,14 +43,24 @@ const KDS = () => {
 
   const kdsContainerRef = useRef(null);
 
+  // Check permissions
+  useEffect(() => {
+    if (!can("viewKDS")) {
+      // Optionally redirect or show error
+      return;
+    }
+  }, [can]);
+
   // Initialize stations
   useEffect(() => {
-    dispatch(fetchStations());
-  }, [dispatch]);
+    if (can("viewKDS")) {
+      dispatch(fetchStations());
+    }
+  }, [dispatch, can]);
 
   // Set initial station
   useEffect(() => {
-    if (stations.length > 0 && !currentStation) {
+    if (stations.length > 0 && !currentStation && can("viewKDS")) {
       const savedStationId = localStorage.getItem("kdsCurrentStation");
       const stationId = savedStationId || "all";
 
@@ -60,11 +73,13 @@ const KDS = () => {
         dispatch(setCurrentStation(station));
       }
     }
-  }, [stations, currentStation, dispatch]);
+  }, [stations, currentStation, dispatch, can]);
 
   // WebSocket message handler
   const handleWebSocketMessage = useCallback(
     (data) => {
+      if (!can("viewKDS")) return;
+
       const { type, data: orderData } = data;
 
       console.log("WebSocket message received:", type);
@@ -99,7 +114,7 @@ const KDS = () => {
           break;
       }
     },
-    [currentStation, showCompleted, settings.soundEnabled, dispatch]
+    [currentStation, showCompleted, settings.soundEnabled, dispatch, can]
   );
 
   // WebSocket connection
@@ -107,12 +122,12 @@ const KDS = () => {
     stationId: currentStation?.type === "all" ? "all" : currentStation?._id,
     reconnectInterval: 3000,
     maxReconnectAttempts: 10,
-    enabled: !!currentStation, // Only connect when station is selected
+    enabled: !!currentStation && can("viewKDS"),
   });
 
   // Initial fetch
   useEffect(() => {
-    if (!currentStation) return;
+    if (!currentStation || !can("viewKDS")) return;
 
     const stationId =
       currentStation.type === "all" ? "all" : currentStation._id;
@@ -130,7 +145,7 @@ const KDS = () => {
           setIsInitialLoad(false);
         }
       });
-  }, [currentStation, showCompleted, dispatch, isInitialLoad]);
+  }, [currentStation, showCompleted, dispatch, isInitialLoad, can]);
 
   // Online/Offline listeners
   useEffect(() => {
@@ -159,6 +174,8 @@ const KDS = () => {
   }, []);
 
   const toggleFullscreen = async () => {
+    if (!can("useKDS")) return;
+
     try {
       if (!document.fullscreenElement) {
         await kdsContainerRef.current?.requestFullscreen();
@@ -171,7 +188,7 @@ const KDS = () => {
   };
 
   const handleManualRefresh = () => {
-    if (!currentStation) return;
+    if (!currentStation || !can("viewKDS")) return;
 
     setManualRefresh(true);
     const stationId =
@@ -181,6 +198,8 @@ const KDS = () => {
   };
 
   const handleStationChange = (stationId) => {
+    if (!can("useKDS")) return;
+
     const station =
       stationId === "all"
         ? { name: "All Stations", type: "all" }
@@ -203,6 +222,28 @@ const KDS = () => {
       6: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6",
     }[cols];
   };
+
+  // Access Denied UI
+  if (!can("viewKDS")) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to view the Kitchen Display System.
+              </p>
+              <p className="text-sm opacity-70">
+                Contact your administrator if you believe this is an error.
+              </p>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
 
   if (isInitialLoad && loading) {
     return <SuspenseContent />;
@@ -230,71 +271,77 @@ const KDS = () => {
         </div>
 
         <div className="flex-none gap-2">
-          <StationSelector
-            stations={stations}
-            currentStation={currentStation}
-            onStationChange={handleStationChange}
-          />
-
-          <div className="form-control">
-            <label className="label cursor-pointer gap-2 px-4">
-              <span className="label-text hidden md:inline">
-                {showCompleted ? "Completed" : "Active"}
-              </span>
-              <input
-                type="checkbox"
-                className="toggle toggle-primary"
-                checked={showCompleted}
-                onChange={(e) => setShowCompleted(e.target.checked)}
+          {can("useKDS") && (
+            <>
+              <StationSelector
+                stations={stations}
+                currentStation={currentStation}
+                onStationChange={handleStationChange}
               />
-            </label>
-          </div>
 
-          <div className="badge badge-primary badge-lg gap-2">
-            <span className="font-bold">{orders.length}</span>
-            <span className="hidden md:inline">
-              {showCompleted
-                ? "Completed"
-                : orders.length === 1
-                ? "Order"
-                : "Orders"}
-            </span>
-          </div>
+              <div className="form-control">
+                <label className="label cursor-pointer gap-2 px-4">
+                  <span className="label-text hidden md:inline">
+                    {showCompleted ? "Completed" : "Active"}
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="toggle toggle-primary"
+                    checked={showCompleted}
+                    onChange={(e) => setShowCompleted(e.target.checked)}
+                  />
+                </label>
+              </div>
 
-          <button
-            onClick={handleManualRefresh}
-            className={`btn btn-ghost btn-circle ${
-              manualRefresh ? "animate-spin" : ""
-            }`}
-            title="Refresh Orders"
-            disabled={!currentStation}
-          >
-            <RefreshCw size={20} />
-          </button>
+              <div className="badge badge-primary badge-lg gap-2">
+                <span className="font-bold">{orders.length}</span>
+                <span className="hidden md:inline">
+                  {showCompleted
+                    ? "Completed"
+                    : orders.length === 1
+                    ? "Order"
+                    : "Orders"}
+                </span>
+              </div>
 
-          <button
-            className="btn btn-ghost btn-circle"
-            title="KDS Settings"
-            onClick={() => {
-              dispatch(
-                openModal({
-                  title: "KDS Settings",
-                  bodyType: MODAL_BODY_TYPES.KDS_SETTINGS,
-                  size: "lg",
-                })
-              );
-            }}
-          >
-            <Settings size={20} />
-          </button>
+              <button
+                onClick={handleManualRefresh}
+                className={`btn btn-ghost btn-circle ${
+                  manualRefresh ? "animate-spin" : ""
+                }`}
+                title="Refresh Orders"
+                disabled={!currentStation}
+              >
+                <RefreshCw size={20} />
+              </button>
 
-          <button
-            onClick={toggleFullscreen}
-            className="btn btn-ghost btn-circle"
-            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          >
-            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
-          </button>
+              {can("editKDSSettings") && (
+                <button
+                  className="btn btn-ghost btn-circle"
+                  title="KDS Settings"
+                  onClick={() => {
+                    dispatch(
+                      openModal({
+                        title: "KDS Settings",
+                        bodyType: MODAL_BODY_TYPES.KDS_SETTINGS,
+                        size: "lg",
+                      })
+                    );
+                  }}
+                >
+                  <Settings size={20} />
+                </button>
+              )}
+
+              <button
+                onClick={toggleFullscreen}
+                className="btn btn-ghost btn-circle"
+                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+              >
+                {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+              </button>
+            </>
+          )}
 
           {lastUpdate && (
             <div className="hidden lg:block text-xs opacity-70">
@@ -309,9 +356,11 @@ const KDS = () => {
         <div className="alert alert-error mx-4 mt-4">
           <AlertCircle size={20} />
           <span>{error.message || error}</span>
-          <button onClick={handleManualRefresh} className="btn btn-sm">
-            Retry
-          </button>
+          {can("useKDS") && (
+            <button onClick={handleManualRefresh} className="btn btn-sm">
+              Retry
+            </button>
+          )}
         </div>
       )}
 

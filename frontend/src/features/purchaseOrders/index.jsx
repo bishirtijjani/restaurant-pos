@@ -6,10 +6,7 @@ import SuspenseContent from "../../containers/SuspenseContent";
 import { formatCurrency } from "../../utils/numberFormat";
 import { openModal } from "../common/modalSlice";
 import { showNotification } from "../common/headerSlice";
-import {
-  MODAL_BODY_TYPES,
-  CONFIRMATION_MODAL_CLOSE_TYPES,
-} from "../../utils/globalConstantUtil";
+import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import {
   fetchPurchaseOrders,
   approvePurchaseOrder,
@@ -17,24 +14,20 @@ import {
   clearError,
   clearSuccess,
 } from "./purchaseOrdersSlice";
-import { checkRole } from "../../utils/Helpers";
+import { useAuth } from "../../utils/permission";
+import Can from "../../components/Auth/Can";
 import {
   Package,
   Search,
-  Filter,
   Plus,
   RefreshCw,
   Eye,
   Check,
   X,
   Clock,
-  TrendingUp,
   FileText,
   Truck,
-  DollarSign,
   Calendar,
-  User,
-  AlertCircle,
 } from "lucide-react";
 
 const STATUS_COLORS = {
@@ -53,10 +46,11 @@ const PAYMENT_COLORS = {
 
 const TopSideButtons = () => {
   const navigate = useNavigate();
+  const { can } = useAuth();
 
   return (
     <div className="flex flex-wrap gap-2">
-      {(checkRole("admin") || checkRole("manager")) && (
+      <Can do="createPurchaseOrders">
         <button
           onClick={() => navigate("/app/purchase-orders/new")}
           className="btn btn-primary btn-sm lg:btn-md gap-2"
@@ -64,7 +58,7 @@ const TopSideButtons = () => {
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">New Purchase Order</span>
         </button>
-      )}
+      </Can>
       <button
         onClick={() => window.location.reload()}
         className="btn btn-ghost btn-sm lg:btn-md gap-2"
@@ -140,6 +134,8 @@ const PurchaseOrderCard = ({
   onReceive,
   onCancel,
 }) => {
+  const { can } = useAuth();
+
   const formatDate = (dateString) => {
     if (!dateString) return "Not set";
     return new Date(dateString).toLocaleDateString();
@@ -234,32 +230,38 @@ const PurchaseOrderCard = ({
             <Eye className="w-4 h-4 mr-1" /> View
           </button>
 
-          {order.status === "draft" && (
-            <button
-              className="btn btn-sm btn-success"
-              onClick={() => onApprove(order._id)}
-            >
-              <Check className="w-4 h-4 mr-1" /> Approve
-            </button>
-          )}
+          <Can do="approvePurchaseOrders">
+            {order.status === "draft" && (
+              <button
+                className="btn btn-sm btn-success"
+                onClick={() => onApprove(order._id)}
+              >
+                <Check className="w-4 h-4 mr-1" /> Approve
+              </button>
+            )}
+          </Can>
 
-          {order.status === "approved" && (
-            <button
-              className="btn btn-sm btn-info"
-              onClick={() => onReceive(order)}
-            >
-              <Package className="w-4 h-4 mr-1" /> Receive
-            </button>
-          )}
+          <Can do="receivePurchaseOrders">
+            {order.status === "approved" && (
+              <button
+                className="btn btn-sm btn-info"
+                onClick={() => onReceive(order)}
+              >
+                <Package className="w-4 h-4 mr-1" /> Receive
+              </button>
+            )}
+          </Can>
 
-          {order.status !== "received" && order.status !== "cancelled" && (
-            <button
-              className="btn btn-sm btn-error btn-outline"
-              onClick={() => onCancel(order._id)}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+          <Can do="cancelPurchaseOrders">
+            {order.status !== "received" && order.status !== "cancelled" && (
+              <button
+                className="btn btn-sm btn-error btn-outline"
+                onClick={() => onCancel(order._id)}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </Can>
         </div>
       </div>
     </div>
@@ -269,6 +271,7 @@ const PurchaseOrderCard = ({
 const PurchaseOrdersManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { can } = useAuth();
   const { orders, loading, error, success, message } = useSelector(
     (state) => state.purchaseOrders
   );
@@ -354,6 +357,24 @@ const PurchaseOrdersManagement = () => {
 
   if (loading) return <SuspenseContent />;
 
+  if (!can("viewPurchaseOrders")) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to view purchase orders.
+              </p>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
+
   return (
     <TitleCard
       title={
@@ -387,7 +408,7 @@ const PurchaseOrdersManagement = () => {
               ? "Try adjusting your filters"
               : "Create your first purchase order to get started"}
           </p>
-          {(checkRole("admin") || checkRole("manager")) && (
+          <Can do="createPurchaseOrders">
             <button
               onClick={() => navigate("/app/purchase-orders/new")}
               className="btn btn-primary mt-4"
@@ -395,7 +416,7 @@ const PurchaseOrdersManagement = () => {
               <Plus className="w-4 h-4 mr-2" />
               Create Purchase Order
             </button>
-          )}
+          </Can>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

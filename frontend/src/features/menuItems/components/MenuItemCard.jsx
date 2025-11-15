@@ -14,7 +14,8 @@ import PhotoIcon from "@heroicons/react/24/outline/PhotoIcon";
 import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import { formatCurrency } from "../../../utils/numberFormat";
-import { checkRole } from "../../../utils/Helpers";
+import { useAuth } from "../../../utils/permission";
+import Can from "../../../components/Auth/Can";
 
 // Clock icon component
 const ClockIcon = () => (
@@ -36,13 +37,22 @@ const ClockIcon = () => (
 
 const MenuItemCard = ({ item, handleToggleAvailability }) => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const placeholderImage = "https://placehold.co/400x300?text=No+Image";
 
   const handleStatusToggle = () => {
+    if (!can("viewMenu")) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to update menu items",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     dispatch(handleToggleAvailability(item._id))
       .then(() => {
-        // Call your custom notification function with success message and status 1 (good)
-
         dispatch(
           showNotification({
             message: `${item.name} is now ${
@@ -53,7 +63,6 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
         );
       })
       .catch(() => {
-        // Call your custom notification function with error message and status 0 (error)
         dispatch(showNotification({ message: "Action failed", status: 0 }));
       });
   };
@@ -134,21 +143,23 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
               <InformationCircleIcon className="w-5 h-5" />
             </button>
 
-            <button
-              className="btn btn-sm btn-ghost tooltip"
-              data-tip={
-                item.isAvailable ? "Mark Unavailable" : "Mark Available"
-              }
-              onClick={handleStatusToggle}
-            >
-              {item.isAvailable ? (
-                <XCircleIcon className="w-5 h-5 text-error" />
-              ) : (
-                <CheckCircleIcon className="w-5 h-5 text-success" />
-              )}
-            </button>
+            {can("viewMenu") && (
+              <button
+                className="btn btn-sm btn-ghost tooltip"
+                data-tip={
+                  item.isAvailable ? "Mark Unavailable" : "Mark Available"
+                }
+                onClick={handleStatusToggle}
+              >
+                {item.isAvailable ? (
+                  <XCircleIcon className="w-5 h-5 text-error" />
+                ) : (
+                  <CheckCircleIcon className="w-5 h-5 text-success" />
+                )}
+              </button>
+            )}
 
-            {(checkRole("admin") || checkRole("manager")) && (
+            <Can do="editMenu">
               <button
                 className="btn btn-sm btn-ghost tooltip"
                 data-tip="Edit Item"
@@ -164,9 +175,9 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
               >
                 <PencilSquareIcon className="w-5 h-5" />
               </button>
-            )}
+            </Can>
 
-            {checkRole("admin") && (
+            <Can do="deleteMenu">
               <button
                 className="btn btn-sm btn-ghost tooltip"
                 data-tip="Delete Item"
@@ -186,7 +197,7 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
               >
                 <TrashIcon className="w-5 h-5 text-error" />
               </button>
-            )}
+            </Can>
           </div>
         </div>
       </div>

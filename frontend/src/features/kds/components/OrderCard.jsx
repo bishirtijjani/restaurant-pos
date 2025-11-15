@@ -16,20 +16,16 @@ import { updateKDSOrderStatus, recallOrder } from "../kdsSlice";
 import OrderTimer from "./OrderTimer";
 import { getOrderColor, groupItemsByCategory } from "../kdsUtils";
 import { showNotification } from "../../common/headerSlice";
+import { useAuth } from "../../../utils/permission";
 
 const OrderCard = ({ order, settings, isCompletedView = false }) => {
   const dispatch = useDispatch();
+  const { can } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [processing, setProcessing] = useState(false);
 
   const orderAge = Math.floor((new Date() - new Date(order.createdAt)) / 60000);
 
-  // Determine priority based on order age and status
-  // completed orders get 'completed' priority if age >= 15 mins
-  // otherwise use normal priority logic
-  // completed orders are visually distinct
-  // completed orders are not considered for warning/critical states
-  // to avoid confusion with active orders
   const priority =
     orderAge >= 15
       ? order.orderStatus == "ready" || "completed"
@@ -43,6 +39,16 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
   const groupedItems = groupItemsByCategory(order.orderItems);
 
   const handleStart = async () => {
+    if (!can("updateKDSOrders")) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to update orders",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     setProcessing(true);
     try {
       await dispatch(
@@ -67,6 +73,16 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
   };
 
   const handleComplete = async () => {
+    if (!can("updateKDSOrders")) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to update orders",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     setProcessing(true);
     try {
       await dispatch(
@@ -91,6 +107,16 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
   };
 
   const handleRecall = async () => {
+    if (!can("recallKDSOrders")) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to recall orders",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     if (window.confirm("Recall this order back to preparing?")) {
       try {
         await dispatch(
@@ -244,13 +270,20 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
         {/* Actions */}
         <div className="flex gap-2 pt-2 border-t">
           {isCompletedView ? (
-            <button onClick={handleRecall} className="btn btn-warning flex-1">
-              <RotateCcw size={18} />
-              Recall
-            </button>
+            <>
+              {can("recallKDSOrders") && (
+                <button
+                  onClick={handleRecall}
+                  className="btn btn-warning flex-1"
+                >
+                  <RotateCcw size={18} />
+                  Recall
+                </button>
+              )}
+            </>
           ) : (
             <>
-              {order.orderStatus === "pending" && (
+              {order.orderStatus === "pending" && can("updateKDSOrders") && (
                 <button
                   onClick={handleStart}
                   disabled={processing}
@@ -263,7 +296,7 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
                 </button>
               )}
 
-              {order.orderStatus === "preparing" && (
+              {order.orderStatus === "preparing" && can("updateKDSOrders") && (
                 <button
                   onClick={handleComplete}
                   disabled={processing}
@@ -274,6 +307,12 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
                   <CheckCircle size={18} />
                   {processing ? "Completing..." : "Ready"}
                 </button>
+              )}
+
+              {!can("updateKDSOrders") && order.orderStatus !== "ready" && (
+                <div className="text-xs text-center opacity-70 flex-1 py-2">
+                  View only - No update permission
+                </div>
               )}
             </>
           )}

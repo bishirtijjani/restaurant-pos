@@ -22,15 +22,19 @@ import { fetchAllCategories } from "../categories/categoriesSlice";
 import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 import TaxBreakdown from "./components/TaxBreakdown";
 import { openRightDrawer } from "../common/rightDrawerSlice";
+import { useAuth } from "../../utils/permission";
+import { useNavigate } from "react-router-dom";
+import TitleCard from "../../components/Cards/TitleCard";
 
 // Component for the order type selector
-const OrderTypeSelector = ({ orderType, setOrderType }) => (
+const OrderTypeSelector = ({ orderType, setOrderType, disabled }) => (
   <div className="join mb-4 join-vertical lg:join-horizontal">
     <button
       className={`join-item btn btn-sm md:btn-md ${
         orderType === "dine-in" ? "btn-primary" : "btn-outline"
       }`}
       onClick={() => setOrderType("dine-in")}
+      disabled={disabled}
     >
       <UtensilsCrossed size={18} className="mr-1" /> Dine-in
     </button>
@@ -39,6 +43,7 @@ const OrderTypeSelector = ({ orderType, setOrderType }) => (
         orderType === "takeaway" ? "btn-primary" : "btn-outline"
       }`}
       onClick={() => setOrderType("takeaway")}
+      disabled={disabled}
     >
       <ShoppingBag size={18} className="mr-1" /> Takeaway
     </button>
@@ -47,6 +52,7 @@ const OrderTypeSelector = ({ orderType, setOrderType }) => (
         orderType === "delivery" ? "btn-primary" : "btn-outline"
       }`}
       onClick={() => setOrderType("delivery")}
+      disabled={disabled}
     >
       <Truck size={18} className="mr-1" /> Delivery
     </button>
@@ -54,8 +60,12 @@ const OrderTypeSelector = ({ orderType, setOrderType }) => (
 );
 
 // Component for category filters
-const CategoryFilter = ({ activeCategory, setActiveCategory, categories }) => {
-  // Add 'All' category if it doesn't exist in the categories array
+const CategoryFilter = ({
+  activeCategory,
+  setActiveCategory,
+  categories,
+  disabled,
+}) => {
   const allCategories = [
     { id: "all", name: "All" },
     ...categories.filter((category) => category.name !== "All"),
@@ -70,6 +80,7 @@ const CategoryFilter = ({ activeCategory, setActiveCategory, categories }) => {
             activeCategory === category.name ? "btn-primary" : "btn-outline"
           } flex-shrink-0`}
           onClick={() => setActiveCategory(category.name)}
+          disabled={disabled}
         >
           {category.icon && category.icon}
           <span className="ml-2">{category.name}</span>
@@ -80,12 +91,7 @@ const CategoryFilter = ({ activeCategory, setActiveCategory, categories }) => {
 };
 
 // Component for a single menu item
-const MenuItem = ({ item, addToCart }) => {
-  const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
-  );
-  const currency = settings?.currency?.symbol || "$";
-
+const MenuItem = ({ item, addToCart, currency, disabled }) => {
   const renderIcon = () => {
     switch (item.category) {
       case "Coffee":
@@ -105,8 +111,10 @@ const MenuItem = ({ item, addToCart }) => {
 
   return (
     <div
-      className="bg-base-100 border max-h-min border-base-300 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-      onClick={() => addToCart(item)}
+      className={`bg-base-100 border max-h-min border-base-300 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${
+        !disabled ? "cursor-pointer" : "opacity-50 cursor-not-allowed"
+      }`}
+      onClick={() => !disabled && addToCart(item)}
     >
       <div className="h-32 w-full bg-base-200 flex items-center justify-center">
         {item.image ? (
@@ -126,7 +134,10 @@ const MenuItem = ({ item, addToCart }) => {
             {currency}
             {parseFloat(item.price).toFixed(2)}
           </span>
-          <button className="btn btn-sm btn-primary btn-circle">
+          <button
+            className="btn btn-sm btn-primary btn-circle"
+            disabled={disabled}
+          >
             <PlusCircle size={16} />
           </button>
         </div>
@@ -136,12 +147,7 @@ const MenuItem = ({ item, addToCart }) => {
 };
 
 // Component for a cart item
-const CartItem = ({ item, updateQuantity }) => {
-  const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
-  );
-  const currency = settings?.currency?.symbol || "$";
-
+const CartItem = ({ item, updateQuantity, currency, disabled }) => {
   return (
     <div className="flex items-center justify-between border-b border-base-300 pb-3 mb-3">
       <div className="flex items-center">
@@ -177,6 +183,7 @@ const CartItem = ({ item, updateQuantity }) => {
             e.stopPropagation();
             updateQuantity(item._id, item.quantity - 1);
           }}
+          disabled={disabled}
         >
           <MinusCircle size={16} />
         </button>
@@ -187,6 +194,7 @@ const CartItem = ({ item, updateQuantity }) => {
             e.stopPropagation();
             updateQuantity(item._id, item.quantity + 1);
           }}
+          disabled={disabled}
         >
           <PlusCircle size={16} />
         </button>
@@ -196,6 +204,7 @@ const CartItem = ({ item, updateQuantity }) => {
             e.stopPropagation();
             updateQuantity(item._id, 0);
           }}
+          disabled={disabled}
         >
           <X size={16} />
         </button>
@@ -221,13 +230,13 @@ const OrderSummary = ({
   setPackagingFee,
   deliveryFee,
   setDeliveryFee,
+  currency,
+  disabled,
 }) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
-  const currency = settings?.currency?.symbol || "$";
 
-  // Calculate with tax
   const calculateWithTax = () => {
     const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -309,6 +318,7 @@ const OrderSummary = ({
             onChange={(e) => setPackagingFee(e.target.value)}
             className="input input-bordered input-sm w-24"
             min={0}
+            disabled={disabled}
           />
         </div>
       )}
@@ -325,6 +335,7 @@ const OrderSummary = ({
             onChange={(e) => setDeliveryFee(e.target.value)}
             className="input input-bordered input-sm w-24"
             min={0}
+            disabled={disabled}
           />
         </div>
       )}
@@ -333,7 +344,11 @@ const OrderSummary = ({
 };
 
 // Customer Details Component for delivery orders
-const CustomerDetailsForm = ({ customerDetails, setCustomerDetails }) => (
+const CustomerDetailsForm = ({
+  customerDetails,
+  setCustomerDetails,
+  disabled,
+}) => (
   <div className="bg-base-200 rounded-lg p-4 mb-4">
     <h3 className="font-medium mb-3 flex items-center">
       <User size={16} className="mr-2" /> Customer Details
@@ -349,6 +364,7 @@ const CustomerDetailsForm = ({ customerDetails, setCustomerDetails }) => (
             setCustomerDetails({ ...customerDetails, name: e.target.value })
           }
           placeholder="Customer name"
+          disabled={disabled}
         />
       </div>
       <div>
@@ -361,6 +377,7 @@ const CustomerDetailsForm = ({ customerDetails, setCustomerDetails }) => (
             setCustomerDetails({ ...customerDetails, phone: e.target.value })
           }
           placeholder="Phone number"
+          disabled={disabled}
         />
       </div>
       {customerDetails.address !== undefined && (
@@ -377,6 +394,7 @@ const CustomerDetailsForm = ({ customerDetails, setCustomerDetails }) => (
             }
             placeholder="Delivery address"
             rows="2"
+            disabled={disabled}
           ></textarea>
         </div>
       )}
@@ -385,8 +403,11 @@ const CustomerDetailsForm = ({ customerDetails, setCustomerDetails }) => (
 );
 
 // Main POS component
-export default function POS() {
+export default function AddOrder() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { can } = useAuth();
+
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
@@ -408,6 +429,9 @@ export default function POS() {
     address: "",
   });
 
+  // Check permissions
+  const canCreateOrders = can("createOrders");
+
   // Fetch menu items on component mount
   useEffect(() => {
     if (!menuItems.length) dispatch(fetchAllMenuItems());
@@ -425,11 +449,8 @@ export default function POS() {
 
   // Add item to cart
   const addToCart = (item) => {
-    console.log("Adding item with ID:", item._id);
-    console.log(
-      "Current cart item IDs:",
-      cart.map((i) => i._id)
-    );
+    if (!canCreateOrders) return;
+
     const existingItem = cart.find((cartItem) => cartItem._id === item._id);
 
     if (existingItem) {
@@ -447,6 +468,8 @@ export default function POS() {
 
   // Update item quantity
   const updateQuantity = (id, newQuantity) => {
+    if (!canCreateOrders) return;
+
     if (newQuantity === 0) {
       setCart(cart.filter((item) => item._id !== id));
     } else {
@@ -473,20 +496,28 @@ export default function POS() {
 
   // Handle checkout process
   const handleCheckout = () => {
+    if (!canCreateOrders) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to create orders",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     if (cart.length === 0) return;
 
-    // Prepare order items in the format expected by the backend
     const orderItems = cart.map((item) => ({
       menuItemId: item._id,
       name: item.name,
       price: item.price,
       quantity: item.quantity,
-      customizations: "", // Could be added as an extra feature
+      customizations: "",
       subtotal: item.price * item.quantity,
       preparationTime: item.preparationTime || 15,
     }));
 
-    // Calculate totals
     const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
@@ -499,7 +530,6 @@ export default function POS() {
 
     const totalAmount = subtotal + packagingAmount + deliveryAmount;
 
-    // Create order payload according to your schema
     const orderPayload = {
       table: orderType === "dine-in" ? tableNumber : "Takeaway",
       customerDetails: {
@@ -521,23 +551,13 @@ export default function POS() {
       })),
     };
 
-    // Open payment confirmation modal with order details
     dispatch(
       openRightDrawer({
         title: "Payment Confirmation",
         bodyType: RIGHT_DRAWER_TYPES.CONFIRM_PAYMENT,
         extraObject: orderPayload,
-        // size: "lg",
       })
     );
-    // dispatch(
-    //   openModal({
-    //     title: "Payment Confirmation",
-    //     bodyType: MODAL_BODY_TYPES.PAYMENT_CONFIRMATION,
-    //     extraObject: orderPayload,
-    //     size: "lg",
-    //   })
-    // );
   };
 
   // Update customer details when order type changes
@@ -546,6 +566,32 @@ export default function POS() {
       setCustomerDetails({ ...customerDetails, address: "" });
     }
   }, [orderType]);
+
+  // Show access denied if user doesn't have permission
+  if (!canCreateOrders) {
+    return (
+      <TitleCard title="Access Denied" topMargin="mt-2">
+        <div className="hero min-h-[400px]">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <div className="text-6xl mb-4">🔒</div>
+              <h1 className="text-3xl font-bold text-error">Access Denied</h1>
+              <p className="py-6">
+                You do not have permission to create orders. Please contact your
+                administrator if you believe this is an error.
+              </p>
+              <button
+                onClick={() => navigate("/app/dashboard")}
+                className="btn btn-primary"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </TitleCard>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-base-200 text-base-content">
@@ -560,6 +606,7 @@ export default function POS() {
               className="input input-bordered w-full pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              disabled={!canCreateOrders}
             />
             <Search className="absolute left-3 top-3 text-muted" size={18} />
           </div>
@@ -569,12 +616,19 @@ export default function POS() {
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
             categories={categories}
+            disabled={!canCreateOrders}
           />
 
           {/* Menu items grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 overflow-y-auto flex-grow">
             {filteredItems.map((item) => (
-              <MenuItem key={item._id} item={item} addToCart={addToCart} />
+              <MenuItem
+                key={item._id}
+                item={item}
+                addToCart={addToCart}
+                currency={currency}
+                disabled={!canCreateOrders}
+              />
             ))}
             {filteredItems.length === 0 && (
               <div className="col-span-3 text-center text-muted py-12">
@@ -594,6 +648,7 @@ export default function POS() {
           <OrderTypeSelector
             orderType={orderType}
             setOrderType={setOrderType}
+            disabled={!canCreateOrders}
           />
 
           {/* Order type indicator */}
@@ -619,6 +674,7 @@ export default function POS() {
                   value={tableNumber}
                   onChange={(e) => setTableNumber(e.target.value)}
                   min="1"
+                  disabled={!canCreateOrders}
                 />
               </div>
             )}
@@ -629,6 +685,7 @@ export default function POS() {
             <CustomerDetailsForm
               customerDetails={customerDetails}
               setCustomerDetails={setCustomerDetails}
+              disabled={!canCreateOrders}
             />
           )}
 
@@ -643,6 +700,8 @@ export default function POS() {
                     key={item._id}
                     item={item}
                     updateQuantity={updateQuantity}
+                    currency={currency}
+                    disabled={!canCreateOrders}
                   />
                 ))}
               </div>
@@ -657,6 +716,7 @@ export default function POS() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows="2"
+              disabled={!canCreateOrders}
             ></textarea>
           </div>
 
@@ -668,6 +728,8 @@ export default function POS() {
             setPackagingFee={setPackagingFee}
             deliveryFee={deliveryFee}
             setDeliveryFee={setDeliveryFee}
+            currency={currency}
+            disabled={!canCreateOrders}
           />
 
           {/* Action buttons */}
@@ -675,14 +737,14 @@ export default function POS() {
             <button
               className="btn btn-outline w-full md:flex-1"
               onClick={() => setCart([])}
-              disabled={cart.length === 0}
+              disabled={cart.length === 0 || !canCreateOrders}
             >
               Clear
             </button>
             <button
               className="btn btn-primary w-full md:flex-1"
               onClick={handleCheckout}
-              disabled={cart.length === 0}
+              disabled={cart.length === 0 || !canCreateOrders}
             >
               Pay {currency}
               {calculateTotal().toFixed(2)}
