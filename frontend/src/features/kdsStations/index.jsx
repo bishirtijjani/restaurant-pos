@@ -27,7 +27,7 @@ const StationsManagement = () => {
   }, [dispatch]);
 
   const handleToggleActive = async (station) => {
-    if (!can("editStations")) {
+    if (!can("editKDSStations")) {
       dispatch(
         showNotification({
           message: "You don't have permission to modify stations",
@@ -65,7 +65,7 @@ const StationsManagement = () => {
   };
 
   const handleDelete = (station) => {
-    if (!can("deleteStations")) {
+    if (!can("deleteKDSStations")) {
       dispatch(
         showNotification({
           message: "You don't have permission to delete stations",
@@ -108,7 +108,7 @@ const StationsManagement = () => {
   };
 
   const handleEdit = (station) => {
-    if (!can("editStations")) {
+    if (!can("editKDSStations")) {
       dispatch(
         showNotification({
           message: "You don't have permission to edit stations",
@@ -129,7 +129,7 @@ const StationsManagement = () => {
   };
 
   const handleAddNew = () => {
-    if (!can("createStations")) {
+    if (!can("createKDSStations")) {
       dispatch(
         showNotification({
           message: "You don't have permission to create stations",
@@ -156,7 +156,7 @@ const StationsManagement = () => {
   if (loading) return <SuspenseContent />;
 
   // Check if user has permission to view stations
-  if (!can("viewStations")) {
+  if (!can("viewKDSStations")) {
     return (
       <TitleCard title="Access Denied" topMargin="mt-2">
         <div className="hero min-h-[400px]">
@@ -192,7 +192,7 @@ const StationsManagement = () => {
               {inactiveStations.length})
             </button>
           )}
-          <Can do="createStations">
+          <Can do="createKDSStations">
             <button
               className="btn btn-primary btn-sm gap-2"
               onClick={handleAddNew}
@@ -232,7 +232,7 @@ const StationsManagement = () => {
           <p className="text-base-content/70 mb-4">
             Create your first kitchen station to get started
           </p>
-          <Can do="createStations">
+          <Can do="createKDSStations">
             <button className="btn btn-primary btn-sm" onClick={handleAddNew}>
               <Plus size={16} /> Create Station
             </button>
@@ -364,7 +364,7 @@ const StationCard = ({
 
         {/* Actions */}
         <div className="card-actions justify-between mt-3 pt-3 border-t">
-          <Can do="editStations">
+          <Can do="editKDSStations">
             <button
               onClick={() => onToggleActive(station)}
               className={`btn btn-sm gap-1 ${
@@ -377,9 +377,9 @@ const StationCard = ({
             </button>
           </Can>
 
-          {(can("editStations") || can("deleteStations")) && (
+          {(can("editKDSStations") || can("deleteKDSStations")) && (
             <div className="flex gap-1">
-              <Can do="editStations">
+              <Can do="editKDSStations">
                 <button
                   onClick={() => onEdit(station)}
                   className="btn btn-ghost btn-sm btn-square"
@@ -388,7 +388,7 @@ const StationCard = ({
                   <Edit size={16} />
                 </button>
               </Can>
-              <Can do="deleteStations">
+              <Can do="deleteKDSStations">
                 <button
                   onClick={() => onDelete(station)}
                   className="btn btn-ghost btn-sm btn-square text-error"
