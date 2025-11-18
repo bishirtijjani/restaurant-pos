@@ -1,3 +1,4 @@
+// frontend/src/App.jsx
 import React, { lazy, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import "./App.css";
@@ -10,8 +11,10 @@ import {
 import { themeChange } from "theme-change";
 import checkAuth from "./app/auth";
 import initializeApp from "./app/init";
+import { initializeOfflineSupport } from "./app/initOffline";
 import { fetchSettings } from "./features/settings/generalSettings/generalSettingsSlice";
 import { getCurrentUser } from "./app/authSlice";
+import OfflineIndicator from "./components/OfflineIndicator";
 
 const Layout = lazy(() => import("./containers/Layout"));
 const Login = lazy(() => import("./pages/Login"));
@@ -21,6 +24,9 @@ const Register = lazy(() => import("./pages/Register"));
 const Home = lazy(() => import("./pages/Home"));
 
 initializeApp();
+
+// Initialize offline support
+initializeOfflineSupport();
 
 const token = checkAuth();
 
@@ -38,7 +44,6 @@ function App() {
   }, [dispatch]);
 
   useEffect(() => {
-    // Fetch current user if we have a token but no user data
     const storedToken = localStorage.getItem("token");
     if (storedToken && !user) {
       dispatch(getCurrentUser());
@@ -49,17 +54,12 @@ function App() {
     <>
       <Router>
         <Routes>
-          {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/home" element={<Home />} />
-
-          {/* Protected routes */}
           <Route path="/app/*" element={<Layout />} />
-
-          {/* Catch-all route */}
           <Route
             path="/*"
             element={
@@ -68,6 +68,9 @@ function App() {
           />
         </Routes>
       </Router>
+
+      {/* Offline Indicator */}
+      <OfflineIndicator />
     </>
   );
 }

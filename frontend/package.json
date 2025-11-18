@@ -19,6 +19,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "jwt-decode": "^4.0.0",
+    "localforage": "^1.10.0",
     "lucide-react": "^0.487.0",
     "moment": "^2.30.1",
     "print-js": "^1.6.0",
@@ -38,6 +39,7 @@
     "recharts": "^2.15.0",
     "styled-components": "^6.1.19",
     "theme-change": "^2.5.0",
+    "uuid": "^13.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

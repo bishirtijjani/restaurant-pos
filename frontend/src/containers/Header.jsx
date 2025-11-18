@@ -1,17 +1,25 @@
 import { themeChange } from "theme-change";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import Bars3Icon from "@heroicons/react/24/outline/Bars3Icon";
-import MoonIcon from "@heroicons/react/24/outline/MoonIcon";
-import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import { openRightDrawer } from "../features/common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
-import { NavLink, Routes, Link, useLocation } from "react-router-dom";
-import UserCircleIcon from "@heroicons/react/24/outline/UserCircleIcon";
-import { RefreshCw, Paintbrush, PaletteIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  RefreshCw,
+  Paintbrush,
+  PaletteIcon,
+  Database,
+  WifiOff,
+  UserCircle2,
+} from "lucide-react";
 import { getTourId } from "../utils/Helpers";
 import TourTriggerButton from "../features/onboarding/components/TourTriggerButton";
+import {
+  useOnlineStatus,
+  useSyncQueue,
+} from "../features/common/hooks/useOffline";
+import SyncManager from "../components/SyncManager";
 
 function Header() {
   const dispatch = useDispatch();
@@ -19,6 +27,9 @@ function Header() {
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("theme")
   );
+  const isOnline = useOnlineStatus();
+  const { queueStats } = useSyncQueue();
+  const [showSyncManager, setShowSyncManager] = useState(false);
 
   useEffect(() => {
     themeChange(false);
@@ -75,6 +86,30 @@ function Header() {
         </button>
 
         <div className="flex-none ">
+          <button
+            className={`btn btn-sm rounded-box mx-2 gap-2 ${
+              !isOnline
+                ? "btn-error"
+                : queueStats.total > 0
+                ? "btn-warning"
+                : "btn-ghost"
+            }`}
+            onClick={() => setShowSyncManager(true)}
+          >
+            {!isOnline ? (
+              <WifiOff className="w-4 h-4" />
+            ) : (
+              <Database className="w-4 h-4" />
+            )}
+            <span className="hidden md:inline">
+              {!isOnline
+                ? "Offline"
+                : queueStats.total > 0
+                ? `Sync (${queueStats.total})`
+                : "Synced"}
+            </span>
+          </button>
+          {/* Tour Button */}
           {getTourId() && (
             <TourTriggerButton tourId={getTourId()} className="mr-2" />
           )}
@@ -146,7 +181,7 @@ function Header() {
             <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
               <div className="w-10 rounded-full">
                 {/* <img src="#" alt="profile" /> */}
-                <UserCircleIcon />
+                <UserCircle2 />
               </div>
             </label>
             <ul
@@ -170,6 +205,9 @@ function Header() {
           </div>
         </div>
       </div>
+      {showSyncManager && (
+        <SyncManager onClose={() => setShowSyncManager(false)} />
+      )}
     </>
   );
 }

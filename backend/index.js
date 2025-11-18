@@ -26,7 +26,7 @@ const corsOptions = require("./config/corsOptions");
 // Middleware
 dotenv.config();
 app.use(express.json());
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Database connection
 connectToDB();

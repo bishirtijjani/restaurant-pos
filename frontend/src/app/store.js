@@ -19,6 +19,7 @@ import onboardingReducer from "../features/onboarding/onboardingSlice";
 import stockAdjustmentsReducer from "../features/stockAdjustments/stockAdjustmentsSlice";
 import inventoryReducer from "../features/inventory/inventorySlice";
 import purchaseOrdersReducer from "../features/purchaseOrders/purchaseOrdersSlice";
+import offlineMiddleware from "../utils/offline/offlineMiddleware";
 
 const combinedReducer = {
   header: headerReducer,
@@ -45,4 +46,11 @@ const combinedReducer = {
 
 export default configureStore({
   reducer: combinedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: ["persist/PERSIST"],
+      },
+    }).concat(offlineMiddleware),
 });

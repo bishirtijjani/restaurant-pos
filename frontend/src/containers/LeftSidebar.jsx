@@ -73,13 +73,11 @@ function LeftSidebar() {
         {/* Logo Section */}
         <li className="sticky flex  flex-row justify-between top-0 bg-base-100 py-3 z-40 border-b border-base-300 shadow-sm">
           <Link to="/dashboard" className="">
-            <a href="/">
-              <img
-                src="/icon.svg"
-                className="w-8 h-8 m-0 p-0 text-white"
-                alt="Codeket Restaurant Logo"
-              />
-            </a>
+            <img
+              src="/icon.svg"
+              className="w-8 h-8 m-0 p-0 text-white"
+              alt="Codeket Restaurant Logo"
+            />
             <span className="text-xl m-0 p-0 font-bold tracking-wide text-base-content">
               Restaurant
             </span>
