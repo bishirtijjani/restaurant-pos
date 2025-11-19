@@ -1,21 +1,53 @@
-// frontend/src/utils/offline/connectionMonitor.js
 export class ConnectionMonitor {
   constructor() {
     this.online = navigator.onLine;
     this.listeners = new Set();
-    this.setupListeners();
+    this.checkInterval = null;
   }
 
   setupListeners() {
+    // Listen to browser online/offline events
     window.addEventListener("online", () => {
-      this.online = true;
-      this.notifyListeners({ online: true, timestamp: Date.now() });
+      console.log("🟢 Browser detected: ONLINE");
+      this.handleOnline();
     });
 
     window.addEventListener("offline", () => {
-      this.online = false;
-      this.notifyListeners({ online: false, timestamp: Date.now() });
+      console.log("🔴 Browser detected: OFFLINE");
+      this.handleOffline();
     });
+
+    // Periodic connectivity check (every 10 seconds)
+    this.checkInterval = setInterval(() => {
+      this.checkConnectivity().then((isConnected) => {
+        if (isConnected && !this.online) {
+          console.log("🟢 Periodic check: ONLINE");
+          this.handleOnline();
+        } else if (!isConnected && this.online) {
+          console.log("🔴 Periodic check: OFFLINE");
+          this.handleOffline();
+        }
+      });
+    }, 10000);
+
+    // Initial check
+    this.checkConnectivity().then((isConnected) => {
+      this.online = isConnected;
+      console.log(
+        "🔍 Initial connectivity check:",
+        isConnected ? "ONLINE" : "OFFLINE"
+      );
+    });
+  }
+
+  handleOnline() {
+    this.online = true;
+    this.notifyListeners({ online: true, timestamp: Date.now() });
+  }
+
+  handleOffline() {
+    this.online = false;
+    this.notifyListeners({ online: false, timestamp: Date.now() });
   }
 
   isOnline() {
@@ -24,7 +56,6 @@ export class ConnectionMonitor {
 
   addListener(callback) {
     this.listeners.add(callback);
-    // Return unsubscribe function
     return () => this.listeners.delete(callback);
   }
 
@@ -33,17 +64,35 @@ export class ConnectionMonitor {
   }
 
   // Check actual connectivity with ping
-  async checkConnectivity(url = "/api/health") {
-    try {
-      const response = await fetch(url, {
-        method: "HEAD",
-        cache: "no-cache",
-        timeout: 5000,
-      });
-      return response.ok;
-    } catch {
+  async checkConnectivity() {
+    // First check browser's navigator.onLine
+    if (!navigator.onLine) {
       return false;
     }
+
+    // Then verify with actual network request
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch("/api/categories?limit=1", {
+        method: "HEAD",
+        cache: "no-cache",
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  destroy() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+    }
+    this.listeners.clear();
   }
 }
 

@@ -190,7 +190,7 @@ const MenuItems = () => {
 
   const filteredMenuItems = menuItems.filter((item) => {
     const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.itemCode?.toLowerCase().includes(searchQuery.toLowerCase());
 

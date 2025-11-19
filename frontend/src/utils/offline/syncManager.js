@@ -2,6 +2,7 @@
 import axios from "axios";
 import offlineStorage from "./storage";
 import { syncQueue } from "./syncQueue";
+import store from "../../app/store";
 
 export class SyncManager {
   constructor() {
@@ -10,7 +11,6 @@ export class SyncManager {
     this.listeners = new Set();
   }
 
-  // Start automatic sync
   startAutoSync(intervalMs = 30000) {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
@@ -22,13 +22,11 @@ export class SyncManager {
       }
     }, intervalMs);
 
-    // Initial sync
     if (navigator.onLine) {
       this.syncAll();
     }
   }
 
-  // Stop automatic sync
   stopAutoSync() {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
@@ -36,7 +34,6 @@ export class SyncManager {
     }
   }
 
-  // Sync all data
   async syncAll() {
     if (this.syncing) {
       console.log("Sync already in progress");
@@ -47,11 +44,11 @@ export class SyncManager {
     this.notifyListeners({ type: "sync:start" });
 
     try {
-      // 1. Pull latest data from server
-      await this.pullFromServer();
-
-      // 2. Push queued operations to server
+      // Push queued operations first
       await this.pushToServer();
+
+      // Then pull latest data
+      await this.pullFromServer();
 
       this.notifyListeners({ type: "sync:complete", success: true });
     } catch (error) {
@@ -66,11 +63,10 @@ export class SyncManager {
     }
   }
 
-  // Pull latest data from server
   async pullFromServer() {
     const stores = [
-      "menuItems",
       "categories",
+      "menuItems",
       "orders",
       "customers",
       "suppliers",
@@ -90,7 +86,6 @@ export class SyncManager {
     }
   }
 
-  // Pull specific store data
   async pullStore(storeName) {
     const endpoint = this.getEndpoint(storeName);
     if (!endpoint) return;
@@ -108,10 +103,12 @@ export class SyncManager {
         await offlineStorage.bulkSet(storeName, items);
         await offlineStorage.setLastSync(storeName);
 
-        // Mark all as synced
         for (const item of items) {
           await offlineStorage.markSynced(storeName, item._id || item.id);
         }
+
+        // Dispatch to Redux to update UI
+        this.dispatchToRedux(storeName, items);
       }
 
       this.notifyListeners({
@@ -125,14 +122,19 @@ export class SyncManager {
     }
   }
 
-  // Push queued operations to server
   async pushToServer() {
     const pending = await syncQueue.getPending();
 
     for (const operation of pending) {
       try {
-        await this.processOperation(operation);
+        const result = await this.processOperation(operation);
         await syncQueue.markCompleted(operation.id);
+
+        // If it was a create operation, replace temp ID with real ID
+        if (operation.type === "create" && operation.tempId && result.data) {
+          const realData = result.data.data || result.data;
+          await this.replaceTempId(operation, realData);
+        }
 
         this.notifyListeners({
           type: "push:success",
@@ -156,7 +158,6 @@ export class SyncManager {
     }
   }
 
-  // Process individual operation
   async processOperation(operation) {
     const { type, method, endpoint, data, storeName, itemId } = operation;
 
@@ -187,19 +188,89 @@ export class SyncManager {
         await offlineStorage.remove(storeName, itemId);
       } else {
         const id = serverData._id || serverData.id || itemId;
-        await offlineStorage.set(storeName, id, serverData);
-        await offlineStorage.markSynced(storeName, id);
+        await offlineStorage.set(storeName, id, {
+          ...serverData,
+          _synced: true,
+          _offline: false,
+        });
       }
     }
 
     return response;
   }
 
-  // Get API endpoint for store
+  async replaceTempId(operation, realData) {
+    const { storeName, tempId } = operation;
+
+    try {
+      // Remove temp item from storage
+      await offlineStorage.remove(storeName, tempId);
+
+      // Add real item
+      if (realData._id) {
+        await offlineStorage.set(storeName, realData._id, {
+          ...realData,
+          _synced: true,
+          _offline: false,
+        });
+      }
+
+      // Dispatch update to Redux
+      this.dispatchTempIdReplacement(storeName, tempId, realData);
+    } catch (error) {
+      console.error("Failed to replace temp ID:", error);
+    }
+  }
+
+  dispatchToRedux(storeName, items) {
+    const actionMap = {
+      categories: "categories/fetchAll/fulfilled",
+      menuItems: "menuItems/fetchAllMenuItems/fulfilled",
+      orders: "orders/fetchAllOrders/fulfilled",
+      customers: "customers/fetchAllCustomers/fulfilled",
+      suppliers: "suppliers/fetchAll/fulfilled",
+      expenses: "expenses/fetchAll/fulfilled",
+      inventory: "inventory/fetchAll/fulfilled",
+      purchaseOrders: "purchaseOrders/fetchAll/fulfilled",
+      users: "users/fetchAll/fulfilled",
+    };
+
+    const actionType = actionMap[storeName];
+    if (actionType) {
+      store.dispatch({
+        type: actionType,
+        payload: items,
+        meta: { synced: true },
+      });
+    }
+  }
+
+  dispatchTempIdReplacement(storeName, tempId, realData) {
+    const updateActionMap = {
+      categories: "categories/replaceTempId",
+      menuItems: "menuItems/replaceTempId",
+      orders: "orders/replaceTempId",
+      customers: "customers/replaceTempId",
+      suppliers: "suppliers/replaceTempId",
+      expenses: "expenses/replaceTempId",
+      inventory: "inventory/replaceTempId",
+      purchaseOrders: "purchaseOrders/replaceTempId",
+      users: "users/replaceTempId",
+    };
+
+    const actionType = updateActionMap[storeName];
+    if (actionType) {
+      store.dispatch({
+        type: actionType,
+        payload: { tempId, realData },
+      });
+    }
+  }
+
   getEndpoint(storeName) {
     const endpoints = {
-      menuItems: "/api/menu-items",
       categories: "/api/categories",
+      menuItems: "/api/menu-items",
       orders: "/api/orders",
       customers: "/api/customers",
       suppliers: "/api/suppliers",
@@ -213,13 +284,11 @@ export class SyncManager {
     return endpoints[storeName];
   }
 
-  // Add sync listener
   addListener(callback) {
     this.listeners.add(callback);
     return () => this.listeners.delete(callback);
   }
 
-  // Notify listeners
   notifyListeners(event) {
     this.listeners.forEach((callback) => callback(event));
   }

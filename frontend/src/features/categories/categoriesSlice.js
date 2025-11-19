@@ -1,14 +1,14 @@
+// frontend/src/features/categories/categoriesSlice.js
 import axios from "axios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { getToken } from "../../utils/Helpers";
 
 const initialState = {
   categories: [],
-  status: "idle", // idle | loading | succeeded | failed
+  status: "idle",
   error: null,
 };
 
-// Thunks
 export const fetchAllCategories = createAsyncThunk(
   "categories/fetchAll",
   async (_, { rejectWithValue }) => {
@@ -81,11 +81,23 @@ export const deleteCategory = createAsyncThunk(
   }
 );
 
-// Slice
 const categoriesSlice = createSlice({
   name: "categories",
   initialState,
-  reducers: {},
+  reducers: {
+    // Add reducer for replacing temp IDs
+    replaceTempId: (state, action) => {
+      const { tempId, realData } = action.payload;
+      const index = state.categories.findIndex((cat) => cat._id === tempId);
+      if (index >= 0) {
+        state.categories[index] = {
+          ...realData,
+          _synced: true,
+          _offline: false,
+        };
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchAllCategories.pending, (state) => {
@@ -94,21 +106,32 @@ const categoriesSlice = createSlice({
       })
       .addCase(fetchAllCategories.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.categories = action.payload;
+        // Filter out temp items and merge with server data
+        const serverData = action.payload;
+        const tempItems = state.categories.filter((cat) => cat._tempId);
+        state.categories = [...serverData, ...tempItems];
       })
       .addCase(fetchAllCategories.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
       .addCase(createCategory.fulfilled, (state, action) => {
-        state.categories.push(action.payload);
+        const newCategory = action.payload;
+        // Check if it already exists (offline optimistic update)
+        const exists = state.categories.find(
+          (cat) => cat._id === newCategory._id
+        );
+        if (!exists) {
+          state.categories.push(newCategory);
+        }
       })
       .addCase(updateCategory.fulfilled, (state, action) => {
+        const updatedCategory = action.payload;
         const index = state.categories.findIndex(
-          (category) => category._id === action.payload._id
+          (category) => category._id === updatedCategory._id
         );
         if (index >= 0) {
-          state.categories[index] = action.payload;
+          state.categories[index] = updatedCategory;
         }
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
@@ -119,4 +142,5 @@ const categoriesSlice = createSlice({
   },
 });
 
+export const { replaceTempId } = categoriesSlice.actions;
 export default categoriesSlice.reducer;
