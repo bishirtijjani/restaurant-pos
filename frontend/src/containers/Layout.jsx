@@ -1,3 +1,4 @@
+// frontend/src/containers/Layout.jsx
 import PageContent from "./PageContent";
 import LeftSidebar from "./LeftSidebar";
 import { useSelector, useDispatch } from "react-redux";
@@ -10,7 +11,7 @@ import ModalLayout from "./ModalLayout";
 import OnboardingTour from "../features/onboarding/OnboardingTour";
 import { useLocation } from "react-router-dom";
 import { getTourId } from "../utils/Helpers";
-import { getCurrentUser } from "../app/authSlice";
+import { getCurrentUser, setUserFromToken } from "../app/authSlice";
 
 function Layout() {
   const dispatch = useDispatch();
@@ -20,13 +21,6 @@ function Layout() {
   const { newNotificationMessage, newNotificationStatus } = useSelector(
     (state) => state.header
   );
-
-  useEffect(() => {
-    // Ensure user is loaded when layout mounts
-    if (!user) {
-      dispatch(getCurrentUser());
-    }
-  }, [dispatch, user]);
 
   useEffect(() => {
     if (newNotificationMessage !== "") {

@@ -67,7 +67,7 @@ const register = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+// backend/controllers/authController.js (update the login function)
 const login = async (req, res) => {
   console.log("login attempt");
   try {
@@ -79,9 +79,18 @@ const login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, role: user?.role }, "68149540", {
-      expiresIn: "3d",
-    });
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        email: user.email,
+        fullname: user.fullname,
+      },
+      "68149540",
+      {
+        expiresIn: "3d",
+      }
+    );
 
     const userResponse = {
       _id: user._id,

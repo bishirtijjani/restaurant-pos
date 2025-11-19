@@ -1,12 +1,27 @@
+// frontend/src/app/authSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { isTokenExpired } from "../utils/Helpers";
 
+// Helper function to get user from token
+const getUserFromToken = () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (token && !isTokenExpired(token)) {
+      const decoded = jwtDecode(token);
+      return decoded;
+    }
+  } catch (error) {
+    console.error("Failed to decode token:", error);
+  }
+  return null;
+};
+
 // Initial state for authentication
 const initialState = {
   token: localStorage.getItem("token") || null,
-  user: null,
+  user: getUserFromToken(), // Initialize user from token
   loading: false,
   error: null,
 };
@@ -21,7 +36,6 @@ export const loginUser = createAsyncThunk(
       const { token, user } = response.data;
       localStorage.setItem("token", token);
       if (token) {
-        // If login is successful, set global token for Axios requests
         axios.defaults.headers.common["authorization"] = `Bearer ${token}`;
       }
       return { user, token };
@@ -62,7 +76,7 @@ export const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
 // Async thunk for getting current user
 export const getCurrentUser = createAsyncThunk(
   "auth/getCurrentUser",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const token = localStorage.getItem("token");
       if (!token || isTokenExpired(token)) {
@@ -71,8 +85,27 @@ export const getCurrentUser = createAsyncThunk(
         return rejectWithValue("Token expired or missing");
       }
 
-      const response = await axios.get("/api/auth/me");
+      // First try to get from token (works offline)
+      const userFromToken = getUserFromToken();
+      if (userFromToken) {
+        // If offline, return the token data immediately
+        if (!navigator.onLine) {
+          return userFromToken;
+        }
 
+        // If online, try to fetch fresh data but fallback to token if it fails
+        try {
+          const response = await axios.get("/api/auth/me");
+          return response.data.user;
+        } catch (error) {
+          // If fetch fails but we have token data, use that
+          console.log("Using token data as fallback");
+          return userFromToken;
+        }
+      }
+
+      // If no token data, must fetch from server
+      const response = await axios.get("/api/auth/me");
       return response.data.user;
     } catch (error) {
       return rejectWithValue(
@@ -92,7 +125,7 @@ export const updateUserProfile = createAsyncThunk(
 
       const response = await axios.put("/api/auth/update", formData);
 
-      return response.data.user; // Return updated user data
+      return response.data.user;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to update profile"
@@ -105,7 +138,15 @@ export const updateUserProfile = createAsyncThunk(
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {},
+  reducers: {
+    // Add a reducer to manually set user from token
+    setUserFromToken: (state) => {
+      const user = getUserFromToken();
+      if (user) {
+        state.user = user;
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Handle registration
@@ -131,11 +172,11 @@ const authSlice = createSlice({
         state.loading = false;
         state.token = action.payload.token;
         state.user = action.payload.user;
-        state.error = null; // Clear any previous error
+        state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload; // Set error message in state
+        state.error = action.payload;
       })
       // Handle getCurrentUser
       .addCase(getCurrentUser.pending, (state) => {
@@ -149,6 +190,11 @@ const authSlice = createSlice({
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        // If getCurrentUser fails but we have a token, try to use token data
+        const userFromToken = getUserFromToken();
+        if (userFromToken) {
+          state.user = userFromToken;
+        }
       })
       // Handle logout
       .addCase(logoutUser.fulfilled, (state) => {
@@ -171,4 +217,5 @@ const authSlice = createSlice({
   },
 });
 
+export const { setUserFromToken } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,4 +1,6 @@
 import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { getCurrentUser } from "../app/authSlice";
 
 // Role definitions
 export const ROLES = {
@@ -158,6 +160,8 @@ export const CAN = {
 
 // Simple permission check
 export const can = (action, userRole) => {
+  console.log("userRole: ", userRole);
+  console.log("action: ", action);
   if (!userRole) return false;
   return CAN[action]?.includes(userRole) || false;
 };

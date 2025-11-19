@@ -13,7 +13,7 @@ import checkAuth from "./app/auth";
 import initializeApp from "./app/init";
 import { initializeOfflineSupport } from "./app/initOffline";
 import { fetchSettings } from "./features/settings/generalSettings/generalSettingsSlice";
-import { getCurrentUser } from "./app/authSlice";
+import { getCurrentUser, setUserFromToken } from "./app/authSlice";
 import OfflineIndicator from "./components/OfflineIndicator";
 
 const Layout = lazy(() => import("./containers/Layout"));
@@ -24,8 +24,6 @@ const Register = lazy(() => import("./pages/Register"));
 const Home = lazy(() => import("./pages/Home"));
 
 initializeApp();
-
-// Initialize offline support
 initializeOfflineSupport();
 
 const token = checkAuth();
@@ -45,10 +43,16 @@ function App() {
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    if (storedToken && !user) {
-      dispatch(getCurrentUser());
+    if (storedToken) {
+      // Always decode from token first (works offline)
+      dispatch(setUserFromToken());
+
+      // Then fetch from server if online and no user
+      if (!user && navigator.onLine) {
+        dispatch(getCurrentUser());
+      }
     }
-  }, [dispatch, user]);
+  }, []);
 
   return (
     <>
@@ -69,7 +73,6 @@ function App() {
         </Routes>
       </Router>
 
-      {/* Offline Indicator */}
       <OfflineIndicator />
     </>
   );
