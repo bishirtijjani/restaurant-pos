@@ -1,28 +1,18 @@
 // frontend/src/app/init.js
 import axios from "axios";
-import { connectionMonitor } from "../utils/offline/connectionMonitor";
+import offlineAxios from "../utils/offline/offlineAxios"; // Import your offline axios
 
 const initializeApp = () => {
   const token = localStorage.getItem("token");
 
+  // Configure both axios instances
   if (token) {
     axios.defaults.headers.common["authorization"] = `Bearer ${token}`;
+    offlineAxios.defaults.headers.common["authorization"] = `Bearer ${token}`;
   }
 
-  if (import.meta.env.MODE === "development") {
-    axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
-  } else {
-    axios.defaults.baseURL = "";
-    console.log = () => {};
-  }
-
-  // Initialize connection monitoring
-  connectionMonitor.setupListeners();
-
-  console.log(
-    "🟢 App initialized. Online status:",
-    connectionMonitor.isOnline()
-  );
+  axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+  offlineAxios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 };
 
 export default initializeApp;

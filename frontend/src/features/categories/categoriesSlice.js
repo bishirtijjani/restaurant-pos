@@ -1,5 +1,6 @@
 // frontend/src/features/categories/categoriesSlice.js
 import axios from "axios";
+import offlineAxios from "../../utils/offline/offlineAxios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { getToken } from "../../utils/Helpers";
 
@@ -13,7 +14,7 @@ export const fetchAllCategories = createAsyncThunk(
   "categories/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/api/categories", {
+      const response = await offlineAxios.get("/api/categories", {
         headers: {
           Authorization: `${getToken()}`,
         },
@@ -31,7 +32,7 @@ export const createCategory = createAsyncThunk(
   "categories/create",
   async (category, { rejectWithValue }) => {
     try {
-      const response = await axios.post("/api/categories", category, {
+      const response = await offlineAxios.post("/api/categories", category, {
         headers: {
           Authorization: `${getToken()}`,
         },
@@ -49,11 +50,15 @@ export const updateCategory = createAsyncThunk(
   "categories/update",
   async ({ id, category }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/api/categories/${id}`, category, {
-        headers: {
-          Authorization: `${getToken()}`,
-        },
-      });
+      const response = await offlineAxios.put(
+        `/api/categories/${id}`,
+        category,
+        {
+          headers: {
+            Authorization: `${getToken()}`,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -67,7 +72,7 @@ export const deleteCategory = createAsyncThunk(
   "categories/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`/api/categories/${id}`, {
+      await offlineAxios.delete(`/api/categories/${id}`, {
         headers: {
           Authorization: `${getToken()}`,
         },
