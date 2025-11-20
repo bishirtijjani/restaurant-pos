@@ -1,5 +1,5 @@
 // frontend/src/App.jsx
-import React, { lazy, useEffect } from "react";
+import React, { lazy, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import "./App.css";
 import {
@@ -33,6 +33,9 @@ function App() {
   const user = useSelector((state) => state.auth.user);
   const authToken = useSelector((state) => state.auth.token);
 
+  // Use ref to track if we've already fetched user
+  const hasFetchedUser = useRef(false);
+
   useEffect(() => {
     themeChange(false);
   }, []);
@@ -42,6 +45,9 @@ function App() {
   }, [dispatch]);
 
   useEffect(() => {
+    // Only run once
+    if (hasFetchedUser.current) return;
+
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       // Always decode from token first (works offline)
@@ -51,8 +57,10 @@ function App() {
       if (!user && navigator.onLine) {
         dispatch(getCurrentUser());
       }
+
+      hasFetchedUser.current = true;
     }
-  }, []);
+  }, [dispatch]); // Remove 'user' from dependencies
 
   return (
     <>

@@ -27,6 +27,12 @@ const generateTempId = () =>
 export const offlineMiddleware = (store) => (next) => async (action) => {
   const { type, payload } = action;
 
+  // CRITICAL FIX: Skip middleware processing for actions that are already marked as processed
+  // This prevents infinite loops
+  if (action.meta?.middlewareProcessed) {
+    return next(action);
+  }
+
   // Handle pending actions (CREATE/UPDATE/DELETE while offline)
   if (type.endsWith("/pending") && !connectionMonitor.isOnline()) {
     const baseType = type.replace("/pending", "");
@@ -67,10 +73,16 @@ export const offlineMiddleware = (store) => (next) => async (action) => {
       await offlineStorage.set(storeName, tempId, optimisticData);
 
       // Dispatch fulfilled action with optimistic data
+      // CRITICAL: Mark as processed to prevent middleware loop
       const fulfilledAction = {
         type: `${baseType}/fulfilled`,
         payload: optimisticData,
-        meta: { ...action.meta, offline: true, tempId },
+        meta: {
+          ...action.meta,
+          offline: true,
+          tempId,
+          middlewareProcessed: true, // ADDED THIS
+        },
       };
 
       return next(fulfilledAction);
@@ -111,10 +123,15 @@ export const offlineMiddleware = (store) => (next) => async (action) => {
       await offlineStorage.set(storeName, itemId, optimisticData);
 
       // Dispatch fulfilled action with optimistic data
+      // CRITICAL: Mark as processed to prevent middleware loop
       const fulfilledAction = {
         type: `${baseType}/fulfilled`,
         payload: optimisticData,
-        meta: { ...action.meta, offline: true },
+        meta: {
+          ...action.meta,
+          offline: true,
+          middlewareProcessed: true, // ADDED THIS
+        },
       };
 
       return next(fulfilledAction);
@@ -144,10 +161,15 @@ export const offlineMiddleware = (store) => (next) => async (action) => {
       await offlineStorage.remove(storeName, itemId);
 
       // Dispatch fulfilled action
+      // CRITICAL: Mark as processed to prevent middleware loop
       const fulfilledAction = {
         type: `${baseType}/fulfilled`,
         payload: itemId,
-        meta: { ...action.meta, offline: true },
+        meta: {
+          ...action.meta,
+          offline: true,
+          middlewareProcessed: true, // ADDED THIS
+        },
       };
 
       return next(fulfilledAction);
@@ -199,10 +221,16 @@ export const offlineMiddleware = (store) => (next) => async (action) => {
         const cachedData = await offlineStorage.getAll(storeName);
 
         // Create a new fulfilled action with cached data
+        // CRITICAL: Mark as processed to prevent middleware loop
         return next({
           type: `${baseType}/fulfilled`,
           payload: cachedData,
-          meta: { ...action.meta, offline: true, cached: true },
+          meta: {
+            ...action.meta,
+            offline: true,
+            cached: true,
+            middlewareProcessed: true, // ADDED THIS
+          },
         });
       } catch (error) {
         console.error("Failed to load offline data:", error);
