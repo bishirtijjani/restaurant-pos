@@ -175,6 +175,9 @@ export class SyncManager {
         break;
       case "DELETE":
         response = await axios.delete(endpoint);
+
+        // For DELETE, manually set response data
+        response.data = { success: true, id: itemId };
         break;
       default:
         throw new Error(`Unsupported method: ${method}`);

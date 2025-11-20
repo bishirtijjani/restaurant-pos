@@ -6,7 +6,7 @@ export default defineConfig({
   base: process.env.ELECTRON ? "./" : "/",
   plugins: [react()],
   server: {
-    port: 5182, //
+    port: 5173, //
     open: true,
   },
   build: {

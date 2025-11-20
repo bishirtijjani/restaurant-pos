@@ -1,15 +1,15 @@
+// frontend/src/features/menuItems/menuItemsSlice.js
 import axios from "axios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const initialState = {
   menuItems: [],
-  status: "idle", // idle | loading | succeeded | failed
+  status: "idle",
   error: null,
 };
 
-// Thunk to fetch all menu items
 export const fetchAllMenuItems = createAsyncThunk(
-  "menuItems/fetchAll",
+  "menuItems/fetchAllMenuItems",
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get("/api/menu-items");
@@ -22,7 +22,6 @@ export const fetchAllMenuItems = createAsyncThunk(
   }
 );
 
-// Thunk to add a menu item
 export const addMenuItem = createAsyncThunk(
   "menuItems/addMenuItem",
   async (menuItemData, { rejectWithValue }) => {
@@ -35,7 +34,6 @@ export const addMenuItem = createAsyncThunk(
   }
 );
 
-// Thunk to update a menu item
 export const updateMenuItem = createAsyncThunk(
   "menuItems/updateMenuItem",
   async ({ id, updatedData }, { rejectWithValue }) => {
@@ -50,13 +48,12 @@ export const updateMenuItem = createAsyncThunk(
   }
 );
 
-// Thunk to delete a menu item
 export const deleteMenuItem = createAsyncThunk(
   "menuItems/deleteMenuItem",
   async (id, { rejectWithValue }) => {
     try {
       await axios.delete(`/api/menu-items/${id}`);
-      return id; // Return the deleted menu item's ID for state update
+      return id;
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Failed to delete menu item"
@@ -65,7 +62,6 @@ export const deleteMenuItem = createAsyncThunk(
   }
 );
 
-// Thunk to toggle menu item availability
 export const toggleMenuItemAvailability = createAsyncThunk(
   "menuItems/toggleAvailability",
   async (id, { rejectWithValue }) => {
@@ -85,75 +81,76 @@ export const toggleMenuItemAvailability = createAsyncThunk(
 const menuItemsSlice = createSlice({
   name: "menuItems",
   initialState,
-  reducers: {},
+  reducers: {
+    // ADD THIS - was missing!
+    replaceTempId: (state, action) => {
+      const { tempId, realData } = action.payload;
+      const index = state.menuItems.findIndex((item) => item._id === tempId);
+      if (index >= 0) {
+        state.menuItems[index] = {
+          ...realData,
+          _synced: true,
+          _offline: false,
+        };
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
-      // Fetch all menu items
       .addCase(fetchAllMenuItems.pending, (state) => {
         state.status = "loading";
         state.error = null;
       })
       .addCase(fetchAllMenuItems.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.menuItems = action.payload;
+        const serverData = action.payload;
+        const tempItems = state.menuItems.filter((item) => item._tempId);
+        state.menuItems = [...serverData, ...tempItems];
       })
       .addCase(fetchAllMenuItems.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
-      // Add a menu item
-      .addCase(addMenuItem.pending, (state) => {
-        state.status = "loading";
-      })
       .addCase(addMenuItem.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.menuItems.push(action.payload);
-      })
-      .addCase(addMenuItem.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
-      // Update a menu item
-      .addCase(updateMenuItem.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(updateMenuItem.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        const index = state.menuItems.findIndex(
-          (menuItem) => menuItem._id === action.payload._id
+        const newMenuItem = action.payload;
+        const exists = state.menuItems.find(
+          (item) => item._id === newMenuItem._id
         );
-        if (index !== -1) {
-          state.menuItems[index] = action.payload; // Update the menu item in the array
+        if (!exists) {
+          state.menuItems.push(newMenuItem);
         }
       })
-      .addCase(updateMenuItem.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
-      // Delete a menu item
-      .addCase(deleteMenuItem.pending, (state) => {
-        state.status = "loading";
+      .addCase(updateMenuItem.fulfilled, (state, action) => {
+        const updatedMenuItem = action.payload;
+        const index = state.menuItems.findIndex(
+          (menuItem) => menuItem._id === updatedMenuItem._id
+        );
+        if (index !== -1) {
+          // MERGE instead of replace
+          state.menuItems[index] = {
+            ...state.menuItems[index],
+            ...updatedMenuItem,
+          };
+        }
       })
       .addCase(deleteMenuItem.fulfilled, (state, action) => {
-        state.status = "succeeded";
         state.menuItems = state.menuItems.filter(
           (menuItem) => menuItem._id !== action.payload
         );
       })
-      .addCase(deleteMenuItem.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
-      // Toggle menu item availability
       .addCase(toggleMenuItemAvailability.fulfilled, (state, action) => {
         const index = state.menuItems.findIndex(
           (menuItem) => menuItem._id === action.payload._id
         );
         if (index !== -1) {
-          state.menuItems[index] = action.payload;
+          state.menuItems[index] = {
+            ...state.menuItems[index],
+            ...action.payload,
+          };
         }
       });
   },
 });
 
+export const { replaceTempId } = menuItemsSlice.actions;
 export default menuItemsSlice.reducer;

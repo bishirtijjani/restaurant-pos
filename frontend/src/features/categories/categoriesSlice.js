@@ -1,7 +1,6 @@
 // frontend/src/features/categories/categoriesSlice.js
-import axios from "axios";
-import offlineAxios from "../../utils/offline/offlineAxios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import offlineAxios from "../../utils/offline/offlineAxios";
 import { getToken } from "../../utils/Helpers";
 
 const initialState = {
@@ -15,9 +14,7 @@ export const fetchAllCategories = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await offlineAxios.get("/api/categories", {
-        headers: {
-          Authorization: `${getToken()}`,
-        },
+        headers: { Authorization: `${getToken()}` },
       });
       return response.data;
     } catch (error) {
@@ -33,9 +30,7 @@ export const createCategory = createAsyncThunk(
   async (category, { rejectWithValue }) => {
     try {
       const response = await offlineAxios.post("/api/categories", category, {
-        headers: {
-          Authorization: `${getToken()}`,
-        },
+        headers: { Authorization: `${getToken()}` },
       });
       return response.data;
     } catch (error) {
@@ -54,9 +49,7 @@ export const updateCategory = createAsyncThunk(
         `/api/categories/${id}`,
         category,
         {
-          headers: {
-            Authorization: `${getToken()}`,
-          },
+          headers: { Authorization: `${getToken()}` },
         }
       );
       return response.data;
@@ -73,9 +66,7 @@ export const deleteCategory = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       await offlineAxios.delete(`/api/categories/${id}`, {
-        headers: {
-          Authorization: `${getToken()}`,
-        },
+        headers: { Authorization: `${getToken()}` },
       });
       return id;
     } catch (error) {
@@ -90,7 +81,6 @@ const categoriesSlice = createSlice({
   name: "categories",
   initialState,
   reducers: {
-    // Add reducer for replacing temp IDs
     replaceTempId: (state, action) => {
       const { tempId, realData } = action.payload;
       const index = state.categories.findIndex((cat) => cat._id === tempId);
@@ -111,7 +101,6 @@ const categoriesSlice = createSlice({
       })
       .addCase(fetchAllCategories.fulfilled, (state, action) => {
         state.status = "succeeded";
-        // Filter out temp items and merge with server data
         const serverData = action.payload;
         const tempItems = state.categories.filter((cat) => cat._tempId);
         state.categories = [...serverData, ...tempItems];
@@ -122,7 +111,6 @@ const categoriesSlice = createSlice({
       })
       .addCase(createCategory.fulfilled, (state, action) => {
         const newCategory = action.payload;
-        // Check if it already exists (offline optimistic update)
         const exists = state.categories.find(
           (cat) => cat._id === newCategory._id
         );
@@ -136,7 +124,11 @@ const categoriesSlice = createSlice({
           (category) => category._id === updatedCategory._id
         );
         if (index >= 0) {
-          state.categories[index] = updatedCategory;
+          // MERGE instead of replace
+          state.categories[index] = {
+            ...state.categories[index],
+            ...updatedCategory,
+          };
         }
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
