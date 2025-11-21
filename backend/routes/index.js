@@ -10,7 +10,7 @@ router.use("/customers", require("./customerRoutes"));
 router.use("/categories", require("./categoryRoutes"));
 router.use("/dashboard", require("./dashboardRoutes"));
 router.use("/menu-items", require("./menuItemRoutes"));
-router.use("/suppliers",require("./supplierRoutes"));
+router.use("/suppliers", require("./supplierRoutes"));
 router.use("/orders", require("./orderRoutes"));
 router.use("/analytics", require("./analyticsRoutes"));
 router.use("/expenses", require("./expenseRoutes"));
@@ -20,5 +20,6 @@ router.use("/onboarding", require("./onboardingRoutes"));
 router.use("/inventory", require("./inventoryRoutes"));
 router.use("/purchase-orders", require("./purchaseOrderRoutes"));
 router.use("/stock-adjustments", require("./stockAdjustmentRoutes"));
+router.use("/ultra-fast-pos", require("./ultraFastPOSRoutes"));
 
 module.exports = router;

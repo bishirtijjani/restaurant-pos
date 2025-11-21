@@ -6,10 +6,23 @@ export class SyncQueue {
   constructor() {
     this.processing = false;
     this.listeners = new Set();
+    this.enqueuedSignatures = new Set(); // Track enqueued operations
   }
 
-  // Add operation to queue
+  // Add operation to queue with duplicate prevention
   async enqueue(operation) {
+    // Check for duplicate using signature
+    if (
+      operation.signature &&
+      this.enqueuedSignatures.has(operation.signature)
+    ) {
+      console.log(
+        "⚠️ Duplicate operation detected, skipping enqueue:",
+        operation.signature
+      );
+      return null;
+    }
+
     const queueItem = {
       id: uuidv4(),
       ...operation,
@@ -19,7 +32,25 @@ export class SyncQueue {
     };
 
     await offlineStorage.set("syncQueue", queueItem.id, queueItem);
+
+    // Mark signature as enqueued
+    if (operation.signature) {
+      this.enqueuedSignatures.add(operation.signature);
+
+      // Clear signature after 10 seconds
+      setTimeout(() => {
+        this.enqueuedSignatures.delete(operation.signature);
+      }, 10000);
+    }
+
     this.notifyListeners();
+
+    console.log(
+      "✅ Operation enqueued:",
+      queueItem.id,
+      operation.type,
+      operation.storeName
+    );
 
     return queueItem.id;
   }
@@ -39,8 +70,17 @@ export class SyncQueue {
 
   // Mark operation as completed
   async markCompleted(id) {
+    const item = await offlineStorage.get("syncQueue", id);
+
+    // Clear signature tracking
+    if (item?.signature) {
+      this.enqueuedSignatures.delete(item.signature);
+    }
+
     await offlineStorage.remove("syncQueue", id);
     this.notifyListeners();
+
+    console.log("✅ Operation completed:", id);
   }
 
   // Move operation to failed queue
@@ -51,9 +91,16 @@ export class SyncQueue {
       item.error = error.message;
       item.failedAt = Date.now();
 
+      // Clear signature tracking
+      if (item.signature) {
+        this.enqueuedSignatures.delete(item.signature);
+      }
+
       await offlineStorage.set("failedQueue", id, item);
       await offlineStorage.remove("syncQueue", id);
       this.notifyListeners();
+
+      console.log("❌ Operation failed:", id, error.message);
     }
   }
 
@@ -69,6 +116,8 @@ export class SyncQueue {
       await offlineStorage.set("syncQueue", id, item);
       await offlineStorage.remove("failedQueue", id);
       this.notifyListeners();
+
+      console.log("🔄 Retrying operation:", id);
     }
   }
 
@@ -104,6 +153,11 @@ export class SyncQueue {
   // Notify all listeners
   notifyListeners() {
     this.listeners.forEach((callback) => callback());
+  }
+
+  // Clear tracking on app restart
+  clearTracking() {
+    this.enqueuedSignatures.clear();
   }
 }
 

@@ -1,0 +1,24 @@
+/* frontend/src/features/ultraFastPOS/ultraFastPOS.css */
+.ultra-fast-mode * {
+  transition: none !important;
+  animation: none !important;
+}
+
+.ultra-fast-mode {
+  --animation-duration: 0s;
+}
+
+.ultra-fast-mode .btn {
+  transition: none;
+}
+
+.ultra-fast-mode .btn:hover {
+  transform: none;
+}
+
+/* High contrast for speed reading */
+.ultra-fast-mode.high-contrast {
+  --primary: #00ff00;
+  --base-100: #000000;
+  --base-content: #ffffff;
+}

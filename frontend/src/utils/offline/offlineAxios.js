@@ -8,6 +8,14 @@ import { connectionMonitor } from "./connectionMonitor";
 const generateTempId = () =>
   `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+// Track processed requests to prevent duplicates
+const processedRequests = new Set();
+
+// Helper to create request signature
+function getRequestSignature(config) {
+  return `${config.method}-${config.url}-${JSON.stringify(config.data)}`;
+}
+
 // Helper function to extract store name from URL
 function getStoreNameFromUrl(url) {
   if (!url) return null;
@@ -34,7 +42,7 @@ function getStoreNameFromUrl(url) {
   return null;
 }
 
-// Request interceptor - intercept and handle offline operations
+// Request interceptor
 axios.interceptors.request.use(
   async (config) => {
     // If online, proceed normally
@@ -48,6 +56,16 @@ axios.interceptors.request.use(
       config.url
     );
 
+    // Check for duplicate request
+    const signature = getRequestSignature(config);
+    if (processedRequests.has(signature)) {
+      console.log("⚠️ Duplicate request detected, skipping:", signature);
+      const error = new Error("Duplicate request blocked");
+      error.isDuplicate = true;
+      config.adapter = () => Promise.reject(error);
+      return config;
+    }
+
     const storeName = getStoreNameFromUrl(config.url);
     const method = config.method.toLowerCase();
 
@@ -55,13 +73,11 @@ axios.interceptors.request.use(
     if (method === "get") {
       if (storeName) {
         try {
-          // Check if it's a single item request (has ID in URL)
           const urlParts = config.url.split("/");
           const lastPart = urlParts[urlParts.length - 1];
-          const isIdRequest = lastPart && lastPart.length === 24; // MongoDB ID length
+          const isIdRequest = lastPart && lastPart.length === 24;
 
           let cachedData;
-
           if (isIdRequest) {
             cachedData = await offlineStorage.get(storeName, lastPart);
           } else {
@@ -70,8 +86,6 @@ axios.interceptors.request.use(
 
           if (cachedData) {
             console.log("✅ Serving from cache:", storeName);
-
-            // Create a fake successful response
             const fakeResponse = {
               data: cachedData,
               status: 200,
@@ -82,8 +96,6 @@ axios.interceptors.request.use(
               cached: true,
               offline: true,
             };
-
-            // Return a resolved promise that axios will treat as a successful response
             config.adapter = () => Promise.resolve(fakeResponse);
             return config;
           }
@@ -95,6 +107,10 @@ axios.interceptors.request.use(
 
     // Handle POST requests (CREATE)
     if (method === "post" && storeName) {
+      // Mark as processed
+      processedRequests.add(signature);
+      setTimeout(() => processedRequests.delete(signature), 5000); // Clear after 5s
+
       const tempId = generateTempId();
       const optimisticData = {
         ...config.data,
@@ -106,7 +122,7 @@ axios.interceptors.request.use(
         updatedAt: new Date().toISOString(),
       };
 
-      // Queue the operation
+      // Queue the operation - ONLY ONCE
       const operation = {
         type: "create",
         method: "POST",
@@ -115,16 +131,14 @@ axios.interceptors.request.use(
         storeName: storeName,
         tempId: tempId,
         headers: config.headers,
+        signature: signature, // Add signature for tracking
       };
 
       await syncQueue.enqueue(operation);
-
-      // Cache optimistically
       await offlineStorage.set(storeName, tempId, optimisticData);
 
-      console.log("✅ CREATE queued:", storeName, tempId);
+      console.log("✅ CREATE queued ONCE:", storeName, tempId);
 
-      // Create a fake successful response
       const fakeResponse = {
         data: optimisticData,
         status: 201,
@@ -143,6 +157,10 @@ axios.interceptors.request.use(
 
     // Handle PUT/PATCH requests (UPDATE)
     if ((method === "put" || method === "patch") && storeName) {
+      // Mark as processed
+      processedRequests.add(signature);
+      setTimeout(() => processedRequests.delete(signature), 5000);
+
       const urlParts = config.url.split("/");
       const itemId = urlParts[urlParts.length - 1];
 
@@ -154,7 +172,6 @@ axios.interceptors.request.use(
         updatedAt: new Date().toISOString(),
       };
 
-      // Queue the operation
       const operation = {
         type: "update",
         method: method.toUpperCase(),
@@ -163,16 +180,14 @@ axios.interceptors.request.use(
         storeName: storeName,
         itemId: itemId,
         headers: config.headers,
+        signature: signature,
       };
 
       await syncQueue.enqueue(operation);
-
-      // Update cache
       await offlineStorage.set(storeName, itemId, optimisticData);
 
-      console.log("✅ UPDATE queued:", storeName, itemId);
+      console.log("✅ UPDATE queued ONCE:", storeName, itemId);
 
-      // Create a fake successful response
       const fakeResponse = {
         data: optimisticData,
         status: 200,
@@ -190,10 +205,13 @@ axios.interceptors.request.use(
 
     // Handle DELETE requests
     if (method === "delete" && storeName) {
+      // Mark as processed
+      processedRequests.add(signature);
+      setTimeout(() => processedRequests.delete(signature), 5000);
+
       const urlParts = config.url.split("/");
       const itemId = urlParts[urlParts.length - 1];
 
-      // Queue the operation
       const operation = {
         type: "delete",
         method: "DELETE",
@@ -201,16 +219,14 @@ axios.interceptors.request.use(
         storeName: storeName,
         itemId: itemId,
         headers: config.headers,
+        signature: signature,
       };
 
       await syncQueue.enqueue(operation);
-
-      // Remove from cache
       await offlineStorage.remove(storeName, itemId);
 
-      console.log("✅ DELETE queued:", storeName, itemId);
+      console.log("✅ DELETE queued ONCE:", storeName, itemId);
 
-      // Create a fake successful response
       const fakeResponse = {
         data: { success: true, message: "Deleted (Offline)" },
         status: 200,
@@ -226,11 +242,9 @@ axios.interceptors.request.use(
       return config;
     }
 
-    // For any other offline request, return an error
     const offlineError = new Error("No internet connection");
     offlineError.isOffline = true;
     offlineError.config = config;
-
     config.adapter = () => Promise.reject(offlineError);
     return config;
   },
@@ -239,10 +253,9 @@ axios.interceptors.request.use(
   }
 );
 
-// Response interceptor - cache successful responses
+// Response interceptor
 axios.interceptors.response.use(
   async (response) => {
-    // Don't cache offline/fake responses
     if (response.offline || response.cached) {
       return response;
     }
@@ -272,11 +285,15 @@ axios.interceptors.response.use(
     return response;
   },
   async (error) => {
-    // Handle offline errors
+    // Skip duplicate request errors
+    if (error.isDuplicate) {
+      console.log("Skipping duplicate request error");
+      return Promise.reject(error);
+    }
+
     if (error.isOffline) {
       console.log("🔴 Request blocked - offline mode");
 
-      // Try to serve from cache for GET requests
       if (error.config?.method === "get") {
         const storeName = getStoreNameFromUrl(error.config.url);
         if (storeName) {

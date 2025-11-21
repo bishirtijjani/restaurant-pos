@@ -14,6 +14,7 @@ import {
   PlusCircle,
   Monitor,
   Package,
+  Zap,
 } from "lucide-react";
 
 const iconClasses = `h-5 w-5`;
@@ -45,7 +46,6 @@ export const adminRoutes = [
     icon: <Tag className={iconClasses} />,
     name: "Menu Items",
   },
-
   {
     path: "/app/suppliers",
     icon: <Truck className={iconClasses} />,
@@ -87,6 +87,11 @@ export const adminRoutes = [
         path: "/app/orders",
         icon: <ShoppingCart className={submenuIconClasses} />,
         name: "View All Orders",
+      },
+      {
+        path: "/app/ultra-fast-pos",
+        icon: <Zap className={iconClasses} />,
+        name: "Ultra-Fast POS",
       },
       {
         path: "/app/orders/new",
@@ -200,6 +205,11 @@ export const managerRoutes = [
     ],
   },
   {
+    path: "/app/ultra-fast-pos",
+    icon: <Zap className={iconClasses} />,
+    name: "Ultra-Fast POS",
+  },
+  {
     path: "/app/customers",
     icon: <Users className={iconClasses} />,
     name: "Customers",
@@ -282,6 +292,11 @@ export const waiterRoutes = [
         name: "Add New Order",
       },
     ],
+  },
+  {
+    path: "/app/ultra-fast-pos",
+    icon: <Zap className={iconClasses} />,
+    name: "Ultra-Fast POS",
   },
   {
     path: "/app/customers",

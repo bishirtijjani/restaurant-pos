@@ -8,6 +8,7 @@ const Dashboard = lazy(() => import("../pages/protected/Dashboard"));
 const ProfileSettings = lazy(() =>
   import("../pages/protected/ProfileSettings")
 );
+
 const MenuItems = lazy(() => import("../pages/protected/MenuItems"));
 const Categories = lazy(() => import("../pages/protected/Categories"));
 const Suppliers = lazy(() => import("../pages/protected/Suppliers"));
@@ -33,6 +34,11 @@ const CreatePurchaseOrder = lazy(() =>
 );
 const PurchaseOrderDetails = lazy(() =>
   import("../pages/protected/PurchaseOrderDetails")
+);
+
+const UltraFastPOS = lazy(() => import("../pages/protected/UltraFastPOS"));
+const KeyboardSettings = lazy(() =>
+  import("../features/ultraFastPOS/components/KeyboardSettings")
 );
 
 const routes = [
@@ -87,6 +93,14 @@ const routes = [
   {
     path: "/purchase-orders/:id",
     component: PurchaseOrderDetails,
+  },
+  {
+    path: "/ultra-fast-pos",
+    component: UltraFastPOS,
+  },
+  {
+    path: "/settings/keyboard",
+    component: KeyboardSettings,
   },
   {
     path: "/stock-adjustments",
