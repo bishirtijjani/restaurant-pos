@@ -9,6 +9,8 @@ import SelectBox from "../../../components/Input/SelectBox";
 import ToggleInput from "../../../components/Input/ToggleInput";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import { fetchAddOnGroups } from "../../addOnGroups/addOnGroupsSlice";
+import { Check } from "lucide-react";
 
 const EditMenuItemModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
@@ -19,9 +21,9 @@ const EditMenuItemModalBody = ({ extraObject }) => {
   const currency = settings?.currency?.symbol || "$";
   const menuItem = extraObject;
 
-  // Fetch categories when component mounts
   useEffect(() => {
     dispatch(fetchAllCategories());
+    dispatch(fetchAddOnGroups({ isActive: true }));
   }, [dispatch]);
 
   const [formData, setFormData] = useState({
@@ -34,12 +36,16 @@ const EditMenuItemModalBody = ({ extraObject }) => {
     description: "",
     isAvailable: true,
     image: null,
+    addOnGroups: [],
   });
 
   // Add state for image preview
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const addOnGroups = useSelector((state) => state.addOnGroups.groups || []);
+  const [selectedAddOnGroups, setSelectedAddOnGroups] = useState([]);
 
   // Initialize form data with the menu item data
   useEffect(() => {
@@ -63,6 +69,14 @@ const EditMenuItemModalBody = ({ extraObject }) => {
       }
     }
   }, [menuItem]);
+
+  const toggleAddOnGroup = (groupId) => {
+    setSelectedAddOnGroups((prev) =>
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
 
   const updateFormValue = ({ updateType, value }) => {
     setFormData({

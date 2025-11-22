@@ -21,6 +21,7 @@ import inventoryReducer from "../features/inventory/inventorySlice";
 import purchaseOrdersReducer from "../features/purchaseOrders/purchaseOrdersSlice";
 import offlineMiddleware from "../utils/offline/offlineMiddleware";
 import ultraFastPOSReducer from "../features/ultraFastPOS/ultraFastPOSSlice";
+import addOnGroupsReducer from "../features/addOnGroups/addOnGroupsSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -44,6 +45,7 @@ const combinedReducer = {
   inventory: inventoryReducer,
   purchaseOrders: purchaseOrdersReducer,
   ultraFastPOS: ultraFastPOSReducer,
+  addOnGroups: addOnGroupsReducer,
 };
 
 export default configureStore({

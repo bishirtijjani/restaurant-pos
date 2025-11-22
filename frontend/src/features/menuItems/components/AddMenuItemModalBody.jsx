@@ -4,6 +4,10 @@ import { addMenuItem } from "../menuItemsSlice";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
+
+import { fetchAddOnGroups } from "../../addOnGroups/addOnGroupsSlice";
+import { Check } from "lucide-react";
+
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 
 const AddMenuItemModalBody = () => {
@@ -16,6 +20,7 @@ const AddMenuItemModalBody = () => {
 
   useEffect(() => {
     dispatch(fetchAllCategories());
+    dispatch(fetchAddOnGroups({ isActive: true }));
   }, [dispatch]);
 
   const [formData, setFormData] = useState({
@@ -32,17 +37,38 @@ const AddMenuItemModalBody = () => {
     },
     isAvailable: true,
     image: null,
+    addOnGroups: [],
   });
 
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const addOnGroups = useSelector((state) => state.addOnGroups.groups || []);
+  const [selectedAddOnGroups, setSelectedAddOnGroups] = useState([]);
+
+  const toggleAddOnGroup = (groupId) => {
+    setSelectedAddOnGroups((prev) =>
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
+
   const updateFormValue = ({ updateType, value }) => {
     setFormData({
       ...formData,
       [updateType]: value,
     });
+
+    const updatedFormData = {
+      ...formData,
+      [updateType]: value,
+    };
+
+    if (updateType === "addOnGroups") {
+      updatedFormData.addOnGroups = value;
+    }
 
     if (errors[updateType]) {
       setErrors({
@@ -139,6 +165,7 @@ const AddMenuItemModalBody = () => {
         preparationTime: formData.preparationTime
           ? parseInt(formData.preparationTime)
           : 15,
+        addOnGroups: selectedAddOnGroups,
       };
 
       const resultAction = await dispatch(addMenuItem(menuItemData));
@@ -457,6 +484,54 @@ const AddMenuItemModalBody = () => {
             />
           </div>
         )}
+
+        <div className="divider">Add-On Groups (Optional)</div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">
+              Select add-on groups for this item
+            </span>
+          </label>
+          {addOnGroups.length === 0 ? (
+            <div className="alert alert-info">
+              <span>
+                No add-on groups available. Create them in the Add-On Groups
+                section.
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {addOnGroups.map((group) => (
+                <label
+                  key={group._id}
+                  className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-base-200 transition ${
+                    selectedAddOnGroups.includes(group._id)
+                      ? "border-primary bg-primary/10"
+                      : "border-base-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedAddOnGroups.includes(group._id)}
+                    onChange={() => toggleAddOnGroup(group._id)}
+                    className="checkbox checkbox-primary checkbox-sm"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{group.name}</div>
+                    <div className="text-xs text-base-content/70">
+                      {group.items?.length || 0} items •{" "}
+                      {group.isRequired ? "Required" : "Optional"}
+                    </div>
+                  </div>
+                  {selectedAddOnGroups.includes(group._id) && (
+                    <Check className="w-4 h-4 text-primary" />
+                  )}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Submit button */}
         <div className="modal-action">

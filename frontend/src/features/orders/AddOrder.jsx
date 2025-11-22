@@ -149,9 +149,9 @@ const MenuItem = ({ item, addToCart, currency, disabled }) => {
 // Component for a cart item
 const CartItem = ({ item, updateQuantity, currency, disabled }) => {
   return (
-    <div className="flex items-center justify-between border-b border-base-300 pb-3 mb-3">
-      <div className="flex items-center">
-        <div className="w-12 h-12 rounded-md bg-base-200 flex items-center justify-center mr-3">
+    <div className="flex items-start justify-between border-b border-base-300 pb-3 mb-3">
+      <div className="flex items-start flex-1">
+        <div className="w-12 h-12 rounded-md bg-base-200 flex items-center justify-center mr-3 flex-shrink-0">
           {item.image ? (
             <img
               src={item.image}
@@ -168,15 +168,42 @@ const CartItem = ({ item, updateQuantity, currency, disabled }) => {
             </div>
           )}
         </div>
-        <div>
-          <h4 className="font-medium">{item.name}</h4>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium truncate">{item.name}</h4>
           <p className="text-primary font-semibold">
             {currency}
             {parseFloat(item.price).toFixed(2)}
           </p>
+
+          {/* Display add-ons */}
+          {item.addOns && item.addOns.length > 0 && (
+            <div className="mt-1 space-y-1">
+              {item.addOns.map((addOnGroup, idx) => (
+                <div key={idx} className="text-xs text-base-content/70">
+                  <span className="font-medium">{addOnGroup.groupName}:</span>{" "}
+                  {addOnGroup.selectedItems?.map((si) => si.name).join(", ")}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Display item note */}
+          {item.itemNote && (
+            <div className="mt-1 text-xs italic text-base-content/60">
+              Note: {item.itemNote}
+            </div>
+          )}
+
+          {/* Display add-ons total */}
+          {item.addOnsTotal > 0 && (
+            <div className="text-xs text-success mt-1">
+              +{currency}
+              {item.addOnsTotal.toFixed(2)} add-ons
+            </div>
+          )}
         </div>
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 ml-2">
         <button
           className="btn btn-sm btn-circle btn-ghost"
           onClick={(e) => {
@@ -451,18 +478,73 @@ export default function AddOrder() {
   const addToCart = (item) => {
     if (!canCreateOrders) return;
 
-    const existingItem = cart.find((cartItem) => cartItem._id === item._id);
+    // Check if item has add-on groups
+    if (item.addOnGroups && item.addOnGroups.length > 0) {
+      // Open add-on selector modal
+      dispatch(
+        openModal({
+          title: `Customize ${item.name}`,
+          bodyType: MODAL_BODY_TYPES.ADDON_SELECTOR,
+          extraObject: {
+            menuItem: item,
+            onConfirm: (addOnData) => {
+              addItemToCart(item, addOnData);
+            },
+          },
+          size: "lg",
+        })
+      );
+    } else {
+      // Add directly to cart without add-ons
+      addItemToCart(item, { addOns: [], itemNote: "", total: item.price });
+    }
+  };
 
-    if (existingItem) {
+  // Add new function to actually add item to cart
+  const addItemToCart = (item, addOnData) => {
+    const existingItemIndex = cart.findIndex((cartItem) => {
+      // Check if it's the same item with same add-ons and note
+      if (cartItem._id !== item._id) return false;
+      if (cartItem.itemNote !== addOnData.itemNote) return false;
+
+      // Compare add-ons
+      const cartAddOns = JSON.stringify(
+        (cartItem.addOns || []).map((a) => ({
+          groupId: a.groupId,
+          items: a.selectedItemIds?.sort(),
+        }))
+      );
+      const newAddOns = JSON.stringify(
+        (addOnData.addOns || []).map((a) => ({
+          groupId: a.groupId,
+          items: a.selectedItemIds?.sort(),
+        }))
+      );
+
+      return cartAddOns === newAddOns;
+    });
+
+    if (existingItemIndex >= 0) {
+      // Increase quantity of existing item
       setCart(
-        cart.map((cartItem) =>
-          cartItem._id === item._id
+        cart.map((cartItem, idx) =>
+          idx === existingItemIndex
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
             : cartItem
         )
       );
     } else {
-      setCart([...cart, { ...item, quantity: 1 }]);
+      // Add as new cart item
+      setCart([
+        ...cart,
+        {
+          ...item,
+          quantity: 1,
+          addOns: addOnData.addOns,
+          itemNote: addOnData.itemNote,
+          addOnsTotal: addOnData.total - item.price,
+        },
+      ]);
     }
   };
 
@@ -483,14 +565,17 @@ export default function AddOrder() {
 
   // Calculate total for payment button
   const calculateTotal = () => {
-    const subtotal = cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
+    const subtotal = cart.reduce((sum, item) => {
+      const itemTotal = item.price * item.quantity;
+      const addOnsTotal = (item.addOnsTotal || 0) * item.quantity;
+      return sum + itemTotal + addOnsTotal;
+    }, 0);
+
     const packaging =
       orderType === "dine-in" ? 0 : parseFloat(packagingFee) || 0;
     const delivery =
       orderType === "delivery" ? parseFloat(deliveryFee) || 0 : 0;
+
     return subtotal + packaging + delivery;
   };
 
@@ -513,8 +598,10 @@ export default function AddOrder() {
       name: item.name,
       price: item.price,
       quantity: item.quantity,
-      customizations: "",
-      subtotal: item.price * item.quantity,
+      itemNote: item.itemNote || "",
+      addOns: item.addOns || [],
+      subtotal:
+        item.price * item.quantity + (item.addOnsTotal || 0) * item.quantity,
       preparationTime: item.preparationTime || 15,
     }));
 
