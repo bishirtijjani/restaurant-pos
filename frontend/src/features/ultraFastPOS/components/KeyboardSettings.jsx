@@ -10,43 +10,13 @@ import {
 } from "../ultraFastPOSSlice";
 import { showNotification } from "../../common/headerSlice";
 
-const DEFAULT_SHORTCUTS = {
-  // Payment actions
-  finalizeSale: "f9",
-  cancelSale: "escape",
-  voidLastItem: "backspace",
-
-  // Category navigation
-  category1: "1",
-  category2: "2",
-  category3: "3",
-  category4: "4",
-  category5: "5",
-  category6: "6",
-  category7: "7",
-  category8: "8",
-  category9: "9",
-
-  // Quick actions
-  searchItem: "ctrl+f",
-  openCalculator: "ctrl+c",
-  reprintLast: "ctrl+p",
-  customerLookup: "ctrl+k",
-  applyDiscount: "ctrl+d",
-
-  // Payment methods
-  payCash: "f1",
-  payCard: "f2",
-  payTransfer: "f3",
-};
-
 const KeyboardSettings = () => {
   const dispatch = useDispatch();
   const { keyboardSettings, loading } = useSelector(
     (state) => state.ultraFastPOS
   );
 
-  const [shortcuts, setShortcuts] = useState(DEFAULT_SHORTCUTS);
+  const [shortcuts, setShortcuts] = useState({});
   const [editingKey, setEditingKey] = useState(null);
   const [recordedKey, setRecordedKey] = useState("");
   const [errors, setErrors] = useState({});
@@ -57,25 +27,31 @@ const KeyboardSettings = () => {
 
   useEffect(() => {
     if (keyboardSettings) {
-      setShortcuts({ ...DEFAULT_SHORTCUTS, ...keyboardSettings });
+      setShortcuts(keyboardSettings);
     }
   }, [keyboardSettings]);
 
-  const handleKeyRecord = (event) => {
+  // ADD THIS: Global key listener when editing
+  useEffect(() => {
     if (!editingKey) return;
 
-    event.preventDefault();
-    const key = event.key.toLowerCase();
+    const handleKeyRecord = (event) => {
+      event.preventDefault();
+      const key = event.key.toLowerCase();
 
-    // Build combination
-    let combination = "";
-    if (event.ctrlKey) combination += "ctrl+";
-    if (event.shiftKey) combination += "shift+";
-    if (event.altKey) combination += "alt+";
-    combination += key;
+      // Build combination
+      let combination = "";
+      if (event.ctrlKey) combination += "ctrl+";
+      if (event.shiftKey) combination += "shift+";
+      if (event.altKey) combination += "alt+";
+      combination += key;
 
-    setRecordedKey(combination);
-  };
+      setRecordedKey(combination);
+    };
+
+    window.addEventListener("keydown", handleKeyRecord);
+    return () => window.removeEventListener("keydown", handleKeyRecord);
+  }, [editingKey]);
 
   const saveKeyBinding = () => {
     if (!editingKey || !recordedKey) return;
@@ -132,7 +108,6 @@ const KeyboardSettings = () => {
     if (window.confirm("Reset all keyboard shortcuts to defaults?")) {
       try {
         await dispatch(resetKeyboardSettings()).unwrap();
-        setShortcuts(DEFAULT_SHORTCUTS);
         dispatch(
           showNotification({
             message: "Keyboard settings reset to defaults",
@@ -189,16 +164,18 @@ const KeyboardSettings = () => {
             Configure keyboard shortcuts for Ultra-Fast POS Mode
           </p>
           <p className="text-sm">
-            Click on a shortcut to record a new key combination
+            {editingKey
+              ? "Press any key combination now..."
+              : "Click on a shortcut to record a new key combination"}
           </p>
         </div>
       </div>
 
-      {Object.entries(shortcutGroups).map(([groupName, shortcuts]) => (
+      {Object.entries(shortcutGroups).map(([groupName, groupShortcuts]) => (
         <div key={groupName} className="mb-8">
           <h3 className="text-lg font-bold mb-4 text-primary">{groupName}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {shortcuts.map(({ key, label }) => (
+            {groupShortcuts.map(({ key, label }) => (
               <div
                 key={key}
                 className="card bg-base-200 border border-base-300 hover:border-primary transition-all"
@@ -232,11 +209,11 @@ const KeyboardSettings = () => {
                       onClick={() => {
                         setEditingKey(key);
                         setRecordedKey("");
+                        setErrors({});
                       }}
-                      onKeyDown={editingKey === key ? handleKeyRecord : null}
                       className="kbd kbd-lg w-full justify-center hover:bg-primary hover:text-primary-content transition-all"
                     >
-                      {shortcuts[key]}
+                      {shortcuts[key] || "Not set"}
                     </button>
                   )}
 

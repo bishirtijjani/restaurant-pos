@@ -1,12 +1,5 @@
 // frontend/src/pages/protected/UltraFastPOS.jsx
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  memo,
-  useRef,
-  useCallback,
-} from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useUltraFastKeyboard } from "../../hooks/useUltraFastKeyboard";
@@ -15,48 +8,6 @@ import { fetchAllCategories } from "../../features/categories/categoriesSlice";
 import { fetchSettings } from "../../features/settings/generalSettings/generalSettingsSlice";
 import { showNotification } from "../../features/common/headerSlice";
 import axios from "axios";
-
-// Memoize cart item component
-const CartItem = memo(({ item, currency, onRemove }) => (
-  <div className="flex justify-between items-center bg-base-200 p-3 rounded">
-    <div className="flex-1">
-      <div className="font-semibold">{item.name}</div>
-      <div className="text-sm">
-        {item.quantity} × {currency}
-        {item.price.toFixed(2)}
-      </div>
-    </div>
-    <div className="flex items-center gap-2">
-      <div className="font-bold">
-        {currency}
-        {(item.price * item.quantity).toFixed(2)}
-      </div>
-      <button
-        onClick={() => onRemove(item._id)}
-        className="btn btn-error btn-xs btn-circle"
-      >
-        <X className="w-3 h-3" />
-      </button>
-    </div>
-  </div>
-));
-
-// Memoize menu item button
-const MenuItem = memo(({ item, index, currency, onAdd }) => (
-  <button
-    onClick={() => onAdd(item)}
-    className="btn btn-lg h-24 flex-col btn-outline hover:btn-primary"
-  >
-    <div className="font-bold">
-      [{index + 1}] {item.name}
-    </div>
-    <div className="text-lg">
-      {currency}
-      {item.price.toFixed(2)}
-    </div>
-  </button>
-));
-
 import {
   ShoppingCart,
   Trash2,
@@ -67,7 +18,6 @@ import {
   CreditCard,
   Banknote,
 } from "lucide-react";
-import TitleCard from "../../components/Cards/TitleCard";
 
 const UltraFastPOS = () => {
   const dispatch = useDispatch();
@@ -88,13 +38,6 @@ const UltraFastPOS = () => {
   const [showCalculator, setShowCalculator] = useState(false);
   const [calculatorValue, setCalculatorValue] = useState("");
 
-  const cartRef = useRef(cart);
-
-  // Keep ref updated
-  useEffect(() => {
-    cartRef.current = cart;
-  }, [cart]);
-
   // Preload data
   useEffect(() => {
     dispatch(fetchAllMenuItems());
@@ -107,6 +50,11 @@ const UltraFastPOS = () => {
     if (activeCategory === "All") return menuItems;
     return menuItems.filter((item) => item.category === activeCategory);
   }, [menuItems, activeCategory]);
+
+  const cartRef = React.useRef([]);
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
 
   // Calculate total
   const total = useMemo(() => {
@@ -145,7 +93,6 @@ const UltraFastPOS = () => {
     }
   }, [cart.length]);
 
-  // Instant sale completion
   const finalizeSale = useCallback(
     async (paymentMethod = "cash") => {
       if (cartRef.current.length === 0) {
@@ -161,23 +108,42 @@ const UltraFastPOS = () => {
       setIsProcessing(true);
 
       try {
-        // Use existing order creation endpoint
+        // Format order data to match backend expectations
         const orderData = {
           order: {
+            table: "Takeaway",
+            customerDetails: {
+              name: "Walk-in",
+              phone: "",
+              email: "",
+              address: "",
+            },
             orderType: "takeaway",
             orderItems: cartRef.current.map((item) => ({
               menuItemId: item._id,
+              name: item.name,
+              price: item.price,
               quantity: item.quantity,
+              customizations: "",
+              subtotal: item.price * item.quantity,
+              preparationTime: item.preparationTime || 15,
             })),
+            subtotal: total,
+            packagingFee: 0,
+            deliveryFee: 0,
+            totalAmount: total,
             amountPaid: total,
             paymentMethod,
+            paymentStatus: "paid",
+            balance: 0,
+            note: "",
           },
         };
 
         const response = await axios.post("/api/orders", orderData);
         const order = response.data.data;
 
-        // Auto-print instantly (no dialog)
+        // Auto-print instantly
         await printReceipt(order);
 
         // Clear cart
@@ -190,9 +156,10 @@ const UltraFastPOS = () => {
           })
         );
       } catch (error) {
+        console.error("Order creation error:", error);
         dispatch(
           showNotification({
-            message: "Failed to complete sale",
+            message: error.response?.data?.message || "Failed to complete sale",
             status: 0,
           })
         );
@@ -206,7 +173,6 @@ const UltraFastPOS = () => {
   // Instant print (no delays)
   const printReceipt = async (order) => {
     try {
-      // Use existing print endpoint
       const printWindow = window.open("", "_blank");
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -214,44 +180,57 @@ const UltraFastPOS = () => {
           <head>
             <title>Receipt #${order.orderNumber}</title>
             <style>
-              body { font-family: monospace; width: 300px; margin: 0 auto; }
+              body { font-family: monospace; width: 300px; margin: 0 auto; padding: 20px; }
               table { width: 100%; border-collapse: collapse; }
               th, td { padding: 5px; text-align: left; }
               .total { font-weight: bold; font-size: 18px; }
+              hr { border: 1px dashed #000; }
             </style>
           </head>
           <body>
-            <h2>Receipt #${order.orderNumber}</h2>
+            <h2 style="text-align: center;">Receipt #${order.orderNumber}</h2>
             <p>Date: ${new Date().toLocaleString()}</p>
             <hr>
             <table>
-              ${order.orderItems
-                .map(
-                  (item) => `
+              <thead>
                 <tr>
-                  <td>${item.name}</td>
-                  <td>${item.quantity}</td>
-                  <td>${settings.currency.symbol}${item.subtotal.toFixed(
-                    2
-                  )}</td>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Price</th>
                 </tr>
-              `
-                )
-                .join("")}
+              </thead>
+              <tbody>
+                ${order.orderItems
+                  .map(
+                    (item) => `
+                  <tr>
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>${
+                      settings?.currency?.symbol || "₦"
+                    }${item.subtotal.toFixed(2)}</td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
             </table>
             <hr>
             <p class="total">Total: ${
-              settings.currency.symbol
+              settings?.currency?.symbol || "₦"
             }${order.totalAmount.toFixed(2)}</p>
-            <p>Paid: ${settings.currency.symbol}${order.amountPaid.toFixed(
-        2
-      )}</p>
+            <p>Paid: ${
+              settings?.currency?.symbol || "₦"
+            }${order.amountPaid.toFixed(2)}</p>
+            <p>Method: ${order.paymentMethod}</p>
             <hr>
             <p style="text-align: center;">Thank you!</p>
             <script>
               window.onload = () => {
-                window.print();
-                window.close();
+                setTimeout(() => {
+                  window.print();
+                  window.close();
+                }, 500);
               };
             </script>
           </body>
@@ -330,211 +309,233 @@ const UltraFastPOS = () => {
   useUltraFastKeyboard(shortcuts, true);
 
   return (
-    <TitleCard
-      title="Fast POS Mode"
-      //   TopSideButtons={<TopSideButtons />}
-      topMargin="mt-2"
-    >
-      <div className="fixed inset-0 bg-base-300 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="bg-base-100 border-b border-base-300 p-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <KeyboardIcon className="w-6 h-6 text-primary" />
-            Ultra-Fast POS Mode
-          </h1>
-          <div className="flex gap-2">
-            <button
-              onClick={() => navigate("/app/settings/keyboard")}
-              className="btn btn-ghost btn-sm"
-            >
-              <KeyboardIcon className="w-4 h-4" />
-              Keyboard Settings
-            </button>
-            <button
-              onClick={() => navigate("/app/orders/new")}
-              className="btn btn-outline btn-sm"
-            >
-              <X className="w-4 h-4" />
-              Exit Fast Mode
-            </button>
-          </div>
+    // THIS IS THE KEY FIX - position fixed with z-index to overlay everything
+    <div className="fixed inset-0 bg-base-300 flex flex-col overflow-hidden z-[9999]">
+      {/* Header */}
+      <div className="bg-base-100 border-b-2 border-base-300 shadow-lg p-4 flex justify-between items-center flex-shrink-0">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <KeyboardIcon className="w-6 h-6 text-primary" />
+          Ultra-Fast POS Mode
+        </h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate("/app/settings/keyboard")}
+            className="btn btn-ghost btn-sm gap-2"
+          >
+            <KeyboardIcon className="w-4 h-4" />
+            Keyboard Settings
+          </button>
+          <button
+            onClick={() => navigate("/app/orders/new")}
+            className="btn btn-error btn-sm gap-2"
+          >
+            <X className="w-4 h-4" />
+            Exit Fast Mode
+          </button>
         </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left: Items */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {/* Categories */}
-            <div className="flex flex-wrap gap-2 mb-4">
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Left: Items */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {/* Categories */}
+          <div className="flex flex-wrap gap-2 mb-4 sticky top-0 bg-base-300 z-10 pb-4">
+            <button
+              onClick={() => setActiveCategory("All")}
+              className={`btn btn-sm ${
+                activeCategory === "All" ? "btn-primary" : "btn-outline"
+              }`}
+            >
+              All Items
+            </button>
+            {categories.map((cat, index) => (
               <button
-                onClick={() => setActiveCategory("All")}
+                key={cat._id}
+                onClick={() => setActiveCategory(cat.name)}
                 className={`btn btn-sm ${
-                  activeCategory === "All" ? "btn-primary" : "btn-outline"
+                  activeCategory === cat.name ? "btn-primary" : "btn-outline"
                 }`}
               >
-                All
+                <span className="opacity-60">[{index + 1}]</span> {cat.name}
               </button>
-              {categories.map((cat, index) => (
-                <button
-                  key={cat._id}
-                  onClick={() => setActiveCategory(cat.name)}
-                  className={`btn btn-sm ${
-                    activeCategory === cat.name ? "btn-primary" : "btn-outline"
-                  }`}
-                >
-                  [{index + 1}] {cat.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Items Grid */}
-            <div className="grid grid-cols-3 gap-2">
-              {filteredItems.slice(0, 9).map((item, index) => (
-                <button
-                  key={item._id}
-                  onClick={() => addToCart(item)}
-                  className="btn btn-lg h-24 flex-col btn-outline hover:btn-primary"
-                >
-                  <div className="font-bold">
-                    [{index + 1}] {item.name}
-                  </div>
-                  <div className="text-lg">
-                    {settings.currency.symbol}
-                    {item.price.toFixed(2)}
-                  </div>
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
 
-          {/* Right: Cart */}
-          <div className="w-96 bg-base-100 border-l border-base-300 flex flex-col">
-            {/* Cart Header */}
-            <div className="p-4 border-b border-base-300 flex justify-between items-center">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5" />
-                Cart ({cart.length})
-              </h2>
+          {/* Items Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {filteredItems.slice(0, 9).map((item, index) => (
               <button
-                onClick={clearCart}
-                className="btn btn-error btn-sm btn-circle"
-                disabled={cart.length === 0}
+                key={item._id}
+                onClick={() => addToCart(item)}
+                className="btn btn-lg h-28 flex-col justify-center btn-outline hover:btn-primary hover:scale-105 transition-transform"
               >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {cart.length === 0 ? (
-                <div className="text-center text-base-content/50 mt-8">
-                  Cart is empty
+                <div className="text-xs opacity-60 mb-1">[{index + 1}]</div>
+                <div className="font-bold text-sm mb-1">{item.name}</div>
+                <div className="text-lg font-bold text-primary">
+                  {settings?.currency?.symbol || "₦"}
+                  {item.price.toFixed(2)}
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {cart.map((item) => (
-                    <div
-                      key={item._id}
-                      className="flex justify-between items-center bg-base-200 p-3 rounded"
-                    >
-                      <div className="flex-1">
-                        <div className="font-semibold">{item.name}</div>
-                        <div className="text-sm">
-                          {item.quantity} × {settings.currency.symbol}
-                          {item.price.toFixed(2)}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="font-bold">
-                          {settings.currency.symbol}
-                          {(item.price * item.quantity).toFixed(2)}
-                        </div>
-                        <button
-                          onClick={() => removeFromCart(item._id)}
-                          className="btn btn-error btn-xs btn-circle"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+              </button>
+            ))}
+          </div>
+
+          {filteredItems.length === 0 && (
+            <div className="text-center text-base-content/50 mt-12">
+              <p className="text-xl">No items in this category</p>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Cart */}
+        <div className="w-96 bg-base-100 border-l-2 border-base-300 shadow-xl flex flex-col flex-shrink-0">
+          {/* Cart Header */}
+          <div className="p-4 border-b-2 border-base-300 flex justify-between items-center flex-shrink-0">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5 text-primary" />
+              Cart ({cart.length})
+            </h2>
+            <button
+              onClick={clearCart}
+              className="btn btn-error btn-sm btn-circle"
+              disabled={cart.length === 0}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Cart Items */}
+          <div className="flex-1 overflow-y-auto p-4 min-h-0">
+            {cart.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-base-content/50">
+                <ShoppingCart className="w-16 h-16 mb-4 opacity-30" />
+                <p className="text-lg">Cart is empty</p>
+                <p className="text-sm mt-2">Use number keys to add items</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {cart.map((item, idx) => (
+                  <div
+                    key={`${item._id}-${idx}`}
+                    className="flex justify-between items-center bg-base-200 p-3 rounded-lg hover:bg-base-300 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="font-semibold">{item.name}</div>
+                      <div className="text-sm text-base-content/70">
+                        {item.quantity} × {settings?.currency?.symbol || "₦"}
+                        {item.price.toFixed(2)}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className="flex items-center gap-3">
+                      <div className="font-bold text-lg">
+                        {settings?.currency?.symbol || "₦"}
+                        {(item.price * item.quantity).toFixed(2)}
+                      </div>
+                      <button
+                        onClick={() => removeFromCart(item._id)}
+                        className="btn btn-error btn-xs btn-circle"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Total & Payment Section */}
+          <div className="p-4 border-t-2 border-base-300 bg-base-200 flex-shrink-0">
+            <div className="text-4xl font-bold text-center mb-4 text-primary">
+              {settings?.currency?.symbol || "₦"}
+              {total.toFixed(2)}
             </div>
 
-            {/* Total */}
-            <div className="p-4 border-t border-base-300 bg-base-200">
-              <div className="text-3xl font-bold text-center mb-4">
-                Total: {settings.currency.symbol}
-                {total.toFixed(2)}
-              </div>
-
-              {/* Payment Buttons */}
-              <div className="grid grid-cols-3 gap-2 mb-2">
-                <button
-                  onClick={() => finalizeSale("cash")}
-                  className="btn btn-success"
-                  disabled={cart.length === 0 || isProcessing}
-                >
-                  <Banknote className="w-4 h-4" />
-                  <div className="text-xs">[F1] Cash</div>
-                </button>
-                <button
-                  onClick={() => finalizeSale("card")}
-                  className="btn btn-info"
-                  disabled={cart.length === 0 || isProcessing}
-                >
-                  <CreditCard className="w-4 h-4" />
-                  <div className="text-xs">[F2] Card</div>
-                </button>
-                <button
-                  onClick={() => finalizeSale("Transfer")}
-                  className="btn btn-warning"
-                  disabled={cart.length === 0 || isProcessing}
-                >
-                  <DollarSign className="w-4 h-4" />
-                  <div className="text-xs">[F3] Transfer</div>
-                </button>
-              </div>
-
+            {/* Payment Buttons */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
               <button
                 onClick={() => finalizeSale("cash")}
-                className="btn btn-primary btn-lg w-full"
+                className="btn btn-success btn-sm flex-col h-16"
                 disabled={cart.length === 0 || isProcessing}
               >
-                {isProcessing ? "Processing..." : "[F9] Complete Sale"}
+                <Banknote className="w-5 h-5" />
+                <div className="text-xs font-bold">F1: Cash</div>
               </button>
+              <button
+                onClick={() => finalizeSale("card")}
+                className="btn btn-info btn-sm flex-col h-16"
+                disabled={cart.length === 0 || isProcessing}
+              >
+                <CreditCard className="w-5 h-5" />
+                <div className="text-xs font-bold">F2: Card</div>
+              </button>
+              <button
+                onClick={() => finalizeSale("Transfer")}
+                className="btn btn-warning btn-sm flex-col h-16"
+                disabled={cart.length === 0 || isProcessing}
+              >
+                <DollarSign className="w-5 h-5" />
+                <div className="text-xs font-bold">F3: Transfer</div>
+              </button>
+            </div>
 
-              <div className="text-xs text-center mt-2 text-base-content/50">
-                ESC: Clear | Backspace: Void Last
-              </div>
+            <button
+              onClick={() => finalizeSale("cash")}
+              className="btn btn-primary btn-lg w-full"
+              disabled={cart.length === 0 || isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <span className="loading loading-spinner"></span>
+                  Processing...
+                </>
+              ) : (
+                "F9: Complete Sale"
+              )}
+            </button>
+
+            <div className="text-xs text-center mt-3 text-base-content/60 space-y-1">
+              <div>ESC: Clear Cart | Backspace: Void Last</div>
+              <div>1-9: Add Items | Alt+1-9: Categories</div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Calculator Modal */}
-        {showCalculator && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-base-100 p-6 rounded-lg w-96">
-              <h3 className="text-xl font-bold mb-4">Quick Calculator</h3>
-              <input
-                type="text"
-                value={calculatorValue}
-                onChange={(e) => setCalculatorValue(e.target.value)}
-                className="input input-bordered w-full mb-4 text-2xl text-right"
-                autoFocus
-              />
+      {/* Calculator Modal */}
+      {showCalculator && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10000]">
+          <div className="bg-base-100 p-6 rounded-lg w-96 shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <Calculator className="w-5 h-5" />
+                Quick Calculator
+              </h3>
               <button
                 onClick={() => setShowCalculator(false)}
-                className="btn btn-block"
+                className="btn btn-ghost btn-sm btn-circle"
               >
-                Close
+                <X className="w-4 h-4" />
               </button>
             </div>
+            <input
+              type="text"
+              value={calculatorValue}
+              onChange={(e) => setCalculatorValue(e.target.value)}
+              className="input input-bordered w-full mb-4 text-3xl text-right font-mono"
+              placeholder="0"
+              autoFocus
+            />
+            <button
+              onClick={() => setShowCalculator(false)}
+              className="btn btn-primary btn-block"
+            >
+              Close (Ctrl+C)
+            </button>
           </div>
-        )}
-      </div>
-    </TitleCard>
+        </div>
+      )}
+    </div>
   );
 };
 
