@@ -1,5 +1,93 @@
-// backend/models/Order.js
+// backend/models/Order.js (UPDATED)
 const mongoose = require("mongoose");
+
+// Schema for selected add-ons within an order item
+const selectedAddOnSchema = new mongoose.Schema(
+  {
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AddOnGroup",
+      required: true,
+    },
+    groupName: {
+      type: String,
+      required: true,
+    },
+    selectedItems: [
+      {
+        itemId: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+        price: {
+          type: Number,
+          required: true,
+          default: 0,
+        },
+        // Store inventory info for stock management
+        inventoryItem: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "InventoryItem",
+          default: null,
+        },
+        quantityUsed: {
+          type: Number,
+          default: 1,
+        },
+      },
+    ],
+    addOnSubtotal: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { _id: false }
+);
+
+const orderItemSchema = new mongoose.Schema({
+  menuItemId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "MenuItem",
+    required: true,
+  },
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  quantity: { type: Number, required: true, default: 1 },
+  customizations: { type: String }, // Legacy field
+  // NEW: Item-level note
+  itemNote: {
+    type: String,
+    default: "",
+  },
+  // NEW: Selected add-ons for this item
+  addOns: [selectedAddOnSchema],
+  // NEW: Add-ons total for this item
+  addOnsTotal: {
+    type: Number,
+    default: 0,
+  },
+  subtotal: { type: Number, required: true },
+  itemStatus: {
+    type: String,
+    enum: ["pending", "preparing", "ready", "completed", "cancelled", "voided"],
+    default: "pending",
+  },
+  // NEW: Void information if item was voided
+  voidInfo: {
+    isVoided: { type: Boolean, default: false },
+    voidedAt: { type: Date, default: null },
+    voidedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    voidReason: { type: String, default: null },
+  },
+});
 
 const OrderSchema = new mongoose.Schema(
   {
@@ -24,31 +112,28 @@ const OrderSchema = new mongoose.Schema(
       enum: ["dine-in", "takeaway", "delivery"],
       default: "dine-in",
     },
-    orderItems: [
-      {
-        menuItemId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "MenuItem",
-          required: true,
-        },
-        name: { type: String, required: true },
-        price: { type: Number, required: true },
-        quantity: { type: Number, required: true, default: 1 },
-        customizations: { type: String },
-        subtotal: { type: Number, required: true },
-        itemStatus: {
-          type: String,
-          enum: ["pending", "preparing", "ready", "completed", "cancelled"],
-          default: "pending",
-        },
-      },
-    ],
+    orderItems: [orderItemSchema],
     servedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+    // NEW: Order-level note
+    orderNote: {
+      type: String,
+      default: "",
+    },
+    // Legacy note field (keeping for backward compatibility)
+    note: {
+      type: String,
+      default: "",
+    },
     totalAmount: { type: Number, required: true },
+    // NEW: Separate tracking for add-ons total
+    addOnsTotal: {
+      type: Number,
+      default: 0,
+    },
     taxBreakdown: {
       items: [
         {
@@ -63,6 +148,8 @@ const OrderSchema = new mongoose.Schema(
       subtotal: { type: Number, default: 0 },
     },
     discount: { type: Number, default: 0 },
+    packagingFee: { type: Number, default: 0 },
+    deliveryFee: { type: Number, default: 0 },
     amountPaid: { type: Number, required: true, default: 0 },
     balance: { type: Number, default: 0 },
     paymentMethod: {
@@ -99,6 +186,42 @@ const OrderSchema = new mongoose.Schema(
       type: Date,
       required: false,
     },
+    // NEW: Modification tracking
+    isModified: {
+      type: Boolean,
+      default: false,
+    },
+    modificationCount: {
+      type: Number,
+      default: 0,
+    },
+    lastModifiedAt: {
+      type: Date,
+      default: null,
+    },
+    lastModifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    // NEW: Version for optimistic locking
+    version: {
+      type: Number,
+      default: 1,
+    },
+    // NEW: Void tracking
+    hasVoidedItems: {
+      type: Boolean,
+      default: false,
+    },
+    voidedItemsCount: {
+      type: Number,
+      default: 0,
+    },
+    totalVoidedAmount: {
+      type: Number,
+      default: 0,
+    },
     lastAction: {
       action: {
         type: String,
@@ -110,6 +233,8 @@ const OrderSchema = new mongoose.Schema(
           "cancel",
           "bump",
           "recall",
+          "modify",
+          "void_item",
         ],
         default: null,
       },
@@ -144,7 +269,9 @@ OrderSchema.pre("save", async function (next) {
 OrderSchema.pre("save", async function (next) {
   if (this.isNew || this.isModified("orderItems")) {
     const maxPrepTime = Math.max(
-      ...this.orderItems.map((item) => item.preparationTime || 15),
+      ...this.orderItems
+        .filter((item) => !item.voidInfo?.isVoided)
+        .map((item) => item.preparationTime || 15),
       15
     );
     this.estimatedReadyTime = new Date(Date.now() + maxPrepTime * 60 * 1000);

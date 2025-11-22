@@ -1,3 +1,4 @@
+// backend/models/MenuItem.js (UPDATED)
 const mongoose = require("mongoose");
 
 const menuItemSchema = new mongoose.Schema(
@@ -41,6 +42,18 @@ const menuItemSchema = new mongoose.Schema(
     image: {
       type: String,
       default: null,
+    },
+    // NEW: Add-on groups associated with this menu item
+    addOnGroups: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "AddOnGroup",
+      },
+    ],
+    // NEW: Allow item-level notes
+    allowNotes: {
+      type: Boolean,
+      default: true,
     },
     lastAction: {
       action: {

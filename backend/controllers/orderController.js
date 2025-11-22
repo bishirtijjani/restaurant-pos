@@ -1,5 +1,8 @@
+// backend/controllers/orderController.js (UPDATED - key sections)
 const Order = require("../models/Order");
 const MenuItem = require("../models/MenuItem");
+const AddOnGroup = require("../models/AddOnGroup");
+const InventoryItem = require("../models/InventoryItem");
 const GeneralSettings = require("../models/GeneralSettings");
 const logAction = require("../utils/logAction");
 const { notifyKDS } = require("../utils/webSocket");
@@ -17,7 +20,19 @@ const generateOrderNumber = async () => {
   return orderNumber;
 };
 
-// Tax calculation utility
+// Helper to calculate add-ons total for an item
+const calculateItemAddOnsTotal = (addOns, quantity = 1) => {
+  if (!addOns || addOns.length === 0) return 0;
+  const perItemAddOns = addOns.reduce((total, group) => {
+    return (
+      total +
+      group.selectedItems.reduce((sum, item) => sum + (item.price || 0), 0)
+    );
+  }, 0);
+  return perItemAddOns * quantity;
+};
+
+// Tax calculation utility (updated to include add-ons)
 const calculateOrderTax = (orderItems, settings, orderType) => {
   const { taxSettings, serviceCharge } = settings;
 
@@ -26,7 +41,8 @@ const calculateOrderTax = (orderItems, settings, orderType) => {
   const itemTaxes = [];
 
   orderItems.forEach((item) => {
-    const itemSubtotal = item.price * item.quantity;
+    // Include add-ons in item subtotal
+    const itemSubtotal = item.price * item.quantity + (item.addOnsTotal || 0);
     subtotal += itemSubtotal;
 
     if (taxSettings?.enabled) {
@@ -71,7 +87,7 @@ const calculateOrderTax = (orderItems, settings, orderType) => {
   };
 };
 
-// Create a new order
+// Create a new order (UPDATED)
 const createOrder = async (req, res) => {
   try {
     const {
@@ -84,6 +100,7 @@ const createOrder = async (req, res) => {
       packagingFee,
       deliveryFee,
       note,
+      orderNote,
     } = req.body.order;
 
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
@@ -102,9 +119,14 @@ const createOrder = async (req, res) => {
     }
 
     const processedItems = [];
+    const inventoryDeductions = [];
 
     for (const item of orderItems) {
-      const menuItem = await MenuItem.findById(item.menuItemId);
+      const menuItem = await MenuItem.findById(item.menuItemId).populate({
+        path: "addOnGroups",
+        match: { isActive: true },
+      });
+
       if (!menuItem) {
         return res.status(404).json({
           success: false,
@@ -120,8 +142,102 @@ const createOrder = async (req, res) => {
       }
 
       const quantity = item.quantity || 1;
-      const subtotal = menuItem.price * quantity;
       const preparationTime = menuItem.preparationTime || 15;
+
+      // Process add-ons
+      let addOnsTotal = 0;
+      const processedAddOns = [];
+
+      if (item.addOns && item.addOns.length > 0) {
+        for (const addOn of item.addOns) {
+          const addOnGroup = await AddOnGroup.findById(addOn.groupId);
+
+          if (!addOnGroup || !addOnGroup.isActive) continue;
+
+          // Validate required groups
+          if (
+            addOnGroup.isRequired &&
+            (!addOn.selectedItemIds || addOn.selectedItemIds.length === 0)
+          ) {
+            return res.status(400).json({
+              success: false,
+              message: `${addOnGroup.name} is required for ${menuItem.name}`,
+            });
+          }
+
+          // Validate selection rules
+          if (addOn.selectedItemIds) {
+            if (
+              addOnGroup.selectionType === "single" &&
+              addOn.selectedItemIds.length > 1
+            ) {
+              return res.status(400).json({
+                success: false,
+                message: `${addOnGroup.name} allows only single selection`,
+              });
+            }
+
+            if (
+              addOnGroup.minSelections &&
+              addOn.selectedItemIds.length < addOnGroup.minSelections
+            ) {
+              return res.status(400).json({
+                success: false,
+                message: `${addOnGroup.name} requires at least ${addOnGroup.minSelections} selection(s)`,
+              });
+            }
+
+            if (
+              addOnGroup.maxSelections &&
+              addOn.selectedItemIds.length > addOnGroup.maxSelections
+            ) {
+              return res.status(400).json({
+                success: false,
+                message: `${addOnGroup.name} allows maximum ${addOnGroup.maxSelections} selections`,
+              });
+            }
+          }
+
+          const selectedItems = [];
+
+          for (const selectedItemId of addOn.selectedItemIds || []) {
+            const addOnItem = addOnGroup.items.id(selectedItemId);
+
+            if (addOnItem && addOnItem.isAvailable) {
+              selectedItems.push({
+                itemId: addOnItem._id,
+                name: addOnItem.name,
+                price: addOnItem.price,
+                inventoryItem: addOnItem.inventoryItem,
+                quantityUsed: addOnItem.quantityUsed || 1,
+              });
+
+              addOnsTotal += addOnItem.price;
+
+              // Track inventory deduction for add-on
+              if (addOnItem.inventoryItem) {
+                inventoryDeductions.push({
+                  inventoryItemId: addOnItem.inventoryItem,
+                  name: addOnItem.name,
+                  quantityToDeduct: (addOnItem.quantityUsed || 1) * quantity,
+                });
+              }
+            }
+          }
+
+          if (selectedItems.length > 0) {
+            processedAddOns.push({
+              groupId: addOnGroup._id,
+              groupName: addOnGroup.name,
+              selectedItems,
+              addOnSubtotal: selectedItems.reduce((sum, i) => sum + i.price, 0),
+            });
+          }
+        }
+      }
+
+      const itemAddOnsTotal = addOnsTotal * quantity;
+      const subtotal = menuItem.price * quantity + itemAddOnsTotal;
 
       processedItems.push({
         menuItemId: menuItem._id,
@@ -129,10 +245,32 @@ const createOrder = async (req, res) => {
         price: menuItem.price,
         quantity,
         customizations: item.customizations || "",
+        itemNote: item.itemNote || "",
+        addOns: processedAddOns,
+        addOnsTotal: itemAddOnsTotal,
         subtotal,
         preparationTime,
         customTax: menuItem.customTax || { enabled: false, rate: 0 },
       });
+    }
+
+    // Verify and deduct inventory for add-ons
+    for (const deduction of inventoryDeductions) {
+      const inventoryItem = await InventoryItem.findById(
+        deduction.inventoryItemId
+      );
+
+      if (inventoryItem) {
+        if (inventoryItem.currentStock < deduction.quantityToDeduct) {
+          return res.status(400).json({
+            success: false,
+            message: `Insufficient stock for add-on: ${deduction.name}`,
+          });
+        }
+
+        inventoryItem.currentStock -= deduction.quantityToDeduct;
+        await inventoryItem.save();
+      }
     }
 
     const taxCalculation = calculateOrderTax(
@@ -146,6 +284,11 @@ const createOrder = async (req, res) => {
 
     const deliveryAmount =
       orderType === "delivery" ? parseFloat(deliveryFee) || 0 : 0;
+
+    const totalAddOnsAmount = processedItems.reduce(
+      (sum, item) => sum + (item.addOnsTotal || 0),
+      0
+    );
 
     const finalTotal = taxCalculation.total + packagingAmount + deliveryAmount;
 
@@ -172,17 +315,23 @@ const createOrder = async (req, res) => {
         price: item.price,
         quantity: item.quantity,
         customizations: item.customizations,
+        itemNote: item.itemNote,
+        addOns: item.addOns,
+        addOnsTotal: item.addOnsTotal,
         subtotal: item.subtotal,
         itemStatus: "pending",
       })),
       servedBy: req.user.id,
       orderStatus: "pending",
+      orderNote: orderNote || note || "",
+      note: orderNote || note || "",
       taxBreakdown: {
         items: taxCalculation.itemTaxes,
         totalTax: taxCalculation.totalTax,
         serviceCharge: taxCalculation.serviceCharge,
         subtotal: taxCalculation.subtotal,
       },
+      addOnsTotal: totalAddOnsAmount,
       packagingFee: packagingAmount,
       deliveryFee: deliveryAmount,
       totalAmount: finalTotal,
@@ -190,7 +339,6 @@ const createOrder = async (req, res) => {
       balance,
       paymentMethod: paymentMethod || "cash",
       paymentStatus,
-      note: note || "",
       lastAction: {
         action: "create",
         performedBy: req.user.id,
