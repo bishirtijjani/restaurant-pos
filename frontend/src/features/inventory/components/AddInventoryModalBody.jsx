@@ -7,6 +7,7 @@ import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 
 const CATEGORIES = [
   "Raw Materials",
@@ -231,19 +232,21 @@ const AddInventoryModalBody = () => {
           <label className="label">
             <span className="label-text">Supplier (Optional)</span>
           </label>
-          <select
-            name="supplier"
+          <SearchableSelect
+            options={suppliers}
             value={formData.supplier}
-            onChange={handleChange}
-            className="select select-bordered"
-          >
-            <option value="">Select supplier</option>
-            {suppliers.map((supplier) => (
-              <option key={supplier._id} value={supplier._id}>
-                {supplier.name}
-              </option>
-            ))}
-          </select>
+            onChange={(e) =>
+              // SearchableSelect currently emits an object like:
+              // { target: { name: "productId", value: optionId } }
+              // map that into the same shape handleChange expects:
+              handleChange({
+                target: { name: "supplier", value: e?.target?.value },
+              })
+            }
+            placeholder="Select supplier"
+            className=""
+            isLoading={false}
+          />
         </div>
 
         {/* Notes */}

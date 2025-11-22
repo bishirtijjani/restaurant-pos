@@ -1,4 +1,4 @@
-import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
+import { XCircle } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import NotificationBodyRightDrawer from "../features/common/components/NotificationBodyRightDrawer";
 import { closeRightDrawer } from "../features/common/rightDrawerSlice";
@@ -38,7 +38,7 @@ function RightSidebar() {
               className="float-left btn btn-circle btn-outline btn-sm"
               onClick={() => close()}
             >
-              <XMarkIcon className="h-5 w-5" />
+              <XCircle className="h-5 w-5" />
             </button>
             <span className="ml-2 font-bold text-xl">{header}</span>
           </div>

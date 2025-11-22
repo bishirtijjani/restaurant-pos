@@ -1,8 +1,13 @@
+// frontend/src/features/orders/components/UpdatePaymentModalBody.jsx
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { closeModal } from "../../common/modalSlice";
+import { showNotification } from "../../common/headerSlice";
+import { updatePayment, fetchOrders } from "../ordersSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 
-function UpdatePaymentModalBody({ extraObject }) {
+function UpdatePaymentModalBody({ extraObject, closeModal: close }) {
   const dispatch = useDispatch();
   const order = extraObject;
   const settings = useSelector(
@@ -52,10 +57,7 @@ function UpdatePaymentModalBody({ extraObject }) {
       ).unwrap();
 
       dispatch(
-        showNotification({
-          message: "Payment updated successfully",
-          status: 1,
-        })
+        showNotification({ message: "Payment updated successfully", status: 1 })
       );
       dispatch(fetchOrders());
       dispatch(closeModal());
@@ -73,97 +75,97 @@ function UpdatePaymentModalBody({ extraObject }) {
   };
 
   return (
-    <div className="modal-content">
-      <div className="modal-body">
-        <div className="space-y-4">
-          <div className="alert alert-info">
-            <div>
-              <div className="text-sm">
-                <strong>Order Total:</strong> {currency}
-                {order.totalAmount.toLocaleString()}
-              </div>
-              <div className="text-sm">
-                <strong>Currently Paid:</strong> {currency}
-                {order.amountPaid.toLocaleString()}
-              </div>
-              <div className="text-sm">
-                <strong>Remaining Balance:</strong> {currency}
-                {remainingBalance.toLocaleString()}
-              </div>
-            </div>
+    <div className="space-y-4">
+      <div className="alert alert-info text-sm">
+        <div className="space-y-1">
+          <div>
+            <strong>Order Total:</strong> {currency}
+            {order.totalAmount?.toFixed(2)}
           </div>
-
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">
-                New Total Amount Paid ({currency})
-              </span>
-            </label>
-            <FormattedNumberInput
-              name="amountPaid"
-              value={paymentData.amountPaid}
-              onChange={handleInputChange}
-              className="input input-bordered"
-              placeholder="Enter new total amount paid"
-              step="0.01"
-              min="0"
-              max={order.totalAmount}
-            />
-            <label className="label">
-              <span className="label-text-alt">
-                This is the total amount paid so far, not an additional payment
-              </span>
-            </label>
+          <div>
+            <strong>Currently Paid:</strong> {currency}
+            {order.amountPaid?.toFixed(2)}
           </div>
-
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Payment Method</span>
-            </label>
-            <select
-              name="paymentMethod"
-              value={paymentData.paymentMethod}
-              onChange={handleInputChange}
-              className="select select-bordered"
-            >
-              <option value="cash">Cash</option>
-              <option value="card">Card</option>
-              <option value="Transfer">Bank Transfer</option>
-            </select>
+          <div>
+            <strong>Remaining:</strong> {currency}
+            {remainingBalance.toFixed(2)}
           </div>
-
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Reason (Optional)</span>
-            </label>
-            <textarea
-              name="reason"
-              value={paymentData.reason}
-              onChange={handleInputChange}
-              className="textarea textarea-bordered"
-              placeholder="Reason for payment update..."
-              rows="2"
-            />
-          </div>
-
-          {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
         </div>
       </div>
 
-      <div className="modal-action">
-        <button
-          onClick={handleSubmit}
-          className={`btn btn-primary ${loading ? "loading" : ""}`}
-          disabled={loading}
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">New Total Amount Paid ({currency})</span>
+        </label>
+        <FormattedNumberInput
+          name="amountPaid"
+          value={paymentData.amountPaid}
+          onChange={handleInputChange}
+          className="input input-bordered"
+          placeholder="Enter amount"
+          min="0"
+          max={order.totalAmount}
+        />
+        <label className="label">
+          <span className="label-text-alt">
+            This is the total paid, not additional payment
+          </span>
+        </label>
+      </div>
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Payment Method</span>
+        </label>
+        <select
+          name="paymentMethod"
+          value={paymentData.paymentMethod}
+          onChange={handleInputChange}
+          className="select select-bordered"
         >
-          Update Payment
-        </button>
+          <option value="cash">Cash</option>
+          <option value="card">Card</option>
+          <option value="Transfer">Bank Transfer</option>
+        </select>
+      </div>
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Reason (Optional)</span>
+        </label>
+        <textarea
+          name="reason"
+          value={paymentData.reason}
+          onChange={handleInputChange}
+          className="textarea textarea-bordered"
+          placeholder="Reason for payment update..."
+          rows="2"
+        />
+      </div>
+
+      {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
+
+      <div className="modal-action">
         <button
           onClick={() => dispatch(closeModal())}
           className="btn btn-outline"
           disabled={loading}
         >
           Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          className="btn btn-primary"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <span className="loading loading-spinner loading-sm"></span>{" "}
+              Updating...
+            </>
+          ) : (
+            "Update Payment"
+          )}
         </button>
       </div>
     </div>

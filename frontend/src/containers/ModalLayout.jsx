@@ -1,52 +1,71 @@
-import { MODAL_BODY_TYPES } from "../utils/globalConstantUtil";
+// frontend/src/containers/ModalLayout.jsx
 import { useSelector, useDispatch } from "react-redux";
 import { closeModal } from "../features/common/modalSlice";
+import { MODAL_BODY_TYPES } from "../utils/globalConstantUtil";
 import { X } from "lucide-react";
 
-import ConfirmationModalBody from "../features/common/components/ConfirmationModalBody";
-
-import SessionExpiredModalBody from "../features/common/components/SessionExpiredModalBody";
-
-import ViewUserModalBody from "../features/users/components/ViewUserModalBody";
-import EditUserModalBody from "../features/users/components/EditUserModalBody";
+// User modals
 import AddUserModalBody from "../features/users/components/AddUserModalBody";
+import EditUserModalBody from "../features/users/components/EditUserModalBody";
+import ViewUserModalBody from "../features/users/components/ViewUserModalBody";
 
-import AddMenuItemModalBody from "../features/menuItems/components/AddMenuItemModalBody";
-import EditMenuItemModalBody from "../features/menuItems/components/EditMenuItemModalBody";
+// Customer modals
+import AddCustomerModalBody from "../features/customers/components/AddCustomerModalBody";
+import EditCustomerModalBody from "../features/customers/components/EditCustomerModalBody";
+import ViewCustomerModalBody from "../features/customers/components/ViewCustomerModalBody";
 
+// Category modals
 import AddCategoryModalBody from "../features/categories/components/AddCategoryModalBody";
 import EditCategoryModalBody from "../features/categories/components/EditCategoryModalBody";
 
+// Menu item modals
+import AddMenuItemModalBody from "../features/menuItems/components/AddMenuItemModalBody";
+import EditMenuItemModalBody from "../features/menuItems/components/EditMenuItemModalBody";
+import ViewMenuItemModalBody from "../features/menuItems/components/ViewMenuItemModalBody";
+
+// Supplier modals
 import AddSupplierModalBody from "../features/suppliers/components/AddSupplierModalBody";
 import EditSupplierModalBody from "../features/suppliers/components/EditSupplierModalBody";
 
-import AddOrderModalBody from "../features/orders/components/AddOrderModalBody";
-import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
-import Receipt from "../features/common/components/Receipt";
-
-import AddExpenseModalBody from "../features/expenses/components/AddExpenseModalBody";
-import EditExpenseModalBody from "../features/expenses/components/EditExpenseModalBody";
-
-import AddCustomerModalBody from "../features/customers/components/AddCustomerModalBody";
-import EditCustomerModalBody from "../features/customers/components/EditCustomerModalBody";
-
-import ViewMenuItemModalBody from "../features/menuItems/components/ViewMenuItemModalBody";
-
-import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
-
+// Order modals
 import OrderDetailsModalBody from "../features/orders/components/OrderDetailsModalBody";
 import UpdatePaymentModalBody from "../features/orders/components/UpdatePaymentModalBody";
+import ModifyOrderModalBody from "../features/orders/components/ModifyOrderModalBody";
+import AddItemToOrderModalBody from "../features/orders/components/AddItemToOrderModalBody";
+import VoidOrderItemsModalBody from "../features/orders/components/VoidOrderItemsModalBody";
+import AddOnSelectorModalBody from "../features/orders/components/AddOnSelectorModalBody";
+// newly imported order/kds/confirmation/session components
+import AddOrderModalBody from "../features/orders/components/AddOrderModalBody";
+import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
+import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
+import SessionExpiredModalBody from "../features/common/components/SessionExpiredModalBody";
 
-import StationManagementModalBody from "../features/kdsStations/components/StationManagementModalBody";
+// Add-on group modals
+import AddAddOnGroupModalBody from "../features/addOnGroups/components/AddAddOnGroupModalBody";
+import EditAddOnGroupModalBody from "../features/addOnGroups/components/EditAddOnGroupModalBody";
 
-import AddStockAdjustmentModalBody from "../features/stockAdjustments/components/AddStockAdjustmentModalBody";
-import ViewStockAdjustmentModalBody from "../features/stockAdjustments/components/ViewStockAdjustmentModalBody";
-
-import ReceivePurchaseOrderModalBody from "../features/purchaseOrders/components/ReceivePurchaseOrderModalBody";
-
+// Inventory modals
 import AddInventoryModalBody from "../features/inventory/components/AddInventoryModalBody";
 import EditInventoryModalBody from "../features/inventory/components/EditInventoryModalBody";
 import LinkMenuItemsModalBody from "../features/inventory/components/LinkMenuItemsModalBody";
+
+// Expense modals
+import AddExpenseModalBody from "../features/expenses/components/AddExpenseModalBody";
+import EditExpenseModalBody from "../features/expenses/components/EditExpenseModalBody";
+
+// KDS modals
+import StationManagementModalBody from "../features/kdsStations/components/StationManagementModalBody";
+
+// Stock adjustment modals
+import AddStockAdjustmentModalBody from "../features/stockAdjustments/components/AddStockAdjustmentModalBody";
+import ViewStockAdjustmentModalBody from "../features/stockAdjustments/components/ViewStockAdjustmentModalBody";
+
+// Purchase order modals
+import ReceivePurchaseOrderModalBody from "../features/purchaseOrders/components/ReceivePurchaseOrderModalBody";
+
+// Common modals
+import ConfirmationModalBody from "../features/common/components/ConfirmationModalBody";
+import Receipt from "../features/common/components/Receipt";
 
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
@@ -109,6 +128,12 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.EDIT_CUSTOMER]: (
                   <EditCustomerModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.VIEW_CUSTOMER]: (
+                  <ViewCustomerModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />
@@ -178,6 +203,30 @@ function ModalLayout() {
                     extraObject={extraObject}
                   />
                 ),
+                [MODAL_BODY_TYPES.MODIFY_ORDER]: (
+                  <ModifyOrderModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_ITEM_TO_ORDER]: (
+                  <AddItemToOrderModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.VOID_ORDER_ITEMS]: (
+                  <VoidOrderItemsModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_ON_SELECTOR]: (
+                  <AddOnSelectorModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
 
                 [MODAL_BODY_TYPES.ADD_KDS_STATION]: (
                   <StationManagementModalBody
@@ -187,6 +236,12 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.EDIT_KDS_STATION]: (
                   <StationManagementModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.KDS_SETTINGS]: (
+                  <KDSSettingsModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />
@@ -205,8 +260,14 @@ function ModalLayout() {
                   />
                 ),
 
-                [MODAL_BODY_TYPES.KDS_SETTINGS]: (
-                  <KDSSettingsModalBody
+                [MODAL_BODY_TYPES.ADD_ADDON_GROUP]: (
+                  <AddAddOnGroupModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_ADDON_GROUP]: (
+                  <EditAddOnGroupModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />

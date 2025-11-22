@@ -55,3 +55,15 @@ Backend: Node.js/Express with MongoDB
 Features comprehensive API endpoints for all operations
 Includes authentication and authorization middleware
 Has detailed activity logging for all changes
+
+modified: frontend/src/app/store.js
+new file: frontend/src/features/addOnGroups/addOnGroupsSlice.js
+new file: frontend/src/features/addOnGroups/components/AddAddOnGroupModalBody.jsx
+new file: frontend/src/features/addOnGroups/components/EditAddOnGroupModalBody.jsx
+new file: frontend/src/features/addOnGroups/index.jsx
+modified: frontend/src/features/menuItems/components/AddMenuItemModalBody.jsx
+modified: frontend/src/features/menuItems/components/EditMenuItemModalBody.jsx
+modified: frontend/src/features/orders/AddOrder.jsx
+new file: frontend/src/features/orders/components/AddItemToOrderModalBody.jsx
+new file: frontend/src/features/orders/components/AddOnSelectorModalBody.jsx
+new file: frontend/src/features/orders/components/ModifyOrderModalBody.jsx

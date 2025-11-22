@@ -1,0 +1,284 @@
+// frontend/src/features/orders/components/VoidOrderItemsModalBody.jsx
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { closeModal } from "../../common/modalSlice";
+import { showNotification } from "../../common/headerSlice";
+import { fetchOrders } from "../ordersSlice";
+import axios from "axios";
+import ErrorText from "../../../components/Typography/ErrorText";
+import { AlertTriangle, Check, Package } from "lucide-react";
+
+const VoidOrderItemsModalBody = ({ extraObject, closeModal: close }) => {
+  const dispatch = useDispatch();
+  const order = extraObject;
+  const currentUser = useSelector((state) => state.auth.user);
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
+  const currency = settings?.currency?.symbol || "$";
+
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const activeItems = order.orderItems.filter(
+    (item) => !item.voidInfo?.isVoided
+  );
+
+  const toggleItem = (itemId) => {
+    setSelectedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId]
+    );
+    if (errors.items) setErrors((prev) => ({ ...prev, items: "" }));
+  };
+
+  const selectAll = () => {
+    if (selectedItems.length === activeItems.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(activeItems.map((item) => item._id));
+    }
+  };
+
+  const calculateVoidTotal = () => {
+    return activeItems
+      .filter((item) => selectedItems.includes(item._id))
+      .reduce((sum, item) => sum + item.subtotal, 0);
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (selectedItems.length === 0) {
+      newErrors.items = "Please select at least one item to void";
+    }
+    if (!reason.trim()) {
+      newErrors.reason = "Please provide a reason for voiding";
+    }
+    if (selectedItems.length === activeItems.length) {
+      newErrors.items = "Cannot void all items. Use cancel order instead.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    setLoading(true);
+    try {
+      await axios.post(`/api/void/order/${order._id}/items`, {
+        itemIds: selectedItems,
+        reason,
+      });
+
+      dispatch(
+        showNotification({
+          message: `Successfully voided ${selectedItems.length} item(s)`,
+          status: 1,
+        })
+      );
+      dispatch(fetchOrders());
+      dispatch(closeModal());
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to void items";
+      dispatch(showNotification({ message, status: 0 }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Warning */}
+      <div className="alert alert-warning">
+        <AlertTriangle className="w-5 h-5" />
+        <div>
+          <div className="font-semibold">Voiding Items</div>
+          <div className="text-sm">
+            Voided items will be removed from the order total and inventory will
+            be restored.
+          </div>
+        </div>
+      </div>
+
+      {/* User Info */}
+      <div className="bg-base-200 p-3 rounded-lg flex items-center gap-3">
+        <div className="avatar placeholder">
+          <div className="bg-primary text-primary-content rounded-full w-10">
+            <span>{currentUser?.fullname?.[0] || "U"}</span>
+          </div>
+        </div>
+        <div>
+          <div className="font-medium">
+            {currentUser?.fullname || "Unknown User"}
+          </div>
+          <div className="text-xs text-base-content/70">
+            Performing void action
+          </div>
+        </div>
+      </div>
+
+      {/* Item Selection */}
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold">Select Items to Void</h3>
+          <button onClick={selectAll} className="btn btn-xs btn-ghost">
+            {selectedItems.length === activeItems.length
+              ? "Deselect All"
+              : "Select All"}
+          </button>
+        </div>
+
+        {errors.items && <ErrorText>{errors.items}</ErrorText>}
+
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {activeItems.map((item) => {
+            const isSelected = selectedItems.includes(item._id);
+            return (
+              <button
+                key={item._id}
+                type="button"
+                onClick={() => toggleItem(item._id)}
+                className={`w-full flex items-center justify-between p-3 rounded-lg border transition ${
+                  isSelected
+                    ? "border-error bg-error/10"
+                    : "border-base-300 hover:bg-base-200"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                      isSelected ? "border-error bg-error" : "border-base-300"
+                    }`}
+                  >
+                    {isSelected && (
+                      <Check className="w-3 h-3 text-error-content" />
+                    )}
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">{item.name}</div>
+                    <div className="text-xs text-base-content/70">
+                      {item.quantity} × {currency}
+                      {item.price.toFixed(2)}
+                    </div>
+                    {item.addOns?.length > 0 && (
+                      <div className="text-xs text-base-content/60">
+                        + {item.addOns.length} add-on(s)
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <span className="font-semibold">
+                  {currency}
+                  {item.subtotal.toFixed(2)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Reason */}
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Reason for Voiding *</span>
+        </label>
+        <select
+          value={reason}
+          onChange={(e) => {
+            setReason(e.target.value);
+            if (errors.reason) setErrors((prev) => ({ ...prev, reason: "" }));
+          }}
+          className={`select select-bordered ${
+            errors.reason ? "select-error" : ""
+          }`}
+        >
+          <option value="">Select a reason...</option>
+          <option value="Customer changed mind">Customer changed mind</option>
+          <option value="Wrong item ordered">Wrong item ordered</option>
+          <option value="Item unavailable">Item unavailable</option>
+          <option value="Quality issue">Quality issue</option>
+          <option value="Duplicate entry">Duplicate entry</option>
+          <option value="Other">Other</option>
+        </select>
+        {errors.reason && <ErrorText>{errors.reason}</ErrorText>}
+      </div>
+
+      {reason === "Other" && (
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Specify Reason *</span>
+          </label>
+          <textarea
+            value={reason === "Other" ? "" : reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="textarea textarea-bordered"
+            rows="2"
+            placeholder="Enter specific reason..."
+          />
+        </div>
+      )}
+
+      {/* Summary */}
+      {selectedItems.length > 0 && (
+        <div className="bg-error/10 p-4 rounded-lg border border-error/30">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-sm text-base-content/70">Items to void</div>
+              <div className="font-semibold">
+                {selectedItems.length} item(s)
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-base-content/70">
+                Amount to deduct
+              </div>
+              <div className="font-bold text-lg text-error">
+                -{currency}
+                {calculateVoidTotal().toFixed(2)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inventory Restoration Notice */}
+      <div className="flex items-center gap-2 text-sm text-base-content/70">
+        <Package className="w-4 h-4" />
+        <span>
+          Inventory quantities will be automatically restored for voided items
+          with inventory links.
+        </span>
+      </div>
+
+      <div className="modal-action">
+        <button
+          onClick={() => dispatch(closeModal())}
+          className="btn btn-outline"
+          disabled={loading}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          className="btn btn-error"
+          disabled={loading || selectedItems.length === 0}
+        >
+          {loading ? (
+            <>
+              <span className="loading loading-spinner loading-sm"></span>
+              Voiding...
+            </>
+          ) : (
+            `Void ${selectedItems.length} Item(s)`
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default VoidOrderItemsModalBody;

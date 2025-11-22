@@ -1,10 +1,10 @@
+// frontend/src/routes/sidebar.jsx
 import {
   LayoutDashboard,
   Shapes,
   Users,
   Settings,
   KeyRound,
-  BarChart,
   ShoppingCart,
   Truck,
   ClipboardList,
@@ -15,6 +15,7 @@ import {
   Monitor,
   Package,
   Zap,
+  Plus,
 } from "lucide-react";
 
 const iconClasses = `h-5 w-5`;
@@ -42,9 +43,21 @@ export const adminRoutes = [
     name: "Product Categories",
   },
   {
-    path: "/app/menu-items",
-    icon: <Tag className={iconClasses} />,
-    name: "Menu Items",
+    path: "",
+    icon: <Tag className={`${iconClasses} inline`} />,
+    name: "Menu",
+    submenu: [
+      {
+        path: "/app/menu-items",
+        icon: <Tag className={submenuIconClasses} />,
+        name: "Menu Items",
+      },
+      {
+        path: "/app/add-on-groups",
+        icon: <Plus className={submenuIconClasses} />,
+        name: "Add-On Groups",
+      },
+    ],
   },
   {
     path: "/app/suppliers",
@@ -90,7 +103,7 @@ export const adminRoutes = [
       },
       {
         path: "/app/ultra-fast-pos",
-        icon: <Zap className={iconClasses} />,
+        icon: <Zap className={submenuIconClasses} />,
         name: "Ultra-Fast POS",
       },
       {
@@ -141,19 +154,26 @@ export const managerRoutes = [
     name: "Kitchen Display",
   },
   {
-    path: "/app/stations",
-    icon: <Monitor className={submenuIconClasses} />,
-    name: "Station Management",
+    path: "",
+    icon: <Tag className={`${iconClasses} inline`} />,
+    name: "Menu",
+    submenu: [
+      {
+        path: "/app/menu-items",
+        icon: <Tag className={submenuIconClasses} />,
+        name: "Menu Items",
+      },
+      {
+        path: "/app/add-on-groups",
+        icon: <Plus className={submenuIconClasses} />,
+        name: "Add-On Groups",
+      },
+    ],
   },
   {
     path: "/app/categories",
     icon: <Shapes className={iconClasses} />,
     name: "Product Categories",
-  },
-  {
-    path: "/app/menu-items",
-    icon: <Tag className={iconClasses} />,
-    name: "Menu Items",
   },
   {
     path: "/app/suppliers",
@@ -198,16 +218,16 @@ export const managerRoutes = [
         name: "View All Orders",
       },
       {
+        path: "/app/ultra-fast-pos",
+        icon: <Zap className={submenuIconClasses} />,
+        name: "Ultra-Fast POS",
+      },
+      {
         path: "/app/orders/new",
         icon: <PlusCircle className={submenuIconClasses} />,
         name: "Add New Order",
       },
     ],
-  },
-  {
-    path: "/app/ultra-fast-pos",
-    icon: <Zap className={iconClasses} />,
-    name: "Ultra-Fast POS",
   },
   {
     path: "/app/customers",
@@ -248,6 +268,11 @@ export const cashierRoutes = [
         path: "/app/orders/new",
         icon: <PlusCircle className={submenuIconClasses} />,
         name: "Add New Order",
+      },
+      {
+        path: "/app/ultra-fast-pos",
+        icon: <Zap className={submenuIconClasses} />,
+        name: "Ultra-Fast POS",
       },
     ],
   },
@@ -291,12 +316,12 @@ export const waiterRoutes = [
         icon: <PlusCircle className={submenuIconClasses} />,
         name: "Add New Order",
       },
+      {
+        path: "/app/ultra-fast-pos",
+        icon: <Zap className={submenuIconClasses} />,
+        name: "Ultra-Fast POS",
+      },
     ],
-  },
-  {
-    path: "/app/ultra-fast-pos",
-    icon: <Zap className={iconClasses} />,
-    name: "Ultra-Fast POS",
   },
   {
     path: "/app/customers",

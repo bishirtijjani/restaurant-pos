@@ -441,10 +441,13 @@ const InventoryManagement = () => {
   }, [success, message, error, dispatch]);
 
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
+    const list = Array.isArray(items) ? items : [];
+    const q = (searchQuery || "").toLowerCase();
+
+    return list.filter((item) => {
       const matchesSearch =
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.sku?.toLowerCase().includes(searchQuery.toLowerCase());
+        item.name?.toLowerCase().includes(q) ||
+        item.sku?.toLowerCase().includes(q);
 
       const matchesCategory = categoryFilter
         ? item.category === categoryFilter

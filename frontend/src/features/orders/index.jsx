@@ -1,10 +1,8 @@
+// frontend/src/features/orders/index.jsx
 import React, { useEffect, useState } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
 import { openModal } from "../common/modalSlice";
-import {
-  MODAL_BODY_TYPES,
-  CONFIRMATION_MODAL_CLOSE_TYPES,
-} from "../../utils/globalConstantUtil";
+import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchOrders,
@@ -17,11 +15,9 @@ import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice"
 import SuspenseContent from "../../containers/SuspenseContent";
 import SearchBar from "../../components/Input/SearchBar";
 import { showNotification } from "../common/headerSlice";
-import Badge from "./components/Badge";
 import Datepicker from "react-tailwindcss-datepicker";
 import {
   ArrowPathIcon,
-  FunnelIcon,
   EyeIcon,
   XCircleIcon,
   DocumentTextIcon,
@@ -30,7 +26,7 @@ import {
   UserCircleIcon,
   AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Edit3, Trash2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
@@ -45,17 +41,12 @@ const statusColors = {
 };
 
 const paymentColors = {
-  pending: "text-error",
-  partial: "text-warning",
-  paid: "text-success",
+  pending: "badge-error",
+  partial: "badge-warning",
+  paid: "badge-success",
 };
 
-const OrderFilters = ({
-  currentFilters,
-  applyFilters,
-  clearFilters,
-  currency,
-}) => {
+const OrderFilters = ({ currentFilters, applyFilters, clearFiltersAction }) => {
   const statusOptions = [
     "pending",
     "preparing",
@@ -73,10 +64,7 @@ const OrderFilters = ({
 
   const handleDateChange = (newValue) => {
     setDateRange(newValue);
-    applyFilters({
-      startDate: newValue.startDate,
-      endDate: newValue.endDate,
-    });
+    applyFilters({ startDate: newValue.startDate, endDate: newValue.endDate });
   };
 
   return (
@@ -86,85 +74,57 @@ const OrderFilters = ({
           <AdjustmentsHorizontalIcon className="w-5 h-5 mr-2" />
           Filters
         </h3>
-        <button onClick={clearFilters} className="btn btn-xs btn-ghost">
+        <button onClick={clearFiltersAction} className="btn btn-xs btn-ghost">
           Clear All
         </button>
       </div>
 
       <div className="flex flex-wrap gap-4">
         <div className="form-control">
-          <label className="label">
-            <span className="label-text">Status</span>
+          <label className="label py-1">
+            <span className="label-text text-xs">Status</span>
           </label>
-          <div className="dropdown dropdown-hover">
-            <label tabIndex={0} className="btn btn-sm btn-outline min-w-36">
-              <FunnelIcon className="w-4 h-4 mr-2" />
-              {currentFilters.status || "All"}
-            </label>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-52"
-            >
-              {statusOptions.map((status) => (
-                <li key={status}>
-                  <a
-                    onClick={() => applyFilters({ status })}
-                    className={currentFilters.status === status ? "active" : ""}
-                  >
-                    {status}
-                  </a>
-                </li>
-              ))}
-              <li>
-                <a onClick={() => applyFilters({ status: "" })}>All</a>
-              </li>
-            </ul>
-          </div>
+          <select
+            className="select select-bordered select-sm"
+            value={currentFilters.status || ""}
+            onChange={(e) => applyFilters({ status: e.target.value })}
+          >
+            <option value="">All</option>
+            {statusOptions.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="form-control">
-          <label className="label">
-            <span className="label-text">Payment</span>
+          <label className="label py-1">
+            <span className="label-text text-xs">Payment</span>
           </label>
-          <div className="dropdown dropdown-hover">
-            <label tabIndex={0} className="btn btn-sm btn-outline min-w-36">
-              <span className="font-bold mr-2">{currency}</span>
-              {currentFilters.paymentStatus || "All"}
-            </label>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-52"
-            >
-              {paymentStatusOptions.map((status) => (
-                <li key={status}>
-                  <a
-                    onClick={() => applyFilters({ paymentStatus: status })}
-                    className={
-                      currentFilters.paymentStatus === status ? "active" : ""
-                    }
-                  >
-                    {status}
-                  </a>
-                </li>
-              ))}
-              <li>
-                <a onClick={() => applyFilters({ paymentStatus: "" })}>All</a>
-              </li>
-            </ul>
-          </div>
+          <select
+            className="select select-bordered select-sm"
+            value={currentFilters.paymentStatus || ""}
+            onChange={(e) => applyFilters({ paymentStatus: e.target.value })}
+          >
+            <option value="">All</option>
+            {paymentStatusOptions.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="form-control min-w-64">
-          <label className="label">
-            <span className="label-text">Date Range</span>
+        <div className="form-control min-w-[200px]">
+          <label className="label py-1">
+            <span className="label-text text-xs">Date Range</span>
           </label>
           <Datepicker
             value={dateRange}
             onChange={handleDateChange}
             showShortcuts={true}
-            primaryColor="hsl(var(--p))"
             inputClassName="input input-sm input-bordered w-full"
-            containerClassName="relative"
           />
         </div>
       </div>
@@ -176,140 +136,118 @@ const OrderCard = ({
   order,
   currency,
   onViewDetails,
-  onUpdateStatus,
   onUpdatePayment,
+  onModify,
+  onVoid,
   onCancel,
 }) => {
   const { can } = useAuth();
+  const canModify = !["completed", "cancelled"].includes(order.orderStatus);
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
       hour: "numeric",
       minute: "numeric",
       hour12: true,
-    }).format(date);
+    }).format(new Date(dateString));
   };
 
-  const canUpdateStatus = can("editOrders");
-  const canCancelOrder = can("cancelOrders");
-
   return (
-    <div className="card bg-base-100 shadow-md hover:shadow-lg transition-all duration-300 border border-base-200">
+    <div className="card bg-base-100 shadow-md hover:shadow-lg transition-all border border-base-200">
       <div className="card-body p-4">
-        <div className="flex justify-between items-start mb-3">
+        <div className="flex justify-between items-start mb-2">
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-lg">#{order.orderNumber}</h3>
-              <span className={`badge ${statusColors[order.orderStatus]}`}>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold">#{order.orderNumber}</h3>
+              <span
+                className={`badge badge-sm ${statusColors[order.orderStatus]}`}
+              >
                 {order.orderStatus}
               </span>
+              {order.isModified && (
+                <span className="badge badge-sm badge-outline badge-info">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Modified
+                </span>
+              )}
+              {order.hasVoidedItems && (
+                <span className="badge badge-sm badge-outline badge-warning">
+                  Voided
+                </span>
+              )}
             </div>
-            <p className="text-sm flex items-center gap-1 text-base-content/70 mt-1">
-              <UserCircleIcon className="w-4 h-4" />
-              {order.customerDetails?.name || "Walk-in Customer"}
+            <p className="text-xs flex items-center gap-1 text-base-content/70 mt-1">
+              <UserCircleIcon className="w-3 h-3" />
+              {order.customerDetails?.name || "Walk-in"}
             </p>
           </div>
-          <div
-            className={`badge ${paymentColors[order.paymentStatus]} gap-1 p-3`}
-          >
-            <span className="font-bold">{currency}</span>
+          <span className={`badge ${paymentColors[order.paymentStatus]}`}>
             {order.paymentStatus}
-          </div>
+          </span>
         </div>
 
-        <div className="divider my-1"></div>
-
-        <div className="mb-3">
-          <div className="flex justify-between items-center">
-            <span className="text-base-content/70 text-sm">Total Amount</span>
-            <span className="font-semibold text-base">
+        <div className="text-sm space-y-1">
+          <div className="flex justify-between">
+            <span className="text-base-content/70">Total</span>
+            <span className="font-semibold">
               {currency}
-              {order.totalAmount?.toLocaleString()}
+              {order.totalAmount?.toFixed(2)}
             </span>
           </div>
-          <div className="flex justify-between items-center mt-1">
-            <span className="text-base-content/70 text-sm flex items-center gap-1">
-              <ClockIcon className="w-4 h-4" /> Created
+          <div className="flex justify-between text-xs text-base-content/50">
+            <span className="flex items-center gap-1">
+              <ClockIcon className="w-3 h-3" />
+              {formatDate(order.createdAt)}
             </span>
-            <span className="text-sm">{formatDate(order.createdAt)}</span>
+            <span className="capitalize">{order.orderType}</span>
           </div>
         </div>
 
-        <div className="card-actions justify-end mt-2 flex-wrap gap-2">
-          <Can do="viewOrders">
-            <button
-              className="btn btn-sm btn-outline btn-primary"
-              onClick={() => onViewDetails(order)}
-            >
-              <EyeIcon className="w-4 h-4 mr-1" /> View
-            </button>
-          </Can>
-
-          {order.orderStatus !== "cancelled" &&
-            order.orderStatus !== "completed" && (
-              <>
-                {canUpdateStatus && (
-                  <>
-                    {order.orderStatus === "pending" && (
-                      <button
-                        className="btn btn-sm btn-info"
-                        onClick={() => onUpdateStatus(order._id, "preparing")}
-                      >
-                        Start Preparing
-                      </button>
-                    )}
-
-                    {order.orderStatus === "preparing" && (
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => onUpdateStatus(order._id, "ready")}
-                      >
-                        Mark Ready
-                      </button>
-                    )}
-
-                    {order.orderStatus === "ready" && (
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={() => onUpdateStatus(order._id, "served")}
-                      >
-                        Mark Served
-                      </button>
-                    )}
-
-                    {order.orderStatus === "served" && (
-                      <button
-                        className="btn btn-sm btn-neutral"
-                        onClick={() => onUpdateStatus(order._id, "completed")}
-                      >
-                        Complete
-                      </button>
-                    )}
-                  </>
-                )}
-
-                <Can do="editOrders">
-                  <button
-                    className="btn btn-sm btn-outline"
-                    onClick={() => onUpdatePayment(order)}
-                  >
-                    <CurrencyDollarIcon className="w-4 h-4" />
-                  </button>
-                </Can>
-
-                {canCancelOrder && (
-                  <button
-                    className="btn btn-sm btn-error btn-outline"
-                    onClick={() => onCancel(order)}
-                  >
-                    <XCircleIcon className="w-4 h-4" />
-                  </button>
-                )}
-              </>
-            )}
+        <div className="card-actions justify-end mt-3 flex-wrap gap-1">
+          <button
+            className="btn btn-xs btn-outline"
+            onClick={() => onViewDetails(order)}
+          >
+            <EyeIcon className="w-3 h-3" />
+          </button>
+          {canModify && (
+            <>
+              <Can do="editOrders">
+                <button
+                  className="btn btn-xs btn-outline btn-info"
+                  onClick={() => onModify(order)}
+                  title="Modify"
+                >
+                  <Edit3 className="w-3 h-3" />
+                </button>
+                <button
+                  className="btn btn-xs btn-outline btn-warning"
+                  onClick={() => onVoid(order)}
+                  title="Void Items"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+                <button
+                  className="btn btn-xs btn-outline"
+                  onClick={() => onUpdatePayment(order)}
+                  title="Update Payment"
+                >
+                  <CurrencyDollarIcon className="w-3 h-3" />
+                </button>
+              </Can>
+              <Can do="cancelOrders">
+                <button
+                  className="btn btn-xs btn-outline btn-error"
+                  onClick={() => onCancel(order)}
+                  title="Cancel"
+                >
+                  <XCircleIcon className="w-3 h-3" />
+                </button>
+              </Can>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -318,14 +256,12 @@ const OrderCard = ({
 
 const TopSideButtons = () => {
   const navigate = useNavigate();
-  const { can } = useAuth();
-
   return (
     <div className="flex flex-wrap gap-2">
       <Can do="createOrders">
         <button
           onClick={() => navigate("/app/orders/new")}
-          className="btn btn-primary btn-sm lg:btn-md gap-2"
+          className="btn btn-primary btn-sm gap-2"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">New Order</span>
@@ -333,10 +269,9 @@ const TopSideButtons = () => {
       </Can>
       <button
         onClick={() => window.location.reload()}
-        className="btn btn-ghost btn-sm lg:btn-md gap-2"
+        className="btn btn-ghost btn-sm gap-2"
       >
         <RefreshCw className="w-4 h-4" />
-        <span className="hidden sm:inline">Refresh</span>
       </button>
     </div>
   );
@@ -350,44 +285,25 @@ const Orders = () => {
   const { orders, loading, error, filters } = useSelector(
     (state) => state.orders
   );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState("grid");
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
   const currency = settings?.currency?.symbol || "$";
 
-  // Check permissions
-  const canViewOrders = can("viewOrders");
-  const canEditOrders = can("editOrders");
-  const canCancelOrders = can("cancelOrders");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!settings) dispatch(fetchSettings());
-    if (canViewOrders) {
-      dispatch(fetchOrders(filters));
-    }
-  }, [dispatch, filters, canViewOrders]);
+    if (can("viewOrders")) dispatch(fetchOrders(filters));
+  }, [dispatch, filters]);
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.orderNumber.includes(searchQuery) ||
+  const filteredOrders = orders.filter(
+    (order) =>
+      order.orderNumber?.includes(searchQuery) ||
       order.customerDetails?.name
         ?.toLowerCase()
-        .includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      !filters.status || order.orderStatus === filters.status;
-    const matchesPayment =
-      !filters.paymentStatus || order.paymentStatus === filters.paymentStatus;
-    const matchesDate =
-      (!filters.startDate ||
-        new Date(order.createdAt) >= new Date(filters.startDate)) &&
-      (!filters.endDate ||
-        new Date(order.createdAt) <= new Date(filters.endDate));
-
-    return matchesSearch && matchesStatus && matchesPayment && matchesDate;
-  });
+        .includes(searchQuery.toLowerCase())
+  );
 
   const handleViewDetails = (order) => {
     dispatch(
@@ -400,54 +316,29 @@ const Orders = () => {
     );
   };
 
-  const handleStatusUpdate = async (orderId, newStatus) => {
-    if (!canEditOrders) {
-      dispatch(
-        showNotification({
-          message: "You don't have permission to update order status",
-          status: 0,
-        })
-      );
-      return;
-    }
+  const handleModify = (order) => {
+    dispatch(
+      openModal({
+        title: `Modify Order #${order.orderNumber}`,
+        bodyType: MODAL_BODY_TYPES.MODIFY_ORDER,
+        extraObject: order,
+        size: "lg",
+      })
+    );
+  };
 
-    try {
-      await dispatch(
-        updateOrderStatus({
-          id: orderId,
-          orderStatus: newStatus,
-          reason: `Status updated to ${newStatus}`,
-        })
-      ).unwrap();
-
-      dispatch(
-        showNotification({
-          message: `Order marked as ${newStatus}`,
-          status: 1,
-        })
-      );
-      dispatch(fetchOrders(filters));
-    } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.message || "Failed to update order status",
-          status: 0,
-        })
-      );
-    }
+  const handleVoid = (order) => {
+    dispatch(
+      openModal({
+        title: `Void Items - Order #${order.orderNumber}`,
+        bodyType: MODAL_BODY_TYPES.VOID_ORDER_ITEMS,
+        extraObject: order,
+        size: "lg",
+      })
+    );
   };
 
   const handleUpdatePayment = (order) => {
-    if (!canEditOrders) {
-      dispatch(
-        showNotification({
-          message: "You don't have permission to update payment",
-          status: 0,
-        })
-      );
-      return;
-    }
-
     dispatch(
       openModal({
         title: "Update Payment",
@@ -458,51 +349,31 @@ const Orders = () => {
   };
 
   const handleCancelOrder = async (order) => {
-    if (!canCancelOrders) {
+    if (!window.confirm(`Cancel order #${order.orderNumber}?`)) return;
+    try {
+      await dispatch(
+        cancelOrder({ id: order._id, reason: "Cancelled by staff" })
+      ).unwrap();
       dispatch(
         showNotification({
-          message: "You don't have permission to cancel orders",
+          message: `Order #${order.orderNumber} cancelled`,
+          status: 1,
+        })
+      );
+      dispatch(fetchOrders(filters));
+    } catch (err) {
+      dispatch(
+        showNotification({
+          message: err.message || "Failed to cancel",
           status: 0,
         })
       );
-      return;
-    }
-
-    if (
-      window.confirm(
-        `Are you sure you want to cancel order #${order.orderNumber}?`
-      )
-    ) {
-      try {
-        await dispatch(
-          cancelOrder({
-            id: order._id,
-            reason: "Order cancelled by staff",
-          })
-        ).unwrap();
-
-        dispatch(
-          showNotification({
-            message: `Order #${order.orderNumber} cancelled successfully`,
-            status: 1,
-          })
-        );
-        dispatch(fetchOrders(filters));
-      } catch (error) {
-        dispatch(
-          showNotification({
-            message: error.message || "Failed to cancel order",
-            status: 0,
-          })
-        );
-      }
     }
   };
 
   if (loading) return <SuspenseContent />;
 
-  // Show access denied if user doesn't have permission
-  if (!canViewOrders) {
+  if (!can("viewOrders")) {
     return (
       <TitleCard title="Access Denied" topMargin="mt-2">
         <div className="hero min-h-[400px]">
@@ -510,15 +381,12 @@ const Orders = () => {
             <div className="max-w-md">
               <div className="text-6xl mb-4">🔒</div>
               <h1 className="text-3xl font-bold text-error">Access Denied</h1>
-              <p className="py-6">
-                You do not have permission to view orders. Please contact your
-                administrator if you believe this is an error.
-              </p>
+              <p className="py-6">You do not have permission to view orders.</p>
               <button
                 onClick={() => navigate("/app/dashboard")}
                 className="btn btn-primary"
               >
-                Go to Dashboard
+                Dashboard
               </button>
             </div>
           </div>
@@ -540,41 +408,19 @@ const Orders = () => {
           placeholderText="Search by order # or customer..."
           styleClass="w-full lg:w-96"
         />
-
-        <div className="flex items-center gap-2">
-          <div className="join">
-            <button
-              className={`join-item btn btn-sm ${
-                viewMode === "grid" ? "btn-active" : ""
-              }`}
-              onClick={() => setViewMode("grid")}
-            >
-              Grid
-            </button>
-            <button
-              className={`join-item btn btn-sm ${
-                viewMode === "list" ? "btn-active" : ""
-              }`}
-              onClick={() => setViewMode("list")}
-            >
-              List
-            </button>
-          </div>
-          <button
-            onClick={() => dispatch(fetchOrders(filters))}
-            className="btn btn-sm btn-circle"
-            title="Refresh"
-          >
-            <ArrowPathIcon className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          onClick={() => dispatch(fetchOrders(filters))}
+          className="btn btn-sm btn-circle"
+          title="Refresh"
+        >
+          <ArrowPathIcon className="w-4 h-4" />
+        </button>
       </div>
 
       <OrderFilters
         currentFilters={filters}
         applyFilters={(newFilters) => dispatch(setFilters(newFilters))}
-        clearFilters={() => dispatch(clearFilters())}
-        currency={currency}
+        clearFiltersAction={() => dispatch(clearFilters())}
       />
 
       {error ? (
@@ -586,165 +432,30 @@ const Orders = () => {
         <div className="text-center py-16 bg-base-200 rounded-lg">
           <DocumentTextIcon className="w-16 h-16 mx-auto text-base-content/30 mb-4" />
           <h3 className="text-xl font-semibold">No orders found</h3>
-          <p className="text-base-content/70 max-w-md mx-auto mt-2">
-            Try adjusting your filters or search terms to find what you're
-            looking for
+          <p className="text-base-content/70 mt-2">
+            Try adjusting your filters
           </p>
           <button
             className="btn btn-outline btn-sm mt-4"
             onClick={() => dispatch(clearFilters())}
           >
-            Clear all filters
+            Clear filters
           </button>
         </div>
-      ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredOrders.map((order) => (
             <OrderCard
               key={order._id}
               order={order}
               currency={currency}
               onViewDetails={handleViewDetails}
-              onUpdateStatus={handleStatusUpdate}
               onUpdatePayment={handleUpdatePayment}
+              onModify={handleModify}
+              onVoid={handleVoid}
               onCancel={handleCancelOrder}
             />
           ))}
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-base-300">
-          <table className="table table-zebra w-full">
-            <thead>
-              <tr>
-                <th>Order #</th>
-                <th>Customer</th>
-                <th>Status</th>
-                <th>Payment</th>
-                <th>Total</th>
-                <th>Time</th>
-                <th className="text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((order) => (
-                <tr key={order._id} className="hover">
-                  <td className="font-medium">#{order.orderNumber}</td>
-                  <td>{order.customerDetails?.name || "Walk-in"}</td>
-                  <td>
-                    <Badge className={statusColors[order.orderStatus]}>
-                      {order.orderStatus}
-                    </Badge>
-                  </td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        paymentColors[order.paymentStatus]
-                      } gap-1`}
-                    >
-                      {order.paymentStatus}
-                    </span>
-                  </td>
-                  <td className="font-medium">
-                    {currency}
-                    {order.totalAmount?.toLocaleString()}
-                  </td>
-                  <td className="text-sm">
-                    {new Date(order.createdAt).toLocaleTimeString()}
-                  </td>
-                  <td className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Can do="viewOrders">
-                        <button
-                          className="btn btn-ghost btn-sm btn-square"
-                          onClick={() => handleViewDetails(order)}
-                          title="View Details"
-                        >
-                          <EyeIcon className="w-4 h-4" />
-                        </button>
-                      </Can>
-
-                      {order.orderStatus !== "cancelled" &&
-                        order.orderStatus !== "completed" &&
-                        (canEditOrders || canCancelOrders) && (
-                          <div className="dropdown dropdown-end">
-                            <label
-                              tabIndex={0}
-                              className="btn btn-ghost btn-sm btn-square"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-4 h-4"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
-                                />
-                              </svg>
-                            </label>
-                            <ul
-                              tabIndex={0}
-                              className="dropdown-content z-10 menu menu-sm p-2 shadow bg-base-100 rounded-box w-48"
-                            >
-                              {canEditOrders && (
-                                <>
-                                  {order.orderStatus !== "ready" && (
-                                    <li>
-                                      <a
-                                        onClick={() =>
-                                          handleStatusUpdate(order._id, "ready")
-                                        }
-                                      >
-                                        Mark as Ready
-                                      </a>
-                                    </li>
-                                  )}
-                                  {order.orderStatus !== "served" && (
-                                    <li>
-                                      <a
-                                        onClick={() =>
-                                          handleStatusUpdate(
-                                            order._id,
-                                            "served"
-                                          )
-                                        }
-                                      >
-                                        Mark as Served
-                                      </a>
-                                    </li>
-                                  )}
-                                  <li>
-                                    <a
-                                      onClick={() => handleUpdatePayment(order)}
-                                    >
-                                      Update Payment
-                                    </a>
-                                  </li>
-                                </>
-                              )}
-                              {canCancelOrders && (
-                                <li>
-                                  <a
-                                    className="text-error"
-                                    onClick={() => handleCancelOrder(order)}
-                                  >
-                                    Cancel Order
-                                  </a>
-                                </li>
-                              )}
-                            </ul>
-                          </div>
-                        )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       )}
     </TitleCard>

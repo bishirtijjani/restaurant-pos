@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "/api/addon-groups";
+const API_URL = "/api/add-on-groups"; // Fixed: matches backend route
 
 // Fetch all add-on groups
 export const fetchAddOnGroups = createAsyncThunk(
@@ -111,6 +111,9 @@ const addOnGroupsSlice = createSlice({
     clearCurrentGroup: (state) => {
       state.currentGroup = null;
     },
+    clearMenuItemGroups: (state) => {
+      state.menuItemGroups = [];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -121,7 +124,7 @@ const addOnGroupsSlice = createSlice({
       })
       .addCase(fetchAddOnGroups.fulfilled, (state, action) => {
         state.loading = false;
-        state.groups = action.payload.data;
+        state.groups = action.payload.data || [];
       })
       .addCase(fetchAddOnGroups.rejected, (state, action) => {
         state.loading = false;
@@ -148,7 +151,10 @@ const addOnGroupsSlice = createSlice({
       .addCase(createAddOnGroup.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
-        state.message = action.payload.message;
+        state.message = action.payload.message || "Add-on group created";
+        if (action.payload.data) {
+          state.groups.push(action.payload.data);
+        }
       })
       .addCase(createAddOnGroup.rejected, (state, action) => {
         state.loading = false;
@@ -156,24 +162,59 @@ const addOnGroupsSlice = createSlice({
       })
 
       // Update
+      .addCase(updateAddOnGroup.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateAddOnGroup.fulfilled, (state, action) => {
+        state.loading = false;
         state.success = true;
-        state.message = action.payload.message;
+        state.message = action.payload.message || "Add-on group updated";
+        const index = state.groups.findIndex(
+          (g) => g._id === action.payload.data?._id
+        );
+        if (index !== -1) {
+          state.groups[index] = action.payload.data;
+        }
+      })
+      .addCase(updateAddOnGroup.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
 
       // Delete
+      .addCase(deleteAddOnGroup.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(deleteAddOnGroup.fulfilled, (state, action) => {
+        state.loading = false;
         state.groups = state.groups.filter((g) => g._id !== action.payload);
         state.success = true;
+        state.message = "Add-on group deleted";
+      })
+      .addCase(deleteAddOnGroup.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
 
       // Fetch for menu item
+      .addCase(fetchAddOnGroupsForMenuItem.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(fetchAddOnGroupsForMenuItem.fulfilled, (state, action) => {
-        state.menuItemGroups = action.payload.data;
+        state.loading = false;
+        state.menuItemGroups = action.payload.data || [];
+      })
+      .addCase(fetchAddOnGroupsForMenuItem.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const { clearError, clearSuccess, clearCurrentGroup } =
-  addOnGroupsSlice.actions;
+export const {
+  clearError,
+  clearSuccess,
+  clearCurrentGroup,
+  clearMenuItemGroups,
+} = addOnGroupsSlice.actions;
 export default addOnGroupsSlice.reducer;
