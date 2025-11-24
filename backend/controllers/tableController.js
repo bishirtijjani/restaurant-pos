@@ -1,53 +1,46 @@
-// backend/controllers/tableController.js
 const Table = require("../models/Table");
 const Floor = require("../models/Floor");
 const Order = require("../models/Order");
-const Reservation = require("../models/Reservation");
 const logAction = require("../utils/logAction");
 
-// Get all tables
 exports.getAllTables = async (req, res) => {
-try {
-const { floor, status, assignedStaff, active } = req.query;
-
+  try {
+    const { floorId, status, isActive } = req.query;
     const filter = {};
-    if (floor) filter.floor = floor;
+
+    if (floorId) filter.floorId = floorId;
     if (status) filter.status = status;
-    if (assignedStaff) filter.assignedStaff = assignedStaff;
-    if (active !== undefined) filter.isActive = active === "true";
+    if (isActive !== undefined) filter.isActive = isActive === "true";
 
     const tables = await Table.find(filter)
-      .populate("floor", "name")
+      .populate("floorId", "name")
       .populate("assignedStaff", "fullname")
       .populate("currentOrder", "orderNumber orderStatus totalAmount")
-      .populate("mergedWith", "tableNumber status")
-      .sort({ floor: 1, tableNumber: 1 });
+      .populate("mergedWith", "tableNumber")
+      .sort({ "floorId.order": 1, tableNumber: 1 });
 
     res.status(200).json({
       success: true,
       count: tables.length,
       data: tables,
     });
-
-} catch (error) {
-console.error("Error fetching tables:", error);
-res.status(500).json({
-success: false,
-message: "Failed to fetch tables",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error fetching tables:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tables",
+      error: error.message,
+    });
+  }
 };
 
-// Get single table
 exports.getTableById = async (req, res) => {
-try {
-const table = await Table.findById(req.params.id)
-.populate("floor", "name")
-.populate("assignedStaff", "fullname")
-.populate("currentOrder")
-.populate("mergedWith", "tableNumber status")
-.populate("lastAction.performedBy", "fullname");
+  try {
+    const table = await Table.findById(req.params.id)
+      .populate("floorId", "name")
+      .populate("assignedStaff", "fullname email")
+      .populate("currentOrder")
+      .populate("mergedWith", "tableNumber status");
 
     if (!table) {
       return res.status(404).json({
@@ -60,66 +53,65 @@ const table = await Table.findById(req.params.id)
       success: true,
       data: table,
     });
-
-} catch (error) {
-console.error("Error fetching table:", error);
-res.status(500).json({
-success: false,
-message: "Failed to fetch table",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error fetching table:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch table",
+      error: error.message,
+    });
+  }
 };
 
-// Create table
 exports.createTable = async (req, res) => {
-try {
-const {
-tableNumber,
-floor,
-capacity,
-shape,
-position,
-notes,
-} = req.body;
+  try {
+    const {
+      floorId,
+      tableNumber,
+      capacity,
+      position,
+      shape,
+      notes,
+      assignedStaff,
+    } = req.body;
 
-    if (!tableNumber || !floor || !capacity) {
+    if (!floorId || !tableNumber) {
       return res.status(400).json({
         success: false,
-        message: "Table number, floor, and capacity are required",
+        message: "Floor ID and table number are required",
       });
     }
 
-    // Verify floor exists
-    const floorExists = await Floor.findById(floor);
-    if (!floorExists) {
+    const floor = await Floor.findById(floorId);
+    if (!floor) {
       return res.status(404).json({
         success: false,
         message: "Floor not found",
       });
     }
 
-    // Check for duplicate table number on same floor
-    const existingTable = await Table.findOne({ tableNumber, floor });
+    const existingTable = await Table.findOne({
+      floorId,
+      tableNumber: tableNumber.trim(),
+      isActive: true,
+    });
+
     if (existingTable) {
       return res.status(400).json({
         success: false,
-        message: "A table with this number already exists on this floor",
+        message: `Table ${tableNumber} already exists on ${floor.name}`,
       });
     }
 
     const table = await Table.create({
-      tableNumber,
-      floor,
-      capacity,
-      shape: shape || "square",
+      floorId,
+      tableNumber: tableNumber.trim(),
+      capacity: capacity || 4,
       position: position || { x: 0, y: 0 },
+      shape: shape || "square",
       notes: notes || "",
-      lastAction: {
-        action: "create",
-        performedBy: req.user.id,
-        createdAt: new Date(),
-      },
+      assignedStaff: assignedStaff || null,
+      status: "available",
     });
 
     await logAction(
@@ -129,11 +121,11 @@ notes,
       "create",
       null,
       table,
-      `Created table: ${tableNumber} on ${floorExists.name}`
+      `Created table: ${tableNumber} on ${floor.name}`
     );
 
     const populatedTable = await Table.findById(table._id)
-      .populate("floor", "name")
+      .populate("floorId", "name")
       .populate("assignedStaff", "fullname");
 
     res.status(201).json({
@@ -141,24 +133,20 @@ notes,
       message: "Table created successfully",
       data: populatedTable,
     });
-
-} catch (error) {
-console.error("Error creating table:", error);
-res.status(500).json({
-success: false,
-message: "Failed to create table",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error creating table:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create table",
+      error: error.message,
+    });
+  }
 };
 
-// Update table
 exports.updateTable = async (req, res) => {
-try {
-const { id } = req.params;
-const updateData = req.body;
+  try {
+    const oldTable = await Table.findById(req.params.id);
 
-    const oldTable = await Table.findById(id);
     if (!oldTable) {
       return res.status(404).json({
         success: false,
@@ -166,139 +154,83 @@ const updateData = req.body;
       });
     }
 
-    // Check for duplicate table number if being changed
-    if (updateData.tableNumber || updateData.floor) {
-      const tableNumber = updateData.tableNumber || oldTable.tableNumber;
-      const floor = updateData.floor || oldTable.floor;
+    const {
+      tableNumber,
+      capacity,
+      position,
+      shape,
+      notes,
+      assignedStaff,
+      status,
+      isActive,
+    } = req.body;
 
+    if (tableNumber && tableNumber !== oldTable.tableNumber) {
       const existingTable = await Table.findOne({
-        tableNumber,
-        floor,
-        _id: { $ne: id },
+        floorId: oldTable.floorId,
+        tableNumber: tableNumber.trim(),
+        _id: { $ne: req.params.id },
+        isActive: true,
       });
 
       if (existingTable) {
         return res.status(400).json({
           success: false,
-          message: "A table with this number already exists on this floor",
+          message: `Table ${tableNumber} already exists on this floor`,
         });
       }
     }
 
-    const table = await Table.findByIdAndUpdate(
-      id,
-      {
-        ...updateData,
-        lastAction: {
-          action: "update",
-          performedBy: req.user.id,
-          createdAt: new Date(),
-        },
-      },
+    const updateData = {};
+    if (tableNumber !== undefined) updateData.tableNumber = tableNumber.trim();
+    if (capacity !== undefined) updateData.capacity = capacity;
+    if (position !== undefined) updateData.position = position;
+    if (shape !== undefined) updateData.shape = shape;
+    if (notes !== undefined) updateData.notes = notes;
+    if (assignedStaff !== undefined) updateData.assignedStaff = assignedStaff;
+    if (status !== undefined) updateData.status = status;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    if (status === "occupied" && oldTable.status !== "occupied") {
+      updateData.lastOccupiedAt = new Date();
+    }
+
+    const updatedTable = await Table.findByIdAndUpdate(
+      req.params.id,
+      updateData,
       { new: true, runValidators: true }
     )
-      .populate("floor", "name")
-      .populate("assignedStaff", "fullname")
-      .populate("currentOrder");
+      .populate("floorId", "name")
+      .populate("assignedStaff", "fullname");
 
     await logAction(
       req.user.id,
       "Table",
-      table._id,
+      req.params.id,
       "update",
       oldTable,
-      table,
-      `Updated table: ${table.tableNumber}`
+      updatedTable,
+      req.body.reason || `Updated table: ${updatedTable.tableNumber}`
     );
 
     res.status(200).json({
       success: true,
       message: "Table updated successfully",
-      data: table,
+      data: updatedTable,
     });
-
-} catch (error) {
-console.error("Error updating table:", error);
-res.status(500).json({
-success: false,
-message: "Failed to update table",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error updating table:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update table",
+      error: error.message,
+    });
+  }
 };
 
-// Delete table (soft delete)
-exports.deleteTable = async (req, res) => {
-try {
-const { id } = req.params;
-
-    const table = await Table.findById(id);
-    if (!table) {
-      return res.status(404).json({
-        success: false,
-        message: "Table not found",
-      });
-    }
-
-    // Can't delete occupied or ordered tables
-    if (["occupied", "ordered"].includes(table.status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot delete a table with an active order",
-      });
-    }
-
-    // Can't delete reserved tables
-    const activeReservations = await Reservation.countDocuments({
-      table: id,
-      status: { $in: ["pending", "confirmed"] },
-    });
-
-    if (activeReservations > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot delete a table with active reservations",
-      });
-    }
-
-    table.isActive = false;
-    table.lastAction = {
-      action: "delete",
-      performedBy: req.user.id,
-      createdAt: new Date(),
-    };
-    await table.save();
-
-    await logAction(
-      req.user.id,
-      "Table",
-      id,
-      "delete",
-      table,
-      null,
-      `Deleted table: ${table.tableNumber}`
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Table deleted successfully",
-    });
-
-} catch (error) {
-console.error("Error deleting table:", error);
-res.status(500).json({
-success: false,
-message: "Failed to delete table",
-error: error.message,
-});
-}
-};
-
-// Update table status
 exports.updateTableStatus = async (req, res) => {
-try {
-const { id } = req.params;
-const { status, reason } = req.body;
+  try {
+    const { status, reason } = req.body;
 
     if (!status) {
       return res.status(400).json({
@@ -307,7 +239,8 @@ const { status, reason } = req.body;
       });
     }
 
-    const table = await Table.findById(id);
+    const table = await Table.findById(req.params.id);
+
     if (!table) {
       return res.status(404).json({
         success: false,
@@ -316,114 +249,52 @@ const { status, reason } = req.body;
     }
 
     const oldStatus = table.status;
+    table.status = status;
 
-    // Validate status transitions
-    if (status === "occupied" || status === "ordered") {
-      if (!table.currentOrder) {
-        return res.status(400).json({
-          success: false,
-          message: `Cannot set status to ${status} without an order`,
-        });
-      }
+    if (status === "occupied" && oldStatus !== "occupied") {
+      table.lastOccupiedAt = new Date();
     }
 
-    // If setting to available, clear order and staff
     if (status === "available") {
       table.currentOrder = null;
-      table.assignedStaff = null;
+      table.mergedWith = [];
     }
-
-    table.status = status;
-    table.lastAction = {
-      action: "status_change",
-      performedBy: req.user.id,
-      createdAt: new Date(),
-      reason: reason || `Status changed from ${oldStatus} to ${status}`,
-    };
 
     await table.save();
 
-    const populatedTable = await Table.findById(id)
-      .populate("floor", "name")
+    await logAction(
+      req.user.id,
+      "Table",
+      req.params.id,
+      "state_change",
+      { status: oldStatus },
+      { status },
+      reason || `Changed status from ${oldStatus} to ${status}`
+    );
+
+    const populatedTable = await Table.findById(table._id)
+      .populate("floorId", "name")
       .populate("assignedStaff", "fullname")
-      .populate("currentOrder");
+      .populate("currentOrder", "orderNumber");
 
     res.status(200).json({
       success: true,
       message: "Table status updated successfully",
       data: populatedTable,
     });
-
-} catch (error) {
-console.error("Error updating table status:", error);
-res.status(500).json({
-success: false,
-message: "Failed to update table status",
-error: error.message,
-});
-}
-};
-
-// Assign staff to table
-exports.assignStaff = async (req, res) => {
-try {
-const { id } = req.params;
-const { staffId, reason } = req.body;
-
-    const table = await Table.findById(id);
-    if (!table) {
-      return res.status(404).json({
-        success: false,
-        message: "Table not found",
-      });
-    }
-
-    // Can't assign staff to unavailable tables
-    if (table.status === "unavailable") {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot assign staff to unavailable tables",
-      });
-    }
-
-    table.assignedStaff = staffId || null;
-    table.lastAction = {
-      action: "assign",
-      performedBy: req.user.id,
-      createdAt: new Date(),
-      reason: reason || "Staff assigned to table",
-    };
-
-    await table.save();
-
-    const populatedTable = await Table.findById(id)
-      .populate("floor", "name")
-      .populate("assignedStaff", "fullname")
-      .populate("currentOrder");
-
-    res.status(200).json({
-      success: true,
-      message: staffId
-        ? "Staff assigned successfully"
-        : "Staff unassigned successfully",
-      data: populatedTable,
+  } catch (error) {
+    console.error("Error updating table status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update table status",
+      error: error.message,
     });
-
-} catch (error) {
-console.error("Error assigning staff:", error);
-res.status(500).json({
-success: false,
-message: "Failed to assign staff",
-error: error.message,
-});
-}
+  }
 };
 
-// Link order to table
-exports.linkOrder = async (req, res) => {
-try {
-const { id } = req.params;
-const { orderId } = req.body;
+exports.linkTableToOrder = async (req, res) => {
+  try {
+    const { orderId } = req.body;
 
     if (!orderId) {
       return res.status(400).json({
@@ -432,7 +303,7 @@ const { orderId } = req.body;
       });
     }
 
-    const table = await Table.findById(id);
+    const table = await Table.findById(req.params.id);
     if (!table) {
       return res.status(404).json({
         success: false,
@@ -448,56 +319,54 @@ const { orderId } = req.body;
       });
     }
 
-    // Check if order is already linked to another table
-    const existingTable = await Table.findOne({
-      currentOrder: orderId,
-      _id: { $ne: id },
-    });
-
-    if (existingTable) {
+    if (table.currentOrder && table.currentOrder.toString() !== orderId) {
       return res.status(400).json({
         success: false,
-        message: `Order is already linked to table ${existingTable.tableNumber}`,
+        message: "Table already has an active order",
       });
     }
 
-    // Update table
     table.currentOrder = orderId;
     table.status = "ordered";
+    table.lastOccupiedAt = new Date();
     await table.save();
 
-    // Update order with table info
     order.table = table.tableNumber;
     await order.save();
 
-    const populatedTable = await Table.findById(id)
-      .populate("floor", "name")
-      .populate("assignedStaff", "fullname")
-      .populate("currentOrder");
+    await logAction(
+      req.user.id,
+      "Table",
+      req.params.id,
+      "update",
+      { currentOrder: null },
+      { currentOrder: orderId },
+      `Linked table ${table.tableNumber} to order #${order.orderNumber}`
+    );
+
+    const populatedTable = await Table.findById(table._id)
+      .populate("floorId", "name")
+      .populate("currentOrder", "orderNumber orderStatus totalAmount");
 
     res.status(200).json({
       success: true,
-      message: "Order linked to table successfully",
+      message: "Table linked to order successfully",
       data: populatedTable,
     });
-
-} catch (error) {
-console.error("Error linking order:", error);
-res.status(500).json({
-success: false,
-message: "Failed to link order",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error linking table to order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to link table to order",
+      error: error.message,
+    });
+  }
 };
 
-// Unlink order from table
-exports.unlinkOrder = async (req, res) => {
-try {
-const { id } = req.params;
-const { reason } = req.body;
+exports.unlinkTableFromOrder = async (req, res) => {
+  try {
+    const table = await Table.findById(req.params.id);
 
-    const table = await Table.findById(id);
     if (!table) {
       return res.status(404).json({
         success: false,
@@ -505,34 +374,269 @@ const { reason } = req.body;
       });
     }
 
+    const oldOrderId = table.currentOrder;
     table.currentOrder = null;
-    table.status = "available";
-    table.assignedStaff = null;
-    table.lastAction = {
-      action: "update",
-      performedBy: req.user.id,
-      createdAt: new Date(),
-      reason: reason || "Order unlinked from table",
-    };
-
+    table.status = "cleaning";
     await table.save();
 
-    const populatedTable = await Table.findById(id)
-      .populate("floor", "name")
+    await logAction(
+      req.user.id,
+      "Table",
+      req.params.id,
+      "update",
+      { currentOrder: oldOrderId },
+      { currentOrder: null },
+      `Unlinked table ${table.tableNumber} from order`
+    );
+
+    const populatedTable = await Table.findById(table._id)
+      .populate("floorId", "name")
       .populate("assignedStaff", "fullname");
 
     res.status(200).json({
       success: true,
-      message: "Order unlinked successfully",
+      message: "Table unlinked from order, status set to cleaning",
       data: populatedTable,
     });
-
-} catch (error) {
-console.error("Error unlinking order:", error);
-res.status(500).json({
-success: false,
-message: "Failed to unlink order",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error unlinking table from order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to unlink table from order",
+      error: error.message,
+    });
+  }
 };
+
+exports.mergeTables = async (req, res) => {
+  try {
+    const { tableIds, reason } = req.body;
+
+    if (!tableIds || tableIds.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "At least 2 tables are required to merge",
+      });
+    }
+
+    const tables = await Table.find({ _id: { $in: tableIds }, isActive: true });
+
+    if (tables.length !== tableIds.length) {
+      return res.status(404).json({
+        success: false,
+        message: "One or more tables not found",
+      });
+    }
+
+    const floorIds = [...new Set(tables.map((t) => t.floorId.toString()))];
+    if (floorIds.length > 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot merge tables from different floors",
+      });
+    }
+
+    const busyTables = tables.filter(
+      (t) => t.currentOrder || t.status === "reserved"
+    );
+    if (busyTables.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot merge tables with active orders or reservations",
+      });
+    }
+
+    const mergedTableIds = tableIds.filter((id) => id !== tableIds[0]);
+
+    for (const table of tables) {
+      table.mergedWith = mergedTableIds;
+      table.status = "occupied";
+      await table.save();
+
+      await logAction(
+        req.user.id,
+        "Table",
+        table._id,
+        "merge",
+        { mergedWith: [] },
+        { mergedWith: mergedTableIds },
+        reason ||
+          `Merged tables: ${tables.map((t) => t.tableNumber).join(", ")}`
+      );
+    }
+
+    const updatedTables = await Table.find({ _id: { $in: tableIds } })
+      .populate("floorId", "name")
+      .populate("mergedWith", "tableNumber");
+
+    res.status(200).json({
+      success: true,
+      message: "Tables merged successfully",
+      data: updatedTables,
+    });
+  } catch (error) {
+    console.error("Error merging tables:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to merge tables",
+      error: error.message,
+    });
+  }
+};
+
+exports.splitTables = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const table = await Table.findById(req.params.id);
+
+    if (!table) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+
+    if (!table.mergedWith || table.mergedWith.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Table is not merged with any other tables",
+      });
+    }
+
+    if (table.currentOrder) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot split tables with an active order",
+      });
+    }
+
+    const allMergedIds = [table._id, ...table.mergedWith];
+    const oldMergedWith = [...table.mergedWith];
+
+    await Table.updateMany(
+      { _id: { $in: allMergedIds } },
+      { $set: { mergedWith: [], status: "available" } }
+    );
+
+    for (const tableId of allMergedIds) {
+      await logAction(
+        req.user.id,
+        "Table",
+        tableId,
+        "split",
+        { mergedWith: oldMergedWith },
+        { mergedWith: [] },
+        reason || "Tables split"
+      );
+    }
+
+    const updatedTables = await Table.find({
+      _id: { $in: allMergedIds },
+    }).populate("floorId", "name");
+
+    res.status(200).json({
+      success: true,
+      message: "Tables split successfully",
+      data: updatedTables,
+    });
+  } catch (error) {
+    console.error("Error splitting tables:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to split tables",
+      error: error.message,
+    });
+  }
+};
+
+exports.updateTablePosition = async (req, res) => {
+  try {
+    const { position } = req.body;
+
+    if (!position || position.x === undefined || position.y === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Position with x and y coordinates is required",
+      });
+    }
+
+    const table = await Table.findById(req.params.id);
+
+    if (!table) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+
+    table.position = position;
+    await table.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Table position updated",
+      data: table,
+    });
+  } catch (error) {
+    console.error("Error updating table position:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update table position",
+      error: error.message,
+    });
+  }
+};
+
+exports.deleteTable = async (req, res) => {
+  try {
+    const table = await Table.findById(req.params.id);
+
+    if (!table) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+
+    if (table.currentOrder) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete table with an active order",
+      });
+    }
+
+    if (table.mergedWith && table.mergedWith.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete merged table. Split tables first.",
+      });
+    }
+
+    table.isActive = false;
+    await table.save();
+
+    await logAction(
+      req.user.id,
+      "Table",
+      req.params.id,
+      "delete",
+      table,
+      { isActive: false },
+      `Deleted table: ${table.tableNumber}`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Table deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting table:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete table",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = exports;

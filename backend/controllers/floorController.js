@@ -1,56 +1,33 @@
-// backend/controllers/floorController.js
 const Floor = require("../models/Floor");
 const Table = require("../models/Table");
 const logAction = require("../utils/logAction");
 
-// Get all floors
 exports.getAllFloors = async (req, res) => {
-try {
-const { active } = req.query;
-const filter = {};
-if (active !== undefined) filter.isActive = active === "true";
+  try {
+    const { isActive } = req.query;
+    const filter = {};
+    if (isActive !== undefined) filter.isActive = isActive === "true";
 
-    const floors = await Floor.find(filter)
-      .sort({ displayOrder: 1, name: 1 })
-      .populate("lastAction.performedBy", "fullname");
-
-    // Get table counts for each floor
-    const floorsWithCounts = await Promise.all(
-      floors.map(async (floor) => {
-        const tableCount = await Table.countDocuments({
-          floor: floor._id,
-          isActive: true,
-        });
-        return {
-          ...floor.toObject(),
-          tableCount,
-        };
-      })
-    );
+    const floors = await Floor.find(filter).sort({ order: 1, name: 1 });
 
     res.status(200).json({
       success: true,
       count: floors.length,
-      data: floorsWithCounts,
+      data: floors,
     });
-
-} catch (error) {
-console.error("Error fetching floors:", error);
-res.status(500).json({
-success: false,
-message: "Failed to fetch floors",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error fetching floors:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch floors",
+      error: error.message,
+    });
+  }
 };
 
-// Get single floor
 exports.getFloorById = async (req, res) => {
-try {
-const floor = await Floor.findById(req.params.id).populate(
-"lastAction.performedBy",
-"fullname"
-);
+  try {
+    const floor = await Floor.findById(req.params.id);
 
     if (!floor) {
       return res.status(404).json({
@@ -59,43 +36,41 @@ const floor = await Floor.findById(req.params.id).populate(
       });
     }
 
-    // Get tables for this floor
-    const tables = await Table.find({ floor: floor._id, isActive: true })
+    const tables = await Table.find({ floorId: floor._id, isActive: true })
       .populate("assignedStaff", "fullname")
-      .populate("currentOrder", "orderNumber orderStatus totalAmount");
+      .populate("currentOrder", "orderNumber orderStatus")
+      .sort({ tableNumber: 1 });
 
     res.status(200).json({
       success: true,
-      data: {
-        ...floor.toObject(),
-        tables,
-      },
+      data: { ...floor.toObject(), tables },
     });
-
-} catch (error) {
-console.error("Error fetching floor:", error);
-res.status(500).json({
-success: false,
-message: "Failed to fetch floor",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error fetching floor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch floor",
+      error: error.message,
+    });
+  }
 };
 
-// Create floor
 exports.createFloor = async (req, res) => {
-try {
-const { name, description, displayOrder } = req.body;
+  try {
+    const { name, description, order } = req.body;
 
-    if (!name) {
+    if (!name || name.trim() === "") {
       return res.status(400).json({
         success: false,
         message: "Floor name is required",
       });
     }
 
-    // Check for duplicate name
-    const existingFloor = await Floor.findOne({ name });
+    const existingFloor = await Floor.findOne({
+      name: name.trim(),
+      isActive: true,
+    });
+
     if (existingFloor) {
       return res.status(400).json({
         success: false,
@@ -104,14 +79,9 @@ const { name, description, displayOrder } = req.body;
     }
 
     const floor = await Floor.create({
-      name,
+      name: name.trim(),
       description: description || "",
-      displayOrder: displayOrder || 0,
-      lastAction: {
-        action: "create",
-        performedBy: req.user.id,
-        createdAt: new Date(),
-      },
+      order: order || 0,
     });
 
     await logAction(
@@ -121,7 +91,7 @@ const { name, description, displayOrder } = req.body;
       "create",
       null,
       floor,
-      `Created floor: ${name}`
+      `Created floor: ${floor.name}`
     );
 
     res.status(201).json({
@@ -129,24 +99,20 @@ const { name, description, displayOrder } = req.body;
       message: "Floor created successfully",
       data: floor,
     });
-
-} catch (error) {
-console.error("Error creating floor:", error);
-res.status(500).json({
-success: false,
-message: "Failed to create floor",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error creating floor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create floor",
+      error: error.message,
+    });
+  }
 };
 
-// Update floor
 exports.updateFloor = async (req, res) => {
-try {
-const { id } = req.params;
-const updateData = req.body;
+  try {
+    const oldFloor = await Floor.findById(req.params.id);
 
-    const oldFloor = await Floor.findById(id);
     if (!oldFloor) {
       return res.status(404).json({
         success: false,
@@ -154,12 +120,15 @@ const updateData = req.body;
       });
     }
 
-    // Check for duplicate name if name is being changed
-    if (updateData.name && updateData.name !== oldFloor.name) {
+    const { name, description, order, isActive } = req.body;
+
+    if (name && name !== oldFloor.name) {
       const existingFloor = await Floor.findOne({
-        name: updateData.name,
-        _id: { $ne: id },
+        name: name.trim(),
+        _id: { $ne: req.params.id },
+        isActive: true,
       });
+
       if (existingFloor) {
         return res.status(400).json({
           success: false,
@@ -168,51 +137,47 @@ const updateData = req.body;
       }
     }
 
-    const floor = await Floor.findByIdAndUpdate(
-      id,
-      {
-        ...updateData,
-        lastAction: {
-          action: "update",
-          performedBy: req.user.id,
-          createdAt: new Date(),
-        },
-      },
+    const updateData = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (description !== undefined) updateData.description = description;
+    if (order !== undefined) updateData.order = order;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    const updatedFloor = await Floor.findByIdAndUpdate(
+      req.params.id,
+      updateData,
       { new: true, runValidators: true }
     );
 
     await logAction(
       req.user.id,
       "Floor",
-      floor._id,
+      req.params.id,
       "update",
       oldFloor,
-      floor,
-      `Updated floor: ${floor.name}`
+      updatedFloor,
+      req.body.reason || `Updated floor: ${updatedFloor.name}`
     );
 
     res.status(200).json({
       success: true,
       message: "Floor updated successfully",
-      data: floor,
+      data: updatedFloor,
     });
-
-} catch (error) {
-console.error("Error updating floor:", error);
-res.status(500).json({
-success: false,
-message: "Failed to update floor",
-error: error.message,
-});
-}
+  } catch (error) {
+    console.error("Error updating floor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update floor",
+      error: error.message,
+    });
+  }
 };
 
-// Delete floor (soft delete)
 exports.deleteFloor = async (req, res) => {
-try {
-const { id } = req.params;
+  try {
+    const floor = await Floor.findById(req.params.id);
 
-    const floor = await Floor.findById(id);
     if (!floor) {
       return res.status(404).json({
         success: false,
@@ -220,31 +185,38 @@ const { id } = req.params;
       });
     }
 
-    // Check if floor has active tables
-    const tableCount = await Table.countDocuments({
-      floor: id,
+    const tablesCount = await Table.countDocuments({
+      floorId: req.params.id,
       isActive: true,
     });
 
-    if (tableCount > 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Cannot delete floor with ${tableCount} active table(s). Please delete or move the tables first.`,
+    if (tablesCount > 0) {
+      floor.isActive = false;
+      await floor.save();
+
+      await logAction(
+        req.user.id,
+        "Floor",
+        req.params.id,
+        "update",
+        { ...floor.toObject(), isActive: true },
+        floor,
+        `Deactivated floor: ${floor.name} (${tablesCount} tables)`
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: `Floor deactivated (contains ${tablesCount} tables)`,
+        data: floor,
       });
     }
 
-    floor.isActive = false;
-    floor.lastAction = {
-      action: "delete",
-      performedBy: req.user.id,
-      createdAt: new Date(),
-    };
-    await floor.save();
+    await Floor.findByIdAndDelete(req.params.id);
 
     await logAction(
       req.user.id,
       "Floor",
-      id,
+      req.params.id,
       "delete",
       floor,
       null,
@@ -255,46 +227,14 @@ const { id } = req.params;
       success: true,
       message: "Floor deleted successfully",
     });
-
-} catch (error) {
-console.error("Error deleting floor:", error);
-res.status(500).json({
-success: false,
-message: "Failed to delete floor",
-error: error.message,
-});
-}
-};
-
-// Reorder floors
-exports.reorderFloors = async (req, res) => {
-try {
-const { floorIds } = req.body;
-
-    if (!Array.isArray(floorIds) || floorIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid floor order data",
-      });
-    }
-
-    await Promise.all(
-      floorIds.map((floorId, index) =>
-        Floor.findByIdAndUpdate(floorId, { displayOrder: index })
-      )
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Floors reordered successfully",
+  } catch (error) {
+    console.error("Error deleting floor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete floor",
+      error: error.message,
     });
-
-} catch (error) {
-console.error("Error reordering floors:", error);
-res.status(500).json({
-success: false,
-message: "Failed to reorder floors",
-error: error.message,
-});
-}
+  }
 };
+
+module.exports = exports;
