@@ -7,15 +7,21 @@ const actionToStore = {
   "categories/create/fulfilled": "categories",
   "categories/update/fulfilled": "categories",
   "categories/delete/fulfilled": "categories",
+
   "menuItems/fetchAllMenuItems/fulfilled": "menuItems",
   "menuItems/addMenuItem/fulfilled": "menuItems",
   "menuItems/updateMenuItem/fulfilled": "menuItems",
   "menuItems/deleteMenuItem/fulfilled": "menuItems",
+
   "expenses/fetchAll/fulfilled": "expenses",
   "expenses/addExpense/fulfilled": "expenses",
   "expenses/updateExpense/fulfilled": "expenses",
   "expenses/deleteExpense/fulfilled": "expenses",
-  // Add other mappings...
+
+  "inventory/fetchAll/fulfilled": "inventory",
+  "inventory/create/fulfilled": "inventory",
+  "inventory/update/fulfilled": "inventory",
+  "inventory/delete/fulfilled": "inventory",
 };
 
 export const offlineMiddleware = (store) => (next) => async (action) => {

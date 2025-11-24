@@ -1,4 +1,4 @@
-// backend/controllers/orderController.js (UPDATED - key sections)
+// backend/controllers/orderController.js
 const Order = require("../models/Order");
 const MenuItem = require("../models/MenuItem");
 const AddOnGroup = require("../models/AddOnGroup");
@@ -6,6 +6,11 @@ const InventoryItem = require("../models/InventoryItem");
 const GeneralSettings = require("../models/GeneralSettings");
 const logAction = require("../utils/logAction");
 const { notifyKDS } = require("../utils/webSocket");
+const {
+  calculateOrderDiscounts,
+  incrementPromoCodeUsage,
+  validatePromoCode,
+} = require("../utils/discountCalculator");
 
 // Function to generate unique order numbers
 const generateOrderNumber = async () => {
@@ -32,25 +37,28 @@ const calculateItemAddOnsTotal = (addOns, quantity = 1) => {
   return perItemAddOns * quantity;
 };
 
-// Tax calculation utility (updated to include add-ons)
-const calculateOrderTax = (orderItems, settings, orderType) => {
+// Updated tax calculation to work with discounted subtotal
+const calculateOrderTax = (
+  discountedSubtotal,
+  orderItems,
+  settings,
+  orderType
+) => {
   const { taxSettings, serviceCharge } = settings;
 
-  let subtotal = 0;
   let totalTax = 0;
   const itemTaxes = [];
 
-  orderItems.forEach((item) => {
-    // Include add-ons in item subtotal
-    const itemSubtotal = item.price * item.quantity + (item.addOnsTotal || 0);
-    subtotal += itemSubtotal;
+  if (taxSettings?.enabled) {
+    if (taxSettings.mode === "per-item") {
+      // Per-item tax on original item prices (before discount)
+      orderItems.forEach((item) => {
+        const itemSubtotal =
+          item.price * item.quantity + (item.addOnsTotal || 0);
+        const taxRate = item.customTax?.enabled
+          ? item.customTax.rate
+          : taxSettings.globalRate;
 
-    if (taxSettings?.enabled) {
-      const taxRate = item.customTax?.enabled
-        ? item.customTax.rate
-        : taxSettings.globalRate;
-
-      if (taxSettings.mode === "per-item") {
         const taxAmount = (itemSubtotal * taxRate) / 100;
         totalTax += taxAmount;
 
@@ -60,12 +68,11 @@ const calculateOrderTax = (orderItems, settings, orderType) => {
           taxRate,
           taxAmount,
         });
-      }
+      });
+    } else {
+      // Per-order tax on discounted subtotal
+      totalTax = (discountedSubtotal * taxSettings.globalRate) / 100;
     }
-  });
-
-  if (taxSettings?.enabled && taxSettings.mode === "per-order") {
-    totalTax = (subtotal * taxSettings.globalRate) / 100;
   }
 
   let serviceChargeAmount = 0;
@@ -74,15 +81,15 @@ const calculateOrderTax = (orderItems, settings, orderType) => {
       serviceCharge.applyTo === "all" || serviceCharge.applyTo === orderType;
 
     if (shouldApply) {
-      serviceChargeAmount = (subtotal * serviceCharge.rate) / 100;
+      serviceChargeAmount = (discountedSubtotal * serviceCharge.rate) / 100;
     }
   }
 
   return {
-    subtotal,
+    subtotal: discountedSubtotal,
     totalTax,
     serviceCharge: serviceChargeAmount,
-    total: subtotal + totalTax + serviceChargeAmount,
+    total: discountedSubtotal + totalTax + serviceChargeAmount,
     itemTaxes,
   };
 };
@@ -273,15 +280,68 @@ const createOrder = async (req, res) => {
       }
     }
 
+    // Calculate subtotal
+    const rawSubtotal = processedItems.reduce(
+      (sum, item) => sum + item.subtotal,
+      0
+    );
+
+    // Process discount
+    let orderDiscount = null;
+    let promoCodeData = null;
+
+    // Check for promo code
+    if (req.body.order.promoCode) {
+      const promoValidation = await validatePromoCode(
+        req.body.order.promoCode,
+        rawSubtotal,
+        orderType || "dine-in",
+        customerDetails?.customerId
+      );
+
+      if (promoValidation.valid) {
+        orderDiscount = {
+          enabled: true,
+          type: promoValidation.discountType,
+          value: promoValidation.discountValue,
+          maxDiscount: promoValidation.promoCode.maximumDiscountAmount,
+          name: `Promo: ${promoValidation.promoCode.code}`,
+          promoCode: promoValidation.promoCode.code,
+        };
+        promoCodeData = {
+          code: promoValidation.promoCode.code,
+          discountType: promoValidation.discountType,
+          discountValue: promoValidation.discountValue,
+          discountAmount: promoValidation.discountAmount,
+        };
+      }
+    }
+
+    // Check for manual order discount
+    if (!orderDiscount && req.body.order.orderDiscount?.enabled) {
+      orderDiscount = req.body.order.orderDiscount;
+    }
+
+    // Calculate discounts
+    const discountResult = await calculateOrderDiscounts({
+      orderItems: processedItems,
+      globalDiscount: settings.globalDiscount,
+      orderDiscount,
+      orderType: orderType || "dine-in",
+      subtotal: rawSubtotal,
+    });
+
+    // Calculate tax on discounted subtotal
     const taxCalculation = calculateOrderTax(
+      discountResult.discountedSubtotal,
       processedItems,
       settings,
       orderType || "dine-in"
     );
 
+    // Calculate final total
     const packagingAmount =
       orderType === "dine-in" ? 0 : parseFloat(packagingFee) || 0;
-
     const deliveryAmount =
       orderType === "delivery" ? parseFloat(deliveryFee) || 0 : 0;
 
@@ -290,7 +350,12 @@ const createOrder = async (req, res) => {
       0
     );
 
-    const finalTotal = taxCalculation.total + packagingAmount + deliveryAmount;
+    const finalTotal =
+      discountResult.discountedSubtotal +
+      taxCalculation.totalTax +
+      taxCalculation.serviceCharge +
+      packagingAmount +
+      deliveryAmount;
 
     let paymentStatus = "pending";
     let balance = finalTotal;
@@ -331,6 +396,15 @@ const createOrder = async (req, res) => {
         serviceCharge: taxCalculation.serviceCharge,
         subtotal: taxCalculation.subtotal,
       },
+      discountBreakdown: {
+        hasDiscount: discountResult.totalDiscountAmount > 0,
+        originalSubtotal: rawSubtotal,
+        totalDiscountAmount: discountResult.totalDiscountAmount,
+        discountedSubtotal: discountResult.discountedSubtotal,
+        appliedDiscounts: discountResult.appliedDiscounts,
+        itemDiscounts: discountResult.itemDiscounts,
+      },
+      promoCodeUsed: promoCodeData,
       addOnsTotal: totalAddOnsAmount,
       packagingFee: packagingAmount,
       deliveryFee: deliveryAmount,
@@ -347,6 +421,14 @@ const createOrder = async (req, res) => {
     });
 
     await newOrder.save();
+
+    // After saving order, increment promo code usage
+    if (promoCodeData) {
+      await incrementPromoCodeUsage(
+        promoCodeData.code,
+        customerDetails?.customerId
+      );
+    }
 
     await logAction(
       req.user.id,

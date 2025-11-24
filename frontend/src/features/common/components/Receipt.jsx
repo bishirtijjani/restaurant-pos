@@ -15,6 +15,7 @@ import {
   UtensilsCrossed,
   Truck,
   Receipt as ReceiptIcon,
+  Tag,
 } from "lucide-react";
 import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
 
@@ -43,7 +44,12 @@ const Receipt = ({ extraObject, closeModal }) => {
     customerPhone: orderData.customerDetails?.phone || "",
     customerAddress: orderData.customerDetails?.address || "",
     items: orderData.orderItems || orderData.menuItems || [],
-    subtotal: orderData.taxBreakdown?.subtotal || 0,
+    discountBreakdown: orderData.discountBreakdown || null,
+    promoCodeUsed: orderData.promoCodeUsed || null,
+    subtotal: orderData.discountBreakdown?.hasDiscount
+      ? orderData.discountBreakdown.discountedSubtotal
+      : orderData.taxBreakdown?.subtotal || 0,
+    originalSubtotal: orderData.discountBreakdown?.originalSubtotal || 0,
     serviceCharge: orderData.taxBreakdown?.serviceCharge || 0,
     tax: orderData.taxBreakdown?.totalTax || 0,
     addOnsTotal: orderData.addOnsTotal || 0,
@@ -192,13 +198,64 @@ const Receipt = ({ extraObject, closeModal }) => {
             {/* Totals */}
             <table className="w-full text-xs">
               <tbody>
-                <tr>
-                  <td>Subtotal:</td>
-                  <td className="text-right">
-                    {currency}
-                    {receipt.subtotal.toFixed(2)}
-                  </td>
-                </tr>
+                {/* Discount Section */}
+                {receipt.discountBreakdown?.hasDiscount ? (
+                  <>
+                    <tr>
+                      <td>Subtotal:</td>
+                      <td className="text-right line-through opacity-60">
+                        {currency}
+                        {receipt.originalSubtotal.toFixed(2)}
+                      </td>
+                    </tr>
+                    {receipt.discountBreakdown.appliedDiscounts?.map(
+                      (discount, idx) => (
+                        <tr key={idx} className="text-green-600">
+                          <td className="pl-2">
+                            <span className="inline-flex items-center gap-1">
+                              <Tag size={10} />
+                              {discount.name}:
+                            </span>
+                          </td>
+                          <td className="text-right">
+                            -{currency}
+                            {discount.amount?.toFixed(2)}
+                          </td>
+                        </tr>
+                      )
+                    )}
+                    <tr className="font-medium">
+                      <td>After Discount:</td>
+                      <td className="text-right">
+                        {currency}
+                        {receipt.discountBreakdown.discountedSubtotal?.toFixed(
+                          2
+                        )}
+                      </td>
+                    </tr>
+                  </>
+                ) : (
+                  <tr>
+                    <td>Subtotal:</td>
+                    <td className="text-right">
+                      {currency}
+                      {receipt.subtotal.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
+
+                {/* Promo Code Display */}
+                {receipt.promoCodeUsed?.code && (
+                  <tr className="italic text-green-600">
+                    <td colSpan="2" className="text-center py-1">
+                      <span className="inline-flex items-center gap-1">
+                        <Tag size={10} />
+                        Promo Code Applied: {receipt.promoCodeUsed.code}
+                      </span>
+                    </td>
+                  </tr>
+                )}
+
                 {receipt.tax > 0 && (
                   <tr>
                     <td>Tax:</td>

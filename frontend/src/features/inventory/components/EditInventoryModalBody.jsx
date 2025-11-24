@@ -1,7 +1,6 @@
-// frontend/src/features/inventory/components/EditInventoryModalBody.jsx
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updateInventoryItem, fetchInventoryItems } from "../inventorySlice";
+import { updateInventoryItem } from "../inventorySlice";
 import { fetchAllSuppliers } from "../../suppliers/suppliersSlice";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
@@ -43,6 +42,7 @@ const EditInventoryModalBody = ({ extraObject }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!settings) {
@@ -64,7 +64,7 @@ const EditInventoryModalBody = ({ extraObject }) => {
         reason: "",
       });
     }
-  }, [dispatch, item]);
+  }, [dispatch, item, settings]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -87,11 +87,20 @@ const EditInventoryModalBody = ({ extraObject }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Prevent double submission
+    if (isSubmitting) {
+      console.log("Already submitting, ignoring duplicate submit");
+      return;
+    }
+
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       await dispatch(
@@ -112,15 +121,18 @@ const EditInventoryModalBody = ({ extraObject }) => {
           status: 1,
         })
       );
-      dispatch(fetchInventoryItems());
+
       dispatch(closeModal());
     } catch (error) {
+      console.error("Update inventory item error:", error);
       dispatch(
         showNotification({
           message: error.message || "Failed to update item",
           status: 0,
         })
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

@@ -156,12 +156,17 @@ export const CAN = {
     ROLES.ACCOUNTANT,
     ROLES.STAFF,
   ],
+
+  // Discounts Management
+  viewDiscounts: [ROLES.ADMIN, ROLES.MANAGER],
+  createDiscounts: [ROLES.ADMIN, ROLES.MANAGER],
+  editDiscounts: [ROLES.ADMIN, ROLES.MANAGER],
+  deleteDiscounts: [ROLES.ADMIN],
+  applyDiscounts: [ROLES.ADMIN, ROLES.MANAGER, ROLES.CASHIER, ROLES.WAITER],
 };
 
 // Simple permission check
 export const can = (action, userRole) => {
-  console.log("userRole: ", userRole);
-  console.log("action: ", action);
   if (!userRole) return false;
   return CAN[action]?.includes(userRole) || false;
 };

@@ -147,7 +147,49 @@ const OrderSchema = new mongoose.Schema(
       serviceCharge: { type: Number, default: 0 },
       subtotal: { type: Number, default: 0 },
     },
-    discount: { type: Number, default: 0 },
+    discountBreakdown: {
+      hasDiscount: { type: Boolean, default: false },
+      originalSubtotal: { type: Number, default: 0 },
+      totalDiscountAmount: { type: Number, default: 0 },
+      discountedSubtotal: { type: Number, default: 0 },
+      appliedDiscounts: [
+        {
+          name: { type: String },
+          type: {
+            type: String,
+            enum: [
+              "global",
+              "item",
+              "order",
+              "happy_hour",
+              "happy_hour_bogo",
+              "promo_code",
+            ],
+          },
+          discountType: { type: String, enum: ["percentage", "fixed", "bogo"] },
+          discountValue: { type: Number },
+          amount: { type: Number },
+          promoCode: { type: String, default: null },
+          discountId: { type: mongoose.Schema.Types.ObjectId, ref: "Discount" },
+        },
+      ],
+      itemDiscounts: [
+        {
+          menuItemId: { type: mongoose.Schema.Types.ObjectId, ref: "MenuItem" },
+          name: { type: String },
+          discountType: { type: String },
+          discountValue: { type: Number },
+          amount: { type: Number },
+        },
+      ],
+    },
+    // Promo code used
+    promoCodeUsed: {
+      code: { type: String, default: null },
+      discountType: { type: String, default: null },
+      discountValue: { type: Number, default: null },
+      discountAmount: { type: Number, default: null },
+    },
     packagingFee: { type: Number, default: 0 },
     deliveryFee: { type: Number, default: 0 },
     amountPaid: { type: Number, required: true, default: 0 },

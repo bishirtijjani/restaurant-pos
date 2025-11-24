@@ -414,7 +414,7 @@ const InventoryTable = ({ items, onEdit, onDelete, onLink }) => {
 const InventoryManagement = () => {
   const dispatch = useDispatch();
   const { can } = useAuth();
-  const { items, loading, error, success, message } = useSelector(
+  const { items, status, loading, error, success, message } = useSelector(
     (state) => state.inventory
   );
 
@@ -424,8 +424,8 @@ const InventoryManagement = () => {
   const [viewMode, setViewMode] = useState("grid");
 
   useEffect(() => {
-    dispatch(fetchInventoryItems());
-  }, [dispatch]);
+    if (status === "idle") dispatch(fetchInventoryItems());
+  }, [dispatch, status]);
 
   useEffect(() => {
     if (success && message) {
@@ -508,7 +508,7 @@ const InventoryManagement = () => {
     );
   };
 
-  if (loading) return <SuspenseContent />;
+  if (status === "loading") return <SuspenseContent />;
 
   if (!can("viewInventory")) {
     return (

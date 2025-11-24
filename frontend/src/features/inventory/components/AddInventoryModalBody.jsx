@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createInventoryItem, fetchInventoryItems } from "../inventorySlice";
+import { createInventoryItem } from "../inventorySlice";
 import { fetchAllSuppliers } from "../../suppliers/suppliersSlice";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
@@ -41,13 +41,14 @@ const AddInventoryModalBody = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!settings) {
       dispatch(fetchSettings());
     }
     dispatch(fetchAllSuppliers());
-  }, [dispatch]);
+  }, [dispatch, settings]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -70,29 +71,44 @@ const AddInventoryModalBody = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Prevent double submission
+    if (isSubmitting) {
+      console.log("Already submitting, ignoring duplicate submit");
+      return;
+    }
+
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       await dispatch(createInventoryItem(formData)).unwrap();
+
+      // Show success notification
       dispatch(
         showNotification({
           message: "Inventory item added successfully",
           status: 1,
         })
       );
-      dispatch(fetchInventoryItems());
+
+      // Close modal
       dispatch(closeModal());
     } catch (error) {
+      console.error("Create inventory item error:", error);
       dispatch(
         showNotification({
           message: error.message || "Failed to add item",
           status: 0,
         })
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -113,6 +129,7 @@ const AddInventoryModalBody = () => {
               errors.name ? "input-error" : ""
             }`}
             placeholder="Enter item name"
+            disabled={isSubmitting}
           />
           {errors.name && <ErrorText>{errors.name}</ErrorText>}
         </div>
@@ -129,6 +146,7 @@ const AddInventoryModalBody = () => {
             onChange={handleChange}
             className="input input-bordered"
             placeholder="e.g., ITM-001"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -144,6 +162,7 @@ const AddInventoryModalBody = () => {
             className={`select select-bordered ${
               errors.category ? "select-error" : ""
             }`}
+            disabled={isSubmitting}
           >
             <option value="">Select category</option>
             {CATEGORIES.map((cat) => (
@@ -167,6 +186,7 @@ const AddInventoryModalBody = () => {
             className={`select select-bordered ${
               errors.unit ? "select-error" : ""
             }`}
+            disabled={isSubmitting}
           >
             <option value="">Select unit</option>
             {UNITS.map((unit) => (
@@ -190,6 +210,7 @@ const AddInventoryModalBody = () => {
             className="input input-bordered"
             min="0"
             step="0.01"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -205,6 +226,7 @@ const AddInventoryModalBody = () => {
             className="input input-bordered"
             min="0"
             step="0.01"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -223,6 +245,7 @@ const AddInventoryModalBody = () => {
             min="0"
             step="0.01"
             placeholder="0.00"
+            disabled={isSubmitting}
           />
           {errors.costPrice && <ErrorText>{errors.costPrice}</ErrorText>}
         </div>
@@ -236,9 +259,6 @@ const AddInventoryModalBody = () => {
             options={suppliers}
             value={formData.supplier}
             onChange={(e) =>
-              // SearchableSelect currently emits an object like:
-              // { target: { name: "productId", value: optionId } }
-              // map that into the same shape handleChange expects:
               handleChange({
                 target: { name: "supplier", value: e?.target?.value },
               })
@@ -246,6 +266,7 @@ const AddInventoryModalBody = () => {
             placeholder="Select supplier"
             className=""
             isLoading={false}
+            disabled={isSubmitting}
           />
         </div>
 
@@ -261,6 +282,7 @@ const AddInventoryModalBody = () => {
             className="textarea textarea-bordered"
             rows="3"
             placeholder="Additional notes about this item..."
+            disabled={isSubmitting}
           />
         </div>
       </div>
@@ -270,12 +292,16 @@ const AddInventoryModalBody = () => {
           type="button"
           onClick={() => dispatch(closeModal())}
           className="btn btn-outline"
-          disabled={loading}
+          disabled={isSubmitting}
         >
           Cancel
         </button>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? (
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
             <>
               <span className="loading loading-spinner loading-sm"></span>
               Adding...

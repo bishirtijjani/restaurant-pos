@@ -20,6 +20,18 @@ const menuItemSchema = new mongoose.Schema(
       enabled: { type: Boolean, default: false },
       rate: { type: Number, default: 0, min: 0, max: 100 },
     },
+    discount: {
+      enabled: { type: Boolean, default: false },
+      type: {
+        type: String,
+        enum: ["percentage", "fixed"],
+        default: "percentage",
+      },
+      value: { type: Number, default: 0, min: 0 },
+      maxDiscount: { type: Number, default: null }, // Cap for percentage discounts
+      startDate: { type: Date, default: null },
+      endDate: { type: Date, default: null },
+    },
     costPrice: {
       type: Number,
       default: 0,

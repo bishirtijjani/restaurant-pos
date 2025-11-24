@@ -36,6 +36,9 @@ const KeyboardSettings = lazy(() =>
   import("../features/ultraFastPOS/components/KeyboardSettings")
 );
 const AddOnGroups = lazy(() => import("../pages/protected/AddOnGroups"));
+const Discounts = lazy(() => import("../pages/protected/Discounts"));
+const TableManagement = lazy(() => import("../pages/protected/TableManagement"));
+const Reservations = lazy(() => import("../pages/protected/Reservations"));
 
 const routes = [
   { path: "/dashboard", component: Analytics },
@@ -61,6 +64,9 @@ const routes = [
   { path: "/kds", component: KDS },
   { path: "/stations", component: KDSStations },
   { path: "/404", component: Page404 },
+  { path: "/discounts", component: Discounts },
+  { path: "/table-management", component: TableManagement },
+  { path: "/reservations", component: Reservations },
 ];
 
 export default routes;

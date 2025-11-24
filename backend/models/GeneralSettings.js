@@ -99,6 +99,23 @@ const GeneralSettingsSchema = new mongoose.Schema(
         default: "dine-in",
       },
     },
+    globalDiscount: {
+      enabled: { type: Boolean, default: false },
+      name: { type: String, default: "Store Discount" },
+      type: {
+        type: String,
+        enum: ["percentage", "fixed"],
+        default: "percentage",
+      },
+      value: { type: Number, default: 0, min: 0 },
+      maxDiscount: { type: Number, default: null },
+      applicableOrderTypes: {
+        type: [String],
+        enum: ["dine-in", "takeaway", "delivery"],
+        default: ["dine-in", "takeaway", "delivery"],
+      },
+      minimumOrderAmount: { type: Number, default: 0 },
+    },
   },
   {
     timestamps: true,

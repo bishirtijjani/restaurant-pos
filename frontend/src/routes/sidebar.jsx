@@ -28,9 +28,24 @@ export const adminRoutes = [
     name: "Dashboard",
   },
   {
+    path: "/app/table-management",
+    icon: <Shapes className={iconClasses} />,
+    name: "Table Management",
+  },
+  {
+    path: "/app/reservations",
+    icon: <ClipboardList className={iconClasses} />,
+    name: "Reservations",
+  },
+  {
     path: "/app/kds",
     icon: <Monitor className={iconClasses} />,
     name: "Kitchen Display",
+  },
+  {
+    path: "/app/discounts",
+    icon: <Tag className={iconClasses} />,
+    name: "Discounts & Promos",
   },
   {
     path: "/app/stations",
@@ -149,9 +164,24 @@ export const managerRoutes = [
     name: "Dashboard",
   },
   {
+    path: "/app/table-management",
+    icon: <Shapes className={iconClasses} />,
+    name: "Table Management",
+  },
+  {
+    path: "/app/reservations",
+    icon: <ClipboardList className={iconClasses} />,
+    name: "Reservations",
+  },
+  {
     path: "/app/kds",
     icon: <Monitor className={iconClasses} />,
     name: "Kitchen Display",
+  },
+  {
+    path: "/app/discounts",
+    icon: <Tag className={iconClasses} />,
+    name: "Discounts & Promos",
   },
   {
     path: "",
@@ -253,6 +283,16 @@ export const cashierRoutes = [
     path: "/app/dashboard",
     icon: <LayoutDashboard className={iconClasses} />,
     name: "Dashboard",
+  },
+  {
+    path: "/app/table-management",
+    icon: <Shapes className={iconClasses} />,
+    name: "Table Management",
+  },
+  {
+    path: "/app/reservations",
+    icon: <ClipboardList className={iconClasses} />,
+    name: "Reservations",
   },
   {
     path: "",

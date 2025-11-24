@@ -12,9 +12,7 @@ const getUserFromToken = () => {
       const decoded = jwtDecode(token);
       return decoded;
     }
-  } catch (error) {
-    console.error("Failed to decode token:", error);
-  }
+  } catch (error) {}
   return null;
 };
 
@@ -30,7 +28,6 @@ const initialState = {
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (userCredentials, { rejectWithValue }) => {
-    console.log(userCredentials);
     try {
       const response = await axios.post("/api/auth/login", userCredentials);
       const { token, user } = response.data;
@@ -56,7 +53,6 @@ export const registerUser = createAsyncThunk(
       const response = await axios.post("/api/auth/register", userCredentials);
       const { token, user } = response.data;
       localStorage.setItem("token", token);
-      console.log(response);
       return { token, user };
     } catch (error) {
       console.log(error);
@@ -99,7 +95,6 @@ export const getCurrentUser = createAsyncThunk(
           return response.data.user;
         } catch (error) {
           // If fetch fails but we have token data, use that
-          console.log("Using token data as fallback");
           return userFromToken;
         }
       }

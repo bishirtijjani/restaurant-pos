@@ -13,6 +13,7 @@ import {
   User,
   StickyNote,
   Edit3,
+  Tag,
 } from "lucide-react";
 import {
   MODAL_BODY_TYPES,
@@ -22,6 +23,8 @@ import { fetchAllMenuItems } from "../menuItems/menuItemsSlice";
 import { fetchAllCategories } from "../categories/categoriesSlice";
 import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 import TaxBreakdown from "./components/TaxBreakdown";
+import DiscountSection from "./components/DiscountSection";
+import DiscountBreakdown from "./components/DiscountBreakdown";
 import { openRightDrawer } from "../common/rightDrawerSlice";
 import { openModal } from "../common/modalSlice";
 import { useAuth } from "../../utils/permission";
@@ -316,6 +319,7 @@ export default function AddOrder() {
     phone: "",
     address: "",
   });
+  const [orderDiscount, setOrderDiscount] = useState(null);
 
   const canCreateOrders = can("createOrders");
 
@@ -424,6 +428,22 @@ export default function AddOrder() {
       0
     );
 
+    // Calculate discount amount
+    let discountAmount = 0;
+    if (orderDiscount?.enabled) {
+      if (orderDiscount.type === "percentage") {
+        discountAmount = (itemsSubtotal * orderDiscount.value) / 100;
+        if (orderDiscount.maxDiscount) {
+          discountAmount = Math.min(discountAmount, orderDiscount.maxDiscount);
+        }
+      } else if (orderDiscount.type === "fixed") {
+        discountAmount = Math.min(orderDiscount.value, itemsSubtotal);
+      }
+    }
+
+    const discountedSubtotal = itemsSubtotal - discountAmount;
+
+    // Calculate tax on discounted subtotal
     let totalTax = 0;
     if (settings?.taxSettings?.enabled) {
       if (settings.taxSettings.mode === "per-item") {
@@ -436,7 +456,7 @@ export default function AddOrder() {
           totalTax += (itemTotal * rate) / 100;
         });
       } else {
-        totalTax = (itemsSubtotal * settings.taxSettings.globalRate) / 100;
+        totalTax = (discountedSubtotal * settings.taxSettings.globalRate) / 100;
       }
     }
 
@@ -446,7 +466,8 @@ export default function AddOrder() {
         settings.serviceCharge.applyTo === "all" ||
         settings.serviceCharge.applyTo === orderType;
       if (applies)
-        serviceCharge = (itemsSubtotal * settings.serviceCharge.rate) / 100;
+        serviceCharge =
+          (discountedSubtotal * settings.serviceCharge.rate) / 100;
     }
 
     const packaging =
@@ -456,11 +477,14 @@ export default function AddOrder() {
 
     return {
       subtotal: itemsSubtotal,
+      discountAmount,
+      discountedSubtotal,
       totalTax,
       serviceCharge,
       packaging,
       delivery,
-      total: itemsSubtotal + totalTax + serviceCharge + packaging + delivery,
+      total:
+        discountedSubtotal + totalTax + serviceCharge + packaging + delivery,
     };
   };
 
@@ -496,8 +520,11 @@ export default function AddOrder() {
       totalAmount: totals.total,
       orderNote,
       note: orderNote,
+      // Add discount data
+      orderDiscount: orderDiscount?.enabled ? orderDiscount : null,
+      promoCode: orderDiscount?.promoCode || null,
       taxBreakdown: {
-        subtotal: totals.subtotal,
+        subtotal: totals.discountedSubtotal,
         totalTax: totals.totalTax,
         serviceCharge: totals.serviceCharge,
       },
@@ -644,6 +671,16 @@ export default function AddOrder() {
           />
         </div>
 
+        {/* Discount Section */}
+        <DiscountSection
+          orderType={orderType}
+          subtotal={totals.subtotal}
+          appliedDiscount={orderDiscount}
+          onApplyDiscount={setOrderDiscount}
+          onRemoveDiscount={() => setOrderDiscount(null)}
+          currency={currency}
+        />
+
         {/* Fees */}
         {orderType !== "dine-in" && (
           <div className="flex items-center justify-between mb-2 text-sm">
@@ -674,11 +711,40 @@ export default function AddOrder() {
         <div className="bg-base-200 rounded-lg p-3 mb-3 text-sm space-y-1">
           <div className="flex justify-between">
             <span>Subtotal:</span>
-            <span>
+            <span
+              className={
+                totals.discountAmount > 0
+                  ? "line-through text-base-content/50"
+                  : ""
+              }
+            >
               {currency}
               {totals.subtotal.toFixed(2)}
             </span>
           </div>
+
+          {totals.discountAmount > 0 && (
+            <>
+              <div className="flex justify-between text-success">
+                <span className="flex items-center gap-1">
+                  <Tag className="w-3 h-3" />
+                  {orderDiscount?.name || "Discount"}:
+                </span>
+                <span>
+                  -{currency}
+                  {totals.discountAmount.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between font-medium">
+                <span>After Discount:</span>
+                <span>
+                  {currency}
+                  {totals.discountedSubtotal.toFixed(2)}
+                </span>
+              </div>
+            </>
+          )}
+
           {totals.totalTax > 0 && (
             <div className="flex justify-between">
               <span>Tax:</span>

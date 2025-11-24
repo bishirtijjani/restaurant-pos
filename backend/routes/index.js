@@ -24,5 +24,10 @@ router.use("/inventory", require("./inventoryRoutes"));
 router.use("/purchase-orders", require("./purchaseOrderRoutes"));
 router.use("/stock-adjustments", require("./stockAdjustmentRoutes"));
 router.use("/ultra-fast-pos", require("./ultraFastPOSRoutes"));
+router.use("/discounts", require("./discountRoutes"));
+router.use("/promo-codes", require("./promoCodeRoutes"));
+router.use("/floors", require("./floorRoutes"));
+router.use("/tables", require("./tableRoutes"));
+router.use("/reservations", require("./reservationRoutes"));
 
 module.exports = router;

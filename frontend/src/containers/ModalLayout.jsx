@@ -34,7 +34,7 @@ import ModifyOrderModalBody from "../features/orders/components/ModifyOrderModal
 import AddItemToOrderModalBody from "../features/orders/components/AddItemToOrderModalBody";
 import VoidOrderItemsModalBody from "../features/orders/components/VoidOrderItemsModalBody";
 import AddOnSelectorModalBody from "../features/orders/components/AddOnSelectorModalBody";
-// newly imported order/kds/confirmation/session components
+// order/kds/confirmation/session components
 import AddOrderModalBody from "../features/orders/components/AddOrderModalBody";
 import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
 import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
@@ -62,6 +62,10 @@ import ViewStockAdjustmentModalBody from "../features/stockAdjustments/component
 
 // Purchase order modals
 import ReceivePurchaseOrderModalBody from "../features/purchaseOrders/components/ReceivePurchaseOrderModalBody";
+
+// discount and promos
+import AddDiscountModalBody from "../features/discounts/components/AddDiscountModalBody";
+import AddPromoCodeModalBody from "../features/discounts/components/AddPromoCodeModalBody";
 
 // Common modals
 import ConfirmationModalBody from "../features/common/components/ConfirmationModalBody";
@@ -307,6 +311,31 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.LINK_MENU_ITEMS]: (
                   <LinkMenuItemsModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+
+                [MODAL_BODY_TYPES.ADD_DISCOUNT]: (
+                  <AddDiscountModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_DISCOUNT]: (
+                  <AddDiscountModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_PROMO_CODE]: (
+                  <AddPromoCodeModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_PROMO_CODE]: (
+                  <AddPromoCodeModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />

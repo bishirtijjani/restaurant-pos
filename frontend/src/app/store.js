@@ -22,6 +22,10 @@ import purchaseOrdersReducer from "../features/purchaseOrders/purchaseOrdersSlic
 import offlineMiddleware from "../utils/offline/offlineMiddleware";
 import ultraFastPOSReducer from "../features/ultraFastPOS/ultraFastPOSSlice";
 import addOnGroupsReducer from "../features/addOnGroups/addOnGroupsSlice";
+import discountsReducer from "../features/discounts/discountsSlice";
+import floorsReducer from "../features/table-management/floorSlice";
+import tablesReducer from "../features/table-management/tableSlice";
+import reservationsReducer from "../features/reservations/reservationSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -46,6 +50,10 @@ const combinedReducer = {
   purchaseOrders: purchaseOrdersReducer,
   ultraFastPOS: ultraFastPOSReducer,
   addOnGroups: addOnGroupsReducer,
+  discounts: discountsReducer,
+  floors: floorsReducer,
+  tables: tablesReducer,
+  reservations: reservationsReducer,
 };
 
 export default configureStore({
