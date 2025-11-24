@@ -37,7 +37,8 @@ const KeyboardSettings = lazy(() =>
 );
 const AddOnGroups = lazy(() => import("../pages/protected/AddOnGroups"));
 const Discounts = lazy(() => import("../pages/protected/Discounts"));
-const TableManagement = lazy(() => import("../pages/protected/TableManagement"));
+const Tables = lazy(() => import("../pages/protected/Tables"));
+const Floors = lazy(() => import("../pages/protected/Floors"));
 const Reservations = lazy(() => import("../pages/protected/Reservations"));
 
 const routes = [
@@ -65,7 +66,8 @@ const routes = [
   { path: "/stations", component: KDSStations },
   { path: "/404", component: Page404 },
   { path: "/discounts", component: Discounts },
-  { path: "/table-management", component: TableManagement },
+  { path: "/table-management", component: Tables },
+  { path: "/floors", component: Floors },
   { path: "/reservations", component: Reservations },
 ];
 

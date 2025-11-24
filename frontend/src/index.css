@@ -18,3 +18,111 @@
   flex: 1;
   overflow: auto;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Drag and drop styles */
+.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.drag-over {
+  border: 2px dashed var(--primary);
+  background-color: var(--primary-content);
+}
+
+/* Table status colors */
+.status-available {
+  @apply bg-success/20 border-success;
+}
+
+.status-occupied {
+  @apply bg-warning/20 border-warning;
+}
+
+.status-ordered {
+  @apply bg-info/20 border-info;
+}
+
+.status-reserved {
+  @apply bg-secondary/20 border-secondary;
+}
+
+.status-cleaning {
+  @apply bg-neutral/20 border-neutral;
+}
+
+.status-unavailable {
+  @apply bg-error/20 border-error;
+}
+
+/* Smooth transitions */
+.transition-all-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all-smooth;
+}
+
+.card-hover:hover {
+  @apply shadow-2xl -translate-y-1;
+}

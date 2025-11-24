@@ -1,4 +1,3 @@
-// frontend/src/features/floors/index.jsx
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -8,61 +7,82 @@ import {
   updateFloor,
   deleteFloor,
 } from "./floorSlice";
-import { fetchTables } from "./tableSlice";
+import { fetchTables } from "../tables/tableSlice";
 import TitleCard from "../../components/Cards/TitleCard";
-import { Plus, Edit3, Trash2, ArrowRight, Layers } from "lucide-react";
+import { Plus, Edit3, Trash2, ArrowRight, Layers, Grid } from "lucide-react";
 import { showNotification } from "../common/headerSlice";
 import Can from "../../components/Auth/Can";
 import { useAuth } from "../../utils/permission";
 
 const FloorCard = ({ floor, onEdit, onDelete, onViewTables, tablesCount }) => {
   return (
-    <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-all border border-base-200">
-      <div className="card-body p-4">
+    <div className="card bg-gradient-to-br from-base-100 to-base-200 shadow-lg hover:shadow-xl transition-all border border-primary/20 hover:border-primary/40">
+      <div className="card-body p-5">
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <h3 className="font-bold text-lg flex items-center gap-2">
-              <Layers className="w-5 h-5 text-primary" />
+            <h3 className="font-bold text-xl flex items-center gap-2 mb-2">
+              <Layers className="w-6 h-6 text-primary" />
               {floor.name}
             </h3>
             {floor.description && (
-              <p className="text-sm text-base-content/70 mt-1">
+              <p className="text-sm text-base-content/70 mb-3">
                 {floor.description}
               </p>
             )}
-            <div className="mt-2 flex items-center gap-2">
-              <span className="badge badge-sm badge-outline">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="badge badge-primary badge-lg gap-2">
+                <Grid className="w-3 h-3" />
                 {tablesCount} tables
-              </span>
+              </div>
+              <span className="badge badge-outline">Order: {floor.order}</span>
               {!floor.isActive && (
-                <span className="badge badge-sm badge-warning">Inactive</span>
+                <span className="badge badge-warning">Inactive</span>
               )}
             </div>
           </div>
-          <div className="flex gap-1">
-            <Can do="editMenu">
-              <button
-                onClick={() => onEdit(floor)}
-                className="btn btn-sm btn-ghost btn-circle"
-                title="Edit"
+          <Can do="editMenu">
+            <div className="dropdown dropdown-end">
+              <label tabIndex={0} className="btn btn-ghost btn-circle btn-sm">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                  />
+                </svg>
+              </label>
+              <ul
+                tabIndex={0}
+                className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
               >
-                <Edit3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onDelete(floor)}
-                className="btn btn-sm btn-ghost btn-circle text-error"
-                title="Delete"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </Can>
-          </div>
+                <li>
+                  <a onClick={() => onEdit(floor)}>
+                    <Edit3 className="w-4 h-4" />
+                    Edit
+                  </a>
+                </li>
+                <li>
+                  <a onClick={() => onDelete(floor)} className="text-error">
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </Can>
         </div>
         <button
           onClick={() => onViewTables(floor)}
-          className="btn btn-primary btn-sm mt-4 gap-2"
+          className="btn btn-primary btn-block mt-4 gap-2"
         >
-          View Tables <ArrowRight className="w-4 h-4" />
+          Manage Tables
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -76,84 +96,107 @@ const FloorFormModal = ({ floor, onClose, onSave }) => {
     order: floor?.order || 0,
     isActive: floor?.isActive ?? true,
   });
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Floor name is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!validate()) return;
     onSave(formData);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+      <div className="bg-base-100 rounded-lg shadow-2xl max-w-md w-full animate-slideUp">
         <form onSubmit={handleSubmit}>
-          <div className="p-6">
-            <h3 className="text-2xl font-bold mb-4">
+          <div className="p-6 border-b border-base-300">
+            <h3 className="text-2xl font-bold">
               {floor ? "Edit Floor" : "Create Floor"}
             </h3>
+          </div>
 
-            <div className="space-y-4">
-              <div className="form-control">
+          <div className="p-6 space-y-4">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Floor Name *</span>
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  if (errors.name) setErrors({ ...errors, name: "" });
+                }}
+                className={`input input-bordered ${
+                  errors.name ? "input-error" : ""
+                }`}
+                placeholder="e.g., Ground Floor, First Floor"
+              />
+              {errors.name && (
                 <label className="label">
-                  <span className="label-text">Floor Name *</span>
+                  <span className="label-text-alt text-error">
+                    {errors.name}
+                  </span>
                 </label>
+              )}
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Description</span>
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="textarea textarea-bordered"
+                rows="2"
+                placeholder="Optional description"
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Display Order</span>
+              </label>
+              <input
+                type="number"
+                value={formData.order}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    order: parseInt(e.target.value) || 0,
+                  })
+                }
+                className="input input-bordered"
+                min="0"
+              />
+              <label className="label">
+                <span className="label-text-alt">
+                  Lower numbers appear first
+                </span>
+              </label>
+            </div>
+
+            <div className="form-control">
+              <label className="label cursor-pointer justify-start gap-2">
                 <input
-                  type="text"
-                  value={formData.name}
+                  type="checkbox"
+                  checked={formData.isActive}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                    setFormData({ ...formData, isActive: e.target.checked })
                   }
-                  className="input input-bordered"
-                  placeholder="e.g., Ground Floor, First Floor"
-                  required
+                  className="checkbox checkbox-primary"
                 />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Description</span>
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  className="textarea textarea-bordered"
-                  rows="2"
-                  placeholder="Optional description"
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Display Order</span>
-                </label>
-                <input
-                  type="number"
-                  value={formData.order}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      order: parseInt(e.target.value),
-                    })
-                  }
-                  className="input input-bordered"
-                  min="0"
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label cursor-pointer justify-start gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) =>
-                      setFormData({ ...formData, isActive: e.target.checked })
-                    }
-                    className="checkbox checkbox-primary"
-                  />
-                  <span className="label-text">Active</span>
-                </label>
-              </div>
+                <span className="label-text font-medium">Active</span>
+              </label>
             </div>
           </div>
 
@@ -281,7 +324,7 @@ const FloorManagement = () => {
           <span className="loading loading-spinner loading-lg"></span>
         </div>
       ) : floors.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="text-center py-16 bg-base-200 rounded-lg">
           <Layers className="w-16 h-16 mx-auto text-base-content/30 mb-4" />
           <h3 className="text-xl font-semibold mb-2">No Floors Yet</h3>
           <p className="text-base-content/70 mb-4">
@@ -295,7 +338,7 @@ const FloorManagement = () => {
           </Can>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {floors.map((floor) => (
             <FloorCard
               key={floor._id}

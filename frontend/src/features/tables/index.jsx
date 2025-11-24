@@ -18,12 +18,12 @@ import {
   linkTableToOrder,
   unlinkTableFromOrder,
 } from "./tableSlice";
-import { fetchFloorById } from "./floorSlice";
+import { fetchFloorById } from "../floors/floorSlice";
 import { fetchOrders } from "../orders/ordersSlice";
 import TitleCard from "../../components/Cards/TitleCard";
 import DraggableTable from "./components/DraggableTable";
-import TableFormModal from "./components/TableFormModal";
-import TableDetailsModal from "./components/TableDetailsModal";
+import TableFormModal from "./components/TableFormModalBody";
+import TableDetailsModal from "./components/TableDetailsModalBody";
 import { Plus, ArrowLeft, Grid, List, Users, Settings } from "lucide-react";
 import { showNotification } from "../common/headerSlice";
 import Can from "../../components/Auth/Can";

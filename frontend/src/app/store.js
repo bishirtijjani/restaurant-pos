@@ -23,8 +23,8 @@ import offlineMiddleware from "../utils/offline/offlineMiddleware";
 import ultraFastPOSReducer from "../features/ultraFastPOS/ultraFastPOSSlice";
 import addOnGroupsReducer from "../features/addOnGroups/addOnGroupsSlice";
 import discountsReducer from "../features/discounts/discountsSlice";
-import floorsReducer from "../features/table-management/floorSlice";
-import tablesReducer from "../features/table-management/tableSlice";
+import tablesReducer from "../features/tables/tableSlice";
+import floorsReducer from "../features/floors/floorSlice";
 import reservationsReducer from "../features/reservations/reservationSlice";
 
 const combinedReducer = {
