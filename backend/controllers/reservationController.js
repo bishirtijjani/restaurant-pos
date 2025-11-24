@@ -1,32 +1,26 @@
 const Reservation = require("../models/Reservation");
 const Table = require("../models/Table");
-const Customer = require("../models/Customer");
 const logAction = require("../utils/logAction");
-const { sendNotification } = require("../utils/webSocket");
 
-// Get all reservations
 exports.getAllReservations = async (req, res) => {
   try {
-    const { from, to, status, table, floor } = req.query;
-
+    const { status, tableId, date } = req.query;
     const filter = {};
-    if (status) filter.status = status;
-    if (table) filter.table = table;
-    if (floor) filter.floor = floor;
 
-    if (from && to) {
-      filter.date = {
-        $gte: new Date(new Date(from).setHours(0, 0, 0, 0)),
-        $lte: new Date(new Date(to).setHours(23, 59, 59, 999)),
-      };
+    if (status) filter.status = status;
+    if (tableId) filter.tableId = tableId;
+    if (date) {
+      const startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+      filter.reservationDate = { $gte: startDate, $lte: endDate };
     }
 
     const reservations = await Reservation.find(filter)
-      .populate("table", "tableNumber")
-      .populate("floor", "name")
+      .populate("tableId", "tableNumber floorId status")
       .populate("createdBy", "fullname")
-      .populate("confirmedBy", "fullname")
-      .sort({ date: -1, time: -1 });
+      .sort({ reservationDate: 1, reservationTime: 1 });
 
     res.status(200).json({
       success: true,
@@ -43,15 +37,11 @@ exports.getAllReservations = async (req, res) => {
   }
 };
 
-// Get reservation by ID
 exports.getReservationById = async (req, res) => {
   try {
     const reservation = await Reservation.findById(req.params.id)
-      .populate("table", "tableNumber capacity")
-      .populate("floor", "name")
-      .populate("createdBy", "fullname")
-      .populate("confirmedBy", "fullname")
-      .populate("customerId");
+      .populate("tableId", "tableNumber floorId status capacity")
+      .populate("createdBy", "fullname email");
 
     if (!reservation) {
       return res.status(404).json({
@@ -74,92 +64,91 @@ exports.getReservationById = async (req, res) => {
   }
 };
 
-// Create a new reservation
 exports.createReservation = async (req, res) => {
   try {
     const {
-      customer,
-      customerId,
-      table,
-      date,
-      time,
+      tableId,
+      customerName,
+      customerPhone,
+      customerEmail,
       partySize,
+      reservationDate,
+      reservationTime,
       duration,
-      specialRequests,
       notes,
     } = req.body;
 
     if (
-      !customer ||
-      !customer.name ||
-      !customer.phone ||
-      !table ||
-      !date ||
-      !time ||
-      !partySize
+      !tableId ||
+      !customerName ||
+      !customerPhone ||
+      !partySize ||
+      !reservationDate ||
+      !reservationTime
     ) {
       return res.status(400).json({
         success: false,
         message:
-          "Customer details, table, date, time, and party size are required",
+          "Required fields: tableId, customerName, customerPhone, partySize, reservationDate, reservationTime",
       });
     }
 
-    // Find table and floor
-    const tableDoc = await Table.findById(table);
-    if (!tableDoc) {
+    const table = await Table.findById(tableId);
+    if (!table) {
       return res.status(404).json({
         success: false,
         message: "Table not found",
       });
     }
 
-    // Check for conflicting reservations
-    const conflictingReservation = await Reservation.findOne({
-      table,
-      date: new Date(new Date(date).setHours(0, 0, 0, 0)),
-      time, // This might need more sophisticated time-range checking
-      status: { $in: ["pending", "confirmed"] },
-    });
-
-    if (conflictingReservation) {
-      return res.status(409).json({
+    if (!table.isActive) {
+      return res.status(400).json({
         success: false,
-        message: "This table is already reserved for the selected date and time",
+        message: "Table is not active",
       });
     }
 
-    let resolvedCustomerId = customerId;
-    if (!resolvedCustomerId) {
-      // Find or create customer
-      let existingCustomer = await Customer.findOne({ phone: customer.phone });
-      if (!existingCustomer) {
-        existingCustomer = await Customer.create({
-          name: customer.name,
-          phone: customer.phone,
-          email: customer.email || "",
+    if (partySize > table.capacity) {
+      return res.status(400).json({
+        success: false,
+        message: `Party size exceeds table capacity (${table.capacity})`,
+      });
+    }
+
+    // Check for conflicts
+    const resDate = new Date(reservationDate);
+    const startOfDay = new Date(resDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(resDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existingReservations = await Reservation.find({
+      tableId,
+      reservationDate: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ["pending", "confirmed", "seated"] },
+    });
+
+    for (const existing of existingReservations) {
+      if (existing.reservationTime === reservationTime) {
+        return res.status(400).json({
+          success: false,
+          message: "Table is already reserved at this time",
         });
       }
-      resolvedCustomerId = existingCustomer._id;
     }
 
     const reservation = await Reservation.create({
-      customer,
-      customerId: resolvedCustomerId,
-      table,
-      floor: tableDoc.floor,
-      date: new Date(new Date(date).setHours(0, 0, 0, 0)),
-      time,
+      tableId,
+      customerName,
+      customerPhone,
+      customerEmail: customerEmail || "",
       partySize,
+      reservationDate: resDate,
+      reservationTime,
       duration: duration || 120,
-      specialRequests,
-      notes,
+      notes: notes || "",
       createdBy: req.user.id,
-      lastAction: {
-        action: "create",
-        performedBy: req.user.id,
-        createdAt: new Date(),
-      },
+      status: "pending",
     });
 
     await logAction(
@@ -169,15 +158,17 @@ exports.createReservation = async (req, res) => {
       "create",
       null,
       reservation,
-      `Created reservation ${reservation.reservationNumber}`
+      `Created reservation for ${customerName} at table ${table.tableNumber}`
     );
 
-    sendNotification("reservation_created", reservation);
+    const populatedReservation = await Reservation.findById(reservation._id)
+      .populate("tableId", "tableNumber floorId")
+      .populate("createdBy", "fullname");
 
     res.status(201).json({
       success: true,
       message: "Reservation created successfully",
-      data: reservation,
+      data: populatedReservation,
     });
   } catch (error) {
     console.error("Error creating reservation:", error);
@@ -189,13 +180,10 @@ exports.createReservation = async (req, res) => {
   }
 };
 
-// Update reservation
 exports.updateReservation = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updateData = req.body;
+    const oldReservation = await Reservation.findById(req.params.id);
 
-    const oldReservation = await Reservation.findById(id);
     if (!oldReservation) {
       return res.status(404).json({
         success: false,
@@ -203,43 +191,54 @@ exports.updateReservation = async (req, res) => {
       });
     }
 
-    // Prevent updates to completed or cancelled reservations
-    if (["completed", "cancelled", "no-show"].includes(oldReservation.status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot update a completed or cancelled reservation",
-      });
-    }
+    const {
+      tableId,
+      customerName,
+      customerPhone,
+      customerEmail,
+      partySize,
+      reservationDate,
+      reservationTime,
+      duration,
+      notes,
+    } = req.body;
 
-    const reservation = await Reservation.findByIdAndUpdate(
-      id,
-      {
-        ...updateData,
-        lastAction: {
-          action: "update",
-          performedBy: req.user.id,
-          createdAt: new Date(),
-        },
-      },
+    const updateData = {};
+    if (tableId !== undefined) updateData.tableId = tableId;
+    if (customerName !== undefined) updateData.customerName = customerName;
+    if (customerPhone !== undefined) updateData.customerPhone = customerPhone;
+    if (customerEmail !== undefined) updateData.customerEmail = customerEmail;
+    if (partySize !== undefined) updateData.partySize = partySize;
+    if (reservationDate !== undefined)
+      updateData.reservationDate = new Date(reservationDate);
+    if (reservationTime !== undefined)
+      updateData.reservationTime = reservationTime;
+    if (duration !== undefined) updateData.duration = duration;
+    if (notes !== undefined) updateData.notes = notes;
+
+    const updatedReservation = await Reservation.findByIdAndUpdate(
+      req.params.id,
+      updateData,
       { new: true, runValidators: true }
-    );
+    )
+      .populate("tableId", "tableNumber floorId")
+      .populate("createdBy", "fullname");
 
     await logAction(
       req.user.id,
       "Reservation",
-      id,
+      req.params.id,
       "update",
       oldReservation,
-      reservation,
-      `Updated reservation ${reservation.reservationNumber}`
+      updatedReservation,
+      req.body.reason ||
+        `Updated reservation for ${updatedReservation.customerName}`
     );
-
-    sendNotification("reservation_updated", reservation);
 
     res.status(200).json({
       success: true,
       message: "Reservation updated successfully",
-      data: reservation,
+      data: updatedReservation,
     });
   } catch (error) {
     console.error("Error updating reservation:", error);
@@ -251,10 +250,8 @@ exports.updateReservation = async (req, res) => {
   }
 };
 
-// Update reservation status
 exports.updateReservationStatus = async (req, res) => {
   try {
-    const { id } = req.params;
     const { status, reason } = req.body;
 
     if (!status) {
@@ -264,7 +261,8 @@ exports.updateReservationStatus = async (req, res) => {
       });
     }
 
-    const reservation = await Reservation.findById(id);
+    const reservation = await Reservation.findById(req.params.id);
+
     if (!reservation) {
       return res.status(404).json({
         success: false,
@@ -273,61 +271,36 @@ exports.updateReservationStatus = async (req, res) => {
     }
 
     const oldStatus = reservation.status;
-
-    // Handle status-specific logic
-    switch (status) {
-      case "confirmed":
-        reservation.confirmedBy = req.user.id;
-        break;
-      case "seated":
-        reservation.seatedAt = new Date();
-        // Update table status
-        await Table.findByIdAndUpdate(reservation.table, {
-          status: "occupied",
-        });
-        break;
-      case "completed":
-        reservation.completedAt = new Date();
-        // Update table status back to available
-        await Table.findByIdAndUpdate(reservation.table, {
-          status: "available",
-        });
-        break;
-      case "cancelled":
-      case "no-show":
-        // Ensure table is not blocked
-        if (oldStatus === "confirmed" || oldStatus === "pending") {
-          // No table status change needed unless it was set to reserved
-        }
-        break;
-    }
-
     reservation.status = status;
-    reservation.lastAction = {
-      action: status,
-      performedBy: req.user.id,
-      createdAt: new Date(),
-      reason: reason || `Status changed to ${status}`,
-    };
+
+    if (status === "seated") {
+      const table = await Table.findById(reservation.tableId);
+      if (table) {
+        table.status = "occupied";
+        await table.save();
+      }
+    }
 
     await reservation.save();
 
     await logAction(
       req.user.id,
       "Reservation",
-      id,
-      `status_update: ${status}`,
+      req.params.id,
+      "update",
       { status: oldStatus },
       { status },
-      `Reservation ${reservation.reservationNumber} status updated to ${status}`
+      reason || `Changed reservation status from ${oldStatus} to ${status}`
     );
 
-    sendNotification("reservation_status_updated", reservation);
+    const populatedReservation = await Reservation.findById(reservation._id)
+      .populate("tableId", "tableNumber floorId")
+      .populate("createdBy", "fullname");
 
     res.status(200).json({
       success: true,
-      message: `Reservation status updated to ${status}`,
-      data: reservation,
+      message: "Reservation status updated successfully",
+      data: populatedReservation,
     });
   } catch (error) {
     console.error("Error updating reservation status:", error);
@@ -339,12 +312,10 @@ exports.updateReservationStatus = async (req, res) => {
   }
 };
 
-// Delete a reservation
 exports.deleteReservation = async (req, res) => {
   try {
-    const { id } = req.params;
+    const reservation = await Reservation.findById(req.params.id);
 
-    const reservation = await Reservation.findById(id);
     if (!reservation) {
       return res.status(404).json({
         success: false,
@@ -352,28 +323,17 @@ exports.deleteReservation = async (req, res) => {
       });
     }
 
-    // Only allow deletion for pending reservations, otherwise cancel
-    if (reservation.status !== "pending") {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Only pending reservations can be deleted. Please cancel the reservation instead.",
-      });
-    }
-
-    await reservation.deleteOne();
+    await Reservation.findByIdAndDelete(req.params.id);
 
     await logAction(
       req.user.id,
       "Reservation",
-      id,
+      req.params.id,
       "delete",
       reservation,
       null,
-      `Deleted reservation ${reservation.reservationNumber}`
+      `Deleted reservation for ${reservation.customerName}`
     );
-
-    sendNotification("reservation_deleted", { id });
 
     res.status(200).json({
       success: true,
@@ -389,47 +349,4 @@ exports.deleteReservation = async (req, res) => {
   }
 };
 
-// Get available tables for a given date, time, and party size
-exports.getAvailableTables = async (req, res) => {
-  try {
-    const { date, time, partySize } = req.query;
-
-    if (!date || !time || !partySize) {
-      return res.status(400).json({
-        success: false,
-        message: "Date, time, and party size are required",
-      });
-    }
-
-    // Find reserved table IDs for the given time slot
-    const reservedTables = await Reservation.find({
-      date: new Date(new Date(date).setHours(0, 0, 0, 0)),
-      time, // This can be improved with time range logic
-      status: { $in: ["pending", "confirmed"] },
-    }).select("table");
-
-    const reservedTableIds = reservedTables.map((r) => r.table);
-
-    // Find available tables
-    const availableTables = await Table.find({
-      _id: { $nin: reservedTableIds },
-      capacity: { $gte: partySize },
-      isActive: true,
-    })
-      .populate("floor", "name")
-      .sort({ "floor.name": 1, capacity: 1 });
-
-    res.status(200).json({
-      success: true,
-      count: availableTables.length,
-      data: availableTables,
-    });
-  } catch (error) {
-    console.error("Error fetching available tables:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch available tables",
-      error: error.message,
-    });
-  }
-};
+module.exports = exports;

@@ -1,0 +1,287 @@
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+const API_URL = "/api/tables";
+
+export const fetchTables = createAsyncThunk(
+  "tables/fetchTables",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.floorId) queryParams.append("floorId", params.floorId);
+      if (params.status) queryParams.append("status", params.status);
+      if (params.isActive !== undefined)
+        queryParams.append("isActive", params.isActive);
+
+      const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
+      const response = await axios.get(`${API_URL}${query}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchTableById = createAsyncThunk(
+  "tables/fetchTableById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${API_URL}/${id}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const createTable = createAsyncThunk(
+  "tables/createTable",
+  async (tableData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(API_URL, tableData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const updateTable = createAsyncThunk(
+  "tables/updateTable",
+  async ({ id, ...tableData }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}`, tableData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const updateTableStatus = createAsyncThunk(
+  "tables/updateTableStatus",
+  async ({ id, status, reason }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/status`, {
+        status,
+        reason,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const updateTablePosition = createAsyncThunk(
+  "tables/updateTablePosition",
+  async ({ id, position }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/position`, {
+        position,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const linkTableToOrder = createAsyncThunk(
+  "tables/linkTableToOrder",
+  async ({ id, orderId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/link-order`, {
+        orderId,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const unlinkTableFromOrder = createAsyncThunk(
+  "tables/unlinkTableFromOrder",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/unlink-order`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const mergeTables = createAsyncThunk(
+  "tables/mergeTables",
+  async ({ tableIds, reason }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/merge`, {
+        tableIds,
+        reason,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const splitTables = createAsyncThunk(
+  "tables/splitTables",
+  async ({ id, reason }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/split`, { reason });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const deleteTable = createAsyncThunk(
+  "tables/deleteTable",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`${API_URL}/${id}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+const initialState = {
+  tables: [],
+  currentTable: null,
+  loading: false,
+  error: null,
+  success: false,
+  message: "",
+};
+
+const tablesSlice = createSlice({
+  name: "tables",
+  initialState,
+  reducers: {
+    resetTableState: (state) => {
+      state.error = null;
+      state.success = false;
+      state.message = "";
+    },
+    clearCurrentTable: (state) => {
+      state.currentTable = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchTables.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTables.fulfilled, (state, action) => {
+        state.loading = false;
+        state.tables = action.payload.data;
+        state.success = action.payload.success;
+      })
+      .addCase(fetchTables.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch tables";
+      })
+      .addCase(fetchTableById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTableById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentTable = action.payload.data;
+      })
+      .addCase(fetchTableById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch table";
+      })
+      .addCase(createTable.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createTable.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.message = "Table created successfully";
+        state.tables.push(action.payload.data);
+      })
+      .addCase(createTable.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to create table";
+      })
+      .addCase(updateTable.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.message = "Table updated successfully";
+        const index = state.tables.findIndex(
+          (t) => t._id === action.payload.data._id
+        );
+        if (index !== -1) state.tables[index] = action.payload.data;
+      })
+      .addCase(updateTableStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.tables.findIndex(
+          (t) => t._id === action.payload.data._id
+        );
+        if (index !== -1) state.tables[index] = action.payload.data;
+      })
+      .addCase(updateTablePosition.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.tables.findIndex(
+          (t) => t._id === action.payload.data._id
+        );
+        if (index !== -1) state.tables[index] = action.payload.data;
+      })
+      .addCase(linkTableToOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.tables.findIndex(
+          (t) => t._id === action.payload.data._id
+        );
+        if (index !== -1) state.tables[index] = action.payload.data;
+      })
+      .addCase(unlinkTableFromOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.tables.findIndex(
+          (t) => t._id === action.payload.data._id
+        );
+        if (index !== -1) state.tables[index] = action.payload.data;
+      })
+      .addCase(mergeTables.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.message = "Tables merged successfully";
+        action.payload.data.forEach((updatedTable) => {
+          const index = state.tables.findIndex(
+            (t) => t._id === updatedTable._id
+          );
+          if (index !== -1) state.tables[index] = updatedTable;
+        });
+      })
+      .addCase(splitTables.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.message = "Tables split successfully";
+        action.payload.data.forEach((updatedTable) => {
+          const index = state.tables.findIndex(
+            (t) => t._id === updatedTable._id
+          );
+          if (index !== -1) state.tables[index] = updatedTable;
+        });
+      })
+      .addCase(deleteTable.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.message = "Table deleted successfully";
+        state.tables = state.tables.filter((t) => t._id !== action.meta.arg);
+      });
+  },
+});
+
+export const { resetTableState, clearCurrentTable } = tablesSlice.actions;
+export default tablesSlice.reducer;

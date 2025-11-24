@@ -144,9 +144,7 @@ const reservationSlice = createSlice({
         }
       })
       .addCase(deleteReservation.fulfilled, (state, action) => {
-        state.items = state.items.filter(
-          (res) => res._id !== action.payload
-        );
+        state.items = state.items.filter((res) => res._id !== action.payload);
       })
       .addCase(getAvailableTables.fulfilled, (state, action) => {
         state.availableTables = action.payload;

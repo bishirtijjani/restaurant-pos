@@ -1,31 +1,39 @@
 const express = require("express");
 const router = express.Router();
-const {
-  getAllFloors,
-  getFloorById,
-  createFloor,
-  updateFloor,
-  deleteFloor,
-  reorderFloors,
-} = require("../controllers/floorController");
-const { protect, admin } = require("../middleware/authMiddleware");
-const { checkPermission } = require("../middleware/roleMiddleware");
+const floorController = require("../controllers/floorController");
+const authMiddleware = require("../middleware/authMiddleware");
+const roleMiddleware = require("../middleware/roleMiddleware");
 
-// Route for reordering floors
-router
-  .route("/reorder")
-  .patch(protect, checkPermission("floors", "update"), reorderFloors);
+router.use(authMiddleware);
 
-// Standard routes
-router
-  .route("/")
-  .get(protect, checkPermission("floors", "read"), getAllFloors)
-  .post(protect, checkPermission("floors", "create"), createFloor);
+router.get(
+  "/",
+  roleMiddleware("admin", "manager", "cashier", "waiter"),
+  floorController.getAllFloors
+);
 
-router
-  .route("/:id")
-  .get(protect, checkPermission("floors", "read"), getFloorById)
-  .put(protect, checkPermission("floors", "update"), updateFloor)
-  .delete(protect, checkPermission("floors", "delete"), deleteFloor);
+router.get(
+  "/:id",
+  roleMiddleware("admin", "manager", "cashier", "waiter"),
+  floorController.getFloorById
+);
+
+router.post(
+  "/",
+  roleMiddleware("admin", "manager"),
+  floorController.createFloor
+);
+
+router.put(
+  "/:id",
+  roleMiddleware("admin", "manager"),
+  floorController.updateFloor
+);
+
+router.delete(
+  "/:id",
+  roleMiddleware("admin", "manager"),
+  floorController.deleteFloor
+);
 
 module.exports = router;
