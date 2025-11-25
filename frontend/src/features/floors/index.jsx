@@ -1,3 +1,4 @@
+// frontend/src/features/floors/index.jsx - COMPLETE FIX
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -6,10 +7,19 @@ import {
   createFloor,
   updateFloor,
   deleteFloor,
+  resetFloorState,
 } from "./floorSlice";
 import { fetchTables } from "../tables/tableSlice";
 import TitleCard from "../../components/Cards/TitleCard";
-import { Plus, Edit3, Trash2, ArrowRight, Layers, Grid } from "lucide-react";
+import {
+  Plus,
+  Edit3,
+  Trash2,
+  ArrowRight,
+  Layers,
+  Grid,
+  MapPin,
+} from "lucide-react";
 import { showNotification } from "../common/headerSlice";
 import Can from "../../components/Auth/Can";
 import { useAuth } from "../../utils/permission";
@@ -59,7 +69,7 @@ const FloorCard = ({ floor, onEdit, onDelete, onViewTables, tablesCount }) => {
               </label>
               <ul
                 tabIndex={0}
-                className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
+                className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-10"
               >
                 <li>
                   <a onClick={() => onEdit(floor)}>
@@ -222,7 +232,7 @@ const FloorManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { can } = useAuth();
-  const { floors, loading } = useSelector((state) => state.floors);
+  const { floors, loading, error } = useSelector((state) => state.floors);
   const { tables } = useSelector((state) => state.tables);
 
   const [showModal, setShowModal] = useState(false);
@@ -234,6 +244,13 @@ const FloorManagement = () => {
       dispatch(fetchTables());
     }
   }, [dispatch, can]);
+
+  useEffect(() => {
+    if (error) {
+      dispatch(showNotification({ message: error, status: 0 }));
+      dispatch(resetFloorState());
+    }
+  }, [error, dispatch]);
 
   const getTableCount = (floorId) => {
     return tables.filter((t) => t.floorId === floorId && t.isActive).length;
@@ -297,7 +314,11 @@ const FloorManagement = () => {
     return (
       <TitleCard title="Access Denied">
         <div className="text-center py-12">
-          <p className="text-error">You don't have permission to view floors</p>
+          <div className="text-6xl mb-4">🔒</div>
+          <h3 className="text-2xl font-bold text-error mb-4">Access Denied</h3>
+          <p className="text-base-content/70">
+            You don't have permission to view floors
+          </p>
         </div>
       </TitleCard>
     );

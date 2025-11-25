@@ -1,81 +1,59 @@
-// frontend/src/features/tables/index.jsx
+// frontend/src/features/tables/index.jsx - COMPLETE FIX
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
-import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  rectSortingStrategy,
-} from "@dnd-kit/sortable";
 import {
   fetchTables,
   createTable,
   updateTable,
-  updateTablePosition,
   updateTableStatus,
   deleteTable,
-  linkTableToOrder,
-  unlinkTableFromOrder,
+  resetTableState,
 } from "./tableSlice";
 import { fetchFloorById } from "../floors/floorSlice";
 import { fetchOrders } from "../orders/ordersSlice";
+import { fetchAllUsers } from "../users/usersSlice";
 import TitleCard from "../../components/Cards/TitleCard";
-import DraggableTable from "./components/DraggableTable";
 import TableFormModal from "./components/TableFormModalBody";
 import TableDetailsModal from "./components/TableDetailsModalBody";
-import { Plus, ArrowLeft, Grid, List, Users, Settings } from "lucide-react";
+import TableCard from "./components/TableCard";
+import { Plus, ArrowLeft, Grid, List, Users } from "lucide-react";
 import { showNotification } from "../common/headerSlice";
 import Can from "../../components/Auth/Can";
+import { useAuth } from "../../utils/permission";
 
 const TableManagement = () => {
   const { floorId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { can } = useAuth();
 
-  const { currentFloor } = useSelector((state) => state.floors);
-  const { tables, loading } = useSelector((state) => state.tables);
-  const { orders } = useSelector((state) => state.orders);
+  const { currentFloor, loading: floorLoading } = useSelector(
+    (state) => state.floors
+  );
+  const { tables, loading: tablesLoading } = useSelector(
+    (state) => state.tables
+  );
+  const settings = useSelector(
+    (state) => state.generalSettings.generalSettings
+  );
 
   const [viewMode, setViewMode] = useState("grid");
   const [showTableForm, setShowTableForm] = useState(false);
   const [showTableDetails, setShowTableDetails] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
-  const [activeId, setActiveId] = useState(null);
 
   const floorTables = tables.filter((t) => t.floorId === floorId && t.isActive);
+  const loading = floorLoading || tablesLoading;
 
   useEffect(() => {
-    dispatch(fetchFloorById(floorId));
-    dispatch(fetchTables({ floorId }));
-    dispatch(fetchOrders());
-  }, [dispatch, floorId]);
-
-  const handleDragStart = (event) => {
-    setActiveId(event.active.id);
-  };
-
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-
-    if (active.id !== over?.id) {
-      const oldIndex = floorTables.findIndex((t) => t._id === active.id);
-      const newIndex = floorTables.findIndex((t) => t._id === over.id);
-
-      const reordered = arrayMove(floorTables, oldIndex, newIndex);
-
-      reordered.forEach((table, index) => {
-        dispatch(
-          updateTablePosition({
-            id: table._id,
-            position: { x: index * 150, y: 0 },
-          })
-        );
-      });
+    if (floorId) {
+      dispatch(fetchFloorById(floorId));
+      dispatch(fetchTables({ floorId }));
+      dispatch(fetchOrders());
+      dispatch(fetchAllUsers());
     }
-
-    setActiveId(null);
-  };
+  }, [dispatch, floorId]);
 
   const handleCreateTable = () => {
     setSelectedTable(null);
@@ -122,6 +100,9 @@ const TableManagement = () => {
       ).unwrap();
       dispatch(showNotification({ message: "Status updated", status: 1 }));
       dispatch(fetchTables({ floorId }));
+      if (showTableDetails) {
+        setShowTableDetails(false);
+      }
     } catch (error) {
       dispatch(
         showNotification({
@@ -148,6 +129,20 @@ const TableManagement = () => {
       );
     }
   };
+
+  if (!can("viewMenu")) {
+    return (
+      <TitleCard title="Access Denied">
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🔒</div>
+          <h3 className="text-2xl font-bold text-error mb-4">Access Denied</h3>
+          <p className="text-base-content/70">
+            You don't have permission to view tables
+          </p>
+        </div>
+      </TitleCard>
+    );
+  }
 
   return (
     <TitleCard
@@ -202,7 +197,7 @@ const TableManagement = () => {
           <span className="loading loading-spinner loading-lg"></span>
         </div>
       ) : floorTables.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="text-center py-16 bg-base-200 rounded-lg">
           <Users className="w-16 h-16 mx-auto text-base-content/30 mb-4" />
           <h3 className="text-xl font-semibold mb-2">No Tables Yet</h3>
           <p className="text-base-content/70 mb-4">
@@ -219,37 +214,19 @@ const TableManagement = () => {
           </Can>
         </div>
       ) : viewMode === "grid" ? (
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={floorTables.map((t) => t._id)}
-            strategy={rectSortingStrategy}
-          >
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {floorTables.map((table) => (
-                <DraggableTable
-                  key={table._id}
-                  table={table}
-                  onEdit={handleEditTable}
-                  onDelete={handleDeleteTable}
-                  onStatusChange={handleStatusChange}
-                  onViewDetails={handleViewDetails}
-                />
-              ))}
-            </div>
-          </SortableContext>
-          <DragOverlay>
-            {activeId ? (
-              <DraggableTable
-                table={floorTables.find((t) => t._id === activeId)}
-                isDragging
-              />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {floorTables.map((table) => (
+            <TableCard
+              key={table._id}
+              table={table}
+              currency={settings?.currency?.symbol || "$"}
+              onEdit={handleEditTable}
+              onDelete={handleDeleteTable}
+              onStatusChange={handleStatusChange}
+              onViewDetails={handleViewDetails}
+            />
+          ))}
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="table table-zebra">
