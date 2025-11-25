@@ -1,3 +1,4 @@
+// backend/models/Table.js - ENHANCED VERSION
 const mongoose = require("mongoose");
 
 const tableSchema = new mongoose.Schema(
@@ -30,14 +31,24 @@ const tableSchema = new mongoose.Schema(
       ],
       default: "available",
     },
+    // ENHANCED: Position with rotation and size
     position: {
       x: { type: Number, default: 0 },
       y: { type: Number, default: 0 },
+      rotation: { type: Number, default: 0 }, // NEW
+      width: { type: Number, default: 100 }, // NEW
+      height: { type: Number, default: 100 }, // NEW
     },
     shape: {
       type: String,
-      enum: ["square", "circle", "rectangle"],
+      enum: ["square", "circle", "rectangle", "custom"],
       default: "square",
+    },
+    // NEW: Visual customization
+    styling: {
+      color: { type: String, default: "#ffffff" },
+      borderColor: { type: String, default: "#e5e7eb" },
+      icon: { type: String, default: "table" },
     },
     currentOrder: {
       type: mongoose.Schema.Types.ObjectId,
@@ -59,6 +70,12 @@ const tableSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    // NEW: Time tracking
+    timing: {
+      seatedAt: { type: Date, default: null },
+      orderedAt: { type: Date, default: null },
+      estimatedDuration: { type: Number, default: 90 }, // minutes
+    },
     lastOccupiedAt: {
       type: Date,
       default: null,
@@ -66,6 +83,17 @@ const tableSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    // NEW: Reservation link
+    currentReservation: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Reservation",
+      default: null,
+    },
+    // NEW: QR code for contactless ordering
+    qrCode: {
+      type: String,
+      default: null,
     },
     lastAction: {
       action: {
@@ -85,8 +113,15 @@ const tableSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Virtual for occupancy duration
+tableSchema.virtual("occupancyDuration").get(function () {
+  if (!this.timing.seatedAt) return 0;
+  return Math.floor((Date.now() - this.timing.seatedAt) / 1000 / 60); // minutes
+});
+
 tableSchema.index({ floorId: 1, tableNumber: 1 }, { unique: true });
 tableSchema.index({ status: 1 });
 tableSchema.index({ currentOrder: 1 });
+tableSchema.index({ isActive: 1 });
 
 module.exports = mongoose.model("Table", tableSchema);

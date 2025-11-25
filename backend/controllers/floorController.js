@@ -1,6 +1,8 @@
+// backend/controllers/floorController.js - ENHANCED
 const Floor = require("../models/Floor");
 const Table = require("../models/Table");
 const logAction = require("../utils/logAction");
+const { notifyFloorUpdate } = require("../utils/webSocket");
 
 exports.getAllFloors = async (req, res) => {
   try {
@@ -169,6 +171,80 @@ exports.updateFloor = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to update floor",
+      error: error.message,
+    });
+  }
+};
+
+exports.updateFloorLayout = async (req, res) => {
+  try {
+    const { layout } = req.body;
+
+    const floor = await Floor.findByIdAndUpdate(
+      req.params.id,
+      { layout },
+      { new: true, runValidators: true }
+    );
+
+    if (!floor) {
+      return res.status(404).json({
+        success: false,
+        message: "Floor not found",
+      });
+    }
+
+    // Notify via WebSocket
+    notifyFloorUpdate("floor:layout_updated", floor);
+
+    res.status(200).json({
+      success: true,
+      message: "Floor layout updated",
+      data: floor,
+    });
+  } catch (error) {
+    console.error("Error updating floor layout:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update floor layout",
+      error: error.message,
+    });
+  }
+};
+
+// NEW: Bulk update table positions (for drag-and-drop)
+exports.updateTablePositions = async (req, res) => {
+  try {
+    const { tables } = req.body; // Array of { id, position }
+
+    if (!Array.isArray(tables)) {
+      return res.status(400).json({
+        success: false,
+        message: "Tables must be an array",
+      });
+    }
+
+    const updatePromises = tables.map((table) =>
+      Table.findByIdAndUpdate(
+        table.id,
+        { position: table.position },
+        { new: true }
+      )
+    );
+
+    await Promise.all(updatePromises);
+
+    // Notify via WebSocket
+    notifyFloorUpdate("tables:positions_updated", { tables });
+
+    res.status(200).json({
+      success: true,
+      message: "Table positions updated",
+    });
+  } catch (error) {
+    console.error("Error updating table positions:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update table positions",
       error: error.message,
     });
   }

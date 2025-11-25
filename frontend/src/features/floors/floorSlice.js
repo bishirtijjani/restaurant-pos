@@ -56,6 +56,33 @@ export const updateFloor = createAsyncThunk(
   }
 );
 
+export const updateFloorLayout = createAsyncThunk(
+  "floors/updateFloorLayout",
+  async ({ id, layout }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/layout`, { layout });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const updateTablePositions = createAsyncThunk(
+  "floors/updateTablePositions",
+  async ({ floorId, tables }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/${floorId}/table-positions`,
+        { tables }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 export const deleteFloor = createAsyncThunk(
   "floors/deleteFloor",
   async (id, { rejectWithValue }) => {
@@ -75,6 +102,8 @@ const initialState = {
   error: null,
   success: false,
   message: "",
+  pendingUpdates: [],
+  lastSync: null,
 };
 
 const floorsSlice = createSlice({
@@ -89,6 +118,27 @@ const floorsSlice = createSlice({
     clearCurrentFloor: (state) => {
       state.currentFloor = null;
     },
+    updateFloorFromSocket: (state, action) => {
+      const index = state.floors.findIndex((f) => f._id === action.payload._id);
+      if (index !== -1) {
+        state.floors[index] = { ...state.floors[index], ...action.payload };
+      }
+      if (state.currentFloor?._id === action.payload._id) {
+        state.currentFloor = { ...state.currentFloor, ...action.payload };
+      }
+    },
+    // NEW: Optimistic update for drag-and-drop
+    optimisticUpdateTablePosition: (state, action) => {
+      const { tableId, position } = action.payload;
+      if (state.currentFloor?.tables) {
+        const tableIndex = state.currentFloor.tables.findIndex(
+          (t) => t._id === tableId
+        );
+        if (tableIndex !== -1) {
+          state.currentFloor.tables[tableIndex].position = position;
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -100,6 +150,7 @@ const floorsSlice = createSlice({
         state.loading = false;
         state.floors = action.payload.data;
         state.success = action.payload.success;
+        state.lastSync = Date.now();
       })
       .addCase(fetchFloors.rejected, (state, action) => {
         state.loading = false;
@@ -140,6 +191,23 @@ const floorsSlice = createSlice({
         );
         if (index !== -1) state.floors[index] = action.payload.data;
       })
+      .addCase(updateFloorLayout.fulfilled, (state, action) => {
+        const index = state.floors.findIndex(
+          (f) => f._id === action.payload.data._id
+        );
+        if (index !== -1) {
+          state.floors[index] = action.payload.data;
+        }
+        if (state.currentFloor?._id === action.payload.data._id) {
+          state.currentFloor = action.payload.data;
+        }
+        state.success = true;
+        state.message = "Layout updated";
+      })
+      .addCase(updateTablePositions.fulfilled, (state, action) => {
+        state.success = true;
+        state.message = "Table positions saved";
+      })
       .addCase(deleteFloor.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
@@ -149,5 +217,10 @@ const floorsSlice = createSlice({
   },
 });
 
-export const { resetFloorState, clearCurrentFloor } = floorsSlice.actions;
+export const {
+  resetFloorState,
+  clearCurrentFloor,
+  updateFloorFromSocket,
+  optimisticUpdateTablePosition,
+} = floorsSlice.actions;
 export default floorsSlice.reducer;

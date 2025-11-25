@@ -1,7 +1,221 @@
+// backend/controllers/tableController.js - ENHANCED
 const Table = require("../models/Table");
 const Floor = require("../models/Floor");
 const Order = require("../models/Order");
+const Reservation = require("../models/Reservation");
 const logAction = require("../utils/logAction");
+const { notifyTableUpdate } = require("../utils/webSocket");
+const QRCode = require("qrcode");
+
+// NEW: Generate QR code for table
+exports.generateTableQR = async (req, res) => {
+  try {
+    const table = await Table.findById(req.params.id);
+
+    if (!table) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+
+    const qrData = {
+      tableId: table._id,
+      tableNumber: table.tableNumber,
+      floorId: table.floorId,
+      timestamp: Date.now(),
+    };
+
+    const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(qrData));
+
+    table.qrCode = qrCodeDataUrl;
+    await table.save();
+
+    res.status(200).json({
+      success: true,
+      data: { qrCode: qrCodeDataUrl },
+    });
+  } catch (error) {
+    console.error("Error generating QR code:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate QR code",
+      error: error.message,
+    });
+  }
+};
+
+// ENHANCED: Update table with real-time broadcast
+exports.updateTable = async (req, res) => {
+  try {
+    const oldTable = await Table.findById(req.params.id);
+
+    if (!oldTable) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+
+    const {
+      tableNumber,
+      capacity,
+      position,
+      shape,
+      notes,
+      assignedStaff,
+      status,
+      isActive,
+      styling,
+    } = req.body;
+
+    // Check for duplicate table number
+    if (tableNumber && tableNumber !== oldTable.tableNumber) {
+      const existingTable = await Table.findOne({
+        floorId: oldTable.floorId,
+        tableNumber: tableNumber.trim(),
+        _id: { $ne: req.params.id },
+        isActive: true,
+      });
+
+      if (existingTable) {
+        return res.status(400).json({
+          success: false,
+          message: `Table ${tableNumber} already exists on this floor`,
+        });
+      }
+    }
+
+    const updateData = {};
+    if (tableNumber !== undefined) updateData.tableNumber = tableNumber.trim();
+    if (capacity !== undefined) updateData.capacity = capacity;
+    if (position !== undefined) updateData.position = position;
+    if (shape !== undefined) updateData.shape = shape;
+    if (notes !== undefined) updateData.notes = notes;
+    if (assignedStaff !== undefined) updateData.assignedStaff = assignedStaff;
+    if (status !== undefined) {
+      updateData.status = status;
+      // Update timing
+      if (status === "occupied" && oldTable.status !== "occupied") {
+        updateData["timing.seatedAt"] = new Date();
+      } else if (status === "available") {
+        updateData["timing.seatedAt"] = null;
+        updateData["timing.orderedAt"] = null;
+      }
+    }
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (styling !== undefined) updateData.styling = styling;
+
+    if (status === "occupied" && oldTable.status !== "occupied") {
+      updateData.lastOccupiedAt = new Date();
+    }
+
+    const updatedTable = await Table.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    )
+      .populate("floorId", "name")
+      .populate("assignedStaff", "fullname")
+      .populate("currentOrder", "orderNumber orderStatus totalAmount")
+      .populate("currentReservation");
+
+    await logAction(
+      req.user.id,
+      "Table",
+      req.params.id,
+      "update",
+      oldTable,
+      updatedTable,
+      req.body.reason || `Updated table: ${updatedTable.tableNumber}`
+    );
+
+    // Update floor capacity
+    const floor = await Floor.findById(oldTable.floorId);
+    if (floor) {
+      await floor.updateCapacity();
+    }
+
+    // Broadcast update via WebSocket
+    notifyTableUpdate("table:updated", updatedTable);
+
+    res.status(200).json({
+      success: true,
+      message: "Table updated successfully",
+      data: updatedTable,
+    });
+  } catch (error) {
+    console.error("Error updating table:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update table",
+      error: error.message,
+    });
+  }
+};
+
+// NEW: Get table timeline (occupancy history)
+exports.getTableTimeline = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const table = await Table.findById(req.params.id);
+    if (!table) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+
+    // Get orders for this table
+    const orders = await Order.find({
+      table: table.tableNumber,
+      createdAt: {
+        $gte: startDate
+          ? new Date(startDate)
+          : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        $lte: endDate ? new Date(endDate) : new Date(),
+      },
+    }).sort({ createdAt: -1 });
+
+    // Get reservations
+    const reservations = await Reservation.find({
+      tableId: table._id,
+      reservationDate: {
+        $gte: startDate
+          ? new Date(startDate)
+          : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        $lte: endDate ? new Date(endDate) : new Date(),
+      },
+    }).sort({ reservationDate: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        table,
+        orders,
+        reservations,
+        stats: {
+          totalOrders: orders.length,
+          totalRevenue: orders.reduce((sum, o) => sum + o.totalAmount, 0),
+          averageOrderValue:
+            orders.length > 0
+              ? orders.reduce((sum, o) => sum + o.totalAmount, 0) /
+                orders.length
+              : 0,
+          totalReservations: reservations.length,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching table timeline:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch table timeline",
+      error: error.message,
+    });
+  }
+};
 
 exports.getAllTables = async (req, res) => {
   try {
@@ -138,91 +352,6 @@ exports.createTable = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to create table",
-      error: error.message,
-    });
-  }
-};
-
-exports.updateTable = async (req, res) => {
-  try {
-    const oldTable = await Table.findById(req.params.id);
-
-    if (!oldTable) {
-      return res.status(404).json({
-        success: false,
-        message: "Table not found",
-      });
-    }
-
-    const {
-      tableNumber,
-      capacity,
-      position,
-      shape,
-      notes,
-      assignedStaff,
-      status,
-      isActive,
-    } = req.body;
-
-    if (tableNumber && tableNumber !== oldTable.tableNumber) {
-      const existingTable = await Table.findOne({
-        floorId: oldTable.floorId,
-        tableNumber: tableNumber.trim(),
-        _id: { $ne: req.params.id },
-        isActive: true,
-      });
-
-      if (existingTable) {
-        return res.status(400).json({
-          success: false,
-          message: `Table ${tableNumber} already exists on this floor`,
-        });
-      }
-    }
-
-    const updateData = {};
-    if (tableNumber !== undefined) updateData.tableNumber = tableNumber.trim();
-    if (capacity !== undefined) updateData.capacity = capacity;
-    if (position !== undefined) updateData.position = position;
-    if (shape !== undefined) updateData.shape = shape;
-    if (notes !== undefined) updateData.notes = notes;
-    if (assignedStaff !== undefined) updateData.assignedStaff = assignedStaff;
-    if (status !== undefined) updateData.status = status;
-    if (isActive !== undefined) updateData.isActive = isActive;
-
-    if (status === "occupied" && oldTable.status !== "occupied") {
-      updateData.lastOccupiedAt = new Date();
-    }
-
-    const updatedTable = await Table.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    )
-      .populate("floorId", "name")
-      .populate("assignedStaff", "fullname");
-
-    await logAction(
-      req.user.id,
-      "Table",
-      req.params.id,
-      "update",
-      oldTable,
-      updatedTable,
-      req.body.reason || `Updated table: ${updatedTable.tableNumber}`
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Table updated successfully",
-      data: updatedTable,
-    });
-  } catch (error) {
-    console.error("Error updating table:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to update table",
       error: error.message,
     });
   }
