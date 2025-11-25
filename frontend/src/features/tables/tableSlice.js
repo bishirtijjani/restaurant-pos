@@ -1,3 +1,4 @@
+// frontend/src/features/tables/tableSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -187,7 +188,7 @@ const tablesSlice = createSlice({
       })
       .addCase(fetchTables.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch tables";
+        state.error = action.payload?.message || "Failed to fetch tables";
       })
       .addCase(fetchTableById.pending, (state) => {
         state.loading = true;
@@ -199,7 +200,7 @@ const tablesSlice = createSlice({
       })
       .addCase(fetchTableById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch table";
+        state.error = action.payload?.message || "Failed to fetch table";
       })
       .addCase(createTable.pending, (state) => {
         state.loading = true;
@@ -215,6 +216,9 @@ const tablesSlice = createSlice({
         state.loading = false;
         state.error = action.payload?.message || "Failed to create table";
       })
+      .addCase(updateTable.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateTable.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
@@ -223,6 +227,10 @@ const tablesSlice = createSlice({
           (t) => t._id === action.payload.data._id
         );
         if (index !== -1) state.tables[index] = action.payload.data;
+      })
+      .addCase(updateTable.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to update table";
       })
       .addCase(updateTableStatus.fulfilled, (state, action) => {
         state.loading = false;
@@ -274,11 +282,18 @@ const tablesSlice = createSlice({
           if (index !== -1) state.tables[index] = updatedTable;
         });
       })
+      .addCase(deleteTable.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(deleteTable.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
         state.message = "Table deleted successfully";
         state.tables = state.tables.filter((t) => t._id !== action.meta.arg);
+      })
+      .addCase(deleteTable.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to delete table";
       });
   },
 });

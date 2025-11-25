@@ -1,3 +1,4 @@
+// backend/routes/floorRoutes.js
 const express = require("express");
 const router = express.Router();
 const floorController = require("../controllers/floorController");
@@ -28,6 +29,18 @@ router.put(
   "/:id",
   roleMiddleware("admin", "manager"),
   floorController.updateFloor
+);
+
+router.put(
+  "/:id/layout",
+  roleMiddleware("admin", "manager"),
+  floorController.updateFloorLayout
+);
+
+router.put(
+  "/:id/table-positions",
+  roleMiddleware("admin", "manager"),
+  floorController.updateTablePositions
 );
 
 router.delete(

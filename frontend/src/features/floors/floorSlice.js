@@ -1,3 +1,4 @@
+// frontend/src/features/floors/floorSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -102,8 +103,6 @@ const initialState = {
   error: null,
   success: false,
   message: "",
-  pendingUpdates: [],
-  lastSync: null,
 };
 
 const floorsSlice = createSlice({
@@ -118,16 +117,6 @@ const floorsSlice = createSlice({
     clearCurrentFloor: (state) => {
       state.currentFloor = null;
     },
-    updateFloorFromSocket: (state, action) => {
-      const index = state.floors.findIndex((f) => f._id === action.payload._id);
-      if (index !== -1) {
-        state.floors[index] = { ...state.floors[index], ...action.payload };
-      }
-      if (state.currentFloor?._id === action.payload._id) {
-        state.currentFloor = { ...state.currentFloor, ...action.payload };
-      }
-    },
-    // NEW: Optimistic update for drag-and-drop
     optimisticUpdateTablePosition: (state, action) => {
       const { tableId, position } = action.payload;
       if (state.currentFloor?.tables) {
@@ -150,11 +139,10 @@ const floorsSlice = createSlice({
         state.loading = false;
         state.floors = action.payload.data;
         state.success = action.payload.success;
-        state.lastSync = Date.now();
       })
       .addCase(fetchFloors.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch floors";
+        state.error = action.payload?.message || "Failed to fetch floors";
       })
       .addCase(fetchFloorById.pending, (state) => {
         state.loading = true;
@@ -166,7 +154,7 @@ const floorsSlice = createSlice({
       })
       .addCase(fetchFloorById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch floor";
+        state.error = action.payload?.message || "Failed to fetch floor";
       })
       .addCase(createFloor.pending, (state) => {
         state.loading = true;
@@ -182,6 +170,9 @@ const floorsSlice = createSlice({
         state.loading = false;
         state.error = action.payload?.message || "Failed to create floor";
       })
+      .addCase(updateFloor.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateFloor.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
@@ -190,6 +181,10 @@ const floorsSlice = createSlice({
           (f) => f._id === action.payload.data._id
         );
         if (index !== -1) state.floors[index] = action.payload.data;
+      })
+      .addCase(updateFloor.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to update floor";
       })
       .addCase(updateFloorLayout.fulfilled, (state, action) => {
         const index = state.floors.findIndex(
@@ -204,15 +199,22 @@ const floorsSlice = createSlice({
         state.success = true;
         state.message = "Layout updated";
       })
-      .addCase(updateTablePositions.fulfilled, (state, action) => {
+      .addCase(updateTablePositions.fulfilled, (state) => {
         state.success = true;
         state.message = "Table positions saved";
+      })
+      .addCase(deleteFloor.pending, (state) => {
+        state.loading = true;
       })
       .addCase(deleteFloor.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
         state.message = "Floor deleted successfully";
         state.floors = state.floors.filter((f) => f._id !== action.meta.arg);
+      })
+      .addCase(deleteFloor.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to delete floor";
       });
   },
 });
@@ -220,7 +222,6 @@ const floorsSlice = createSlice({
 export const {
   resetFloorState,
   clearCurrentFloor,
-  updateFloorFromSocket,
   optimisticUpdateTablePosition,
 } = floorsSlice.actions;
 export default floorsSlice.reducer;

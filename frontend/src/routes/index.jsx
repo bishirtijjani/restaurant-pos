@@ -67,6 +67,7 @@ const routes = [
   { path: "/404", component: Page404 },
   { path: "/discounts", component: Discounts },
   { path: "/table-management", component: Tables },
+  { path: "/floors/:floorId/tables", component: Tables },
   { path: "/floors", component: Floors },
   { path: "/reservations", component: Reservations },
 ];

@@ -1,3 +1,4 @@
+// backend/routes/tableRoutes.js
 const express = require("express");
 const router = express.Router();
 const tableController = require("../controllers/tableController");
@@ -16,6 +17,18 @@ router.get(
   "/:id",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
   tableController.getTableById
+);
+
+router.get(
+  "/:id/qr",
+  roleMiddleware("admin", "manager"),
+  tableController.generateTableQR
+);
+
+router.get(
+  "/:id/timeline",
+  roleMiddleware("admin", "manager"),
+  tableController.getTableTimeline
 );
 
 router.post(
