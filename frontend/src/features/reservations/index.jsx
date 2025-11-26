@@ -27,8 +27,6 @@ import {
   User,
   Filter,
 } from "lucide-react";
-import { useAuth } from "../../utils/permission";
-import Can from "../../components/Auth/Can";
 import Datepicker from "react-tailwindcss-datepicker";
 
 const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete }) => {
@@ -103,43 +101,35 @@ const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete }) => {
 
         <div className="card-actions justify-end mt-3 flex-wrap gap-1">
           {reservation.status === "pending" && (
-            <Can do="editMenu">
-              <button
-                className="btn btn-xs btn-success gap-1"
-                onClick={() => onUpdateStatus(reservation._id, "confirmed")}
-              >
-                <CheckCircle className="w-3 h-3" />
-                Confirm
-              </button>
-            </Can>
+            <button
+              className="btn btn-xs btn-success gap-1"
+              onClick={() => onUpdateStatus(reservation._id, "confirmed")}
+            >
+              <CheckCircle className="w-3 h-3" />
+              Confirm
+            </button>
           )}
           {reservation.status === "confirmed" && (
-            <Can do="editMenu">
-              <button
-                className="btn btn-xs btn-info gap-1"
-                onClick={() => onUpdateStatus(reservation._id, "seated")}
-              >
-                Seat
-              </button>
-            </Can>
-          )}
-          <Can do="editMenu">
             <button
-              className="btn btn-xs btn-outline"
-              onClick={() => onEdit(reservation)}
+              className="btn btn-xs btn-info gap-1"
+              onClick={() => onUpdateStatus(reservation._id, "seated")}
             >
-              <Edit3 className="w-3 h-3" />
+              Seat
             </button>
-          </Can>
+          )}
+          <button
+            className="btn btn-xs btn-outline"
+            onClick={() => onEdit(reservation)}
+          >
+            <Edit3 className="w-3 h-3" />
+          </button>
           {["pending", "confirmed"].includes(reservation.status) && (
-            <Can do="deleteMenu">
-              <button
-                className="btn btn-xs btn-outline btn-error"
-                onClick={() => onDelete(reservation._id)}
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </Can>
+            <button
+              className="btn btn-xs btn-outline btn-error"
+              onClick={() => onDelete(reservation._id)}
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
           )}
         </div>
       </div>
@@ -452,7 +442,6 @@ const ReservationFormModal = ({ reservation, onClose, onSave, tables }) => {
 const ReservationManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { can } = useAuth();
 
   const { items: reservations, loading } = useSelector(
     (state) => state.reservations
@@ -465,12 +454,10 @@ const ReservationManagement = () => {
     date: null,
   });
   useEffect(() => {
-    if (can("viewMenu")) {
-      dispatch(getReservations());
-      dispatch(fetchTables());
-      dispatch(fetchAllUsers());
-    }
-  }, [dispatch, can]);
+    dispatch(getReservations());
+    dispatch(fetchTables());
+    dispatch(fetchAllUsers());
+  }, [dispatch]);
   const handleCreate = () => {
     setSelectedReservation(null);
     setShowForm(true);
@@ -544,31 +531,16 @@ const ReservationManagement = () => {
       return false;
     return true;
   });
-  if (!can("viewMenu")) {
-    return (
-      <TitleCard title="Access Denied" topMargin="mt-2">
-        <div className="text-center py-12">
-          <p className="text-error">
-            You don't have permission to view reservations
-          </p>
-        </div>
-      </TitleCard>
-    );
-  }
+
   return (
     <TitleCard
       title="Reservations"
       topMargin="mt-2"
       TopSideButtons={
-        <Can do="createMenu">
-          <button
-            onClick={handleCreate}
-            className="btn btn-primary btn-sm gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Reservation
-          </button>
-        </Can>
+        <button onClick={handleCreate} className="btn btn-primary btn-sm gap-2">
+          <Plus className="w-4 h-4" />
+          New Reservation
+        </button>
       }
     >
       {/* Filters */}
@@ -617,12 +589,10 @@ const ReservationManagement = () => {
               ? "Create your first reservation"
               : "No reservations match your filters"}
           </p>
-          <Can do="createMenu">
-            <button onClick={handleCreate} className="btn btn-primary gap-2">
-              <Plus className="w-4 h-4" />
-              New Reservation
-            </button>
-          </Can>
+          <button onClick={handleCreate} className="btn btn-primary gap-2">
+            <Plus className="w-4 h-4" />
+            New Reservation
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

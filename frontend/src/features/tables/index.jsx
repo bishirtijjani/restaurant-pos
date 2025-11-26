@@ -19,14 +19,11 @@ import TableDetailsModal from "./components/TableDetailsModalBody";
 import TableCard from "./components/TableCard";
 import { Plus, ArrowLeft, Grid, List, Users } from "lucide-react";
 import { showNotification } from "../common/headerSlice";
-import Can from "../../components/Auth/Can";
-import { useAuth } from "../../utils/permission";
 
 const TableManagement = () => {
   const { floorId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { can } = useAuth();
 
   const { currentFloor, loading: floorLoading } = useSelector(
     (state) => state.floors
@@ -43,7 +40,12 @@ const TableManagement = () => {
   const [showTableDetails, setShowTableDetails] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
 
-  const floorTables = tables.filter((t) => t.floorId === floorId && t.isActive);
+  const floorTables = tables.filter((t) => {
+    const tableFloorId =
+      typeof t.floorId === "string" ? t.floorId : t.floorId?._id;
+    return String(tableFloorId) === String(floorId) && t.isActive;
+  });
+
   const loading = floorLoading || tablesLoading;
 
   useEffect(() => {
@@ -130,20 +132,6 @@ const TableManagement = () => {
     }
   };
 
-  if (!can("viewMenu")) {
-    return (
-      <TitleCard title="Access Denied">
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔒</div>
-          <h3 className="text-2xl font-bold text-error mb-4">Access Denied</h3>
-          <p className="text-base-content/70">
-            You don't have permission to view tables
-          </p>
-        </div>
-      </TitleCard>
-    );
-  }
-
   return (
     <TitleCard
       title={
@@ -180,15 +168,13 @@ const TableManagement = () => {
               <List className="w-4 h-4" />
             </button>
           </div>
-          <Can do="createMenu">
-            <button
-              onClick={handleCreateTable}
-              className="btn btn-primary btn-sm gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add Table
-            </button>
-          </Can>
+          <button
+            onClick={handleCreateTable}
+            className="btn btn-primary btn-sm gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Table
+          </button>
         </div>
       }
     >
@@ -203,18 +189,14 @@ const TableManagement = () => {
           <p className="text-base-content/70 mb-4">
             Add tables to this floor to start taking orders
           </p>
-          <Can do="createMenu">
-            <button
-              onClick={handleCreateTable}
-              className="btn btn-primary gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add First Table
-            </button>
-          </Can>
+          <button onClick={handleCreateTable} className="btn btn-primary gap-2">
+            <Plus className="w-4 h-4" />
+            Add First Table
+          </button>
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {console.log(floorTables)}
           {floorTables.map((table) => (
             <TableCard
               key={table._id}
@@ -262,14 +244,13 @@ const TableManagement = () => {
                       >
                         View
                       </button>
-                      <Can do="editMenu">
-                        <button
-                          onClick={() => handleEditTable(table)}
-                          className="btn btn-sm btn-ghost"
-                        >
-                          Edit
-                        </button>
-                      </Can>
+
+                      <button
+                        onClick={() => handleEditTable(table)}
+                        className="btn btn-sm btn-ghost"
+                      >
+                        Edit
+                      </button>
                     </div>
                   </td>
                 </tr>

@@ -7,6 +7,7 @@ const API_URL = "/api/tables";
 export const fetchTables = createAsyncThunk(
   "tables/fetchTables",
   async (params = {}, { rejectWithValue }) => {
+    console.log("Fetching tables with params:", params.floorId);
     try {
       const queryParams = new URLSearchParams();
       if (params.floorId) queryParams.append("floorId", params.floorId);
@@ -16,6 +17,7 @@ export const fetchTables = createAsyncThunk(
 
       const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
       const response = await axios.get(`${API_URL}${query}`);
+      console.log("Fetched tables response:", response);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

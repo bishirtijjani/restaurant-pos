@@ -21,8 +21,6 @@ import {
   MapPin,
 } from "lucide-react";
 import { showNotification } from "../common/headerSlice";
-import Can from "../../components/Auth/Can";
-import { useAuth } from "../../utils/permission";
 
 const FloorCard = ({ floor, onEdit, onDelete, onViewTables, tablesCount }) => {
   return (
@@ -50,42 +48,41 @@ const FloorCard = ({ floor, onEdit, onDelete, onViewTables, tablesCount }) => {
               )}
             </div>
           </div>
-          <Can do="editMenu">
-            <div className="dropdown dropdown-end">
-              <label tabIndex={0} className="btn btn-ghost btn-circle btn-sm">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
-              </label>
-              <ul
-                tabIndex={0}
-                className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-10"
+
+          <div className="dropdown dropdown-end">
+            <label tabIndex={0} className="btn btn-ghost btn-circle btn-sm">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <li>
-                  <a onClick={() => onEdit(floor)}>
-                    <Edit3 className="w-4 h-4" />
-                    Edit
-                  </a>
-                </li>
-                <li>
-                  <a onClick={() => onDelete(floor)} className="text-error">
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </Can>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                />
+              </svg>
+            </label>
+            <ul
+              tabIndex={0}
+              className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-10"
+            >
+              <li>
+                <a onClick={() => onEdit(floor)}>
+                  <Edit3 className="w-4 h-4" />
+                  Edit
+                </a>
+              </li>
+              <li>
+                <a onClick={() => onDelete(floor)} className="text-error">
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
         <button
           onClick={() => onViewTables(floor)}
@@ -231,7 +228,6 @@ const FloorFormModal = ({ floor, onClose, onSave }) => {
 const FloorManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { can } = useAuth();
   const { floors, loading, error } = useSelector((state) => state.floors);
   const { tables } = useSelector((state) => state.tables);
 
@@ -239,11 +235,9 @@ const FloorManagement = () => {
   const [selectedFloor, setSelectedFloor] = useState(null);
 
   useEffect(() => {
-    if (can("viewMenu")) {
-      dispatch(fetchFloors());
-      dispatch(fetchTables());
-    }
-  }, [dispatch, can]);
+    dispatch(fetchFloors());
+    dispatch(fetchTables());
+  }, [dispatch]);
 
   useEffect(() => {
     if (error) {
@@ -253,7 +247,11 @@ const FloorManagement = () => {
   }, [error, dispatch]);
 
   const getTableCount = (floorId) => {
-    return tables.filter((t) => t.floorId === floorId && t.isActive).length;
+    return tables.filter((t) => {
+      const tableFloorId =
+        typeof t.floorId === "string" ? t.floorId : t.floorId?._id;
+      return String(tableFloorId) === String(floorId) && t.isActive;
+    }).length;
   };
 
   const handleCreate = () => {
@@ -310,34 +308,15 @@ const FloorManagement = () => {
     navigate(`/app/floors/${floor._id}/tables`);
   };
 
-  if (!can("viewMenu")) {
-    return (
-      <TitleCard title="Access Denied">
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔒</div>
-          <h3 className="text-2xl font-bold text-error mb-4">Access Denied</h3>
-          <p className="text-base-content/70">
-            You don't have permission to view floors
-          </p>
-        </div>
-      </TitleCard>
-    );
-  }
-
   return (
     <TitleCard
       title="Floor Management"
       topMargin="mt-2"
       TopSideButtons={
-        <Can do="createMenu">
-          <button
-            onClick={handleCreate}
-            className="btn btn-primary btn-sm gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Floor
-          </button>
-        </Can>
+        <button onClick={handleCreate} className="btn btn-primary btn-sm gap-2">
+          <Plus className="w-4 h-4" />
+          Add Floor
+        </button>
       }
     >
       {loading ? (
@@ -351,12 +330,10 @@ const FloorManagement = () => {
           <p className="text-base-content/70 mb-4">
             Create your first floor to start managing tables
           </p>
-          <Can do="createMenu">
-            <button onClick={handleCreate} className="btn btn-primary gap-2">
-              <Plus className="w-4 h-4" />
-              Create First Floor
-            </button>
-          </Can>
+          <button onClick={handleCreate} className="btn btn-primary gap-2">
+            <Plus className="w-4 h-4" />
+            Create First Floor
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
