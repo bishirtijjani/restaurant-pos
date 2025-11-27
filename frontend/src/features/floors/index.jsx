@@ -159,38 +159,54 @@ const FloorManager = () => {
   };
 
   const onDragEnd = (event) => {
-      const { active, over } = event;
+      const { active, over, delta } = event;
+      console.log('onDragEnd called', { active: active?.id, over: over?.id, type: active?.data?.current?.type, delta });
       setActiveReservation(null);
       
-      if (active.data.current?.type === "RESERVATION") {
-          if (over?.id === "floor-canvas" && stageRef.current) {
+      if (active.data.current?.type === "RESERVATION" && over?.id === "floor-canvas") {
+          if (stageRef.current) {
                const stage = stageRef.current;
                
-               // Get client coordinates from dnd-kit event
-               const clientX = event.active.rect.current.translated.left + 20; 
-               const clientY = event.active.rect.current.translated.top + 20;
+               // Get mouse position from the last pointer event
+               const pointerPos = stage.getPointerPosition();
+               console.log('Pointer position on stage:', pointerPos);
                
-               const containerRect = stage.container().getBoundingClientRect();
-               const stageX = clientX - containerRect.left;
-               const stageY = clientY - containerRect.top;
-               
-               const transform = stage.getAbsoluteTransform().copy();
-               transform.invert();
-               const pos = transform.point({ x: stageX, y: stageY });
-               
-               const targetTable = tables.find(t => {
-                   const tx = t.position?.x || 0;
-                   const ty = t.position?.y || 0;
-                   const tw = t.position?.width || t.width || 60;
-                   const th = t.position?.height || t.height || 60;
-                   return pos.x >= tx && pos.x <= tx + tw && pos.y >= ty && pos.y <= ty + th;
-               });
-               
-               if (targetTable) {
-                   if (window.confirm(`Assign reservation for ${active.data.current.reservation.customerName} to table ${targetTable.tableNumber}?`)) {
-                       dispatch(updateTableStatus({ id: targetTable._id, status: "reserved" }));
-                       dispatch(showNotification({ message: "Reservation assigned", status: 1 }));
+               if (pointerPos) {
+                   // Transform to canvas coordinates (accounting for zoom/pan)
+                   const transform = stage.getAbsoluteTransform().copy();
+                   transform.invert();
+                   const canvasPos = transform.point(pointerPos);
+                   
+                   console.log('Canvas position:', canvasPos);
+                   console.log('Tables:', tables.map(t => ({ 
+                       id: t._id, 
+                       number: t.tableNumber, 
+                       x: t.position?.x || 0, 
+                       y: t.position?.y || 0,
+                       w: t.position?.width || 60,
+                       h: t.position?.height || 60
+                   })));
+                   
+                   const targetTable = tables.find(t => {
+                       const tx = t.position?.x || 0;
+                       const ty = t.position?.y || 0;
+                       const tw = t.position?.width || t.width || 60;
+                       const th = t.position?.height || t.height || 60;
+                       const hit = canvasPos.x >= tx && canvasPos.x <= tx + tw && canvasPos.y >= ty && canvasPos.y <= ty + th;
+                       if (hit) console.log('Hit table:', t.tableNumber, { tx, ty, tw, th, canvasPos });
+                       return hit;
+                   });
+                   
+                   if (targetTable) {
+                       if (window.confirm(`Assign reservation for ${active.data.current.reservation.customerName} to table ${targetTable.tableNumber}?`)) {
+                           dispatch(updateTableStatus({ id: targetTable._id, status: "reserved" }));
+                           dispatch(showNotification({ message: "Reservation assigned", status: 1 }));
+                       }
+                   } else {
+                       console.log('No table found at drop position');
                    }
+               } else {
+                   console.log('Could not get pointer position');
                }
           }
       }
