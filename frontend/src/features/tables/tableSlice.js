@@ -176,6 +176,13 @@ const tablesSlice = createSlice({
     clearCurrentTable: (state) => {
       state.currentTable = null;
     },
+    optimisticUpdateTablePosition: (state, action) => {
+      const { tableId, position } = action.payload;
+      const index = state.tables.findIndex((t) => t._id === tableId);
+      if (index !== -1) {
+        state.tables[index].position = position;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -300,5 +307,5 @@ const tablesSlice = createSlice({
   },
 });
 
-export const { resetTableState, clearCurrentTable } = tablesSlice.actions;
+export const { resetTableState, clearCurrentTable, optimisticUpdateTablePosition } = tablesSlice.actions;
 export default tablesSlice.reducer;

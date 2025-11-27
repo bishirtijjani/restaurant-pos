@@ -229,7 +229,7 @@ const OrderSchema = new mongoose.Schema(
       required: false,
     },
     // NEW: Modification tracking
-    isModified: {
+    hasModifications: {
       type: Boolean,
       default: false,
     },

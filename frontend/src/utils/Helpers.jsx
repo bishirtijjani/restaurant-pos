@@ -1,5 +1,4 @@
 import { jwtDecode } from "jwt-decode";
-import { useLocation } from "react-router-dom";
 
 export const getToken = () => localStorage.getItem("token");
 
@@ -25,12 +24,10 @@ export const checkRole = (givenRole) => {
 };
 
 // Determine the current tour ID based on the URL path
-export const getTourId = () => {
-  const location = useLocation();
-
-  if (location.pathname.includes("/menu-items")) return "menu-items";
-  if (location.pathname.includes("/orders")) return "orders";
-  if (location.pathname.includes("/kds")) return "kds";
-  if (location.pathname === "/app/dashboard") return "initial-setup";
+export const getTourId = (pathname) => {
+  if (pathname.includes("/menu-items")) return "menu-items";
+  if (pathname.includes("/orders")) return "orders";
+  if (pathname.includes("/kds")) return "kds";
+  if (pathname === "/app/dashboard") return "initial-setup";
   return null;
 };

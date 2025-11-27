@@ -48,7 +48,7 @@ function Layout() {
 
       <ModalLayout />
 
-      <OnboardingTour tourId={getTourId()} />
+      <OnboardingTour tourId={getTourId(location.pathname)} />
     </>
   );
 }

@@ -358,7 +358,7 @@ exports.modifyOrder = async (req, res) => {
     }
 
     // Update modification tracking
-    order.isModified = true;
+    order.hasModifications = true;
     order.modificationCount = (order.modificationCount || 0) + 1;
     order.lastModifiedAt = new Date();
     order.lastModifiedBy = req.user.id;
@@ -610,7 +610,7 @@ exports.addItemsToOrder = async (req, res) => {
     }
 
     // Update modification tracking
-    order.isModified = true;
+    order.hasModifications = true;
     order.modificationCount = (order.modificationCount || 0) + 1;
     order.lastModifiedAt = new Date();
     order.lastModifiedBy = req.user.id;
@@ -775,7 +775,7 @@ exports.removeItemsFromOrder = async (req, res) => {
     }
 
     // Update modification tracking
-    order.isModified = true;
+    order.hasModifications = true;
     order.modificationCount = (order.modificationCount || 0) + 1;
     order.lastModifiedAt = new Date();
     order.lastModifiedBy = req.user.id;
@@ -935,7 +935,7 @@ exports.updateItemQuantity = async (req, res) => {
     }
 
     // Update modification tracking
-    order.isModified = true;
+    order.hasModifications = true;
     order.modificationCount = (order.modificationCount || 0) + 1;
     order.lastModifiedAt = new Date();
     order.lastModifiedBy = req.user.id;
@@ -1020,7 +1020,7 @@ exports.updateItemNote = async (req, res) => {
     const oldNote = orderItem.itemNote;
     orderItem.itemNote = itemNote || "";
 
-    order.isModified = true;
+    order.hasModifications = true;
     order.lastModifiedAt = new Date();
     order.lastModifiedBy = req.user.id;
     order.version += 1;
@@ -1084,7 +1084,7 @@ exports.updateOrderNote = async (req, res) => {
     order.orderNote = orderNote || "";
     order.note = orderNote || ""; // Legacy field
 
-    order.isModified = true;
+    order.hasModifications = true;
     order.lastModifiedAt = new Date();
     order.lastModifiedBy = req.user.id;
     order.version += 1;

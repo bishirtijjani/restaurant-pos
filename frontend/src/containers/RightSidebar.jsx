@@ -5,6 +5,8 @@ import { closeRightDrawer } from "../features/common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
 import AddOrder from "../features/orders/AddOrder";
 import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
+import EditTableDrawerBody from "../features/floors/components/EditTableDrawerBody";
+import TableDetailsDrawerBody from "../features/floors/components/TableDetailsDrawerBody";
 
 function RightSidebar() {
   const { isOpen, bodyType, extraObject, header } = useSelector(
@@ -60,6 +62,18 @@ function RightSidebar() {
                   ),
                   [RIGHT_DRAWER_TYPES.CONFIRM_PAYMENT]: (
                     <PaymentConfirmationModalBody
+                      {...extraObject}
+                      closeRightDrawer={close}
+                    />
+                  ),
+                  [RIGHT_DRAWER_TYPES.FLOOR_TABLE_EDIT]: (
+                    <EditTableDrawerBody
+                      {...extraObject}
+                      closeRightDrawer={close}
+                    />
+                  ),
+                  [RIGHT_DRAWER_TYPES.FLOOR_TABLE_DETAILS]: (
+                    <TableDetailsDrawerBody
                       {...extraObject}
                       closeRightDrawer={close}
                     />

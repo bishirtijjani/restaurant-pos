@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import Bars3Icon from "@heroicons/react/24/outline/Bars3Icon";
 import { openRightDrawer } from "../features/common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   RefreshCw,
   Paintbrush,
@@ -30,6 +30,8 @@ function Header() {
   const isOnline = useOnlineStatus();
   const { queueStats } = useSyncQueue();
   const [showSyncManager, setShowSyncManager] = useState(false);
+
+  const location = useLocation();
 
   useEffect(() => {
     themeChange(false);
@@ -110,8 +112,8 @@ function Header() {
             </span>
           </button>
           {/* Tour Button */}
-          {getTourId() && (
-            <TourTriggerButton tourId={getTourId()} className="mr-2" />
+          {getTourId(location.pathname) && (
+            <TourTriggerButton tourId={getTourId(location.pathname)} className="mr-2" />
           )}
           {/* Theme selection dropdown */}
           <div className="dropdown dropdown-end">
