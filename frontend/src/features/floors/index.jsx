@@ -35,6 +35,7 @@ const FloorManager = () => {
   const [editMode, setEditMode] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
   const [socket, setSocket] = useState(null);
+  const [activeReservation, setActiveReservation] = useState(null);
 
   const { show } = useContextMenu({ id: MENU_ID });
   const sensors = useSensors(useSensor(PointerSensor, {
@@ -147,8 +148,19 @@ const FloorManager = () => {
   
   const stageRef = useRef(null);
 
+  const onDragStart = (event) => {
+    if (event.active.data.current?.type === "RESERVATION") {
+      setActiveReservation(event.active.data.current.reservation);
+    }
+  };
+
+  const onDragCancel = () => {
+    setActiveReservation(null);
+  };
+
   const onDragEnd = (event) => {
       const { active, over } = event;
+      setActiveReservation(null);
       
       if (active.data.current?.type === "RESERVATION") {
           if (over?.id === "floor-canvas" && stageRef.current) {
@@ -169,14 +181,14 @@ const FloorManager = () => {
                const targetTable = tables.find(t => {
                    const tx = t.position?.x || 0;
                    const ty = t.position?.y || 0;
-                   const tw = t.width || 60;
-                   const th = t.height || 60;
+                   const tw = t.position?.width || t.width || 60;
+                   const th = t.position?.height || t.height || 60;
                    return pos.x >= tx && pos.x <= tx + tw && pos.y >= ty && pos.y <= ty + th;
                });
                
                if (targetTable) {
-                   if (window.confirm(`Assign reservation for ${active.data.current.reservation.customerName} to table ${targetTable.name}?`)) {
-                       dispatch(updateTableStatus({ id: targetTable._id, status: "Reserved" }));
+                   if (window.confirm(`Assign reservation for ${active.data.current.reservation.customerName} to table ${targetTable.tableNumber}?`)) {
+                       dispatch(updateTableStatus({ id: targetTable._id, status: "reserved" }));
                        dispatch(showNotification({ message: "Reservation assigned", status: 1 }));
                    }
                }
@@ -186,14 +198,18 @@ const FloorManager = () => {
 
   const handleAddTable = () => {
       const newTable = {
-          name: `T${tables.length + 1}`,
+          tableNumber: `T${tables.length + 1}`,
           floorId: activeFloorId,
-          shape: "rect",
-          position: { x: 100, y: 100 },
-          width: 60,
-          height: 60,
-          seats: 4,
-          status: "Available"
+          shape: "rectangle",
+          position: { 
+              x: 100, 
+              y: 100,
+              width: 60,
+              height: 60,
+              rotation: 0
+          },
+          capacity: 4,
+          status: "available"
       };
       dispatch(createTable(newTable));
   };
@@ -208,7 +224,7 @@ const FloorManager = () => {
   };
 
   return (
-    <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+    <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={onDragCancel}>
       <div className="flex h-[calc(100vh-6rem)] gap-4">
         {/* Sidebar */}
         <div className="flex-none">
@@ -288,7 +304,19 @@ const FloorManager = () => {
         </div>
         
         <ContextMenu onAction={handleContextMenuAction} />
-        <DragOverlay /> 
+        <DragOverlay>
+          {activeReservation && (
+            <div className="card bg-base-100 shadow-xl border-2 border-primary p-3 cursor-grabbing opacity-90">
+              <div className="flex justify-between items-start mb-1">
+                <h4 className="font-bold text-sm">{activeReservation.customerName}</h4>
+                <span className="badge badge-sm badge-ghost">{activeReservation.status}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-base-content/70">
+                <span>{activeReservation.partySize} guests</span>
+              </div>
+            </div>
+          )}
+        </DragOverlay> 
       </div>
     </DndContext>
   );

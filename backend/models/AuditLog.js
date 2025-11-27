@@ -16,6 +16,9 @@ const auditLogSchema = new mongoose.Schema({
       "roleChange",
       "bump",
       "recall",
+      "state_change",
+      "merge",
+      "split",
     ],
   },
   oldValue: { type: Object, default: null }, // Stores previous values (for edits)

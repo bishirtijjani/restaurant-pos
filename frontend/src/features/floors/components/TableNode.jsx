@@ -13,9 +13,18 @@ const TableNode = ({
   const shapeRef = useRef();
   const groupRef = useRef();
 
+  // Access properties with fallback
+  const width = table.position?.width || table.width || 60;
+  const height = table.position?.height || table.height || 60;
+  const rotation = table.position?.rotation || table.rotation || 0;
+  const x = table.position?.x || 0;
+  const y = table.position?.y || 0;
+  const capacity = table.capacity || table.seats || 4;
+  const tableNumber = table.tableNumber || table.name || "??";
+
   const shapeProps = {
-    width: table.width || 60,
-    height: table.height || 60,
+    width,
+    height,
     fill: getTableColor(table.status),
     stroke: isSelected ? "#00a96e" : "#e5e7eb",
     strokeWidth: isSelected ? 2 : 1,
@@ -23,27 +32,27 @@ const TableNode = ({
     shadowColor: "black",
     shadowOpacity: 0.15,
     shadowOffset: { x: 2, y: 2 },
-    cornerRadius: table.shape === "circle" ? (table.width || 60) / 2 : 8,
+    cornerRadius: table.shape === "circle" ? width / 2 : 8,
   };
 
   const textProps = {
-    text: table.name,
+    text: tableNumber,
     fontSize: 14,
     fontStyle: "bold",
     fill: "#fff",
     align: "center",
     verticalAlign: "middle",
-    width: table.width || 60,
-    height: table.height || 60,
+    width,
+    height,
   };
 
   return (
     <Group
       id={id}
       ref={groupRef}
-      x={table.position?.x || 0}
-      y={table.position?.y || 0}
-      rotation={table.rotation || 0}
+      x={x}
+      y={y}
+      rotation={rotation}
       draggable={editMode}
       onClick={onSelect}
       onTap={onSelect}
@@ -51,6 +60,7 @@ const TableNode = ({
         onChange({
           ...table,
           position: {
+            ...table.position,
             x: e.target.x(),
             y: e.target.y(),
           },
@@ -68,12 +78,13 @@ const TableNode = ({
         onChange({
           ...table,
           position: {
+            ...table.position,
             x: node.x(),
             y: node.y(),
+            width: Math.max(30, width * scaleX),
+            height: Math.max(30, height * scaleY),
+            rotation: node.rotation(),
           },
-          width: Math.max(30, (table.width || 60) * scaleX),
-          height: Math.max(30, (table.height || 60) * scaleY),
-          rotation: node.rotation(),
         });
       }}
       onContextMenu={(e) => {
@@ -96,13 +107,13 @@ const TableNode = ({
         <Circle
           ref={shapeRef}
           {...shapeProps}
-          width={table.width || 60}
-          height={table.height || 60}
+          width={width}
+          height={height}
           offsetX={0}
           offsetY={0}
-          radius={(table.width || 60) / 2}
-          x={(table.width || 60) / 2}
-          y={(table.height || 60) / 2}
+          radius={width / 2}
+          x={width / 2}
+          y={height / 2}
         />
       ) : (
         <Rect ref={shapeRef} {...shapeProps} />
@@ -118,7 +129,7 @@ const TableNode = ({
       />
 
       {/* Capacity Indicator */}
-      <Group x={(table.width || 60) - 10} y={10}>
+      <Group x={width - 10} y={10}>
            <Circle
               radius={10}
               fill="#ffffff"
@@ -127,7 +138,7 @@ const TableNode = ({
               shadowOpacity={0.2}
            />
            <Text
-              text={table.seats || "4"}
+              text={capacity.toString()}
               fontSize={10}
               fontStyle="bold"
               fill="#333"
@@ -144,14 +155,15 @@ const TableNode = ({
 };
 
 const getTableColor = (status) => {
-  switch (status) {
-    case "Available":
+  switch (status?.toLowerCase()) {
+    case "available":
       return "#10b981"; // Emerald 500
-    case "Occupied":
+    case "occupied":
       return "#3b82f6"; // Blue 500
-    case "Reserved":
+    case "reserved":
       return "#f59e0b"; // Amber 500
-    case "Dirty":
+    case "cleaning":
+    case "dirty":
       return "#ef4444"; // Red 500
     default:
       return "#9ca3af"; // Gray 400

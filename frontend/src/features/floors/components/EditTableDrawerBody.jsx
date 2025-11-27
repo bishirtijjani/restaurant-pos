@@ -7,11 +7,33 @@ import { showNotification } from "../../common/headerSlice";
 const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
   const dispatch = useDispatch();
   console.log("EditTableDrawerBody rendered with table:", table);
-  const [tableData, setTableData] = useState(table || {});
+  
+  // Initialize state with correct structure
+  const [tableData, setTableData] = useState({
+      ...table,
+      tableNumber: table.tableNumber || table.name || "",
+      capacity: table.capacity || table.seats || 4,
+      width: table.position?.width || table.width || 60,
+      height: table.position?.height || table.height || 60,
+      shape: table.shape || "rectangle"
+  });
 
   const handleSaveTable = async () => {
     try {
-        await dispatch(updateTable({ id: tableData._id, ...tableData })).unwrap();
+        // Construct payload matching backend schema
+        const payload = {
+            ...tableData,
+            name: undefined, // Remove legacy field if present
+            seats: undefined, // Remove legacy field if present
+            position: {
+                ...table.position,
+                width: tableData.width,
+                height: tableData.height,
+                // Preserve x, y, rotation
+            }
+        };
+        
+        await dispatch(updateTable({ id: tableData._id, ...payload })).unwrap();
         dispatch(showNotification({ message: "Table updated", status: 1 }));
         closeRightDrawer();
     } catch (error) {
@@ -35,13 +57,13 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
     <div className="space-y-4 pt-4">
       <div className="form-control">
         <label className="label">
-          <span className="label-text">Table Name</span>
+          <span className="label-text">Table Number</span>
         </label>
         <input
           type="text"
-          value={tableData.name || ""}
+          value={tableData.tableNumber || ""}
           onChange={(e) =>
-            setTableData({ ...tableData, name: e.target.value })
+            setTableData({ ...tableData, tableNumber: e.target.value })
           }
           className="input input-bordered w-full"
         />
@@ -52,13 +74,13 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
           <span className="label-text">Shape</span>
         </label>
         <select
-          value={tableData.shape || "rect"}
+          value={tableData.shape || "rectangle"}
           onChange={(e) =>
             setTableData({ ...tableData, shape: e.target.value })
           }
           className="select select-bordered w-full"
         >
-          <option value="rect">Rectangle</option>
+          <option value="rectangle">Rectangle</option>
           <option value="circle">Circle</option>
         </select>
       </div>
@@ -100,15 +122,15 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
       
        <div className="form-control">
         <label className="label">
-          <span className="label-text">Seats</span>
+          <span className="label-text">Capacity</span>
         </label>
         <input
           type="number"
-          value={tableData.seats || 4}
+          value={tableData.capacity || 4}
           onChange={(e) =>
             setTableData({
               ...tableData,
-              seats: parseInt(e.target.value),
+              capacity: parseInt(e.target.value),
             })
           }
           className="input input-bordered w-full"

@@ -7,7 +7,7 @@ function InternalPage() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(setPageTitle({ title: "Floors Management" }));
+    dispatch(setPageTitle({ title: "Floors & Tables" }));
   }, []);
 
   return <Floors />;

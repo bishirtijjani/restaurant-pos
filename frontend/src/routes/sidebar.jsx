@@ -28,9 +28,9 @@ export const adminRoutes = [
     name: "Dashboard",
   },
   {
-    path: "/app/table-management",
+    path: "/app/floors",
     icon: <Shapes className={iconClasses} />,
-    name: "Table Management",
+    name: "Floors & Tables",
   },
   {
     path: "/app/reservations",
@@ -164,9 +164,9 @@ export const managerRoutes = [
     name: "Dashboard",
   },
   {
-    path: "/app/table-management",
+    path: "/app/floors",
     icon: <Shapes className={iconClasses} />,
-    name: "Table Management",
+    name: "Floors & Tables",
   },
   {
     path: "/app/reservations",
@@ -285,9 +285,9 @@ export const cashierRoutes = [
     name: "Dashboard",
   },
   {
-    path: "/app/table-management",
+    path: "/app/floors",
     icon: <Shapes className={iconClasses} />,
-    name: "Table Management",
+    name: "Floors & Tables",
   },
   {
     path: "/app/reservations",

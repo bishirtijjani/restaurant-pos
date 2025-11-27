@@ -9,11 +9,13 @@ const TableDetailsDrawerBody = ({ closeRightDrawer, table }) => {
 
   const handleStatusChange = async (status) => {
       try {
+          console.log(`Attempting to update status to ${status} for table ${table._id}`);
           await dispatch(updateTableStatus({ id: table._id, status })).unwrap();
           dispatch(showNotification({ message: `Table marked as ${status}`, status: 1 }));
           closeRightDrawer();
       } catch (error) {
-          dispatch(showNotification({ message: "Failed to update status", status: 0 }));
+          console.error("Failed to update status:", error);
+          dispatch(showNotification({ message: `Failed to update status: ${error.message || error}`, status: 0 }));
       }
   };
 
@@ -23,14 +25,14 @@ const TableDetailsDrawerBody = ({ closeRightDrawer, table }) => {
             <div className="stat">
                 <div className="stat-title">Status</div>
                 <div className={`stat-value text-lg ${
-                    table?.status === 'Available' ? 'text-success' :
-                    table?.status === 'Occupied' ? 'text-primary' :
-                    table?.status === 'Reserved' ? 'text-warning' : 'text-error'
+                    table?.status === 'available' ? 'text-success' :
+                    table?.status === 'occupied' ? 'text-primary' :
+                    table?.status === 'reserved' ? 'text-warning' : 'text-error'
                 }`}>{table?.status || 'Unknown'}</div>
             </div>
              <div className="stat">
                 <div className="stat-title">Seats</div>
-                <div className="stat-value text-lg">{table?.seats || 0}</div>
+                <div className="stat-value text-lg">{table?.capacity || 0}</div>
             </div>
         </div>
 
@@ -46,20 +48,33 @@ const TableDetailsDrawerBody = ({ closeRightDrawer, table }) => {
         <div className="divider">Actions</div>
         
         <div className="grid grid-cols-2 gap-2">
-            <button className="btn btn-outline btn-sm">Assign Waiter</button>
             <button 
-                onClick={() => handleStatusChange('Dirty')}
+                className="btn btn-outline btn-sm"
+                onClick={() => {
+                    // TODO: Implement assign waiter modal or logic
+                    dispatch(showNotification({ message: "Assign Waiter feature coming soon", status: 1 }));
+                }}
+            >
+                Assign Waiter
+            </button>
+            <button 
+                onClick={() => handleStatusChange('cleaning')}
                 className="btn btn-outline btn-sm"
             >
-                Mark Dirty
+                Mark Dirtya
             </button>
              <button 
-                onClick={() => handleStatusChange('Available')}
+                onClick={() => handleStatusChange('available')}
                 className="btn btn-outline btn-sm text-success"
             >
                 Mark Available
             </button>
-            <button className="btn btn-outline btn-sm text-error">Block Table</button>
+            <button 
+                className="btn btn-outline btn-sm text-error"
+                onClick={() => handleStatusChange('unavailable')}
+            >
+                Block Table
+            </button>
         </div>
     </div>
   );
