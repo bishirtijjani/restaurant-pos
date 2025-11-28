@@ -1,7 +1,7 @@
 import { store } from "../app/store"; // Adjust the import based on your store setup
 import { addNotification } from "../features/common/rightDrawerSlice";
 
-const socket = new WebSocket("ws://your-websocket-url");
+const socket = new WebSocket("ws://localhost:5000/ws");
 
 socket.onmessage = (event) => {
   const notification = JSON.parse(event.data);

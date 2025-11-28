@@ -11,6 +11,7 @@ import {
   FileText,
   User,
   Tag,
+  Building,  
   PlusCircle,
   Monitor,
   Package,
@@ -165,7 +166,7 @@ export const managerRoutes = [
   },
   {
     path: "/app/floors",
-    icon: <Shapes className={iconClasses} />,
+    icon: <Building className={iconClasses} />,
     name: "Floors & Tables",
   },
   {

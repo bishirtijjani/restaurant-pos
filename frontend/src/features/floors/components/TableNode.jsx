@@ -5,6 +5,7 @@ const TableNode = ({
   id,
   table,
   isSelected,
+  isSnapTarget, // NEW: whether this table is the snap target
   onSelect,
   onChange,
   editMode,
@@ -26,11 +27,11 @@ const TableNode = ({
     width,
     height,
     fill: getTableColor(table.status),
-    stroke: isSelected ? "#00a96e" : "#e5e7eb",
-    strokeWidth: isSelected ? 2 : 1,
-    shadowBlur: isSelected ? 10 : 5,
-    shadowColor: "black",
-    shadowOpacity: 0.15,
+    stroke: isSnapTarget ? "#570df8" : (isSelected ? "#00a96e" : "#e5e7eb"), // Purple for snap target
+    strokeWidth: isSnapTarget ? 4 : (isSelected ? 2 : 1),
+    shadowBlur: isSnapTarget ? 20 : (isSelected ? 10 : 5),
+    shadowColor: isSnapTarget ? "#570df8" : "black",
+    shadowOpacity: isSnapTarget ? 0.6 : 0.15,
     shadowOffset: { x: 2, y: 2 },
     cornerRadius: table.shape === "circle" ? width / 2 : 8,
   };

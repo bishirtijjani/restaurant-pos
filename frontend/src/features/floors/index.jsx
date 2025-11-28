@@ -18,12 +18,13 @@ import {
 import { getReservations, updateReservation } from "../reservations/reservationSlice";
 import { showNotification } from "../common/headerSlice";
 import { openRightDrawer } from "../common/rightDrawerSlice";
-import { RIGHT_DRAWER_TYPES } from "../../utils/globalConstantUtil";
+import { openModal } from "../common/modalSlice";
+import { RIGHT_DRAWER_TYPES, MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 
 import FloorCanvas from "./components/FloorCanvas";
 import ReservationSidebar from "./components/ReservationSidebar";
 import ContextMenu, { MENU_ID } from "./components/ContextMenu";
-import { Plus, Save, Settings, Monitor } from "lucide-react";
+import { Plus, Save, Settings, Monitor, Building2 } from "lucide-react";
 
 const FloorManager = () => {
   const dispatch = useDispatch();
@@ -36,6 +37,7 @@ const FloorManager = () => {
   const [selectedTable, setSelectedTable] = useState(null);
   const [socket, setSocket] = useState(null);
   const [activeReservation, setActiveReservation] = useState(null);
+  const [snapTarget, setSnapTarget] = useState(null); // Table to snap to
 
   const { show } = useContextMenu({ id: MENU_ID });
   const sensors = useSensors(useSensor(PointerSensor, {
@@ -156,57 +158,185 @@ const FloorManager = () => {
 
   const onDragCancel = () => {
     setActiveReservation(null);
+    setSnapTarget(null);
+  };
+
+  const onDragMove = (event) => {
+    if (event.active.data.current?.type === "RESERVATION" && stageRef.current) {
+      const stage = stageRef.current;
+      
+      // 1. Get the dragged element's rect in screen coordinates
+      const dragRect = event.active.rect.current.translated;
+      
+      if (dragRect) {
+        // 2. Get stage container info to calculate relative position
+        const containerRect = stage.container().getBoundingClientRect();
+        
+        // 3. Calculate drag rect relative to the stage container
+        // This is still in "screen pixels" but relative to the stage top-left
+        const relativeDragRect = {
+            x: dragRect.left - containerRect.left,
+            y: dragRect.top - containerRect.top,
+            width: dragRect.width,
+            height: dragRect.height
+        };
+
+        // 4. Get stage transform (scale & pan)
+        const stageX = stage.x();
+        const stageY = stage.y();
+        const stageScale = stage.scaleX(); // Assuming uniform scale
+
+        // 5. Convert drag rect to "World Space" coordinates
+        // We need to inverse the stage transform
+        const worldDragRect = {
+            x: (relativeDragRect.x - stageX) / stageScale,
+            y: (relativeDragRect.y - stageY) / stageScale,
+            width: relativeDragRect.width / stageScale,
+            height: relativeDragRect.height / stageScale
+        };
+
+        // 6. Check intersection with all tables (AABB Collision)
+        let bestTarget = null;
+        let maxOverlapArea = 0;
+
+        tables.forEach(table => {
+            const tx = table.position?.x || 0;
+            const ty = table.position?.y || 0;
+            const tw = table.position?.width || table.width || 60;
+            const th = table.position?.height || table.height || 60;
+
+            // Calculate intersection rectangle
+            const x_overlap = Math.max(0, Math.min(worldDragRect.x + worldDragRect.width, tx + tw) - Math.max(worldDragRect.x, tx));
+            const y_overlap = Math.max(0, Math.min(worldDragRect.y + worldDragRect.height, ty + th) - Math.max(worldDragRect.y, ty));
+            
+            const overlapArea = x_overlap * y_overlap;
+
+            if (overlapArea > 0) {
+                // If we have an overlap, check if it's the best one (largest area)
+                if (overlapArea > maxOverlapArea) {
+                    maxOverlapArea = overlapArea;
+                    bestTarget = table;
+                }
+            }
+        });
+
+        // 7. Update state
+        if (bestTarget?._id !== snapTarget?._id) {
+            setSnapTarget(bestTarget);
+        }
+      }
+    }
+  };
+
+  const validateAssignment = (table, reservation) => {
+      // 1. Status Check
+      if (table.status && table.status.toLowerCase() !== 'available') {
+          return { valid: false, reason: `Table is ${table.status}` };
+      }
+
+      // 2. Capacity Check
+      const guests = reservation.guests || reservation.partySize || 0;
+      if (guests > table.capacity) {
+          return { valid: false, reason: `Table capacity (${table.capacity}) is too small for ${guests} guests` };
+      }
+
+      // 3. Time Overlap Check
+      // Assuming reservation has reservationTime and duration (default 90 mins)
+      const newStart = new Date(reservation.reservationTime).getTime();
+      const duration = reservation.duration || 90;
+      const newEnd = newStart + duration * 60000;
+
+      const hasOverlap = reservations.some(res => {
+          if (res.tableId !== table._id || res._id === reservation._id || res.status === 'cancelled') return false;
+          
+          const existingStart = new Date(res.reservationTime).getTime();
+          const existingDuration = res.duration || 90;
+          const existingEnd = existingStart + existingDuration * 60000;
+
+          return newStart < existingEnd && newEnd > existingStart;
+      });
+
+      if (hasOverlap) {
+          return { valid: false, reason: "Reservation overlaps with an existing booking" };
+      }
+
+      return { valid: true };
   };
 
   const onDragEnd = (event) => {
-      const { active, over, delta } = event;
-      console.log('onDragEnd called', { active: active?.id, over: over?.id, type: active?.data?.current?.type, delta });
+      const { active, over } = event;
+      
+      // Clear snap target immediately
+      const currentSnapTarget = snapTarget;
+      setSnapTarget(null);
       setActiveReservation(null);
       
       if (active.data.current?.type === "RESERVATION" && over?.id === "floor-canvas") {
-          if (stageRef.current) {
-               const stage = stageRef.current;
-               
-               // Get mouse position from the last pointer event
-               const pointerPos = stage.getPointerPosition();
-               console.log('Pointer position on stage:', pointerPos);
-               
-               if (pointerPos) {
-                   // Transform to canvas coordinates (accounting for zoom/pan)
-                   const transform = stage.getAbsoluteTransform().copy();
-                   transform.invert();
-                   const canvasPos = transform.point(pointerPos);
-                   
-                   console.log('Canvas position:', canvasPos);
-                   console.log('Tables:', tables.map(t => ({ 
-                       id: t._id, 
-                       number: t.tableNumber, 
-                       x: t.position?.x || 0, 
-                       y: t.position?.y || 0,
-                       w: t.position?.width || 60,
-                       h: t.position?.height || 60
-                   })));
-                   
-                   const targetTable = tables.find(t => {
-                       const tx = t.position?.x || 0;
-                       const ty = t.position?.y || 0;
-                       const tw = t.position?.width || t.width || 60;
-                       const th = t.position?.height || t.height || 60;
-                       const hit = canvasPos.x >= tx && canvasPos.x <= tx + tw && canvasPos.y >= ty && canvasPos.y <= ty + th;
-                       if (hit) console.log('Hit table:', t.tableNumber, { tx, ty, tw, th, canvasPos });
-                       return hit;
-                   });
-                   
-                   if (targetTable) {
-                       if (window.confirm(`Assign reservation for ${active.data.current.reservation.customerName} to table ${targetTable.tableNumber}?`)) {
-                           dispatch(updateTableStatus({ id: targetTable._id, status: "reserved" }));
-                           dispatch(showNotification({ message: "Reservation assigned", status: 1 }));
-                       }
-                   } else {
-                       console.log('No table found at drop position');
-                   }
-               } else {
-                   console.log('Could not get pointer position');
+          // Use the last calculated snap target if available, otherwise recalculate (fallback)
+          // Since onDragMove runs every frame, snapTarget should be accurate.
+          
+          let targetTable = currentSnapTarget;
+
+          if (!targetTable) {
+              // Fallback: Recalculate if for some reason snapTarget wasn't set (e.g. very fast drag)
+              if (stageRef.current) {
+                  const stage = stageRef.current;
+                  const dragRect = active.rect.current.translated;
+                  
+                  if (dragRect) {
+                      const containerRect = stage.container().getBoundingClientRect();
+                      const relativeDragRect = {
+                          x: dragRect.left - containerRect.left,
+                          y: dragRect.top - containerRect.top,
+                          width: dragRect.width,
+                          height: dragRect.height
+                      };
+                      const stageX = stage.x();
+                      const stageY = stage.y();
+                      const stageScale = stage.scaleX();
+                      
+                      const worldDragRect = {
+                          x: (relativeDragRect.x - stageX) / stageScale,
+                          y: (relativeDragRect.y - stageY) / stageScale,
+                          width: relativeDragRect.width / stageScale,
+                          height: relativeDragRect.height / stageScale
+                      };
+
+                      let maxOverlapArea = 0;
+
+                      tables.forEach(table => {
+                          const tx = table.position?.x || 0;
+                          const ty = table.position?.y || 0;
+                          const tw = table.position?.width || table.width || 60;
+                          const th = table.position?.height || table.height || 60;
+
+                          const x_overlap = Math.max(0, Math.min(worldDragRect.x + worldDragRect.width, tx + tw) - Math.max(worldDragRect.x, tx));
+                          const y_overlap = Math.max(0, Math.min(worldDragRect.y + worldDragRect.height, ty + th) - Math.max(worldDragRect.y, ty));
+                          const overlapArea = x_overlap * y_overlap;
+
+                          if (overlapArea > 0 && overlapArea > maxOverlapArea) {
+                              maxOverlapArea = overlapArea;
+                              targetTable = table;
+                          }
+                      });
+                  }
+              }
+          }
+
+          if (targetTable) {
+               const reservation = active.data.current.reservation;
+               const validation = validateAssignment(targetTable, reservation);
+
+               if (!validation.valid) {
+                   dispatch(showNotification({ message: validation.reason, status: 0 }));
+                   return;
+               }
+
+               if (window.confirm(`Assign reservation for ${reservation.customerName} to table ${targetTable.tableNumber}?`)) {
+                   dispatch(updateTableStatus({ id: targetTable._id, status: "reserved" }));
+                   // Also update the reservation to link it to the table
+                   dispatch(updateReservation({ id: reservation._id, data: { tableId: targetTable._id, status: "confirmed" } }));
+                   dispatch(showNotification({ message: "Reservation assigned successfully", status: 1 }));
                }
           }
       }
@@ -240,7 +370,7 @@ const FloorManager = () => {
   };
 
   return (
-    <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={onDragCancel}>
+    <DndContext sensors={sensors} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd} onDragCancel={onDragCancel}>
       <div className="flex h-[calc(100vh-6rem)] gap-4">
         {/* Sidebar */}
         <div className="flex-none">
@@ -263,6 +393,16 @@ const FloorManager = () => {
                         </a>
                     ))}
                 </div>
+                <button 
+                    className="btn btn-sm btn-outline gap-2"
+                    onClick={() => dispatch(openModal({
+                        title: "Add New Floor",
+                        bodyType: MODAL_BODY_TYPES.ADD_NEW_FLOOR
+                    }))}
+                >
+                    <Building2 className="w-4 h-4" />
+                    Floor
+                </button>
             </div>
             
             <div className="flex items-center gap-2">
@@ -306,6 +446,7 @@ const FloorManager = () => {
                     floor={floors.find(f => f._id === activeFloorId) || {}}
                     tables={tables}
                     editMode={editMode}
+                    snapTarget={snapTarget}
                     onTableChange={(id, newAttrs) => {
                         dispatch(optimisticUpdateTablePositionTableSlice({ tableId: id, position: newAttrs.position }));
                         if (newAttrs.width !== undefined) {

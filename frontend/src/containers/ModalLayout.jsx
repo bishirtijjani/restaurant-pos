@@ -51,6 +51,9 @@ import LinkMenuItemsModalBody from "../features/inventory/components/LinkMenuIte
 
 // Expense modals
 import AddExpenseModalBody from "../features/expenses/components/AddExpenseModalBody";
+
+// Floor modals
+import AddFloorModalBody from "../features/floors/components/AddFloorModalBody";
 import EditExpenseModalBody from "../features/expenses/components/EditExpenseModalBody";
 
 // KDS modals
@@ -259,6 +262,13 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.EDIT_EXPENSE]: (
                   <EditExpenseModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+
+                [MODAL_BODY_TYPES.ADD_NEW_FLOOR]: (
+                  <AddFloorModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />

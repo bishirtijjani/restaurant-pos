@@ -11,7 +11,8 @@ const FloorCanvas = React.forwardRef(({
   onTableClick,
   onTableContextMenu,
   editMode,
-  onViewChange, 
+  onViewChange,
+  snapTarget, // NEW: table to highlight for snapping
 }, ref) => {
   const stageRef = useRef(null);
   const containerRef = useRef(null);
@@ -140,6 +141,7 @@ const FloorCanvas = React.forwardRef(({
               id={`table-${table._id}`} // ID for finding node
               table={table}
               isSelected={selectedIds.includes(table._id)}
+              isSnapTarget={snapTarget?._id === table._id} // NEW: highlight if snap target
               editMode={editMode}
               onSelect={(e) => {
                 handleTableSelect(table._id, e.evt.shiftKey || e.evt.ctrlKey);
