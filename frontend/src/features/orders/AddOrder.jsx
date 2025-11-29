@@ -31,6 +31,7 @@ import { useAuth } from "../../utils/permission";
 import { useNavigate } from "react-router-dom";
 import TitleCard from "../../components/Cards/TitleCard";
 import { showNotification } from "../common/headerSlice";
+import CustomerSearch from "../../components/Common/CustomerSearch";
 
 const OrderTypeSelector = ({ orderType, setOrderType, disabled }) => (
   <div className="join mb-4 join-vertical lg:join-horizontal w-full">
@@ -252,47 +253,82 @@ const CustomerDetailsForm = ({
   setCustomerDetails,
   orderType,
   disabled,
-}) => (
-  <div className="bg-base-200 rounded-lg p-3 mb-4">
-    <h3 className="font-medium text-sm mb-2 flex items-center gap-1">
-      <User size={14} /> Customer Details
-    </h3>
-    <div className="space-y-2">
-      <input
-        type="text"
-        className="input input-sm input-bordered w-full"
-        value={customerDetails.name}
-        onChange={(e) =>
-          setCustomerDetails({ ...customerDetails, name: e.target.value })
-        }
-        placeholder="Customer name"
-        disabled={disabled}
-      />
-      <input
-        type="tel"
-        className="input input-sm input-bordered w-full"
-        value={customerDetails.phone}
-        onChange={(e) =>
-          setCustomerDetails({ ...customerDetails, phone: e.target.value })
-        }
-        placeholder="Phone number"
-        disabled={disabled}
-      />
-      {orderType === "delivery" && (
-        <textarea
-          className="textarea textarea-sm textarea-bordered w-full"
-          value={customerDetails.address}
+}) => {
+  const handleCustomerSelect = (customer) => {
+    if (customer) {
+      setCustomerDetails({
+        ...customerDetails,
+        customerId: customer._id,
+        name: customer.fullname,
+        phone: customer.phone,
+        address: customer.address || customerDetails.address,
+      });
+    } else {
+      setCustomerDetails({
+        ...customerDetails,
+        customerId: null,
+        name: "",
+        phone: "",
+        address: "",
+      });
+    }
+  };
+
+  return (
+    <div className="bg-base-200 rounded-lg p-3 mb-4">
+      <h3 className="font-medium text-sm mb-2 flex items-center gap-1">
+        <User size={14} /> Customer Details
+      </h3>
+      
+      {!disabled && (
+        <div className="mb-3">
+            <CustomerSearch 
+                onSelect={handleCustomerSelect} 
+                label="Link Customer (Optional)" 
+                placeholder="Search..."
+                initialValue={customerDetails.customerId ? { fullname: customerDetails.name, phone: customerDetails.phone, _id: customerDetails.customerId } : null}
+            />
+            <div className="divider my-1 text-xs text-base-content/50">OR ENTER MANUALLY</div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <input
+          type="text"
+          className="input input-sm input-bordered w-full"
+          value={customerDetails.name}
           onChange={(e) =>
-            setCustomerDetails({ ...customerDetails, address: e.target.value })
+            setCustomerDetails({ ...customerDetails, name: e.target.value })
           }
-          placeholder="Delivery address"
-          rows="2"
+          placeholder="Customer name"
           disabled={disabled}
         />
-      )}
+        <input
+          type="tel"
+          className="input input-sm input-bordered w-full"
+          value={customerDetails.phone}
+          onChange={(e) =>
+            setCustomerDetails({ ...customerDetails, phone: e.target.value })
+          }
+          placeholder="Phone number"
+          disabled={disabled}
+        />
+        {orderType === "delivery" && (
+          <textarea
+            className="textarea textarea-sm textarea-bordered w-full"
+            value={customerDetails.address}
+            onChange={(e) =>
+              setCustomerDetails({ ...customerDetails, address: e.target.value })
+            }
+            placeholder="Delivery address"
+            rows="2"
+            disabled={disabled}
+          />
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function AddOrder() {
   const dispatch = useDispatch();
@@ -315,6 +351,7 @@ export default function AddOrder() {
   const [deliveryFee, setDeliveryFee] = useState("0");
   const [tableNumber, setTableNumber] = useState("1");
   const [customerDetails, setCustomerDetails] = useState({
+    customerId: null,
     name: "",
     phone: "",
     address: "",
@@ -496,6 +533,7 @@ export default function AddOrder() {
     const orderPayload = {
       table: orderType === "dine-in" ? tableNumber : "Takeaway",
       customerDetails: {
+        customerId: customerDetails.customerId || null,
         name: customerDetails.name || "Walk-in",
         phone: customerDetails.phone,
         address: orderType === "delivery" ? customerDetails.address : "",

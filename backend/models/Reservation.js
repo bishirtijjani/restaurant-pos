@@ -12,6 +12,11 @@ const reservationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
+      default: null,
+    },
     customerPhone: {
       type: String,
       required: true,

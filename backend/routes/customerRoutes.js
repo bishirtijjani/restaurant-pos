@@ -2,6 +2,9 @@ const express = require("express");
 const {
   getAllCustomers,
   getCustomerById,
+  getCustomerProfile,
+  addCustomerNote,
+  recordCustomerPayment,
   createCustomer,
   updateCustomer,
   deleteCustomer,
@@ -26,6 +29,27 @@ router.get(
   "/:id",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
   getCustomerById
+);
+
+// Route to fetch customer profile
+router.get(
+  "/:id/profile",
+  roleMiddleware("admin", "manager", "cashier", "waiter"),
+  getCustomerProfile
+);
+
+// Route to add a note
+router.post(
+  "/:id/notes",
+  roleMiddleware("admin", "manager", "cashier", "waiter"),
+  addCustomerNote
+);
+
+// Route to record a payment
+router.post(
+  "/:id/payments",
+  roleMiddleware("admin", "manager", "cashier"),
+  recordCustomerPayment
 );
 
 // Route to create a new customer

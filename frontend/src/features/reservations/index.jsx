@@ -29,7 +29,7 @@ import {
   User,
   Filter,
 } from "lucide-react";
-import Datepicker from "react-tailwindcss-datepicker";
+import { Link } from "react-router-dom";
 
 const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete }) => {
   const statusColors = {
@@ -55,7 +55,13 @@ const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete }) => {
           <div>
             <h3 className="font-bold text-lg flex items-center gap-2">
               <User className="w-5 h-5 text-primary" />
-              {reservation.customerName}
+              {reservation.customerId ? (
+                  <Link to={`/app/customers/${reservation.customerId._id || reservation.customerId}`} className="link link-hover hover:text-primary">
+                    {reservation.customerName}
+                  </Link>
+              ) : (
+                  <span>{reservation.customerName}</span>
+              )}
             </h3>
             <span
               className={`badge badge-sm ${statusColors[reservation.status]}`}

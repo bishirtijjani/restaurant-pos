@@ -24,6 +24,13 @@ const customerSchema = new mongoose.Schema(
       createdAt: { type: Date, default: null }, // Timestamp of last action
       reason: { type: String, default: null }, // Reason for the action
     },
+    notes: [
+      {
+        content: { type: String, required: true },
+        createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

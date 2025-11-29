@@ -14,6 +14,9 @@ import AddCustomerModalBody from "../features/customers/components/AddCustomerMo
 import EditCustomerModalBody from "../features/customers/components/EditCustomerModalBody";
 import ViewCustomerModalBody from "../features/customers/components/ViewCustomerModalBody";
 
+import AddCustomerNoteModalBody from "../features/customers/components/AddCustomerNoteModalBody";
+import RecordPaymentModalBody from "../features/customers/components/RecordPaymentModalBody";
+
 // Category modals
 import AddCategoryModalBody from "../features/categories/components/AddCategoryModalBody";
 import EditCategoryModalBody from "../features/categories/components/EditCategoryModalBody";
@@ -144,6 +147,18 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.VIEW_CUSTOMER]: (
                   <ViewCustomerModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_CUSTOMER_NOTE]: (
+                  <AddCustomerNoteModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.RECORD_CUSTOMER_PAYMENT]: (
+                  <RecordPaymentModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />

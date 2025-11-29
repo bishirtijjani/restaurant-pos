@@ -25,9 +25,11 @@ import {
   CreditCard,
   Calendar,
   User,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
+import { Link } from "react-router-dom";
 
 const TopSideButtons = ({ onRefresh, onAddNew }) => {
   const { can } = useAuth();
@@ -78,7 +80,6 @@ const CustomerCard = ({ customer, onEdit, onDelete, settings }) => {
             </div>
           </div>
 
-          {(can("editCustomers") || can("deleteCustomers")) && (
             <div className="dropdown dropdown-end">
               <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
                 <svg
@@ -93,6 +94,12 @@ const CustomerCard = ({ customer, onEdit, onDelete, settings }) => {
                 tabIndex={0}
                 className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
               >
+                <li>
+                    <Link to={`/app/customers/${customer._id}`} className="text-info">
+                        <Eye className="w-4 h-4" />
+                        View
+                    </Link>
+                </li>
                 <Can do="editCustomers">
                   <li>
                     <button
@@ -117,6 +124,11 @@ const CustomerCard = ({ customer, onEdit, onDelete, settings }) => {
                 </Can>
               </ul>
             </div>
+
+          {!(can("editCustomers") || can("deleteCustomers")) && (
+             <Link to={`/app/customers/${customer._id}`} className="btn btn-ghost btn-sm btn-circle">
+                <Eye className="w-4 h-4" />
+             </Link>
           )}
         </div>
 
@@ -235,9 +247,16 @@ const CustomerTable = ({ customers, onEdit, onDelete, settings }) => {
                   {new Date(customer.createdAt).toLocaleDateString()}
                 </div>
               </td>
-              {(can("editCustomers") || can("deleteCustomers")) && (
+              {(can("editCustomers") || can("deleteCustomers")) ? (
                 <td>
                   <div className="flex gap-2">
+                    <Link
+                        to={`/app/customers/${customer._id}`}
+                        className="btn btn-ghost btn-sm gap-1"
+                    >
+                        <Eye className="w-4 h-4" />
+                        <span className="hidden lg:inline">View</span>
+                    </Link>
                     <Can do="editCustomers">
                       <button
                         className="btn btn-primary btn-sm gap-1"
@@ -257,6 +276,16 @@ const CustomerTable = ({ customers, onEdit, onDelete, settings }) => {
                       </button>
                     </Can>
                   </div>
+                </td>
+              ) : (
+                <td>
+                    <Link
+                        to={`/app/customers/${customer._id}`}
+                        className="btn btn-ghost btn-sm gap-1"
+                    >
+                        <Eye className="w-4 h-4" />
+                        <span className="hidden lg:inline">View</span>
+                    </Link>
                 </td>
               )}
             </tr>

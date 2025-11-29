@@ -15,6 +15,7 @@ const Expenses = lazy(() => import("../pages/protected/Expenses"));
 const Analytics = lazy(() => import("../pages/protected/Analytics"));
 const Users = lazy(() => import("../pages/protected/Users"));
 const Customers = lazy(() => import("../pages/protected/Customers"));
+const CustomerProfile = lazy(() => import("../features/customers/CustomerProfile"));
 const GeneralSettings = lazy(() =>
   import("../pages/protected/GeneralSettings")
 );
@@ -62,6 +63,7 @@ const routes = [
   { path: "/analytics", component: Analytics },
   { path: "/users", component: Users },
   { path: "/customers", component: Customers },
+  { path: "/customers/:id", component: CustomerProfile },
   { path: "/kds", component: KDS },
   { path: "/stations", component: KDSStations },
   { path: "/404", component: Page404 },

@@ -102,6 +102,11 @@ const OrderSchema = new mongoose.Schema(
       required: false,
     },
     customerDetails: {
+      customerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Customer",
+        default: null,
+      },
       name: { type: String, default: "Walk-in" },
       phone: { type: String, required: false },
       email: { type: String, required: false },

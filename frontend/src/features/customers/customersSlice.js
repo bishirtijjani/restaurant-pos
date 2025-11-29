@@ -53,6 +53,45 @@ export const deleteCustomer = createAsyncThunk(
   }
 );
 
+// API call to fetch customer profile
+export const fetchCustomerProfile = createAsyncThunk(
+  "customers/fetchCustomerProfile",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`/api/customers/${id}/profile`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// API call to add a note
+export const addCustomerNote = createAsyncThunk(
+  "customers/addCustomerNote",
+  async ({ id, content }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/api/customers/${id}/notes`, { content });
+      return { id, notes: response.data.data };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// API call to record a payment
+export const recordCustomerPayment = createAsyncThunk(
+  "customers/recordCustomerPayment",
+  async ({ id, paymentData }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/api/customers/${id}/payments`, paymentData);
+      return { id, payment: response.data.data };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 const initialState = {
   customers: [],
   status: "idle",
@@ -104,6 +143,13 @@ const customersSlice = createSlice({
         if (index !== -1) {
           state.customers[index] = action.payload;
         }
+        // Also update currentCustomerProfile if it matches
+        if (state.currentCustomerProfile?.customer?._id === action.payload._id) {
+            state.currentCustomerProfile.customer = {
+                ...state.currentCustomerProfile.customer,
+                ...action.payload
+            };
+        }
       })
       .addCase(updateCustomer.rejected, (state, action) => {
         state.loading = false;
@@ -123,6 +169,34 @@ const customersSlice = createSlice({
       .addCase(deleteCustomer.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Fetch Customer Profile
+      .addCase(fetchCustomerProfile.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchCustomerProfile.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.currentCustomerProfile = action.payload;
+      })
+      .addCase(fetchCustomerProfile.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Add Note
+      .addCase(addCustomerNote.fulfilled, (state, action) => {
+        if (state.currentCustomerProfile?.customer?._id === action.payload.id) {
+          state.currentCustomerProfile.customer.notes = action.payload.notes;
+        }
+      })
+      // Record Payment
+      .addCase(recordCustomerPayment.fulfilled, (state, action) => {
+        if (state.currentCustomerProfile?.customer?._id === action.payload.id) {
+          state.currentCustomerProfile.payments.unshift(action.payload.payment);
+          // Update stats locally: reduce outstanding balance by payment amount
+          if (state.currentCustomerProfile.stats) {
+             state.currentCustomerProfile.stats.outstandingBalance -= action.payload.payment.amount;
+          }
+        }
       });
   },
 });

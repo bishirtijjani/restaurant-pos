@@ -5,6 +5,7 @@ import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import CustomerSearch from "../../../components/Common/CustomerSearch";
 
 const AddReservationModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
@@ -16,6 +17,7 @@ const AddReservationModalBody = ({ extraObject }) => {
 
   const [formData, setFormData] = useState({
     tableId: reservationToEdit.tableId?._id || reservationToEdit.tableId || "",
+    customerId: reservationToEdit.customerId || null,
     customerName: reservationToEdit.customerName || "",
     customerPhone: reservationToEdit.customerPhone || "",
     customerEmail: reservationToEdit.customerEmail || "",
@@ -36,6 +38,26 @@ const AddReservationModalBody = ({ extraObject }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleCustomerSelect = (customer) => {
+    if (customer) {
+        setFormData(prev => ({
+            ...prev,
+            customerId: customer._id,
+            customerName: customer.fullname,
+            customerPhone: customer.phone,
+            customerEmail: customer.email || "",
+        }));
+    } else {
+        setFormData(prev => ({
+            ...prev,
+            customerId: null,
+            customerName: "",
+            customerPhone: "",
+            customerEmail: ""
+        }));
     }
   };
 
@@ -185,6 +207,16 @@ const AddReservationModalBody = ({ extraObject }) => {
                 ))}
             </select>
             {errors.tableId && <ErrorText>{errors.tableId}</ErrorText>}
+        </div>
+
+        {/* Customer Search */}
+        <div className="md:col-span-2">
+            <CustomerSearch 
+                onSelect={handleCustomerSelect} 
+                label="Link Existing Customer (Optional)" 
+                placeholder="Search by name or phone..."
+            />
+            <div className="divider my-1 text-xs text-base-content/50">OR ENTER MANUALLY</div>
         </div>
 
         {/* Customer Name */}
