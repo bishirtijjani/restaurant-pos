@@ -29,7 +29,56 @@ const FloorCanvas = React.forwardRef(({
     data: { type: "FLOOR_CANVAS" },
   });
 
-  useImperativeHandle(ref, () => stageRef.current);
+  const fitToScreen = () => {
+        if (!stageRef.current || tables.length === 0) return;
+        
+        const stage = stageRef.current;
+        const padding = 50;
+        
+        // Calculate bounding box of all tables
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        
+        tables.forEach(table => {
+            const x = table.position?.x || 0;
+            const y = table.position?.y || 0;
+            const w = table.position?.width || table.width || 60;
+            const h = table.position?.height || table.height || 60;
+            
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + w);
+            maxY = Math.max(maxY, y + h);
+        });
+        
+        if (minX === Infinity) return; // No tables
+        
+        const contentWidth = maxX - minX;
+        const contentHeight = maxY - minY;
+        
+        const containerWidth = stageSize.width;
+        const containerHeight = stageSize.height;
+        
+        const scaleX = (containerWidth - padding * 2) / contentWidth;
+        const scaleY = (containerHeight - padding * 2) / contentHeight;
+        
+        const newScale = Math.min(scaleX, scaleY, 1.5); // Cap max scale
+        
+        const newX = (containerWidth - contentWidth * newScale) / 2 - minX * newScale;
+        const newY = (containerHeight - contentHeight * newScale) / 2 - minY * newScale;
+        
+        setScale(newScale);
+        setPosition({ x: newX, y: newY });
+        
+        if (onViewChange) onViewChange({ scale: newScale, position: { x: newX, y: newY } });
+  };
+
+  useImperativeHandle(ref, () => {
+    const stage = stageRef.current;
+    if (stage) {
+        stage.fitToScreen = fitToScreen;
+    }
+    return stage;
+  });
 
   // Resize observer
   useEffect(() => {
@@ -98,6 +147,18 @@ const FloorCanvas = React.forwardRef(({
         stageRef.current.container().style.cursor = editMode ? "default" : (selectedIds.length > 0 ? "default" : "grab");
     }
   }, [editMode, selectedIds]);
+
+  const handleZoomIn = () => {
+      setScale(s => Math.min(s * 1.2, 5));
+  };
+
+  const handleZoomOut = () => {
+      setScale(s => Math.max(s / 1.2, 0.1));
+  };
+
+  const handleFitToScreen = () => {
+      fitToScreen();
+  };
 
   return (
     <div
@@ -168,9 +229,9 @@ const FloorCanvas = React.forwardRef(({
       </Stage>
       
       <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-          <button className="btn btn-circle btn-sm" onClick={() => setScale(s => Math.min(s * 1.2, 5))}>+</button>
-          <button className="btn btn-circle btn-sm" onClick={() => setScale(s => Math.max(s / 1.2, 0.1))}>-</button>
-          <button className="btn btn-circle btn-sm" onClick={() => { setScale(1); setPosition({x: 0, y: 0}); }}>R</button>
+          <button className="btn btn-circle btn-sm bg-base-100 shadow-lg" onClick={handleZoomIn} title="Zoom In">+</button>
+          <button className="btn btn-circle btn-sm bg-base-100 shadow-lg" onClick={handleZoomOut} title="Zoom Out">-</button>
+          <button className="btn btn-circle btn-sm bg-base-100 shadow-lg" onClick={handleFitToScreen} title="Fit to Screen">R</button>
       </div>
 
       {editMode && (

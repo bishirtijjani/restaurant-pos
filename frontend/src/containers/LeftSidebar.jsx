@@ -67,7 +67,7 @@ function LeftSidebar() {
   }
 
   return (
-    <div className="drawer-side z-30 border-r border-base-200">
+    <div className="drawer-side z-50 border-r border-base-200">
       <label htmlFor="left-sidebar-drawer" className="drawer-overlay"></label>
       <ul className="menu w-70 min-h-full bg-base-100 text-base-content p-0">
         {/* Logo Section */}

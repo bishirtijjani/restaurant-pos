@@ -65,7 +65,7 @@ function Header() {
 
   return (
     <>
-      <div className="navbar sticky top-0 bg-base-100  z-10 shadow-md flex justify-between">
+      <div className="navbar sticky top-0 bg-base-100  z-50 shadow-md flex justify-between">
         {/* Menu toogle for mobile view or small screen */}
         <div className="">
           <label
@@ -127,7 +127,7 @@ function Header() {
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40"
+              className="dropdown-content z-50 menu p-2 shadow bg-base-100 rounded-box w-40"
             >
               <li>
                 <a data-set-theme="light" data-act-class="active">

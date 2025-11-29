@@ -70,6 +70,9 @@ import ReceivePurchaseOrderModalBody from "../features/purchaseOrders/components
 import AddDiscountModalBody from "../features/discounts/components/AddDiscountModalBody";
 import AddPromoCodeModalBody from "../features/discounts/components/AddPromoCodeModalBody";
 
+// Reservation modals
+import AddReservationModalBody from "../features/reservations/components/AddReservationModalBody";
+
 // Common modals
 import ConfirmationModalBody from "../features/common/components/ConfirmationModalBody";
 import Receipt from "../features/common/components/Receipt";
@@ -370,6 +373,18 @@ function ModalLayout() {
                   <ConfirmationModalBody
                     extraObject={extraObject}
                     closeModal={close}
+                  />
+                ),
+                [MODAL_BODY_TYPES.ADD_RESERVATION]: (
+                  <AddReservationModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_RESERVATION]: (
+                  <AddReservationModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
                   />
                 ),
                 [MODAL_BODY_TYPES.DEFAULT]: <div></div>,

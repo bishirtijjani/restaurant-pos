@@ -64,6 +64,16 @@ const FloorManager = () => {
     }
   }, [activeFloorId, dispatch]);
 
+  // Fit to screen when tables load or floor changes
+  useEffect(() => {
+      if (tables.length > 0 && stageRef.current && stageRef.current.fitToScreen) {
+          // Small timeout to ensure Konva nodes are ready
+          setTimeout(() => {
+             stageRef.current.fitToScreen();
+          }, 100);
+      }
+  }, [activeFloorId, tables.length]);
+
   // Native WebSocket Connection
   useEffect(() => {
     // Connect to /ws path
@@ -369,12 +379,27 @@ const FloorManager = () => {
       setEditMode(false);
   };
 
+  const handleAddReservation = () => {
+      const extraObject = {};
+      if (selectedTable) {
+          extraObject.tableId = selectedTable._id;
+      }
+      dispatch(openModal({
+          title: "New Reservation",
+          bodyType: MODAL_BODY_TYPES.ADD_RESERVATION,
+          extraObject
+      }));
+  };
+
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd} onDragCancel={onDragCancel}>
       <div className="flex h-[calc(100vh-6rem)] gap-4">
         {/* Sidebar */}
         <div className="flex-none">
-             <ReservationSidebar reservations={reservations} />
+             <ReservationSidebar 
+                reservations={reservations} 
+                onAddReservation={handleAddReservation}
+             />
         </div>
 
         {/* Main Content */}

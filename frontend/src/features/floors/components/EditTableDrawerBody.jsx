@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { updateTable, deleteTable } from "../../tables/tableSlice";
 import { showNotification } from "../../common/headerSlice";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 
 const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
   const dispatch = useDispatch();
-  console.log("EditTableDrawerBody rendered with table:", table);
   
   // Initialize state with correct structure
   const [tableData, setTableData] = useState({
@@ -18,18 +18,33 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
       shape: table.shape || "rectangle"
   });
 
+  // Update state if table prop changes
+  useEffect(() => {
+      setTableData({
+          ...table,
+          tableNumber: table.tableNumber || table.name || "",
+          capacity: table.capacity || table.seats || 4,
+          width: table.position?.width || table.width || 60,
+          height: table.position?.height || table.height || 60,
+          shape: table.shape || "rectangle"
+      });
+  }, [table]);
+
   const handleSaveTable = async () => {
     try {
         // Construct payload matching backend schema
+        // Ensure numeric values are numbers
         const payload = {
-            ...tableData,
-            name: undefined, // Remove legacy field if present
-            seats: undefined, // Remove legacy field if present
+            tableNumber: tableData.tableNumber,
+            capacity: parseInt(tableData.capacity),
+            shape: tableData.shape,
             position: {
                 ...table.position,
-                width: tableData.width,
-                height: tableData.height,
-                // Preserve x, y, rotation
+                x: table.position?.x || 0,
+                y: table.position?.y || 0,
+                rotation: table.position?.rotation || 0,
+                width: parseInt(tableData.width),
+                height: parseInt(tableData.height),
             }
         };
         
@@ -37,6 +52,7 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
         dispatch(showNotification({ message: "Table updated", status: 1 }));
         closeRightDrawer();
     } catch (error) {
+        console.error("Update failed:", error);
         dispatch(showNotification({ message: "Failed to update table", status: 0 }));
     }
   };
@@ -51,6 +67,14 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
               dispatch(showNotification({ message: "Failed to delete table", status: 0 }));
           }
       }
+  };
+
+  const handleNumberChange = (e) => {
+      const { name, value } = e.target;
+      setTableData(prev => ({
+          ...prev,
+          [name]: value
+      }));
   };
 
   return (
@@ -90,15 +114,10 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
           <label className="label">
             <span className="label-text">Width</span>
           </label>
-          <input
-            type="number"
-            value={tableData.width || 60}
-            onChange={(e) =>
-              setTableData({
-                ...tableData,
-                width: parseInt(e.target.value),
-              })
-            }
+          <FormattedNumberInput
+            name="width"
+            value={tableData.width}
+            onChange={handleNumberChange}
             className="input input-bordered w-full"
           />
         </div>
@@ -106,15 +125,10 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
           <label className="label">
             <span className="label-text">Height</span>
           </label>
-          <input
-            type="number"
-            value={tableData.height || 60}
-            onChange={(e) =>
-              setTableData({
-                ...tableData,
-                height: parseInt(e.target.value),
-              })
-            }
+          <FormattedNumberInput
+            name="height"
+            value={tableData.height}
+            onChange={handleNumberChange}
             className="input input-bordered w-full"
           />
         </div>
@@ -124,16 +138,11 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
         <label className="label">
           <span className="label-text">Capacity</span>
         </label>
-        <input
-          type="number"
-          value={tableData.capacity || 4}
-          onChange={(e) =>
-            setTableData({
-              ...tableData,
-              capacity: parseInt(e.target.value),
-            })
-          }
-          className="input input-bordered w-full"
+        <FormattedNumberInput
+            name="capacity"
+            value={tableData.capacity}
+            onChange={handleNumberChange}
+            className="input input-bordered w-full"
         />
       </div>
 

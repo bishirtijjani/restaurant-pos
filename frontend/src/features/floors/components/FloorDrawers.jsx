@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, Trash2, User, Users } from "lucide-react";
+import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 
 const Drawer = ({ isOpen, onClose, title, children }) => {
   return (
@@ -85,9 +86,9 @@ const FloorDrawers = ({
               <label className="label">
                 <span className="label-text">Width</span>
               </label>
-              <input
-                type="number"
-                value={tableData.width || 60}
+              <FormattedNumberInput
+                name="width"
+                value={tableData.width}
                 onChange={(e) =>
                   setTableData({
                     ...tableData,
@@ -101,9 +102,9 @@ const FloorDrawers = ({
               <label className="label">
                 <span className="label-text">Height</span>
               </label>
-              <input
-                type="number"
-                value={tableData.height || 60}
+              <FormattedNumberInput
+                name="height"
+                value={tableData.height}
                 onChange={(e) =>
                   setTableData({
                     ...tableData,
@@ -119,9 +120,9 @@ const FloorDrawers = ({
             <label className="label">
               <span className="label-text">Seats</span>
             </label>
-            <input
-              type="number"
-              value={tableData.seats || 4}
+            <FormattedNumberInput
+              name="seats"
+              value={tableData.seats}
               onChange={(e) =>
                 setTableData({
                   ...tableData,
