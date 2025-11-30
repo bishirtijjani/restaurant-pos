@@ -2,7 +2,10 @@
 import React, { useEffect, useState } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
 import { openModal } from "../common/modalSlice";
-import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
+import {
+  MODAL_BODY_TYPES,
+  CONFIRMATION_MODAL_CLOSE_TYPES,
+} from "../../utils/globalConstantUtil";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchOrders,
@@ -348,27 +351,18 @@ const Orders = () => {
     );
   };
 
-  const handleCancelOrder = async (order) => {
-    if (!window.confirm(`Cancel order #${order.orderNumber}?`)) return;
-    try {
-      await dispatch(
-        cancelOrder({ id: order._id, reason: "Cancelled by staff" })
-      ).unwrap();
-      dispatch(
-        showNotification({
-          message: `Order #${order.orderNumber} cancelled`,
-          status: 1,
-        })
-      );
-      dispatch(fetchOrders(filters));
-    } catch (err) {
-      dispatch(
-        showNotification({
-          message: err.message || "Failed to cancel",
-          status: 0,
-        })
-      );
-    }
+  const handleCancelOrder = (order) => {
+    dispatch(
+      openModal({
+        title: "Cancel Order",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message: `Are you sure you want to cancel order #${order.orderNumber}?`,
+          type: CONFIRMATION_MODAL_CLOSE_TYPES.CANCEL_ORDER,
+          id: order._id,
+        },
+      })
+    );
   };
 
   if (loading) return <SuspenseContent />;

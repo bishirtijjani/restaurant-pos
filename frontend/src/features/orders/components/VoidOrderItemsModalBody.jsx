@@ -3,10 +3,8 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
-import { fetchOrders } from "../ordersSlice";
-import axios from "axios";
-import ErrorText from "../../../components/Typography/ErrorText";
-import { AlertTriangle, Check, Package } from "lucide-react";
+import { fetchAllMenuItems } from "../../menuItems/menuItemsSlice";
+import { AlertTriangle, Package, Check } from "lucide-react";
 
 const VoidOrderItemsModalBody = ({ extraObject, closeModal: close }) => {
   const dispatch = useDispatch();
@@ -15,12 +13,17 @@ const VoidOrderItemsModalBody = ({ extraObject, closeModal: close }) => {
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
+  const menuItems = useSelector((state) => state.menuItems.menuItems);
   const currency = settings?.currency?.symbol || "$";
 
   const [selectedItems, setSelectedItems] = useState([]);
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  React.useEffect(() => {
+    dispatch(fetchAllMenuItems());
+  }, [dispatch]);
 
   const activeItems = order.orderItems.filter(
     (item) => !item.voidInfo?.isVoided
@@ -43,10 +46,72 @@ const VoidOrderItemsModalBody = ({ extraObject, closeModal: close }) => {
     }
   };
 
+  const calculateOrderTotal = (items) => {
+    // 1. Subtotal
+    const itemsSubtotal = items.reduce((sum, item) => {
+      return sum + item.subtotal;
+    }, 0);
+
+    // 2. Discount
+    let discountAmount = 0;
+    const orderDiscount = order.orderDiscount;
+    if (orderDiscount?.enabled) {
+      if (orderDiscount.type === "percentage") {
+        discountAmount = (itemsSubtotal * orderDiscount.value) / 100;
+        if (orderDiscount.maxDiscount) {
+          discountAmount = Math.min(discountAmount, orderDiscount.maxDiscount);
+        }
+      } else if (orderDiscount.type === "fixed") {
+        discountAmount = Math.min(orderDiscount.value, itemsSubtotal);
+      }
+    }
+    const discountedSubtotal = itemsSubtotal - discountAmount;
+
+    // 3. Tax
+    let totalTax = 0;
+    if (settings?.taxSettings?.enabled) {
+      if (settings.taxSettings.mode === "per-item") {
+        items.forEach((item) => {
+          // Find original menu item to get tax rate
+          const menuItem = menuItems.find((m) => m._id === item.menuItemId);
+          const rate = menuItem?.customTax?.enabled
+            ? menuItem.customTax.rate
+            : settings.taxSettings.globalRate;
+          totalTax += (item.subtotal * rate) / 100;
+        });
+      } else {
+        totalTax = (discountedSubtotal * settings.taxSettings.globalRate) / 100;
+      }
+    }
+
+    // 4. Service Charge
+    let serviceCharge = 0;
+    if (settings?.serviceCharge?.enabled) {
+      const applies =
+        settings.serviceCharge.applyTo === "all" ||
+        settings.serviceCharge.applyTo === order.orderType;
+      if (applies) {
+        serviceCharge =
+          (discountedSubtotal * settings.serviceCharge.rate) / 100;
+      }
+    }
+
+    // Fees (Constant)
+    const packaging = order.packagingFee || 0;
+    const delivery = order.deliveryFee || 0;
+
+    return discountedSubtotal + totalTax + serviceCharge + packaging + delivery;
+  };
+
   const calculateVoidTotal = () => {
-    return activeItems
-      .filter((item) => selectedItems.includes(item._id))
-      .reduce((sum, item) => sum + item.subtotal, 0);
+    const currentTotal = calculateOrderTotal(activeItems);
+    
+    const remainingItems = activeItems.filter(
+      (item) => !selectedItems.includes(item._id)
+    );
+    const projectedTotal = calculateOrderTotal(remainingItems);
+
+    return Math.max(0, currentTotal - projectedTotal);
   };
 
   const validate = () => {

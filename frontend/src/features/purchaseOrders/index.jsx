@@ -272,8 +272,8 @@ const PurchaseOrdersManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { can } = useAuth();
-  const { orders, loading, error, success, message } = useSelector(
-    (state) => state.purchaseOrders
+  const { orders = [], loading, error, success, message } = useSelector(
+    (state) => state.purchaseOrders || {}
   );
   const suppliers = useSelector((state) => state.suppliers.suppliers || []);
 
@@ -300,7 +300,7 @@ const PurchaseOrdersManagement = () => {
   }, [success, message, error, dispatch]);
 
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
+    return (orders || []).filter((order) => {
       const matchesSearch =
         order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.supplier?.name

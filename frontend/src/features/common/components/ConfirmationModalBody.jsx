@@ -63,6 +63,12 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
           dispatch(fetchInventoryItems());
           successMessage = "Inventory Item Deleted Successfully!";
           break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.CANCEL_ORDER:
+          await dispatch(
+            cancelOrder({ id, reason: "Cancelled by user" })
+          ).unwrap();
+          successMessage = "Order Cancelled Successfully!";
+          break;
         default:
           successMessage = "Action completed!";
       }
@@ -80,17 +86,20 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
     }
   };
 
+  const isDelete = type.startsWith("DELETE");
+  const buttonText = type === CONFIRMATION_MODAL_CLOSE_TYPES.CANCEL_ORDER ? "Yes, Cancel" : isDelete ? "Yes, Delete" : "Yes, Confirm";
+
   return (
     <>
       <p className="text-xl mt-8 text-center">{message}</p>
 
       <div className="modal-action mt-12">
         <button className="btn btn-outline" onClick={() => closeModal()}>
-          Cancel
+          Back
         </button>
 
         <button className="btn btn-error w-36" onClick={() => proceedWithYes()}>
-          Yes, Delete
+          {buttonText}
         </button>
       </div>
     </>

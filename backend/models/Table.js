@@ -19,6 +19,11 @@ const tableSchema = new mongoose.Schema(
       min: 1,
       default: 4,
     },
+    // NEW: Original capacity for restoring after split
+    originalCapacity: {
+      type: Number,
+      default: 4,
+    },
     status: {
       type: String,
       enum: [

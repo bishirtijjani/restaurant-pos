@@ -349,4 +349,74 @@ exports.deleteReservation = async (req, res) => {
   }
 };
 
+// NEW: Check-in reservation (creates order and updates table)
+exports.checkInReservation = async (req, res) => {
+  try {
+    const reservation = await Reservation.findById(req.params.id)
+      .populate("tableId")
+      .populate("customerId");
+
+    if (!reservation) {
+      return res.status(404).json({
+        success: false,
+        message: "Reservation not found",
+      });
+    }
+
+    if (reservation.status === "seated" || reservation.status === "completed") {
+      return res.status(400).json({
+        success: false,
+        message: "Reservation already checked in",
+      });
+    }
+
+    const table = await Table.findById(reservation.tableId);
+    if (!table) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+
+    // Update reservation status
+    reservation.status = "seated";
+    await reservation.save();
+
+    // Update table status and link reservation
+    table.status = "occupied";
+    table.currentReservation = reservation._id;
+    table.timing.seatedAt = new Date();
+    await table.save();
+
+    await logAction(
+      req.user.id,
+      "Reservation",
+      req.params.id,
+      "update",
+      { status: "confirmed" },
+      { status: "seated" },
+      `Checked in reservation for ${reservation.customerName}`
+    );
+
+    // Return reservation with customer and table data for frontend
+    const populatedReservation = await Reservation.findById(reservation._id)
+      .populate("tableId", "tableNumber floorId")
+      .populate("customerId")
+      .populate("createdBy", "fullname");
+
+    res.status(200).json({
+      success: true,
+      message: "Reservation checked in successfully",
+      data: populatedReservation,
+    });
+  } catch (error) {
+    console.error("Error checking in reservation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to check in reservation",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = exports;

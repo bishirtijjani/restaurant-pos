@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import TitleCard from "../../components/Cards/TitleCard";
 import { showNotification } from "../common/headerSlice";
 import CustomerSearch from "../../components/Common/CustomerSearch";
+import TableSelectionModal from "./components/TableSelectionModal";
 
 const OrderTypeSelector = ({ orderType, setOrderType, disabled }) => (
   <div className="join mb-4 join-vertical lg:join-horizontal w-full">
@@ -39,6 +40,7 @@ const OrderTypeSelector = ({ orderType, setOrderType, disabled }) => (
       { type: "dine-in", icon: UtensilsCrossed, label: "Dine-in" },
       { type: "takeaway", icon: ShoppingBag, label: "Takeaway" },
       { type: "delivery", icon: Truck, label: "Delivery" },
+      { type: "walk-in", icon: User, label: "Walk-In" },
     ].map(({ type, icon: Icon, label }) => (
       <button
         key={type}
@@ -350,6 +352,8 @@ export default function AddOrder() {
   const [packagingFee, setPackagingFee] = useState("0");
   const [deliveryFee, setDeliveryFee] = useState("0");
   const [tableNumber, setTableNumber] = useState("1");
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [showTableModal, setShowTableModal] = useState(false);
   const [customerDetails, setCustomerDetails] = useState({
     customerId: null,
     name: "",
@@ -530,8 +534,19 @@ export default function AddOrder() {
   const handleCheckout = () => {
     if (!canCreateOrders || cart.length === 0) return;
 
+    // Validate dine-in requires table
+    if (orderType === "dine-in" && !selectedTable) {
+      dispatch(
+        showNotification({
+          message: "Please select a table for dine-in orders",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     const orderPayload = {
-      table: orderType === "dine-in" ? tableNumber : "Takeaway",
+      table: orderType === "dine-in" ? selectedTable?.tableNumber : "Takeaway",
       customerDetails: {
         customerId: customerDetails.customerId || null,
         name: customerDetails.name || "Walk-in",
@@ -602,9 +617,10 @@ export default function AddOrder() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-base-200 gap-4 p-2">
+
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_24rem] h-[calc(100vh-2rem)] overflow-hidden bg-base-200 gap-4 p-2">
       {/* Left - Menu */}
-      <div className="flex-1 bg-base-100 rounded-xl shadow-lg p-4 flex flex-col">
+      <div className="bg-base-100 rounded-xl shadow-lg p-4 flex flex-col h-full overflow-hidden">
         <div className="relative mb-4">
           <Search
             className="absolute left-3 top-3 text-base-content/50"
@@ -626,7 +642,7 @@ export default function AddOrder() {
           disabled={!canCreateOrders}
         />
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto flex-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto flex-1 pr-2 content-start">
           {filteredItems.map((item) => (
             <MenuItem
               key={item._id}
@@ -645,7 +661,7 @@ export default function AddOrder() {
       </div>
 
       {/* Right - Cart */}
-      <div className="w-full lg:w-96 bg-base-100 rounded-xl shadow-lg p-4 flex flex-col">
+      <div className="bg-base-100 rounded-xl shadow-lg p-4 flex flex-col h-full overflow-y-auto">
         <h2 className="text-lg font-bold mb-3">Current Order</h2>
 
         <OrderTypeSelector
@@ -655,14 +671,36 @@ export default function AddOrder() {
         />
 
         {orderType === "dine-in" && (
-          <div className="flex items-center gap-2 mb-3 bg-base-200 p-2 rounded-lg">
-            <span className="text-sm">Table:</span>
-            <input
-              type="text"
-              className="input input-sm input-bordered w-16"
-              value={tableNumber}
-              onChange={(e) => setTableNumber(e.target.value)}
-            />
+          <div className="mb-3 bg-base-200 p-3 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">Table Selection</span>
+              {selectedTable && (
+                <button
+                  onClick={() => setShowTableModal(true)}
+                  className="btn btn-xs btn-ghost"
+                >
+                  Change
+                </button>
+              )}
+            </div>
+            {selectedTable ? (
+              <div className="flex items-center gap-2 p-2 bg-base-100 rounded border border-primary">
+                <div className="flex-1">
+                  <div className="font-bold">Table {selectedTable.tableNumber}</div>
+                  <div className="text-xs text-base-content/70">
+                    {selectedTable.capacity} seats
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowTableModal(true)}
+                className="btn btn-sm btn-outline w-full"
+                disabled={!canCreateOrders}
+              >
+                Select Table
+              </button>
+            )}
           </div>
         )}
 
@@ -676,7 +714,7 @@ export default function AddOrder() {
         )}
 
         {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto mb-3">
+        <div className="mb-3">
           {cart.length === 0 ? (
             <div className="text-center py-12 text-base-content/50">
               <ShoppingBag size={40} className="mx-auto mb-2 opacity-50" />
@@ -709,15 +747,17 @@ export default function AddOrder() {
           />
         </div>
 
-        {/* Discount Section */}
-        <DiscountSection
-          orderType={orderType}
-          subtotal={totals.subtotal}
-          appliedDiscount={orderDiscount}
-          onApplyDiscount={setOrderDiscount}
-          onRemoveDiscount={() => setOrderDiscount(null)}
-          currency={currency}
-        />
+        <div className="divider my-2"></div>
+        <div className="mb-3">
+          <DiscountSection
+            orderType={orderType}
+            subtotal={totals.subtotal}
+            appliedDiscount={orderDiscount}
+            onApplyDiscount={setOrderDiscount}
+            onRemoveDiscount={() => setOrderDiscount(null)}
+            currency={currency}
+          />
+        </div>
 
         {/* Fees */}
         {orderType !== "dine-in" && (
@@ -848,6 +888,22 @@ export default function AddOrder() {
           </button>
         </div>
       </div>
+
+      {/* Table Selection Modal */}
+      {showTableModal && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-4xl">
+            <TableSelectionModal
+              onSelect={(table) => {
+                setSelectedTable(table);
+                setTableNumber(table.tableNumber);
+              }}
+              onClose={() => setShowTableModal(false)}
+              selectedTableId={selectedTable?._id}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

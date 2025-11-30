@@ -8,6 +8,7 @@ import {
   updateReservation,
   updateReservationStatus,
   deleteReservation,
+  checkInReservation,
 } from "./reservationSlice";
 import { fetchTables } from "../tables/tableSlice";
 import { fetchAllUsers } from "../users/usersSlice";
@@ -31,7 +32,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete }) => {
+const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete, onCheckIn }) => {
   const statusColors = {
     pending: "badge-warning",
     confirmed: "badge-info",
@@ -118,12 +119,20 @@ const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete }) => {
             </button>
           )}
           {reservation.status === "confirmed" && (
-            <button
-              className="btn btn-xs btn-info gap-1"
-              onClick={() => onUpdateStatus(reservation._id, "seated")}
-            >
-              Seat
-            </button>
+            <>
+              <button
+                className="btn btn-xs btn-success gap-1"
+                onClick={() => onCheckIn(reservation._id)}
+              >
+                Check-in
+              </button>
+              <button
+                className="btn btn-xs btn-info gap-1"
+                onClick={() => onUpdateStatus(reservation._id, "seated")}
+              >
+                Seat
+              </button>
+            </>
           )}
           <button
             className="btn btn-xs btn-outline"
@@ -213,6 +222,35 @@ const ReservationManagement = () => {
       );
     }
   };
+  
+  const handleCheckIn = async (id) => {
+    try {
+      const result = await dispatch(checkInReservation(id)).unwrap();
+      dispatch(showNotification({ message: "Reservation checked in successfully", status: 1 }));
+      
+      // Navigate to POS with pre-filled data
+      const reservation = result;
+      navigate("/app/add-order", {
+        state: {
+          orderType: "dine-in",
+          table: reservation.tableId,
+          customerDetails: {
+            customerId: reservation.customerId?._id || null,
+            name: reservation.customerName,
+            phone: reservation.customerPhone,
+            email: reservation.customerEmail || "",
+          },
+        },
+      });
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.message || "Failed to check in reservation",
+          status: 0,
+        })
+      );
+    }
+  };
   const filteredReservations = reservations.filter((r) => {
     if (filters.status && r.status !== filters.status) return false;
     if (
@@ -295,6 +333,7 @@ const ReservationManagement = () => {
               onEdit={handleEdit}
               onUpdateStatus={handleUpdateStatus}
               onDelete={handleDelete}
+              onCheckIn={handleCheckIn}
             />
           ))}
         </div>

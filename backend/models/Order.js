@@ -114,7 +114,7 @@ const OrderSchema = new mongoose.Schema(
     },
     orderType: {
       type: String,
-      enum: ["dine-in", "takeaway", "delivery"],
+      enum: ["dine-in", "takeaway", "delivery", "walk-in"],
       default: "dine-in",
     },
     orderItems: [orderItemSchema],

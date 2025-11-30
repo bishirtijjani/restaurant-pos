@@ -1,37 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createReservation, updateReservation } from "../reservationSlice";
+import { createReservation } from "../reservationSlice";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import CustomerSearch from "../../../components/Common/CustomerSearch";
 
-const AddReservationModalBody = ({ extraObject }) => {
+const AddReservationModalBody = ({ closeModal: close }) => {
   const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.reservations);
   const { tables } = useSelector((state) => state.tables);
+  const { items: reservations } = useSelector((state) => state.reservations);
   
-  const isEdit = !!extraObject;
-  const reservationToEdit = extraObject || {};
-
   const [formData, setFormData] = useState({
-    tableId: reservationToEdit.tableId?._id || reservationToEdit.tableId || "",
-    customerId: reservationToEdit.customerId || null,
-    customerName: reservationToEdit.customerName || "",
-    customerPhone: reservationToEdit.customerPhone || "",
-    customerEmail: reservationToEdit.customerEmail || "",
-    partySize: reservationToEdit.partySize || 2,
-    reservationDate: reservationToEdit.reservationDate
-      ? new Date(reservationToEdit.reservationDate).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0],
-    reservationTime: reservationToEdit.reservationTime || "",
-    duration: reservationToEdit.duration || 120,
-    notes: reservationToEdit.notes || "",
+    tableId: "",
+    customerId: null,
+    customerName: "",
+    customerPhone: "",
+    customerEmail: "",
+    partySize: 2,
+    reservationDate: new Date().toISOString().split("T")[0],
+    reservationTime: "",
+    duration: 120,
+    notes: "",
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [conflicts, setConflicts] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,9 +68,6 @@ const AddReservationModalBody = ({ extraObject }) => {
     return newErrors;
   };
 
-  const { items: reservations } = useSelector((state) => state.reservations);
-  const [conflicts, setConflicts] = useState([]);
-
   const checkConflicts = () => {
       const newConflicts = [];
       if (!formData.tableId || !formData.reservationDate || !formData.reservationTime) {
@@ -103,7 +96,6 @@ const AddReservationModalBody = ({ extraObject }) => {
 
       const hasOverlap = reservations.some(res => {
           if (res.tableId?._id !== table._id && res.tableId !== table._id) return false;
-          if (isEdit && res._id === reservationToEdit._id) return false;
           if (res.status === 'cancelled' || res.status === 'completed') return false;
           
           const existingStart = new Date(`${res.reservationDate.split('T')[0]}T${res.reservationTime}`).getTime();
@@ -135,17 +127,6 @@ const AddReservationModalBody = ({ extraObject }) => {
       return;
     }
     
-    // Block if there are conflicts (except capacity warning? User said "warn or prevent". Let's prevent for overlap/status, maybe warn for capacity? 
-    // "The user cannot accidentally save conflicting reservations unless allowed per design."
-    // Let's block for now if there are conflicts, or maybe just show them and allow save with confirmation?
-    // "Conflict messages must appear immediately... The user cannot accidentally save..."
-    // I'll block save if there are conflicts, but maybe allow override?
-    // For now, I will just display them. If I want to block, I should check conflicts length.
-    // Let's block for overlap and status, but maybe just warn for capacity.
-    // Actually, let's just show the conflicts and if the user clicks save, we can ask for confirmation or block.
-    // Requirement: "Conflict messages must appear immediately... The user cannot accidentally save conflicting reservations unless allowed per design."
-    // I will block if there are conflicts.
-    
     if (conflicts.length > 0) {
         if (!window.confirm("There are conflicts with this reservation. Are you sure you want to proceed?")) {
             return;
@@ -155,14 +136,9 @@ const AddReservationModalBody = ({ extraObject }) => {
     setIsSubmitting(true);
 
     try {
-      if (isEdit) {
-          await dispatch(updateReservation({ id: reservationToEdit._id, data: formData })).unwrap();
-          dispatch(showNotification({ message: "Reservation updated successfully", status: 1 }));
-      } else {
-          await dispatch(createReservation(formData)).unwrap();
-          dispatch(showNotification({ message: "Reservation created successfully", status: 1 }));
-      }
-      dispatch(closeModal());
+      await dispatch(createReservation(formData)).unwrap();
+      dispatch(showNotification({ message: "Reservation created successfully", status: 1 }));
+      close();
     } catch (error) {
       console.error("Reservation operation error:", error);
       dispatch(showNotification({ message: error.message || "Operation failed", status: 0 }));
@@ -354,7 +330,7 @@ const AddReservationModalBody = ({ extraObject }) => {
       <div className="modal-action">
         <button
           type="button"
-          onClick={() => dispatch(closeModal())}
+          onClick={() => close()}
           className="btn btn-outline"
           disabled={isSubmitting}
         >
@@ -365,7 +341,7 @@ const AddReservationModalBody = ({ extraObject }) => {
           className="btn btn-primary"
           disabled={isSubmitting}
         >
-          {isSubmitting ? <span className="loading loading-spinner loading-sm"></span> : (isEdit ? "Update Reservation" : "Create Reservation")}
+          {isSubmitting ? <span className="loading loading-spinner loading-sm"></span> : "Create Reservation"}
         </button>
       </div>
     </form>

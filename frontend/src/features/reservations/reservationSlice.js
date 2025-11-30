@@ -67,6 +67,19 @@ export const deleteReservation = createAsyncThunk(
   }
 );
 
+// NEW: Check-in reservation
+export const checkInReservation = createAsyncThunk(
+  "reservations/checkIn",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/${id}/check-in`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 const initialState = {
   items: [],
   loading: false,
@@ -149,6 +162,23 @@ const reservationSlice = createSlice({
       .addCase(deleteReservation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || "Failed to delete reservation";
+      })
+      .addCase(checkInReservation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkInReservation.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.items.findIndex(
+          (item) => item._id === action.payload._id
+        );
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(checkInReservation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to check in reservation";
       });
   },
 });

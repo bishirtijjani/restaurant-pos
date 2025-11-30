@@ -106,7 +106,63 @@ const ModifyOrderModalBody = ({ extraObject }) => {
   };
 
   const calculateNewTotal = () => {
-    return orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+    // 1. Subtotal
+    const itemsSubtotal = orderItems.reduce((sum, item) => {
+      const itemTotal = (item.price + (item.addOnsTotal || 0)) * item.quantity;
+      return sum + itemTotal;
+    }, 0);
+
+    // 2. Discount
+    let discountAmount = 0;
+    const orderDiscount = order.orderDiscount;
+    if (orderDiscount?.enabled) {
+      if (orderDiscount.type === "percentage") {
+        discountAmount = (itemsSubtotal * orderDiscount.value) / 100;
+        if (orderDiscount.maxDiscount) {
+          discountAmount = Math.min(discountAmount, orderDiscount.maxDiscount);
+        }
+      } else if (orderDiscount.type === "fixed") {
+        discountAmount = Math.min(orderDiscount.value, itemsSubtotal);
+      }
+    }
+    const discountedSubtotal = itemsSubtotal - discountAmount;
+
+    // 3. Tax
+    let totalTax = 0;
+    if (settings?.taxSettings?.enabled) {
+      if (settings.taxSettings.mode === "per-item") {
+        orderItems.forEach((item) => {
+          const itemTotal =
+            (item.price + (item.addOnsTotal || 0)) * item.quantity;
+          // Find original menu item to get tax rate
+          const menuItem = menuItems.find((m) => m._id === item.menuItemId);
+          const rate = menuItem?.customTax?.enabled
+            ? menuItem.customTax.rate
+            : settings.taxSettings.globalRate;
+          totalTax += (itemTotal * rate) / 100;
+        });
+      } else {
+        totalTax = (discountedSubtotal * settings.taxSettings.globalRate) / 100;
+      }
+    }
+
+    // 4. Service Charge
+    let serviceCharge = 0;
+    if (settings?.serviceCharge?.enabled) {
+      const applies =
+        settings.serviceCharge.applyTo === "all" ||
+        settings.serviceCharge.applyTo === order.orderType;
+      if (applies) {
+        serviceCharge =
+          (discountedSubtotal * settings.serviceCharge.rate) / 100;
+      }
+    }
+
+    // 5. Fees
+    const packaging = order.packagingFee || 0;
+    const delivery = order.deliveryFee || 0;
+
+    return discountedSubtotal + totalTax + serviceCharge + packaging + delivery;
   };
 
   const validate = () => {

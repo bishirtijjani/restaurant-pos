@@ -75,6 +75,7 @@ import AddPromoCodeModalBody from "../features/discounts/components/AddPromoCode
 
 // Reservation modals
 import AddReservationModalBody from "../features/reservations/components/AddReservationModalBody";
+import EditReservationModalBody from "../features/reservations/components/EditReservationModalBody";
 
 // Common modals
 import ConfirmationModalBody from "../features/common/components/ConfirmationModalBody";
@@ -397,7 +398,7 @@ function ModalLayout() {
                   />
                 ),
                 [MODAL_BODY_TYPES.EDIT_RESERVATION]: (
-                  <AddReservationModalBody
+                  <EditReservationModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />

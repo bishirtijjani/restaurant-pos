@@ -43,4 +43,11 @@ router.delete(
   reservationController.deleteReservation
 );
 
+// NEW: Check-in reservation
+router.post(
+  "/:id/check-in",
+  roleMiddleware("admin", "manager", "cashier", "waiter"),
+  reservationController.checkInReservation
+);
+
 module.exports = router;

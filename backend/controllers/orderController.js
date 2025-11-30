@@ -110,6 +110,14 @@ const createOrder = async (req, res) => {
       orderNote,
     } = req.body.order;
 
+    // VALIDATION: Dine-in requires a table
+    if (orderType === "dine-in" && (!table || table === "Takeaway")) {
+      return res.status(400).json({
+        success: false,
+        message: "Dine-in orders must have a table assigned",
+      });
+    }
+
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
       return res.status(400).json({
         success: false,
