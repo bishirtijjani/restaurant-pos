@@ -5,7 +5,7 @@ const reservationSchema = new mongoose.Schema(
     tableId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Table",
-      required: true,
+      default: null,
     },
     customerName: {
       type: String,

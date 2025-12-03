@@ -344,6 +344,88 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
             </div>
           </div>
         )}
+
+        {/* Payment History */}
+        {(order.paymentHistory && order.paymentHistory.length > 0) || (order.payments && order.payments.length > 0) && (
+          <div className="card bg-base-200">
+            <div className="card-body p-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <CurrencyDollarIcon className="w-5 h-5" />
+                Payment History
+              </h3>
+              <div className="space-y-2">
+                {order.paymentHistory && order.paymentHistory.length > 0 ? (
+                  order.paymentHistory.map((entry, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-2 rounded-lg ${
+                        entry.type === "refund"
+                          ? "bg-error/10 border border-error/30"
+                          : "bg-success/10 border border-success/30"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span
+                            className={`badge badge-sm ${
+                              entry.type === "refund"
+                                ? "badge-error"
+                                : "badge-success"
+                            }`}
+                          >
+                            {entry.type}
+                          </span>
+                          {entry.method && (
+                            <span className="ml-2 text-sm capitalize">
+                              {entry.method}
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className={`font-bold ${
+                            entry.type === "refund"
+                              ? "text-error"
+                              : "text-success"
+                          }`}
+                        >
+                          {entry.type === "refund" ? "-" : "+"}
+                          {currency}
+                          {entry.amount.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="text-xs opacity-70 mt-1">
+                        {new Date(entry.timestamp).toLocaleString()}
+                      </div>
+                      {entry.note && (
+                        <div className="text-xs mt-1 italic">{entry.note}</div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  order.payments && order.payments.map((payment, idx) => (
+                    <div
+                      key={idx}
+                      className="p-2 rounded-lg bg-success/10 border border-success/30"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm capitalize">
+                          {payment.method}
+                        </span>
+                        <span className="font-bold text-success">
+                          {currency}
+                          {payment.amount.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="text-xs opacity-70 mt-1">
+                        {new Date(payment.timestamp).toLocaleString()}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
@@ -363,6 +445,29 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
             >
               <Trash2 className="w-4 h-4" />
               Void Items
+            </button>
+          </Can>
+        )}
+        {(order.paymentStatus === "paid" || order.paymentStatus === "partial") && order.amountPaid > 0 && (
+          <Can do="editOrders">
+            <button
+              onClick={() => {
+                closeModal();
+                setTimeout(() => {
+                  dispatch(
+                    openModal({
+                      title: `Refund Order #${order.orderNumber}`,
+                      bodyType: MODAL_BODY_TYPES.REFUND_ORDER,
+                      extraObject: order,
+                      size: "lg",
+                    })
+                  );
+                }, 100);
+              }}
+              className="btn btn-outline btn-warning btn-sm gap-2"
+            >
+              <CurrencyDollarIcon className="w-4 h-4" />
+              Process Refund
             </button>
           </Can>
         )}

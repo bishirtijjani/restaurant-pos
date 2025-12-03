@@ -1,8 +1,18 @@
 import React, { useRef, useState, useEffect, useImperativeHandle } from "react";
-import { Stage, Layer, Transformer } from "react-konva";
+import { Stage, Layer, Transformer, Line } from "react-konva";
 import { useDroppable } from "@dnd-kit/core";
 import TableNode from "./TableNode";
 import GridLayer from "./GridLayer";
+import { Fullscreen, Minus, Plus } from "lucide-react";
+
+// Helper to get center of table
+const getCenter = (table) => {
+    const x = table.position?.x || 0;
+    const y = table.position?.y || 0;
+    const w = table.position?.width || table.width || 60;
+    const h = table.position?.height || table.height || 60;
+    return { x: x + w / 2, y: y + h / 2 };
+};
 
 const FloorCanvas = React.forwardRef(({
   floor,
@@ -13,6 +23,9 @@ const FloorCanvas = React.forwardRef(({
   editMode,
   onViewChange,
   snapTarget, // NEW: table to highlight for snapping
+  reservedSoonTableIds = [], // NEW: tables with upcoming reservations
+  selectedTableIds = [], // Lifted state
+  onTableSelect, // Lifted handler
 }, ref) => {
   const stageRef = useRef(null);
   const containerRef = useRef(null);
@@ -21,7 +34,7 @@ const FloorCanvas = React.forwardRef(({
   // Local state
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [selectedIds, setSelectedIds] = useState([]);
+  // const [selectedIds, setSelectedIds] = useState([]); // Removed local state
   const [stageSize, setStageSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
   const { setNodeRef, isOver } = useDroppable({
@@ -98,12 +111,12 @@ const FloorCanvas = React.forwardRef(({
   // Update Transformer nodes
   useEffect(() => {
     if (editMode && transformerRef.current && stageRef.current) {
-      const nodes = selectedIds.map(id => stageRef.current.findOne(`#table-${id}`));
+      const nodes = selectedTableIds.map(id => stageRef.current.findOne(`#table-${id}`));
       const validNodes = nodes.filter(Boolean);
       transformerRef.current.nodes(validNodes);
       transformerRef.current.getLayer().batchDraw();
     }
-  }, [selectedIds, editMode, tables]);
+  }, [selectedTableIds, editMode, tables]);
 
   // Zoom handler
   const handleWheel = (e) => {
@@ -135,18 +148,16 @@ const FloorCanvas = React.forwardRef(({
   };
 
   const handleTableSelect = (tableId, isMulti) => {
-      if (isMulti) {
-          setSelectedIds(prev => prev.includes(tableId) ? prev.filter(id => id !== tableId) : [...prev, tableId]);
-      } else {
-          setSelectedIds([tableId]);
+      if (onTableSelect) {
+          onTableSelect(tableId, isMulti);
       }
   };
 
   useEffect(() => {
     if (stageRef.current) {
-        stageRef.current.container().style.cursor = editMode ? "default" : (selectedIds.length > 0 ? "default" : "grab");
+        stageRef.current.container().style.cursor = editMode ? "default" : (selectedTableIds.length > 0 ? "default" : "grab");
     }
-  }, [editMode, selectedIds]);
+  }, [editMode, selectedTableIds]);
 
   const handleZoomIn = () => {
       setScale(s => Math.min(s * 1.2, 5));
@@ -177,15 +188,18 @@ const FloorCanvas = React.forwardRef(({
         scaleY={scale}
         x={position.x}
         y={position.y}
-        draggable={!editMode || (editMode && selectedIds.length === 0)}
+        draggable={!editMode || (editMode && selectedTableIds.length === 0)}
         onWheel={handleWheel}
         onMouseDown={(e) => {
           const clickedOnEmpty = e.target === e.target.getStage();
           if (clickedOnEmpty) {
-            setSelectedIds([]);
+            if (onTableSelect) onTableSelect(null, false); // Clear selection
           }
         }}
         onDragEnd={handleDragEnd}
+        onContextMenu={(e) => {
+            e.evt.preventDefault();
+        }}
         ref={stageRef}
       >
         <GridLayer 
@@ -196,17 +210,49 @@ const FloorCanvas = React.forwardRef(({
         />
         
         <Layer>
+            {/* Render Merge Connections */}
+            {tables.map(table => {
+                if (!table.mergedWith || table.mergedWith.length === 0) return null;
+                
+                const start = getCenter(table);
+                
+                return table.mergedWith.map(mergedId => {
+                    // mergedWith can be objects or IDs depending on population
+                    const targetId = typeof mergedId === 'object' ? mergedId._id : mergedId;
+                    const targetTable = tables.find(t => t._id === targetId);
+                    if (!targetTable) return null;
+                    
+                    const end = getCenter(targetTable);
+                    
+                    return (
+                        <Line
+                            key={`merge-${table._id}-${targetId}`}
+                            points={[start.x, start.y, end.x, end.y]}
+                            stroke="#3b82f6" // Blue-500
+                            strokeWidth={4}
+                            dash={[10, 5]}
+                            opacity={0.6}
+                            listening={false} // Pass events through
+                        />
+                    );
+                });
+            })}
+
           {tables.map((table) => (
             <TableNode
               key={table._id}
               id={`table-${table._id}`} // ID for finding node
               table={table}
-              isSelected={selectedIds.includes(table._id)}
+              isSelected={selectedTableIds.includes(table._id)}
               isSnapTarget={snapTarget?._id === table._id} // NEW: highlight if snap target
+              isReservedSoon={reservedSoonTableIds.includes(table._id)}
               editMode={editMode}
               onSelect={(e) => {
-                handleTableSelect(table._id, e.evt.shiftKey || e.evt.ctrlKey);
-                onTableClick(table);
+                const isMulti = e.evt.shiftKey || e.evt.ctrlKey;
+                handleTableSelect(table._id, isMulti);
+                if (!isMulti) {
+                    onTableClick(table);
+                }
               }}
               onChange={(newAttrs) => {
                 onTableChange(table._id, newAttrs);
@@ -228,10 +274,10 @@ const FloorCanvas = React.forwardRef(({
         </Layer>
       </Stage>
       
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-          <button className="btn btn-circle btn-sm bg-base-100 shadow-lg" onClick={handleZoomIn} title="Zoom In">+</button>
-          <button className="btn btn-circle btn-sm bg-base-100 shadow-lg" onClick={handleZoomOut} title="Zoom Out">-</button>
-          <button className="btn btn-circle btn-sm bg-base-100 shadow-lg" onClick={handleFitToScreen} title="Fit to Screen">R</button>
+      <div className="absolute top-4 right-4 flex flex-col gap-2 z-50">
+          <button className="btn btn-circle btn-sm bg-base-100 shadow-lg" onClick={handleZoomIn} title="Zoom In"><Plus /></button>
+          <button className="btn btn-circle btn-sm bg-base-100 shadow-lg" onClick={handleZoomOut} title="Zoom Out"><Minus /></button>
+          <button className="btn btn-circle btn-sm bg-base-100 shadow-lg" onClick={handleFitToScreen} title="Fit to Screen"><Fullscreen /></button>
       </div>
 
       {editMode && (

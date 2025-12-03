@@ -7,6 +7,8 @@ import { fetchAllMenuItems } from "../../features/menuItems/menuItemsSlice";
 import { fetchAllCategories } from "../../features/categories/categoriesSlice";
 import { fetchSettings } from "../../features/settings/generalSettings/generalSettingsSlice";
 import { showNotification } from "../../features/common/headerSlice";
+import { openModal } from "../../features/common/modalSlice";
+import { MODAL_BODY_TYPES, CONFIRMATION_MODAL_CLOSE_TYPES } from "../../utils/globalConstantUtil";
 import axios from "axios";
 import {
   ShoppingCart,
@@ -87,11 +89,17 @@ const UltraFastPOS = () => {
 
   const clearCart = useCallback(() => {
     if (cart.length > 0) {
-      if (window.confirm("Clear entire cart?")) {
-        setCart([]);
-      }
+      dispatch(openModal({
+        title: "Clear Cart?",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message: "Are you sure you want to clear the entire cart?",
+          type: CONFIRMATION_MODAL_CLOSE_TYPES.CLEAR_CART,
+          onConfirm: () => setCart([]),
+        },
+      }));
     }
-  }, [cart.length]);
+  }, [cart.length, dispatch]);
 
   const finalizeSale = useCallback(
     async (paymentMethod = "cash") => {
@@ -326,7 +334,7 @@ const UltraFastPOS = () => {
             Keyboard Settings
           </button>
           <button
-            onClick={() => navigate("/app/orders/new")}
+            onClick={() => navigate("/app/pos")}
             className="btn btn-error btn-sm gap-2"
           >
             <X className="w-4 h-4" />

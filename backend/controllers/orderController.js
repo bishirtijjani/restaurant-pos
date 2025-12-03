@@ -108,6 +108,10 @@ const createOrder = async (req, res) => {
       deliveryFee,
       note,
       orderNote,
+      // NEW: Payment system fields
+      payments, // Array of payment entries for split payments
+      tip, // Tip object { amount, percentage }
+      change, // Change amount
     } = req.body.order;
 
     // VALIDATION: Dine-in requires a table
@@ -358,23 +362,96 @@ const createOrder = async (req, res) => {
       0
     );
 
+    // Calculate final total (including tip if provided)
+    const tipAmount = tip?.amount || 0;
     const finalTotal =
       discountResult.discountedSubtotal +
       taxCalculation.totalTax +
       taxCalculation.serviceCharge +
       packagingAmount +
-      deliveryAmount;
+      deliveryAmount +
+      tipAmount;
 
+    // Handle split payments or single payment
     let paymentStatus = "pending";
     let balance = finalTotal;
-    const paidAmount = parseFloat(amountPaid) || 0;
+    let paidAmount = 0;
+    let changeAmount = 0;
+    let paymentsArray = [];
+    let paymentHistoryArray = [];
+    let primaryPaymentMethod = paymentMethod || "cash";
 
-    if (paidAmount >= finalTotal) {
+    if (payments && Array.isArray(payments) && payments.length > 0) {
+      // Split payment scenario
+      paidAmount = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      
+      // Validate: total payments must equal or exceed bill total
+      if (paidAmount < finalTotal) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient payment. Total: ${finalTotal.toFixed(2)}, Paid: ${paidAmount.toFixed(2)}`,
+        });
+      }
+
+      // Store payments array
+      paymentsArray = payments.map(p => ({
+        method: p.method,
+        amount: parseFloat(p.amount),
+        timestamp: new Date(),
+      }));
+
+      // Initialize payment history with all payment entries
+      paymentHistoryArray = payments.map(p => ({
+        type: "payment",
+        method: p.method,
+        amount: parseFloat(p.amount),
+        timestamp: new Date(),
+        performedBy: req.user.id,
+        note: "Initial payment",
+      }));
+
+      // Set primary payment method as the first one
+      primaryPaymentMethod = payments[0].method;
+      
+      // Calculate change
+      changeAmount = paidAmount - finalTotal;
       paymentStatus = "paid";
       balance = 0;
-    } else if (paidAmount > 0) {
-      paymentStatus = "partial";
-      balance = finalTotal - paidAmount;
+    } else {
+      // Single payment scenario (legacy)
+      paidAmount = parseFloat(amountPaid) || 0;
+      changeAmount = parseFloat(change) || 0;
+
+      if (paidAmount >= finalTotal) {
+        paymentStatus = "paid";
+        balance = 0;
+        // Calculate change if not provided
+        if (!change) {
+          changeAmount = paidAmount - finalTotal;
+        }
+      } else if (paidAmount > 0) {
+        paymentStatus = "partial";
+        balance = finalTotal - paidAmount;
+        changeAmount = 0; // No change for partial payments
+      }
+
+      // Create single payment entry
+      if (paidAmount > 0) {
+        paymentsArray = [{
+          method: paymentMethod || "cash",
+          amount: paidAmount,
+          timestamp: new Date(),
+        }];
+
+        paymentHistoryArray = [{
+          type: "payment",
+          method: paymentMethod || "cash",
+          amount: paidAmount,
+          timestamp: new Date(),
+          performedBy: req.user.id,
+          note: "Initial payment",
+        }];
+      }
     }
 
     const newOrder = new Order({
@@ -419,7 +496,11 @@ const createOrder = async (req, res) => {
       totalAmount: finalTotal,
       amountPaid: paidAmount,
       balance,
-      paymentMethod: paymentMethod || "cash",
+      change: changeAmount,
+      tip: tip || { amount: 0, percentage: 0 },
+      payments: paymentsArray,
+      paymentHistory: paymentHistoryArray,
+      paymentMethod: primaryPaymentMethod,
       paymentStatus,
       lastAction: {
         action: "create",
@@ -782,6 +863,132 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+// Refund an order (full or partial)
+const refundOrder = async (req, res) => {
+  try {
+    const { amount, reason, isPartial } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Refund amount is required and must be greater than 0",
+      });
+    }
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        message: "Refund reason is required",
+      });
+    }
+
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Validate: can only refund paid orders
+    if (order.paymentStatus !== "paid" && order.paymentStatus !== "partial") {
+      return res.status(400).json({
+        success: false,
+        message: "Can only refund paid or partially paid orders",
+      });
+    }
+
+    const refundAmount = parseFloat(amount);
+    
+    // Validate: refund amount cannot exceed amount paid
+    if (refundAmount > order.amountPaid) {
+      return res.status(400).json({
+        success: false,
+        message: `Refund amount (${refundAmount.toFixed(2)}) cannot exceed amount paid (${order.amountPaid.toFixed(2)})`,
+      });
+    }
+
+    const oldOrder = { ...order.toObject() };
+
+    // Add refund entry
+    order.refunds.push({
+      amount: refundAmount,
+      reason,
+      refundedBy: req.user.id,
+      refundedAt: new Date(),
+      isPartial: isPartial !== false, // Default to true if not specified
+    });
+
+    // Add to payment history
+    order.paymentHistory.push({
+      type: "refund",
+      amount: refundAmount,
+      timestamp: new Date(),
+      performedBy: req.user.id,
+      note: reason,
+    });
+
+    // Update payment status
+    const newAmountPaid = order.amountPaid - refundAmount;
+    order.amountPaid = newAmountPaid;
+
+    if (newAmountPaid === 0) {
+      order.paymentStatus = "pending";
+      order.balance = order.totalAmount;
+    } else if (newAmountPaid < order.totalAmount) {
+      order.paymentStatus = "partial";
+      order.balance = order.totalAmount - newAmountPaid;
+    } else {
+      order.paymentStatus = "paid";
+      order.balance = 0;
+    }
+
+    order.lastAction = {
+      action: "update",
+      performedBy: req.user.id,
+      createdAt: new Date(),
+      reason: `Refunded ${refundAmount.toFixed(2)}: ${reason}`,
+    };
+
+    await order.save();
+
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
+    await order.populate("refunds.refundedBy", "fullname");
+    await order.populate("paymentHistory.performedBy", "fullname");
+
+    await logAction(
+      req.user.id,
+      "Order",
+      order._id,
+      "edit",
+      oldOrder,
+      order,
+      `Refunded ${refundAmount.toFixed(2)} for order #${order.orderNumber}: ${reason}`
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Refund processed successfully",
+      data: order,
+    });
+  } catch (error) {
+    console.error("Error processing refund:", error);
+    if (error.kind === "ObjectId") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process refund. Please try again.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getAllOrders,
@@ -789,4 +996,5 @@ module.exports = {
   updateOrderStatus,
   updatePayment,
   cancelOrder,
+  refundOrder,
 };

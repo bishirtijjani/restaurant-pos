@@ -86,7 +86,7 @@ export const InitialSetupTour = {
       spotlightClicks: true,
     },
     {
-      target: '[href="/app/orders/new"]',
+      target: '[href="/app/pos"]',
       content: (
         <div className="space-y-3">
           <div className="flex items-center gap-2">

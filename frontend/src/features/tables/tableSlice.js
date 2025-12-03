@@ -143,6 +143,47 @@ export const splitTables = createAsyncThunk(
   }
 );
 
+export const safeUnmergeTables = createAsyncThunk(
+  "tables/safeUnmergeTables",
+  async ({ id, reason }, { dispatch, rejectWithValue }) => {
+    try {
+      // 1. Perform the split
+      const resultAction = await dispatch(splitTables({ id, reason }));
+      if (splitTables.rejected.match(resultAction)) {
+        throw resultAction.payload;
+      }
+      
+      const updatedTables = resultAction.payload?.data;
+      
+      // Defensive check
+      if (!updatedTables || !Array.isArray(updatedTables)) {
+        console.warn('safeUnmergeTables: No tables returned from split operation');
+        return resultAction.payload;
+      }
+
+      // 2. Cleanup: Check for tables that are occupied but have no order
+      const cleanupPromises = updatedTables.map(async (table) => {
+          if (table && table.status === 'occupied' && !table.currentOrder) {
+              // It was likely a secondary table in a group. Set to cleaning to require cleanup.
+              return dispatch(updateTableStatus({ 
+                  id: table._id, 
+                  status: 'cleaning', 
+                  reason: 'Unmerged cleanup' 
+              }));
+          }
+          return Promise.resolve();
+      });
+
+      await Promise.all(cleanupPromises);
+
+      return resultAction.payload;
+    } catch (error) {
+      console.error('safeUnmergeTables error:', error);
+      return rejectWithValue(error.message || error);
+    }
+  }
+);
+
 export const deleteTable = createAsyncThunk(
   "tables/deleteTable",
   async (id, { rejectWithValue }) => {

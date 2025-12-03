@@ -12,7 +12,17 @@ const initializeApp = () => {
   }
 
   axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+  axios.defaults.withCredentials = true;
+  
   offlineAxios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+  offlineAxios.defaults.withCredentials = true;
 };
+
+// clear console logs
+if (import.meta.env.PRODUCTION) {
+  console.log = () => {};
+  console.error = () => {};
+  console.warn = () => {};
+}
 
 export default initializeApp;

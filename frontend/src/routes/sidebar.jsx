@@ -123,9 +123,9 @@ export const adminRoutes = [
         name: "Ultra-Fast POS",
       },
       {
-        path: "/app/orders/new",
+        path: "/app/pos",
         icon: <PlusCircle className={submenuIconClasses} />,
-        name: "Add New Order",
+        name: "POS",
       },
     ],
   },
@@ -254,9 +254,9 @@ export const managerRoutes = [
         name: "Ultra-Fast POS",
       },
       {
-        path: "/app/orders/new",
+        path: "/app/pos",
         icon: <PlusCircle className={submenuIconClasses} />,
-        name: "Add New Order",
+        name: "POS",
       },
     ],
   },
@@ -306,9 +306,9 @@ export const cashierRoutes = [
         name: "View Orders",
       },
       {
-        path: "/app/orders/new",
+        path: "/app/pos",
         icon: <PlusCircle className={submenuIconClasses} />,
-        name: "Add New Order",
+        name: "POS",
       },
       {
         path: "/app/ultra-fast-pos",
@@ -353,9 +353,9 @@ export const waiterRoutes = [
     name: "Orders",
     submenu: [
       {
-        path: "/app/orders/new",
+        path: "/app/pos",
         icon: <PlusCircle className={submenuIconClasses} />,
-        name: "Add New Order",
+        name: "POS",
       },
       {
         path: "/app/ultra-fast-pos",

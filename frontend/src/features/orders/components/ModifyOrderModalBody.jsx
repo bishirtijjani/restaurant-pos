@@ -97,12 +97,20 @@ const ModifyOrderModalBody = ({ extraObject }) => {
 
   const handleEditItemNote = (index) => {
     const item = orderItems[index];
-    const newNote = window.prompt("Edit item note:", item.itemNote || "");
-    if (newNote !== null) {
-      const newItems = [...orderItems];
-      newItems[index] = { ...item, itemNote: newNote };
-      setOrderItems(newItems);
-    }
+    dispatch(
+      openModal({
+        title: "Edit Item Note",
+        bodyType: MODAL_BODY_TYPES.EDIT_ITEM_NOTE,
+        extraObject: {
+          initialNote: item.itemNote || "",
+          onConfirm: (newNote) => {
+            const newItems = [...orderItems];
+            newItems[index] = { ...item, itemNote: newNote };
+            setOrderItems(newItems);
+          },
+        },
+      })
+    );
   };
 
   const calculateNewTotal = () => {

@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
@@ -26,7 +27,11 @@ const corsOptions = require("./config/corsOptions");
 // Middleware
 dotenv.config();
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({
+  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+  credentials: true
+}));
 
 // Database connection
 connectToDB();

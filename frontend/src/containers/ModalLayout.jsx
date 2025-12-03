@@ -36,9 +36,10 @@ import UpdatePaymentModalBody from "../features/orders/components/UpdatePaymentM
 import ModifyOrderModalBody from "../features/orders/components/ModifyOrderModalBody";
 import AddItemToOrderModalBody from "../features/orders/components/AddItemToOrderModalBody";
 import VoidOrderItemsModalBody from "../features/orders/components/VoidOrderItemsModalBody";
+import RefundModalBody from "../features/orders/components/RefundModalBody";
 import AddOnSelectorModalBody from "../features/orders/components/AddOnSelectorModalBody";
 // order/kds/confirmation/session components
-import AddOrderModalBody from "../features/orders/components/AddOrderModalBody";
+import POSModalBody from "../features/orders/components/POSModalBody";
 import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
 import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
 import SessionExpiredModalBody from "../features/common/components/SessionExpiredModalBody";
@@ -57,6 +58,7 @@ import AddExpenseModalBody from "../features/expenses/components/AddExpenseModal
 
 // Floor modals
 import AddFloorModalBody from "../features/floors/components/AddFloorModalBody";
+import MergeTableModalBody from "../features/floors/components/MergeTableModalBody";
 import EditExpenseModalBody from "../features/expenses/components/EditExpenseModalBody";
 
 // KDS modals
@@ -79,6 +81,7 @@ import EditReservationModalBody from "../features/reservations/components/EditRe
 
 // Common modals
 import ConfirmationModalBody from "../features/common/components/ConfirmationModalBody";
+import EditItemNoteModalBody from "../features/common/components/EditItemNoteModalBody";
 import Receipt from "../features/common/components/Receipt";
 
 function ModalLayout() {
@@ -211,7 +214,7 @@ function ModalLayout() {
                 ),
 
                 [MODAL_BODY_TYPES.ADD_ORDER]: (
-                  <AddOrderModalBody
+                  <POSModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />
@@ -243,6 +246,12 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.VOID_ORDER_ITEMS]: (
                   <VoidOrderItemsModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.REFUND_ORDER]: (
+                  <RefundModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />
@@ -288,6 +297,12 @@ function ModalLayout() {
 
                 [MODAL_BODY_TYPES.ADD_NEW_FLOOR]: (
                   <AddFloorModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.MERGE_TABLE]: (
+                  <MergeTableModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />
@@ -387,6 +402,12 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.CONFIRMATION]: (
                   <ConfirmationModalBody
+                    extraObject={extraObject}
+                    closeModal={close}
+                  />
+                ),
+                [MODAL_BODY_TYPES.EDIT_ITEM_NOTE]: (
+                  <EditItemNoteModalBody
                     extraObject={extraObject}
                     closeModal={close}
                   />

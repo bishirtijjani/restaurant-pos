@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from "@dnd-kit/core";
 import { useContextMenu } from "react-contexify";
@@ -13,28 +13,55 @@ import {
   updateTableStatus,
   deleteTable,
   createTable,
+  mergeTables,
   optimisticUpdateTablePosition as optimisticUpdateTablePositionTableSlice,
 } from "../tables/tableSlice";
-import { getReservations, updateReservation } from "../reservations/reservationSlice";
+import { getReservations, updateReservation, selectReservedSoon } from "../reservations/reservationSlice";
 import { showNotification } from "../common/headerSlice";
 import { openRightDrawer } from "../common/rightDrawerSlice";
 import { openModal } from "../common/modalSlice";
-import { RIGHT_DRAWER_TYPES, MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
+import { RIGHT_DRAWER_TYPES, MODAL_BODY_TYPES, CONFIRMATION_MODAL_CLOSE_TYPES } from "../../utils/globalConstantUtil";
 
 import FloorCanvas from "./components/FloorCanvas";
 import ReservationSidebar from "./components/ReservationSidebar";
 import ContextMenu, { MENU_ID } from "./components/ContextMenu";
-import { Plus, Save, Settings, Monitor, Building2 } from "lucide-react";
+import { Plus, Save, Settings, Monitor, Combine } from "lucide-react";
+import { useReservationLifecycle } from "../reservations/reservationLifecycleHooks";
 
 const FloorManager = () => {
   const dispatch = useDispatch();
   const { floors, loading: floorsLoading } = useSelector((state) => state.floors);
   const { tables } = useSelector((state) => state.tables);
   const { items: reservations } = useSelector((state) => state.reservations);
+  const reservedSoonReservations = useSelector(selectReservedSoon);
+  const reservedSoonTableIds = useMemo(() => 
+    reservedSoonReservations
+      .filter(r => r.tableId)
+      .map(r => r.tableId._id || r.tableId), 
+  [reservedSoonReservations]);
 
   const [activeFloorId, setActiveFloorId] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
+  const [selectedTableIds, setSelectedTableIds] = useState([]); // Lifted state
+
+  const handleTableSelect = useCallback((tableId, isMulti) => {
+      setSelectedTableIds(prev => {
+          if (isMulti) {
+              return prev.includes(tableId) 
+                  ? prev.filter(id => id !== tableId) 
+                  : [...prev, tableId];
+          }
+          return [tableId];
+      });
+      // Also update single selected table for drawer
+      if (!isMulti) {
+          const table = tables.find(t => t._id === tableId);
+          if (table) setSelectedTable(table);
+      } else {
+          setSelectedTable(null); // Clear single selection on multi-select
+      }
+  }, [tables]);
   const [socket, setSocket] = useState(null);
   const [activeReservation, setActiveReservation] = useState(null);
   const [snapTarget, setSnapTarget] = useState(null); // Table to snap to
@@ -44,10 +71,13 @@ const FloorManager = () => {
       activationConstraint: { distance: 8 }
   }));
 
+  // Activate Reservation Lifecycle Automation
+  useReservationLifecycle();
+
   // Initial Load
   useEffect(() => {
     dispatch(fetchFloors());
-    dispatch(getReservations({ status: "confirmed" }));
+    dispatch(getReservations({ date: new Date().toISOString() }));
   }, [dispatch]);
 
   // Set active floor
@@ -77,13 +107,10 @@ const FloorManager = () => {
   // Native WebSocket Connection
   useEffect(() => {
     // Connect to /ws path
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.hostname}:5000/ws`; // Adjust port if needed, assuming 5000 based on backend
-    // Actually, usually it's same host/port if proxied, or specific port.
-    // Let's assume proxy handles /ws or port 5000.
-    // If dev, frontend is 5173, backend 5000.
-    
-    const newSocket = new WebSocket("ws://localhost:5000/ws");
+    const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//
+${import.meta.env.VITE_API_URL || window.location.host}/ws`;
+
+    const newSocket = new WebSocket(wsUrl);
 
     newSocket.onopen = () => {
       console.log("WebSocket connected");
@@ -149,8 +176,36 @@ const FloorManager = () => {
         dispatch(updateTableStatus({ id: table._id, status: "Dirty" }));
         break;
       case "delete":
-        if (window.confirm("Delete this table?")) {
-            dispatch(deleteTable(table._id));
+        dispatch(openModal({
+            title: "Delete Table?",
+            bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+            extraObject: {
+                message: `Are you sure you want to delete table ${table.tableNumber}?`,
+                type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_TABLE,
+                id: table._id,
+            },
+        }));
+        break;
+      case "merge":
+        if (selectedTableIds.includes(table._id) && selectedTableIds.length > 1) {
+            handleMergeTables();
+        } else {
+             dispatch(showNotification({ message: "Select multiple tables (Shift+Click) to merge", status: 0 }));
+        }
+        break;
+      case "split":
+        if (table.mergedWith && table.mergedWith.length > 0) {
+             dispatch(openModal({
+                title: "Split Tables?",
+                bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+                extraObject: {
+                    message: `Are you sure you want to split table ${table.tableNumber}?`,
+                    type: CONFIRMATION_MODAL_CLOSE_TYPES.SPLIT_TABLES,
+                    id: table._id,
+                },
+            }));
+        } else {
+            dispatch(showNotification({ message: "This table is not merged", status: 0 }));
         }
         break;
       default:
@@ -342,14 +397,45 @@ const FloorManager = () => {
                    return;
                }
 
-               if (window.confirm(`Assign reservation for ${reservation.customerName} to table ${targetTable.tableNumber}?`)) {
-                   dispatch(updateTableStatus({ id: targetTable._id, status: "reserved" }));
-                   // Also update the reservation to link it to the table
-                   dispatch(updateReservation({ id: reservation._id, data: { tableId: targetTable._id, status: "confirmed" } }));
-                   dispatch(showNotification({ message: "Reservation assigned successfully", status: 1 }));
-               }
+               dispatch(openModal({
+                   title: "Assign Reservation?",
+                   bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+                   extraObject: {
+                       message: `Assign reservation for ${reservation.customerName} to table ${targetTable.tableNumber}?`,
+                       type: CONFIRMATION_MODAL_CLOSE_TYPES.ASSIGN_RESERVATION,
+                       tableId: targetTable._id,
+                       reservationId: reservation._id,
+                   },
+               }));
           }
       }
+  };
+
+  const handleMergeTables = () => {
+      if (selectedTableIds.length < 2) {
+          dispatch(showNotification({ message: "Select at least 2 tables to merge", status: 0 }));
+          return;
+      }
+      
+      const selectedTables = tables.filter(t => selectedTableIds.includes(t._id));
+      const names = selectedTables.map(t => t.tableNumber || t.name);
+      let formattedNames = "";
+      if (names.length === 1) formattedNames = names[0];
+      else if (names.length === 2) formattedNames = `${names[0]} and ${names[1]}`;
+      else {
+          const last = names.pop();
+          formattedNames = `${names.join(", ")} and ${last}`;
+      }
+
+      dispatch(openModal({
+          title: "Merge Tables?",
+          bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+          extraObject: {
+              message: `Are you sure you want to merge table ${formattedNames}?`,
+              type: CONFIRMATION_MODAL_CLOSE_TYPES.MERGE_TABLES,
+              tableIds: selectedTableIds,
+          },
+      }));
   };
 
   const handleAddTable = () => {
@@ -406,7 +492,7 @@ const FloorManager = () => {
         <div className="flex-1 flex flex-col min-w-0 bg-base-100 rounded-lg shadow-xl overflow-hidden">
           {/* Toolbar */}
           <div className="p-4 border-b border-base-300 flex justify-between items-center bg-base-100 z-10">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center border p-1 rounded-lg border-primary/10 gap-end-0" >
                 <div className="tabs tabs-boxed">
                     {floors.map(floor => (
                         <a 
@@ -419,14 +505,14 @@ const FloorManager = () => {
                     ))}
                 </div>
                 <button 
-                    className="btn btn-sm btn-outline gap-2"
+                    className="btn btn-sm btn-primary" title="Add New Floor"
                     onClick={() => dispatch(openModal({
                         title: "Add New Floor",
                         bodyType: MODAL_BODY_TYPES.ADD_NEW_FLOOR
                     }))}
                 >
-                    <Building2 className="w-4 h-4" />
-                    Floor
+                    <Plus className="w-4 h-4" />
+                    
                 </button>
             </div>
             
@@ -448,6 +534,11 @@ const FloorManager = () => {
                 
                 {editMode && (
                     <>
+                        {selectedTableIds.length > 1 && (
+                            <button onClick={handleMergeTables} className="btn btn-sm btn-warning gap-2 text-white">
+                                <Combine className="w-4 h-4" /> Merge ({selectedTableIds.length})
+                            </button>
+                        )}
                         <button onClick={handleAddTable} className="btn btn-sm btn-outline gap-2">
                             <Plus className="w-4 h-4" /> Table
                         </button>
@@ -480,6 +571,9 @@ const FloorManager = () => {
                     }}
                     onTableClick={handleTableClick}
                     onTableContextMenu={handleTableContextMenu}
+                    reservedSoonTableIds={reservedSoonTableIds}
+                    selectedTableIds={selectedTableIds}
+                    onTableSelect={handleTableSelect}
                  />
              )}
           </div>

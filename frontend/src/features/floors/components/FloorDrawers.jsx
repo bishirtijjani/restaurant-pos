@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, Trash2, User, Users } from "lucide-react";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import TableDetailsDrawerBody from "./TableDetailsDrawerBody";
 
 const Drawer = ({ isOpen, onClose, title, children }) => {
   return (
@@ -161,36 +162,10 @@ const FloorDrawers = ({
         onClose={onClose}
         title={`Table ${selectedTable?.name || ""}`}
       >
-        <div className="space-y-6">
-            <div className="stats shadow w-full">
-                <div className="stat">
-                    <div className="stat-title">Status</div>
-                    <div className={`stat-value text-lg ${
-                        selectedTable?.status === 'Available' ? 'text-success' :
-                        selectedTable?.status === 'Occupied' ? 'text-primary' :
-                        selectedTable?.status === 'Reserved' ? 'text-warning' : 'text-error'
-                    }`}>{selectedTable?.status || 'Unknown'}</div>
-                </div>
-            </div>
-
-            {selectedTable?.currentOrder && (
-                <div className="card bg-base-200 p-4">
-                    <h4 className="font-bold mb-2">Current Order</h4>
-                    <p>Order #{selectedTable.currentOrder.orderNumber}</p>
-                    <p className="text-sm opacity-70">Total: ${selectedTable.currentOrder.totalAmount}</p>
-                    <button className="btn btn-sm btn-outline mt-2 w-full">View Order</button>
-                </div>
-            )}
-
-            <div className="divider">Actions</div>
-            
-            <div className="grid grid-cols-2 gap-2">
-                <button className="btn btn-outline btn-sm">Assign Waiter</button>
-                <button className="btn btn-outline btn-sm">Mark Dirty</button>
-                <button className="btn btn-outline btn-sm">Merge Table</button>
-                <button className="btn btn-outline btn-sm text-error">Block Table</button>
-            </div>
-        </div>
+        <TableDetailsDrawerBody 
+            table={selectedTable} 
+            closeRightDrawer={onClose} 
+        />
       </Drawer>
     </>
   );

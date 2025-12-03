@@ -2,8 +2,29 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
+// Helper to generate tokens
+const generateTokens = (user) => {
+  const accessToken = jwt.sign(
+    {
+      id: user._id,
+      role: user.role,
+      email: user.email,
+      fullname: user.fullname,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  return { accessToken, refreshToken };
+};
+
 const register = async (req, res) => {
-  console.log(" trying");
   try {
     const { fullname, email, password, securityQuestions } = req.body;
 
@@ -51,6 +72,26 @@ const register = async (req, res) => {
       securityQuestions,
     });
 
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    // Save refresh token to DB
+    user.refreshTokens.push({
+      token: await bcrypt.hash(refreshToken, 10),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+    });
+    await user.save();
+
+    // Send refresh token in HttpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     res.status(201).json({
       message:
         userCount === 0
@@ -62,14 +103,14 @@ const register = async (req, res) => {
         email: user.email,
         role: user.role,
       },
+      token: accessToken,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-// backend/controllers/authController.js (update the login function)
+
 const login = async (req, res) => {
-  console.log("login attempt");
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email, deletedAt: null });
@@ -79,18 +120,30 @@ const login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-        email: user.email,
-        fullname: user.fullname,
-      },
-      "68149540",
-      {
-        expiresIn: "3d",
-      }
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    // Remove old refresh tokens (optional cleanup)
+    user.refreshTokens = user.refreshTokens.filter(
+      (rt) => rt.expiresAt > Date.now()
     );
+
+    // Save new refresh token
+    user.refreshTokens.push({
+      token: await bcrypt.hash(refreshToken, 10),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+    });
+    await user.save();
+
+    // Send refresh token in HttpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     const userResponse = {
       _id: user._id,
@@ -99,10 +152,121 @@ const login = async (req, res) => {
       role: user.role,
     };
 
-    res.json({ token, user: userResponse });
+    res.json({ token: accessToken, user: userResponse });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: error.message || "Internal Server Error" });
+  }
+};
+
+const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token required" });
+    }
+
+    res.clearCookie("refreshToken");
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const user = await User.findOne({ _id: decoded.id, deletedAt: null });
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Find the token in the user's refreshTokens array
+    // Since tokens are hashed, we need to compare
+    let tokenIndex = -1;
+    for (let i = 0; i < user.refreshTokens.length; i++) {
+      const rt = user.refreshTokens[i];
+      const isMatch = await bcrypt.compare(refreshToken, rt.token);
+      if (isMatch) {
+        tokenIndex = i;
+        break;
+      }
+    }
+
+    if (tokenIndex === -1) {
+      // Token reuse detection could go here (delete all tokens if reused)
+      return res.status(403).json({ message: "Invalid refresh token" });
+    }
+
+    // Remove the used refresh token (Rotation)
+    user.refreshTokens.splice(tokenIndex, 1);
+
+    // Generate new tokens
+    const { accessToken, newRefreshToken } = generateTokens(user);
+
+    // Save new refresh token
+    user.refreshTokens.push({
+      token: await bcrypt.hash(newRefreshToken, 10),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+    });
+    await user.save();
+
+    // Send new refresh token in cookie
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ token: accessToken });
+  } catch (error) {
+    console.log(error);
+    if (error.name === "JsonWebTokenError") {
+        return res.status(403).json({ message: "Invalid refresh token" });
+    }
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+    
+    if (refreshToken) {
+        try {
+            const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+            if (decoded && decoded.id) {
+                const user = await User.findById(decoded.id);
+                if (user) {
+                    // Find and remove the specific refresh token
+                    let tokenIndex = -1;
+                    for (let i = 0; i < user.refreshTokens.length; i++) {
+                        const isMatch = await bcrypt.compare(refreshToken, user.refreshTokens[i].token);
+                        if (isMatch) {
+                            tokenIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (tokenIndex !== -1) {
+                        user.refreshTokens.splice(tokenIndex, 1);
+                        await user.save();
+                    }
+                }
+            }
+        } catch (err) {
+            // Token might be invalid or expired, just ignore and clear cookie
+            console.log("Logout token verification failed:", err.message);
+        }
+    }
+
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict"
+    });
+    res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -295,6 +459,8 @@ const updateCurrentUser = async (req, res) => {
 module.exports = {
   register,
   login,
+  refreshToken,
+  logout,
   getSecurityQuestions,
   verifySecurityAnswers,
   getCurrentUser,

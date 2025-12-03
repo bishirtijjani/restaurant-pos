@@ -10,7 +10,7 @@ const MenuItems = lazy(() => import("../pages/protected/MenuItems"));
 const Categories = lazy(() => import("../pages/protected/Categories"));
 const Suppliers = lazy(() => import("../pages/protected/Suppliers"));
 const Orders = lazy(() => import("../pages/protected/Orders"));
-const AddOrder = lazy(() => import("../pages/protected/AddOrder"));
+const POS = lazy(() => import("../pages/protected/POS"));
 const Expenses = lazy(() => import("../pages/protected/Expenses"));
 const Analytics = lazy(() => import("../pages/protected/Analytics"));
 const Users = lazy(() => import("../pages/protected/Users"));
@@ -51,7 +51,7 @@ const routes = [
   { path: "/add-on-groups", component: AddOnGroups },
   { path: "/expenses", component: Expenses },
   { path: "/orders", component: Orders },
-  { path: "/orders/new", component: AddOrder },
+  { path: "/pos", component: POS },
   { path: "/inventory", component: Inventory },
   { path: "/purchase-orders", component: PurchaseOrders },
   { path: "/purchase-orders/new", component: CreatePurchaseOrder },

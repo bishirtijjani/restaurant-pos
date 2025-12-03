@@ -1,4 +1,4 @@
-// frontend/src/features/orders/AddOrder.jsx
+// frontend/src/features/orders/POS.jsx
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../components/Input/FormattedNumberInput";
@@ -332,7 +332,7 @@ const CustomerDetailsForm = ({
   );
 };
 
-export default function AddOrder() {
+export default function POS() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { can } = useAuth();

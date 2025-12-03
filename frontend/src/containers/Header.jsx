@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import Bars3Icon from "@heroicons/react/24/outline/Bars3Icon";
 import { openRightDrawer } from "../features/common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   RefreshCw,
   Paintbrush,
@@ -23,6 +23,7 @@ import SyncManager from "../components/SyncManager";
 
 function Header() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { noOfNotifications, pageTitle } = useSelector((state) => state.header);
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("theme")
@@ -60,7 +61,7 @@ function Header() {
 
   function logoutUser() {
     localStorage.clear();
-    window.location.href = "/";
+    navigate("/login");
   }
 
   return (

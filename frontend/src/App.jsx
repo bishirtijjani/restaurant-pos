@@ -9,7 +9,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { themeChange } from "theme-change";
-import checkAuth from "./app/auth";
+import setupAxiosInterceptors from "./app/auth";
 import initializeApp from "./app/init";
 import { initializeOfflineSupport } from "./app/initOffline";
 import { fetchSettings } from "./features/settings/generalSettings/generalSettingsSlice";
@@ -25,13 +25,11 @@ const Home = lazy(() => import("./pages/Home"));
 
 initializeApp();
 initializeOfflineSupport();
-
-const token = checkAuth();
+setupAxiosInterceptors();
 
 function App() {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth.user);
-  const authToken = useSelector((state) => state.auth.token);
+  const { user, token: authToken, loading } = useSelector((state) => state.auth);
 
   // Use ref to track if we've already fetched user
   const hasFetchedUser = useRef(false);
@@ -48,34 +46,42 @@ function App() {
     // Only run once
     if (hasFetchedUser.current) return;
 
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      // Always decode from token first (works offline)
-      dispatch(setUserFromToken());
-
-      // Then fetch from server if online and no user
-      if (!user && navigator.onLine) {
-        dispatch(getCurrentUser());
-      }
-
+    // Don't fetch user if we're on a public page
+    const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/home'];
+    const isPublicPage = publicPaths.some(path => window.location.pathname.includes(path));
+    
+    if (isPublicPage) {
       hasFetchedUser.current = true;
+      return;
     }
-  }, [dispatch]); // Remove 'user' from dependencies
+
+    // Only try to fetch current user if we have a token
+    if (authToken) {
+      dispatch(getCurrentUser());
+    }
+    hasFetchedUser.current = true;
+  }, [dispatch, authToken]);
+
+  if (loading && !authToken) {
+      return <div className="flex items-center justify-center h-screen">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+  }
 
   return (
     <>
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/home" element={<Home />} />
+          <Route path="/login" element={authToken ? <Navigate to="/app/dashboard" replace /> : <Login />} />
+          <Route path="/forgot-password" element={authToken ? <Navigate to="/app/dashboard" replace /> : <ForgotPassword />} />
+          <Route path="/reset-password" element={authToken ? <Navigate to="/app/dashboard" replace /> : <ResetPassword />} />
+          <Route path="/register" element={authToken ? <Navigate to="/app/dashboard" replace /> : <Register />} />
+          <Route path="/home" element={authToken ? <Navigate to="/app/dashboard" replace /> : <Home />} />
           <Route path="/app/*" element={<Layout />} />
           <Route
             path="/*"
             element={
-              <Navigate to={token ? "/app/dashboard" : "/login"} replace />
+              <Navigate to={authToken ? "/app/dashboard" : "/login"} replace />
             }
           />
         </Routes>

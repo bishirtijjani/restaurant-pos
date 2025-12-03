@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import NotificationBodyRightDrawer from "../features/common/components/NotificationBodyRightDrawer";
 import { closeRightDrawer } from "../features/common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
-import AddOrder from "../features/orders/AddOrder";
+import POS from "../features/orders/POS";
 import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
 import EditTableDrawerBody from "../features/floors/components/EditTableDrawerBody";
 import TableDetailsDrawerBody from "../features/floors/components/TableDetailsDrawerBody";
@@ -58,7 +58,7 @@ function RightSidebar() {
                     />
                   ),
                   [RIGHT_DRAWER_TYPES.ADD_ORDER]: (
-                    <AddOrder {...extraObject} closeRightDrawer={close} />
+                    <POS {...extraObject} closeRightDrawer={close} />
                   ),
                   [RIGHT_DRAWER_TYPES.CONFIRM_PAYMENT]: (
                     <PaymentConfirmationModalBody

@@ -199,6 +199,57 @@ const OrderSchema = new mongoose.Schema(
     deliveryFee: { type: Number, default: 0 },
     amountPaid: { type: Number, required: true, default: 0 },
     balance: { type: Number, default: 0 },
+    // NEW: Change amount (for cash payments)
+    change: { type: Number, default: 0 },
+    // NEW: Tip information
+    tip: {
+      amount: { type: Number, default: 0 },
+      percentage: { type: Number, default: 0 },
+    },
+    // NEW: Split payment support - array of payment entries
+    payments: [
+      {
+        method: {
+          type: String,
+          enum: ["cash", "card", "Transfer"],
+          required: true,
+        },
+        amount: { type: Number, required: true },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
+    // NEW: Payment history for audit trail (includes original payments + refunds)
+    paymentHistory: [
+      {
+        type: {
+          type: String,
+          enum: ["payment", "refund"],
+          required: true,
+        },
+        method: { type: String },
+        amount: { type: Number, required: true },
+        timestamp: { type: Date, default: Date.now },
+        performedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        note: { type: String },
+      },
+    ],
+    // NEW: Refund tracking
+    refunds: [
+      {
+        amount: { type: Number, required: true },
+        reason: { type: String },
+        refundedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        refundedAt: { type: Date, default: Date.now },
+        isPartial: { type: Boolean, default: false },
+      },
+    ],
+    // Legacy field - kept for backward compatibility (stores primary payment method)
     paymentMethod: {
       type: String,
       enum: ["cash", "card", "Transfer"],

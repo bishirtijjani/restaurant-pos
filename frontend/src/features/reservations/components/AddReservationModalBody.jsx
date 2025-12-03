@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createReservation } from "../reservationSlice";
-import { closeModal } from "../../common/modalSlice";
+import { closeModal, openModal } from "../../common/modalSlice";
+import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
@@ -59,7 +60,8 @@ const AddReservationModalBody = ({ closeModal: close }) => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.tableId) newErrors.tableId = "Table is required";
+    // Table is optional now to allow for unassigned reservations (drag & drop workflow)
+    // if (!formData.tableId) newErrors.tableId = "Table is required";
     if (!formData.customerName.trim()) newErrors.customerName = "Customer name is required";
     if (!formData.customerPhone.trim()) newErrors.customerPhone = "Phone is required";
     if (!formData.partySize || formData.partySize < 1) newErrors.partySize = "Party size must be at least 1";
@@ -128,11 +130,25 @@ const AddReservationModalBody = ({ closeModal: close }) => {
     }
     
     if (conflicts.length > 0) {
-        if (!window.confirm("There are conflicts with this reservation. Are you sure you want to proceed?")) {
-            return;
-        }
+        dispatch(openModal({
+            title: "Confirmation",
+            bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+            preservePrevious: true,  // Keep the reservation form open beneath
+            extraObject: {
+                message: "There are conflicts with this reservation. Are you sure you want to proceed?",
+                type: "CONFIRM_ADD_RESERVATION",
+                onConfirm: async () => {
+                    await submitReservation();
+                }
+            }
+        }));
+        return;
     }
 
+    await submitReservation();
+  };
+
+  const submitReservation = async () => {
     setIsSubmitting(true);
 
     try {
@@ -166,7 +182,7 @@ const AddReservationModalBody = ({ closeModal: close }) => {
         {/* Table Selection */}
         <div className="form-control md:col-span-2">
             <label className="label">
-                <span className="label-text">Table *</span>
+                <span className="label-text">Table (Optional)</span>
             </label>
             <select
                 name="tableId"

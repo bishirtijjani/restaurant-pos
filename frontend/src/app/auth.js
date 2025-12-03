@@ -1,75 +1,69 @@
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
-import { getToken } from "../utils/Helpers";
+import { refreshSession } from "./authSlice";
+import store from "./store";
 
-// Helper to check if the token is expired
-const isTokenExpired = (token) => {
-  try {
-    const { exp } = jwtDecode(token);
-    return exp * 1000 < Date.now(); // Token expiration in milliseconds
-  } catch {
-    return true;
-  }
-};
-
-const checkAuth = () => {
-  const TOKEN = getToken();
-  const PUBLIC_ROUTES = [
-    "login",
-    "forgot-password",
-    "reset-password",
-    "register",
-    "documentation",
-    "home",
-  ];
-
-  const isPublicPage = PUBLIC_ROUTES.some((route) =>
-    window.location.href.includes(route)
+const setupAxiosInterceptors = () => {
+  // Request interceptor
+  axios.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers.authorization = `Bearer ${token}`;
+      }
+      // Don't show loading indicator for background refresh
+      if (!config.url.includes("/refresh")) {
+        document.body.classList.add("loading-indicator");
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
   );
 
-  if (!TOKEN || isTokenExpired(TOKEN)) {
-    if (!isPublicPage) {
-      window.location.href = "/home";
-    }
-    return;
-  }
+  // Response interceptor
+  axios.interceptors.response.use(
+    (response) => {
+      document.body.classList.remove("loading-indicator");
+      return response;
+    },
+    async (error) => {
+      document.body.classList.remove("loading-indicator");
+      const originalRequest = error.config;
 
-  // Redirect to login if no token and not a public page
-  if (!TOKEN && !isPublicPage) {
-    window.location.href = "/login";
-    return;
-  }
-
-  // Set up Axios defaults and interceptors if a token exists
-  if (TOKEN) {
-    axios.interceptors.request.use(
-      (config) => {
-        document.body.classList.add("loading-indicator");
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    axios.interceptors.response.use(
-      (response) => {
-        document.body.classList.remove("loading-indicator");
-        return response;
-      },
-      (error) => {
-        document.body.classList.remove("loading-indicator");
-
-        // Handle 401 errors globally
-        if (error.response?.status === 401) {
+      // Handle 401 errors
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        // If the error comes from the refresh endpoint itself, don't retry
+        if (originalRequest.url.includes("/auth/refresh")) {
           localStorage.removeItem("token");
-          window.location.href = "/login";
+          if (!window.location.pathname.includes("/login")) {
+             window.location.href = "/login";
+          }
+          return Promise.reject(error);
         }
 
-        return Promise.reject(error);
-      }
-    );
+        originalRequest._retry = true;
 
-    return TOKEN;
-  }
+        try {
+          // Attempt to refresh the session
+          const result = await store.dispatch(refreshSession()).unwrap();
+          
+          // Update the header for the original request
+          originalRequest.headers.authorization = `Bearer ${result.token}`;
+          
+          // Retry the original request
+          return axios(originalRequest);
+        } catch (refreshError) {
+          // Refresh failed - redirect to login
+          localStorage.removeItem("token");
+           if (!window.location.pathname.includes("/login")) {
+             window.location.href = "/login";
+          }
+          return Promise.reject(refreshError);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
 };
 
-export default checkAuth;
+export default setupAxiosInterceptors;

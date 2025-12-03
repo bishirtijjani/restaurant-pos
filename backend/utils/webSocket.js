@@ -78,4 +78,20 @@ const notifyKDS = (eventType, data, stationId = null) => {
   });
 };
 
-module.exports = { initializeWebSocket, notifyKDS };
+const notifyTableUpdate = (eventType, data) => {
+  if (!wss) return;
+
+  const message = JSON.stringify({
+    type: eventType,
+    data,
+    timestamp: new Date().toISOString(),
+  });
+
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+};
+
+module.exports = { initializeWebSocket, notifyKDS, notifyTableUpdate };

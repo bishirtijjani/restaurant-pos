@@ -63,7 +63,7 @@ function LeftSidebar() {
 
   function logoutUser() {
     localStorage.clear();
-    window.location.href = "/";
+    navigate("/login");
   }
 
   return (

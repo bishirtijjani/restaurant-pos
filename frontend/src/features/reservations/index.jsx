@@ -230,7 +230,7 @@ const ReservationManagement = () => {
       
       // Navigate to POS with pre-filled data
       const reservation = result;
-      navigate("/app/add-order", {
+      navigate("/app/pos", {
         state: {
           orderType: "dine-in",
           table: reservation.tableId,

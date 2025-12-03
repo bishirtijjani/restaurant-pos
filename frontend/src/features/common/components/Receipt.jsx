@@ -55,11 +55,15 @@ const Receipt = ({ extraObject, closeModal }) => {
     addOnsTotal: orderData.addOnsTotal || 0,
     packagingFee: orderData.packagingFee || 0,
     deliveryFee: orderData.deliveryFee || 0,
+    // NEW: Payment fields
+    tip: orderData.tip || { amount: 0, percentage: 0 },
     totalAmount: orderData.totalAmount || 0,
+    payments: orderData.payments || [], // Split payments array
     paymentMethod: orderData.paymentMethod || "cash",
     amountPaid: orderData.amountPaid || 0,
     change: orderData.change || 0,
     balance: orderData.balance || 0,
+    refunds: orderData.refunds || [], // Refunds array
     orderNote: orderData.orderNote || orderData.note || "",
   };
 
@@ -281,7 +285,7 @@ const Receipt = ({ extraObject, closeModal }) => {
                       {currency}
                       {receipt.packagingFee.toFixed(2)}
                     </td>
-                  </tr>
+                </tr>
                 )}
                 {receipt.deliveryFee > 0 && (
                   <tr>
@@ -292,6 +296,20 @@ const Receipt = ({ extraObject, closeModal }) => {
                     </td>
                   </tr>
                 )}
+                {receipt.tip?.amount > 0 && (
+                  <tr className="text-success">
+                    <td>
+                      Tip
+                      {receipt.tip.percentage > 0 &&
+                        ` (${receipt.tip.percentage}%)`}
+                      :
+                    </td>
+                    <td className="text-right">
+                      {currency}
+                      {receipt.tip.amount.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
                 <tr className="font-bold text-base">
                   <td>Total:</td>
                   <td className="text-right">
@@ -299,15 +317,37 @@ const Receipt = ({ extraObject, closeModal }) => {
                     {receipt.totalAmount.toFixed(2)}
                   </td>
                 </tr>
-                <tr>
-                  <td>Paid ({receipt.paymentMethod}):</td>
-                  <td className="text-right">
-                    {currency}
-                    {receipt.amountPaid.toFixed(2)}
-                  </td>
-                </tr>
-                {receipt.change > 0 && (
+
+                {/* Payment breakdown - show split payments if available */}
+                {receipt.payments && receipt.payments.length > 0 ? (
+                  <>
+                    <tr>
+                      <td colSpan="2" className="pt-2 font-medium">
+                        Payment Details:
+                      </td>
+                    </tr>
+                    {receipt.payments.map((payment, idx) => (
+                      <tr key={idx} className="text-sm">
+                        <td className="pl-3 capitalize">{payment.method}:</td>
+                        <td className="text-right">
+                          {currency}
+                          {payment.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </>
+                ) : (
                   <tr>
+                    <td>Paid ({receipt.paymentMethod}):</td>
+                    <td className="text-right">
+                      {currency}
+                      {receipt.amountPaid.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
+
+                {receipt.change > 0 && (
+                  <tr className="font-medium text-success">
                     <td>Change:</td>
                     <td className="text-right">
                       {currency}
@@ -323,6 +363,33 @@ const Receipt = ({ extraObject, closeModal }) => {
                       {receipt.balance.toFixed(2)}
                     </td>
                   </tr>
+                )}
+
+                {/* Refunds section */}
+                {receipt.refunds && receipt.refunds.length > 0 && (
+                  <>
+                    <tr>
+                      <td colSpan="2" className="pt-2">
+                        <div className="border-t border-dashed my-1"></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan="2" className="font-medium text-error">
+                        Refunds:
+                      </td>
+                    </tr>
+                    {receipt.refunds.map((refund, idx) => (
+                      <tr key={idx} className="text-sm text-error">
+                        <td className="pl-3">
+                          {new Date(refund.refundedAt).toLocaleDateString()}:
+                        </td>
+                        <td className="text-right">
+                          -{currency}
+                          {refund.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </>
                 )}
               </tbody>
             </table>

@@ -16,6 +16,9 @@ import {
   deleteInventoryItem,
   fetchInventoryItems,
 } from "../../inventory/inventorySlice";
+import { deleteTable, mergeTables, splitTables, safeUnmergeTables } from "../../tables/tableSlice";
+import { updateTableStatus } from "../../tables/tableSlice";
+import { updateReservation } from "../../reservations/reservationSlice";
 
 function ConfirmationModalBody({ extraObject, closeModal }) {
   const dispatch = useDispatch();
@@ -68,6 +71,32 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
             cancelOrder({ id, reason: "Cancelled by user" })
           ).unwrap();
           successMessage = "Order Cancelled Successfully!";
+          break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_TABLE:
+          await dispatch(deleteTable(id)).unwrap();
+          successMessage = "Table Deleted Successfully!";
+          break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.ASSIGN_RESERVATION:
+          const { tableId, reservationId } = extraObject;
+          await dispatch(updateTableStatus({ id: tableId, status: "reserved" })).unwrap();
+          await dispatch(updateReservation({ id: reservationId, data: { tableId, status: "confirmed" } })).unwrap();
+          successMessage = "Reservation assigned successfully";
+          break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.CLEAR_CART:
+          // This is handled by the callback in extraObject
+          if (extraObject.onConfirm) {
+            extraObject.onConfirm();
+          }
+          successMessage = "Cart cleared successfully";
+          break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.MERGE_TABLES:
+          const { tableIds } = extraObject;
+          await dispatch(mergeTables({ tableIds })).unwrap();
+          successMessage = "Tables merged successfully";
+          break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.SPLIT_TABLES:
+          await dispatch(safeUnmergeTables({ id, reason: "User requested split" })).unwrap();
+          successMessage = "Tables split successfully";
           break;
         default:
           successMessage = "Action completed!";

@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema(
         answer: { type: String, required: true }, // Will be hashed
       },
     ],
+    refreshTokens: [
+      {
+        token: { type: String, required: true }, // Hashed refresh token
+        createdAt: { type: Date, default: Date.now },
+        expiresAt: { type: Date, required: true },
+        ip: { type: String },
+        userAgent: { type: String },
+        lastUsed: { type: Date, default: Date.now },
+      },
+    ],
     lastAction: {
       action: {
         type: String,

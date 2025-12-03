@@ -183,4 +183,26 @@ const reservationSlice = createSlice({
   },
 });
 
+export const selectTodaysReservations = (state) => {
+  const { items } = state.reservations;
+  const today = new Date().toISOString().split('T')[0];
+  return items.filter(r => r.reservationDate.startsWith(today) && r.status !== 'cancelled');
+};
+
+export const selectReservedSoon = (state, leadTimeMinutes = 60) => {
+    const { items } = state.reservations;
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    return items.filter(r => {
+        if (r.status !== 'confirmed' && r.status !== 'pending') return false;
+        if (!r.reservationDate.startsWith(today)) return false;
+        
+        const resTime = new Date(`${r.reservationDate.split('T')[0]}T${r.reservationTime}`);
+        const timeDiff = (resTime - now) / 60000; // diff in minutes
+        
+        return timeDiff > 0 && timeDiff <= leadTimeMinutes;
+    });
+};
+
 export default reservationSlice.reducer;

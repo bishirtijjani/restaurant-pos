@@ -79,7 +79,6 @@ exports.createReservation = async (req, res) => {
     } = req.body;
 
     if (
-      !tableId ||
       !customerName ||
       !customerPhone ||
       !partySize ||
@@ -89,30 +88,33 @@ exports.createReservation = async (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Required fields: tableId, customerName, customerPhone, partySize, reservationDate, reservationTime",
+          "Please provide all required fields: Customer Name, Phone, Party Size, Date, and Time.",
       });
     }
 
-    const table = await Table.findById(tableId);
-    if (!table) {
-      return res.status(404).json({
-        success: false,
-        message: "Table not found",
-      });
-    }
+    let table = null;
+    if (tableId) {
+        table = await Table.findById(tableId);
+        if (!table) {
+          return res.status(404).json({
+            success: false,
+            message: "Table not found",
+          });
+        }
 
-    if (!table.isActive) {
-      return res.status(400).json({
-        success: false,
-        message: "Table is not active",
-      });
-    }
+        if (!table.isActive) {
+          return res.status(400).json({
+            success: false,
+            message: "Table is not active",
+          });
+        }
 
-    if (partySize > table.capacity) {
-      return res.status(400).json({
-        success: false,
-        message: `Party size exceeds table capacity (${table.capacity})`,
-      });
+        if (partySize > table.capacity) {
+          return res.status(400).json({
+            success: false,
+            message: `Party size exceeds table capacity (${table.capacity})`,
+          });
+        }
     }
 
     // Check for conflicts
@@ -122,23 +124,25 @@ exports.createReservation = async (req, res) => {
     const endOfDay = new Date(resDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const existingReservations = await Reservation.find({
-      tableId,
-      reservationDate: { $gte: startOfDay, $lte: endOfDay },
-      status: { $in: ["pending", "confirmed", "seated"] },
-    });
-
-    for (const existing of existingReservations) {
-      if (existing.reservationTime === reservationTime) {
-        return res.status(400).json({
-          success: false,
-          message: "Table is already reserved at this time",
+    if (tableId) {
+        const existingReservations = await Reservation.find({
+          tableId,
+          reservationDate: { $gte: startOfDay, $lte: endOfDay },
+          status: { $in: ["pending", "confirmed", "seated"] },
         });
-      }
+
+        for (const existing of existingReservations) {
+          if (existing.reservationTime === reservationTime) {
+            return res.status(400).json({
+              success: false,
+              message: "Table is already reserved at this time",
+            });
+          }
+        }
     }
 
     const reservation = await Reservation.create({
-      tableId,
+      tableId: tableId || null,
       customerName,
       customerPhone,
       customerEmail: customerEmail || "",
@@ -158,7 +162,7 @@ exports.createReservation = async (req, res) => {
       "create",
       null,
       reservation,
-      `Created reservation for ${customerName} at table ${table.tableNumber}`
+      `Created reservation for ${customerName}${table ? ` at table ${table.tableNumber}` : ''}`
     );
 
     const populatedReservation = await Reservation.findById(reservation._id)

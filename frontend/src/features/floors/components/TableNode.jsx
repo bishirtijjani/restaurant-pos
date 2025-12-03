@@ -10,6 +10,7 @@ const TableNode = ({
   onChange,
   editMode,
   onContextMenu,
+  isReservedSoon, // NEW: whether this table has an upcoming reservation
 }) => {
   const shapeRef = useRef();
   const groupRef = useRef();
@@ -27,11 +28,11 @@ const TableNode = ({
     width,
     height,
     fill: getTableColor(table.status),
-    stroke: isSnapTarget ? "#570df8" : (isSelected ? "#00a96e" : "#e5e7eb"), // Purple for snap target
-    strokeWidth: isSnapTarget ? 4 : (isSelected ? 2 : 1),
-    shadowBlur: isSnapTarget ? 20 : (isSelected ? 10 : 5),
-    shadowColor: isSnapTarget ? "#570df8" : "black",
-    shadowOpacity: isSnapTarget ? 0.6 : 0.15,
+    stroke: isSnapTarget ? "#570df8" : (isReservedSoon ? "#f59e0b" : (isSelected ? "#00a96e" : "#e5e7eb")), // Purple for snap, Amber for reserved soon
+    strokeWidth: isSnapTarget || isReservedSoon ? 4 : (isSelected ? 2 : 1),
+    shadowBlur: isSnapTarget || isReservedSoon ? 20 : (isSelected ? 10 : 5),
+    shadowColor: isSnapTarget ? "#570df8" : (isReservedSoon ? "#f59e0b" : "black"),
+    shadowOpacity: isSnapTarget || isReservedSoon ? 0.6 : 0.15,
     shadowOffset: { x: 2, y: 2 },
     cornerRadius: table.shape === "circle" ? width / 2 : 8,
   };
@@ -55,7 +56,11 @@ const TableNode = ({
       y={y}
       rotation={rotation}
       draggable={editMode}
-      onClick={onSelect}
+      onClick={(e) => {
+        if (e.evt.button === 0) { // Only left click
+             onSelect(e);
+        }
+      }}
       onTap={onSelect}
       onDragEnd={(e) => {
         onChange({
@@ -90,6 +95,7 @@ const TableNode = ({
       }}
       onContextMenu={(e) => {
         e.evt.preventDefault(); // Prevent native context menu
+        e.cancelBubble = true; // Stop propagation
         onContextMenu && onContextMenu(e, table);
       }}
       onMouseEnter={(e) => {

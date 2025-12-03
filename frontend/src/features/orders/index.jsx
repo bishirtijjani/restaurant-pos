@@ -263,7 +263,7 @@ const TopSideButtons = () => {
     <div className="flex flex-wrap gap-2">
       <Can do="createOrders">
         <button
-          onClick={() => navigate("/app/orders/new")}
+          onClick={() => navigate("/app/pos")}
           className="btn btn-primary btn-sm gap-2"
         >
           <Plus className="w-4 h-4" />

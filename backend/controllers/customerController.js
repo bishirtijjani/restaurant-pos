@@ -4,6 +4,7 @@ const Order = require("../models/Order");
 const CustomerPayment = require("../models/CustomerPayment");
 const logAction = require("../utils/logAction"); // Import log function
 const mongoose = require("mongoose");
+
 // Fetch all customers
 const getAllCustomers = async (req, res) => {
   try {

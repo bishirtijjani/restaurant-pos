@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateReservation } from "../reservationSlice";
-import { closeModal } from "../../common/modalSlice";
+import { closeModal, openModal } from "../../common/modalSlice";
+import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
@@ -133,11 +134,25 @@ const EditReservationModalBody = ({ extraObject, closeModal: close }) => {
     }
     
     if (conflicts.length > 0) {
-        if (!window.confirm("There are conflicts with this reservation. Are you sure you want to proceed?")) {
-            return;
-        }
+        dispatch(openModal({
+            title: "Confirmation",
+            bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+            preservePrevious: true,  // Keep the edit reservation form open beneath
+            extraObject: {
+                message: "There are conflicts with this reservation. Are you sure you want to proceed?",
+                type: "CONFIRM_EDIT_RESERVATION",
+                onConfirm: async () => {
+                    await submitReservation();
+                }
+            }
+        }));
+        return;
     }
 
+    await submitReservation();
+  };
+
+  const submitReservation = async () => {
     setIsSubmitting(true);
 
     try {

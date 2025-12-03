@@ -65,20 +65,59 @@ export const registerUser = createAsyncThunk(
 
 // Async thunk for logging out
 export const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
+  try {
+    await axios.post("/api/auth/logout");
+  } catch (error) {
+    console.error("Logout failed", error);
+  }
   localStorage.removeItem("token");
   return null;
 });
 
+// Async thunk for refreshing session
+export const refreshSession = createAsyncThunk(
+  "auth/refreshSession",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.post("/api/auth/refresh");
+      const { token } = response.data;
+      localStorage.setItem("token", token);
+      axios.defaults.headers.common["authorization"] = `Bearer ${token}`;
+      
+      // Decode user from token
+      const user = jwtDecode(token);
+      return { token, user };
+    } catch (error) {
+      localStorage.removeItem("token");
+      return rejectWithValue("Session expired");
+    }
+  }
+);
+
 // Async thunk for getting current user
 export const getCurrentUser = createAsyncThunk(
   "auth/getCurrentUser",
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
       const token = localStorage.getItem("token");
+      
+      // If no token or expired, try to refresh first
       if (!token || isTokenExpired(token)) {
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-        return rejectWithValue("Token expired or missing");
+         try {
+            const result = await dispatch(refreshSession()).unwrap();
+            // If refresh successful, we have a valid token now
+            // We can proceed to fetch user details if needed, 
+            // but refreshSession already returns the user from token.
+            // However, to get full user details (like role permissions not in token), 
+            // we might still want to call /me.
+            // For now, let's assume /me is what we want.
+         } catch (refreshError) {
+             // If refresh fails, we are truly logged out
+             if (!window.location.pathname.includes("/login")) {
+                 window.location.href = "/login";
+             }
+             return rejectWithValue("Session expired");
+         }
       }
 
       // First try to get from token (works offline)
@@ -172,6 +211,16 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Handle refreshSession
+      .addCase(refreshSession.fulfilled, (state, action) => {
+        state.token = action.payload.token;
+        // We might want to merge with existing user data or just update basic info
+        state.user = { ...state.user, ...action.payload.user }; 
+      })
+      .addCase(refreshSession.rejected, (state) => {
+        state.token = null;
+        state.user = null;
       })
       // Handle getCurrentUser
       .addCase(getCurrentUser.pending, (state) => {

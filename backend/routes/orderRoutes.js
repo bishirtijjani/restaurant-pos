@@ -37,5 +37,10 @@ router.delete(
   roleMiddleware("admin", "manager"),
   orderController.cancelOrder
 );
+router.post(
+  "/:id/refund",
+  roleMiddleware("admin", "manager"),
+  orderController.refundOrder
+);
 
 module.exports = router;
