@@ -18,6 +18,14 @@ import {
   Zap,
   Plus,
 } from "lucide-react";
+import {
+  ChartBarIcon,
+  DocumentChartBarIcon,
+  CurrencyDollarIcon,
+  UserGroupIcon,
+  LightBulbIcon,
+  CreditCardIcon,
+} from "@heroicons/react/24/outline";
 
 const iconClasses = `h-5 w-5`;
 const submenuIconClasses = `h-5 w-5`;
@@ -27,6 +35,53 @@ export const adminRoutes = [
     path: "/app/dashboard",
     icon: <LayoutDashboard className={iconClasses} />,
     name: "Dashboard",
+  },
+  {
+    path: "/app/analytics",
+    icon: <ChartBarIcon className={iconClasses} />,
+    name: "Analytics",
+    submenu: [
+      {
+        path: "/app/analytics/overview",
+        icon: <DocumentChartBarIcon className={submenuIconClasses} />,
+        name: "Overview",
+      },
+      {
+        path: "/app/analytics/sales",
+        icon: <CurrencyDollarIcon className={submenuIconClasses} />,
+        name: "Sales",
+      },
+      {
+        path: "/app/analytics/menu",
+        icon: <Tag className={submenuIconClasses} />,
+        name: "Menu",
+      },
+      {
+        path: "/app/analytics/staff",
+        icon: <UserGroupIcon className={submenuIconClasses} />,
+        name: "Staff",
+      },
+      {
+        path: "/app/analytics/customers",
+        icon: <Users className={submenuIconClasses} />,
+        name: "Customers",
+      },
+      {
+        path: "/app/analytics/advanced",
+        icon: <LightBulbIcon className={submenuIconClasses} />,
+        name: "Advanced",
+      },
+      {
+        path: "/app/analytics/payments",
+        icon: <CreditCardIcon className={submenuIconClasses} />,
+        name: "Payments",
+      },
+      {
+        path: "/app/analytics/reports",
+        icon: <FileText className={submenuIconClasses} />,
+        name: "Reports",
+      },
+    ],
   },
   {
     path: "/app/floors",
@@ -163,6 +218,53 @@ export const managerRoutes = [
     path: "/app/dashboard",
     icon: <LayoutDashboard className={iconClasses} />,
     name: "Dashboard",
+  },
+  {
+    path: "/app/analytics",
+    icon: <ChartBarIcon className={iconClasses} />,
+    name: "Analytics",
+    submenu: [
+      {
+        path: "/app/analytics/overview",
+        icon: <DocumentChartBarIcon className={submenuIconClasses} />,
+        name: "Overview",
+      },
+      {
+        path: "/app/analytics/sales",
+        icon: <CurrencyDollarIcon className={submenuIconClasses} />,
+        name: "Sales",
+      },
+      {
+        path: "/app/analytics/menu",
+        icon: <Tag className={submenuIconClasses} />,
+        name: "Menu",
+      },
+      {
+        path: "/app/analytics/staff",
+        icon: <UserGroupIcon className={submenuIconClasses} />,
+        name: "Staff",
+      },
+      {
+        path: "/app/analytics/customers",
+        icon: <Users className={submenuIconClasses} />,
+        name: "Customers",
+      },
+      {
+        path: "/app/analytics/advanced",
+        icon: <LightBulbIcon className={submenuIconClasses} />,
+        name: "Advanced",
+      },
+      {
+        path: "/app/analytics/payments",
+        icon: <CreditCardIcon className={submenuIconClasses} />,
+        name: "Payments",
+      },
+      {
+        path: "/app/analytics/reports",
+        icon: <FileText className={submenuIconClasses} />,
+        name: "Reports",
+      },
+    ],
   },
   {
     path: "/app/floors",

@@ -1,0 +1,40 @@
+import { createSlice } from "@reduxjs/toolkit";
+
+const initialState = {
+  performance: {
+    data: [], // { name, sales, orders, avgTime }
+    status: "idle",
+  },
+  laborCost: {
+    data: [], // { date, cost, sales, percentage }
+    status: "idle",
+  },
+  staffList: {
+    data: [],
+    status: "idle",
+  },
+};
+
+export const staffAnalyticsSlice = createSlice({
+  name: "staffAnalytics",
+  initialState,
+  reducers: {
+    setStaffData: (state, action) => {
+      state.performance.data = action.payload.performance;
+      state.laborCost.data = action.payload.laborCost;
+      state.staffList.data = action.payload.staffList;
+      state.performance.status = "succeeded";
+    },
+    setStaffLoading: (state) => {
+      state.performance.status = "loading";
+    },
+  },
+});
+
+export const { setStaffData, setStaffLoading } = staffAnalyticsSlice.actions;
+
+export const selectStaffPerformance = (state) => state.staffAnalytics.performance;
+export const selectLaborCost = (state) => state.staffAnalytics.laborCost;
+export const selectStaffList = (state) => state.staffAnalytics.staffList;
+
+export default staffAnalyticsSlice.reducer;

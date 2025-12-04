@@ -12,7 +12,6 @@ const Suppliers = lazy(() => import("../pages/protected/Suppliers"));
 const Orders = lazy(() => import("../pages/protected/Orders"));
 const POS = lazy(() => import("../pages/protected/POS"));
 const Expenses = lazy(() => import("../pages/protected/Expenses"));
-const Analytics = lazy(() => import("../pages/protected/Analytics"));
 const Users = lazy(() => import("../pages/protected/Users"));
 const Customers = lazy(() => import("../pages/protected/Customers"));
 const CustomerProfile = lazy(() => import("../features/customers/CustomerProfile"));
@@ -41,9 +40,17 @@ const Discounts = lazy(() => import("../pages/protected/Discounts"));
 const Tables = lazy(() => import("../pages/protected/Tables"));
 const Floors = lazy(() => import("../pages/protected/Floors"));
 const Reservations = lazy(() => import("../pages/protected/Reservations"));
+const AnalyticsOverview = lazy(() => import("../features/analytics/dashboards/Overview"));
+const SalesOverview = lazy(() => import("../features/analytics/dashboards/Sales"));
+const MenuIntelligence = lazy(() => import("../features/analytics/dashboards/Menu"));
+const StaffAnalytics = lazy(() => import("../features/analytics/dashboards/Staff"));
+const CustomerInsights = lazy(() => import("../features/analytics/dashboards/Customer"));
+const AdvancedInsights = lazy(() => import("../features/analytics/dashboards/Advanced"));
+const PaymentAnalytics = lazy(() => import("../features/analytics/dashboards/Payment"));
+const CustomReports = lazy(() => import("../features/analytics/dashboards/Reports"));
 
 const routes = [
-  { path: "/dashboard", component: Analytics },
+  { path: "/dashboard", component: Dashboard },
   { path: "/settings/profile", component: ProfileSettings },
   { path: "/settings/general", component: GeneralSettings },
   { path: "/categories", component: Categories },
@@ -60,7 +67,6 @@ const routes = [
   { path: "/settings/keyboard", component: KeyboardSettings },
   { path: "/stock-adjustments", component: StockAdjustments },
   { path: "/suppliers", component: Suppliers },
-  { path: "/analytics", component: Analytics },
   { path: "/users", component: Users },
   { path: "/customers", component: Customers },
   { path: "/customers/:id", component: CustomerProfile },
@@ -72,6 +78,15 @@ const routes = [
   { path: "/floors/:floorId/tables", component: Tables },
   { path: "/floors", component: Floors },
   { path: "/reservations", component: Reservations },
+  { path: "/analytics", component: AnalyticsOverview },
+  { path: "/analytics/overview", component: AnalyticsOverview },
+  { path: "/analytics/sales", component: SalesOverview },
+  { path: "/analytics/menu", component: MenuIntelligence },
+  { path: "/analytics/staff", component: StaffAnalytics },
+  { path: "/analytics/customers", component: CustomerInsights },
+  { path: "/analytics/advanced", component: AdvancedInsights },
+  { path: "/analytics/payments", component: PaymentAnalytics },
+  { path: "/analytics/reports", component: CustomReports },
 ];
 
 export default routes;

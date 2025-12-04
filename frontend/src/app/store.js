@@ -11,7 +11,6 @@ import categoriesReducer from "../features/categories/categoriesSlice";
 import suppliersReducer from "../features/suppliers/suppliersSlice";
 import ordersReducer from "../features/orders/ordersSlice";
 import expensesReducer from "../features/expenses/expensesSlice";
-import analyticsReducer from "../features/analytics/analyticsSlice";
 import generalSettingsReducer from "../features/settings/generalSettings/generalSettingsSlice";
 import kdsReducer from "../features/kds/kdsSlice";
 import kdsStationsReducer from "../features/kdsStations/kdsStationsSlice";
@@ -26,6 +25,14 @@ import discountsReducer from "../features/discounts/discountsSlice";
 import tablesReducer from "../features/tables/tableSlice";
 import floorsReducer from "../features/floors/floorSlice";
 import reservationsReducer from "../features/reservations/reservationSlice";
+import analyticsGlobalReducer from "../features/analytics/slices/analyticsGlobalSlice";
+import salesAnalyticsReducer from "../features/analytics/slices/salesAnalyticsSlice";
+import menuAnalyticsReducer from "../features/analytics/slices/menuAnalyticsSlice";
+import staffAnalyticsReducer from "../features/analytics/slices/staffAnalyticsSlice";
+import customerAnalyticsReducer from "../features/analytics/slices/customerAnalyticsSlice";
+import advancedAnalyticsReducer from "../features/analytics/slices/advancedAnalyticsSlice";
+import paymentAnalyticsReducer from "../features/analytics/slices/paymentAnalyticsSlice";
+import customReportsReducer from "../features/analytics/slices/customReportsSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -40,7 +47,6 @@ const combinedReducer = {
   suppliers: suppliersReducer,
   orders: ordersReducer,
   expenses: expensesReducer,
-  analytics: analyticsReducer,
   generalSettings: generalSettingsReducer,
   kds: kdsReducer,
   kdsStations: kdsStationsReducer,
@@ -54,6 +60,14 @@ const combinedReducer = {
   floors: floorsReducer,
   tables: tablesReducer,
   reservations: reservationsReducer,
+  analyticsGlobal: analyticsGlobalReducer,
+  salesAnalytics: salesAnalyticsReducer,
+  menuAnalytics: menuAnalyticsReducer,
+  staffAnalytics: staffAnalyticsReducer,
+  customerAnalytics: customerAnalyticsReducer,
+  advancedAnalytics: advancedAnalyticsReducer,
+  paymentAnalytics: paymentAnalyticsReducer,
+  customReports: customReportsReducer,
 };
 
 export default configureStore({

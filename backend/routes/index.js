@@ -15,7 +15,6 @@ router.use("/orders", require("./orderRoutes"));
 router.use("/order-modifications", require("./orderModificationRoutes"));
 router.use("/void", require("./voidRoutes"));
 router.use("/add-on-groups", require("./addOnGroupRoutes"));
-router.use("/analytics", require("./analyticsRoutes"));
 router.use("/expenses", require("./expenseRoutes"));
 router.use("/kds", require("./kdsRoutes"));
 router.use("/stations", require("./kdsStationRoutes"));
