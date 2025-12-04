@@ -28,5 +28,6 @@ router.use("/promo-codes", require("./promoCodeRoutes"));
 router.use("/floors", require("./floorRoutes"));
 router.use("/tables", require("./tableRoutes"));
 router.use("/reservations", require("./reservationRoutes"));
+router.use("/analytics", require("./analyticsRoutes"));
 
 module.exports = router;

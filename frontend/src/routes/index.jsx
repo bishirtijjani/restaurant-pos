@@ -48,6 +48,7 @@ const CustomerInsights = lazy(() => import("../features/analytics/dashboards/Cus
 const AdvancedInsights = lazy(() => import("../features/analytics/dashboards/Advanced"));
 const PaymentAnalytics = lazy(() => import("../features/analytics/dashboards/Payment"));
 const CustomReports = lazy(() => import("../features/analytics/dashboards/Reports"));
+const InventoryAnalytics = lazy(() => import("../features/analytics/dashboards/Inventory"));
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
@@ -82,6 +83,7 @@ const routes = [
   { path: "/analytics/overview", component: AnalyticsOverview },
   { path: "/analytics/sales", component: SalesOverview },
   { path: "/analytics/menu", component: MenuIntelligence },
+  { path: "/analytics/inventory", component: InventoryAnalytics },
   { path: "/analytics/staff", component: StaffAnalytics },
   { path: "/analytics/customers", component: CustomerInsights },
   { path: "/analytics/advanced", component: AdvancedInsights },

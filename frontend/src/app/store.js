@@ -33,6 +33,7 @@ import customerAnalyticsReducer from "../features/analytics/slices/customerAnaly
 import advancedAnalyticsReducer from "../features/analytics/slices/advancedAnalyticsSlice";
 import paymentAnalyticsReducer from "../features/analytics/slices/paymentAnalyticsSlice";
 import customReportsReducer from "../features/analytics/slices/customReportsSlice";
+import inventoryAnalyticsReducer from "../features/analytics/slices/inventoryAnalyticsSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -68,6 +69,7 @@ const combinedReducer = {
   advancedAnalytics: advancedAnalyticsReducer,
   paymentAnalytics: paymentAnalyticsReducer,
   customReports: customReportsReducer,
+  inventoryAnalytics: inventoryAnalyticsReducer,
 };
 
 export default configureStore({

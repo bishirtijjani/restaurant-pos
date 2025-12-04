@@ -25,6 +25,7 @@ import {
   UserGroupIcon,
   LightBulbIcon,
   CreditCardIcon,
+  ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 
 const iconClasses = `h-5 w-5`;
@@ -55,6 +56,11 @@ export const adminRoutes = [
         path: "/app/analytics/menu",
         icon: <Tag className={submenuIconClasses} />,
         name: "Menu",
+      },
+      {
+        path: "/app/analytics/inventory",
+        icon: <ArchiveBoxIcon className={submenuIconClasses} />,
+        name: "Inventory",
       },
       {
         path: "/app/analytics/staff",
@@ -238,6 +244,11 @@ export const managerRoutes = [
         path: "/app/analytics/menu",
         icon: <Tag className={submenuIconClasses} />,
         name: "Menu",
+      },
+      {
+        path: "/app/analytics/inventory",
+        icon: <ArchiveBoxIcon className={submenuIconClasses} />,
+        name: "Inventory",
       },
       {
         path: "/app/analytics/staff",

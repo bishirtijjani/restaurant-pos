@@ -1,4 +1,19 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+export const fetchStaffData = createAsyncThunk(
+  "staffAnalytics/fetchStaffData",
+  async ({ startDate, endDate, branchId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("/analytics/staff", {
+        params: { startDate, endDate, branchId },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
 
 const initialState = {
   performance: {
@@ -19,15 +34,26 @@ export const staffAnalyticsSlice = createSlice({
   name: "staffAnalytics",
   initialState,
   reducers: {
-    setStaffData: (state, action) => {
-      state.performance.data = action.payload.performance;
-      state.laborCost.data = action.payload.laborCost;
-      state.staffList.data = action.payload.staffList;
-      state.performance.status = "succeeded";
-    },
     setStaffLoading: (state) => {
       state.performance.status = "loading";
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchStaffData.pending, (state) => {
+        state.performance.status = "loading";
+        state.laborCost.status = "loading";
+        state.staffList.status = "loading";
+      })
+      .addCase(fetchStaffData.fulfilled, (state, action) => {
+        state.performance.status = "succeeded";
+        state.performance.data = action.payload.performance;
+        state.laborCost.data = action.payload.laborCost;
+        state.staffList.data = action.payload.staffList;
+      })
+      .addCase(fetchStaffData.rejected, (state) => {
+        state.performance.status = "failed";
+      });
   },
 });
 

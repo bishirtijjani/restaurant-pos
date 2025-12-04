@@ -1,4 +1,19 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+export const fetchSalesData = createAsyncThunk(
+  "salesAnalytics/fetchSalesData",
+  async ({ startDate, endDate, branchId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("/analytics/sales", {
+        params: { startDate, endDate, branchId },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
 
 const initialState = {
   overview: {
@@ -11,7 +26,7 @@ const initialState = {
     status: "idle",
   },
   byOrderType: {
-    data: [], // Array of { type, value }
+    data: [], // Array of { name, value }
     status: "idle",
   },
   topItems: {
@@ -24,17 +39,29 @@ export const salesAnalyticsSlice = createSlice({
   name: "salesAnalytics",
   initialState,
   reducers: {
-    // specific actions if needed, otherwise async thunks will handle state
-    setSalesData: (state, action) => {
-      state.overview.data = action.payload.overview;
-      state.trends.data = action.payload.trends;
-      state.byOrderType.data = action.payload.byOrderType;
-      state.topItems.data = action.payload.topItems;
-      state.overview.status = "succeeded";
-    },
     setSalesLoading: (state) => {
       state.overview.status = "loading";
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchSalesData.pending, (state) => {
+        state.overview.status = "loading";
+        state.trends.status = "loading";
+        state.byOrderType.status = "loading";
+        state.topItems.status = "loading";
+      })
+      .addCase(fetchSalesData.fulfilled, (state, action) => {
+        state.overview.status = "succeeded";
+        state.overview.data = action.payload.overview;
+        state.trends.data = action.payload.trends;
+        state.byOrderType.data = action.payload.byOrderType;
+        state.topItems.data = action.payload.topItems;
+      })
+      .addCase(fetchSalesData.rejected, (state, action) => {
+        state.overview.status = "failed";
+        state.overview.error = action.payload;
+      });
   },
 });
 

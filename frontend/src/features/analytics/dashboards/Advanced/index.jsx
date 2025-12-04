@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import AnalyticsContainer from "../../components/common/AnalyticsContainer";
 import AnalyticsHeader from "../../components/common/AnalyticsHeader";
 import FilterBar from "../../components/common/FilterBar";
@@ -7,8 +8,26 @@ import SalesForecastChart from "./components/SalesForecastChart";
 import KPICard from "../../components/cards/KPICard";
 import LightBulbIcon from "@heroicons/react/24/solid/LightBulbIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/solid/ExclamationCircleIcon";
+import { fetchAdvancedData, selectHeatmapData, selectForecastingData, selectAnomalies } from "../../slices/advancedAnalyticsSlice";
 
 function AdvancedInsights() {
+  const dispatch = useDispatch();
+  const { dateRange } = useSelector((state) => state.analyticsGlobal);
+  const heatmap = useSelector(selectHeatmapData);
+  const forecasting = useSelector(selectForecastingData);
+  const anomalies = useSelector(selectAnomalies);
+
+  useEffect(() => {
+    if (dateRange.startDate && dateRange.endDate) {
+      dispatch(fetchAdvancedData({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      }));
+    }
+  }, [dispatch, dateRange]);
+
+  const isLoading = heatmap.status === "loading";
+
   return (
     <AnalyticsContainer>
       <AnalyticsHeader
@@ -26,6 +45,7 @@ function AdvancedInsights() {
               AI Insights
             </h3>
             <ul className="space-y-2 text-sm">
+              {/* Mock insights for now, or derive from forecasting data */}
               <li>• Sales are predicted to increase by 15% next weekend.</li>
               <li>• "Spicy Wings" demand correlates with rainy weather.</li>
             </ul>
@@ -38,8 +58,13 @@ function AdvancedInsights() {
               Anomalies Detected
             </h3>
             <ul className="space-y-2 text-sm">
-              <li>• Unusually low sales on Tuesday evening (-20%).</li>
-              <li>• Spike in voided orders on Friday night.</li>
+              {anomalies.data.length > 0 ? (
+                anomalies.data.map((anomaly, index) => (
+                  <li key={index}>• {anomaly.description || "Anomaly detected"}</li>
+                ))
+              ) : (
+                <li>• No anomalies detected in this period.</li>
+              )}
             </ul>
           </div>
         </div>
@@ -47,8 +72,8 @@ function AdvancedInsights() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SalesHeatmap />
-        <SalesForecastChart />
+        <SalesHeatmap data={heatmap.data} loading={isLoading} />
+        <SalesForecastChart data={forecasting.data} loading={forecasting.status === "loading"} />
       </div>
     </AnalyticsContainer>
   );

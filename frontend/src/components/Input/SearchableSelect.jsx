@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import SuspenseContent from "../../containers/SuspenseContent";
 
 const SearchableSelect = ({
   options,
@@ -85,9 +86,7 @@ const SearchableSelect = ({
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-base-300 rounded-md shadow-lg max-h-60 overflow-auto">
           {isLoading ? (
-            <div className="flex justify-center items-center h-screen">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
+            <SuspenseContent />
           ) : filteredOptions.length === 0 ? (
             <div className="px-4 py-2 text-gray-500">No products found</div>
           ) : (

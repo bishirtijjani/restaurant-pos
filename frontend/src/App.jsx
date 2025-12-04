@@ -15,6 +15,7 @@ import { initializeOfflineSupport } from "./app/initOffline";
 import { fetchSettings } from "./features/settings/generalSettings/generalSettingsSlice";
 import { getCurrentUser, setUserFromToken } from "./app/authSlice";
 import OfflineIndicator from "./components/OfflineIndicator";
+import SuspenseContent from "./containers/SuspenseContent";
 
 const Layout = lazy(() => import("./containers/Layout"));
 const Login = lazy(() => import("./pages/Login"));
@@ -63,9 +64,7 @@ function App() {
   }, [dispatch, authToken]);
 
   if (loading && !authToken) {
-      return <div className="flex items-center justify-center h-screen">
-          <span className="loading loading-spinner loading-lg text-primary"></span>
-      </div>
+      return <SuspenseContent />
   }
 
   return (

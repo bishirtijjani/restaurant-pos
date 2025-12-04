@@ -1,4 +1,19 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+export const fetchMenuData = createAsyncThunk(
+  "menuAnalytics/fetchMenuData",
+  async ({ startDate, endDate, branchId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("/analytics/menu", {
+        params: { startDate, endDate, branchId },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
 
 const initialState = {
   matrix: {
@@ -23,16 +38,28 @@ export const menuAnalyticsSlice = createSlice({
   name: "menuAnalytics",
   initialState,
   reducers: {
-    setMenuData: (state, action) => {
-      state.matrix.data = action.payload.matrix;
-      state.categoryPerformance.data = action.payload.categoryPerformance;
-      state.topPerformers.data = action.payload.topPerformers;
-      state.underPerformers.data = action.payload.underPerformers;
-      state.matrix.status = "succeeded";
-    },
     setMenuLoading: (state) => {
       state.matrix.status = "loading";
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchMenuData.pending, (state) => {
+        state.matrix.status = "loading";
+        state.categoryPerformance.status = "loading";
+        state.topPerformers.status = "loading";
+        state.underPerformers.status = "loading";
+      })
+      .addCase(fetchMenuData.fulfilled, (state, action) => {
+        state.matrix.status = "succeeded";
+        state.matrix.data = action.payload.matrix;
+        state.categoryPerformance.data = action.payload.categoryPerformance;
+        state.topPerformers.data = action.payload.topPerformers;
+        state.underPerformers.data = action.payload.underPerformers;
+      })
+      .addCase(fetchMenuData.rejected, (state) => {
+        state.matrix.status = "failed";
+      });
   },
 });
 
