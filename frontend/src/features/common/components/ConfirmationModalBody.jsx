@@ -18,7 +18,7 @@ import {
 } from "../../inventory/inventorySlice";
 import { deleteTable, mergeTables, splitTables, safeUnmergeTables } from "../../tables/tableSlice";
 import { updateTableStatus } from "../../tables/tableSlice";
-import { updateReservation } from "../../reservations/reservationSlice";
+import { updateReservation, deleteReservation } from "../../reservations/reservationSlice";
 
 function ConfirmationModalBody({ extraObject, closeModal }) {
   const dispatch = useDispatch();
@@ -97,6 +97,10 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
         case CONFIRMATION_MODAL_CLOSE_TYPES.SPLIT_TABLES:
           await dispatch(safeUnmergeTables({ id, reason: "User requested split" })).unwrap();
           successMessage = "Tables split successfully";
+          break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_RESERVATION:
+          await dispatch(deleteReservation(id)).unwrap();
+          successMessage = "Reservation Deleted Successfully!";
           break;
         default:
           successMessage = "Action completed!";

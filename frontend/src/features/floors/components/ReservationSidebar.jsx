@@ -122,11 +122,13 @@ const ReservationSidebar = ({ reservations, onAddReservation }) => {
           dispatch(showNotification({ message: "Assign a table first!", status: 0 }));
           return;
       }
-      // We'll dispatch the checkIn action via parent or direct dispatch if we import the thunk
-      // Ideally, we should use the thunk from slice. 
-      // But for now let's just use a placeholder notification or dispatch if we import it.
-      // Since we didn't import checkInReservation here, let's assume we need to add it.
-      // Actually, let's import it to be safe.
+      
+      try {
+          await dispatch(checkInReservation(reservation._id)).unwrap();
+          dispatch(showNotification({ message: "Reservation checked in!", status: 1 }));
+      } catch(error) {
+           dispatch(showNotification({ message: error.message || "Check-in failed", status: 0 }));
+      }
   };
 
   // We need to import the thunks to make the buttons work
@@ -185,7 +187,7 @@ const ReservationSidebar = ({ reservations, onAddReservation }) => {
             <DraggableReservation 
                 key={res._id} 
                 reservation={res} 
-                onCheckIn={(r) => dispatch(checkInReservation(r._id))}
+                onCheckIn={(r) => handleCheckIn(r)}
                 onCancel={(r) => dispatch(updateReservationStatus({ id: r._id, status: 'cancelled', reason: 'Cancelled from Sidebar' }))}
             />
           ))

@@ -1,5 +1,5 @@
 // frontend/src/features/orders/components/UpdatePaymentModalBody.jsx
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { closeModal } from "../../common/modalSlice";
@@ -24,6 +24,14 @@ function UpdatePaymentModalBody({ extraObject, closeModal: close }) {
   });
 
   const remainingBalance = order.totalAmount - order.amountPaid;
+
+  const amountError = useMemo(() => {
+    const amount = parseFloat(paymentData.amountPaid);
+    if (isNaN(amount) || paymentData.amountPaid === "") return ""; // Allow empty while typing, handle on submit
+    if (amount < 0) return "Amount cannot be negative";
+    if (amount > order.totalAmount) return "Amount cannot exceed total order amount";
+    return "";
+  }, [paymentData.amountPaid, order.totalAmount]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -101,11 +109,16 @@ function UpdatePaymentModalBody({ extraObject, closeModal: close }) {
           name="amountPaid"
           value={paymentData.amountPaid}
           onChange={handleInputChange}
-          className="input input-bordered"
+          className={`input input-bordered ${amountError ? "input-error" : ""}`}
           placeholder="Enter amount"
           min="0"
           max={order.totalAmount}
         />
+        {amountError && (
+          <label className="label">
+            <span className="label-text-alt text-error">{amountError}</span>
+          </label>
+        )}
         <label className="label">
           <span className="label-text-alt">
             This is the total paid, not additional payment

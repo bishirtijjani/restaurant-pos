@@ -1,17 +1,3 @@
-// frontend/src/features/tables/index.jsx - COMPLETE FIX
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  fetchTables,
-  createTable,
-  updateTable,
-  updateTableStatus,
-  deleteTable,
-  resetTableState,
-} from "./tableSlice";
-import { fetchFloorById } from "../floors/floorSlice";
-import { fetchOrders } from "../orders/ordersSlice";
 import { fetchAllUsers } from "../users/usersSlice";
 import TitleCard from "../../components/Cards/TitleCard";
 import TableFormModal from "./components/TableFormModalBody";
@@ -109,33 +95,6 @@ const TableManagement = () => {
       dispatch(
         showNotification({
           message: error.message || "Failed to update status",
-          status: 0,
-        })
-      );
-    }
-  };
-
-  const handleDeleteTable = async (tableId) => {
-    if (!window.confirm("Delete this table?")) return;
-
-    try {
-      await dispatch(deleteTable(tableId)).unwrap();
-      dispatch(showNotification({ message: "Table deleted", status: 1 }));
-      dispatch(fetchTables({ floorId }));
-    } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.message || "Failed to delete",
-          status: 0,
-        })
-      );
-    }
-  };
-
-  return (
-    <TitleCard
-      title={
-        <div className="flex items-center gap-2">
           <button
             onClick={() => navigate("/app/floors")}
             className="btn btn-ghost btn-circle btn-sm"

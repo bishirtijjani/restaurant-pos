@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { fetchAllMenuItems } from "../../menuItems/menuItemsSlice";
+import { fetchOrders, voidOrderItems } from "../ordersSlice";
+import ErrorText from "../../../components/Typography/ErrorText";
 import { AlertTriangle, Package, Check } from "lucide-react";
 
 const VoidOrderItemsModalBody = ({ extraObject, closeModal: close }) => {
@@ -134,10 +136,13 @@ const VoidOrderItemsModalBody = ({ extraObject, closeModal: close }) => {
 
     setLoading(true);
     try {
-      await axios.post(`/api/void/order/${order._id}/items`, {
-        itemIds: selectedItems,
-        reason,
-      });
+      await dispatch(
+        voidOrderItems({
+          orderId: order._id,
+          itemIds: selectedItems,
+          reason,
+        })
+      ).unwrap();
 
       dispatch(
         showNotification({
@@ -148,7 +153,7 @@ const VoidOrderItemsModalBody = ({ extraObject, closeModal: close }) => {
       dispatch(fetchOrders());
       dispatch(closeModal());
     } catch (error) {
-      const message = error.response?.data?.message || "Failed to void items";
+      const message = error.message || "Failed to void items";
       dispatch(showNotification({ message, status: 0 }));
     } finally {
       setLoading(false);

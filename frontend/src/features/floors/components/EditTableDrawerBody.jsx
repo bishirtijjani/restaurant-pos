@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { useDispatch } from "react-redux";
-import { updateTable, deleteTable } from "../../tables/tableSlice";
+import { updateTable } from "../../tables/tableSlice";
 import { showNotification } from "../../common/headerSlice";
+import { openModal } from "../../common/modalSlice";
+import { MODAL_BODY_TYPES, CONFIRMATION_MODAL_CLOSE_TYPES } from "../../../utils/globalConstantUtil";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 
 const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
@@ -57,16 +59,23 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
     }
   };
 
-  const handleDelete = async () => {
-      if(window.confirm("Delete this table?")) {
-          try {
-              await dispatch(deleteTable(tableData._id)).unwrap();
-              dispatch(showNotification({ message: "Table deleted", status: 1 }));
-              closeRightDrawer();
-          } catch (error) {
-              dispatch(showNotification({ message: "Failed to delete table", status: 0 }));
-          }
-      }
+  const handleDelete = () => {
+      dispatch(openModal({
+          title: "Confirmation",
+          bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+          extraObject: {
+              message: "Are you sure you want to delete this table?",
+              type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_TABLE,
+              id: tableData._id,
+          },
+      }));
+      // Note: We don't closeRightDrawer() here immediately, 
+      // the confirmation modal success handler (in ConfirmationModalBody) or listener should ideally handle it,
+      // or the user can manually close it. 
+      // But typically deleting the object means we should close the drawer.
+      // Since ConfirmationModalBody deletes it, we can listen for table changes or just close it here if we passed a callback?
+      // Actually ConfirmationModalBody executes the delete.
+      closeRightDrawer();
   };
 
   const handleNumberChange = (e) => {

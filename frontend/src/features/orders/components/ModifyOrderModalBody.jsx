@@ -6,7 +6,7 @@ import { showNotification } from "../../common/headerSlice";
 import { openModal } from "../../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { fetchAllMenuItems } from "../../menuItems/menuItemsSlice";
-import axios from "axios";
+import { modifyOrder, fetchOrders } from "../ordersSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { Plus, Trash2, Edit3, AlertCircle, Package, X } from "lucide-react";
 
@@ -14,6 +14,7 @@ const ModifyOrderModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
   const order = extraObject;
   const menuItems = useSelector((state) => state.menuItems.menuItems || []);
+  const menuItemLoading = useSelector((state) => state.menuItems.loading);
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
   );
@@ -194,9 +195,9 @@ const ModifyOrderModalBody = ({ extraObject }) => {
     setLoading(true);
 
     try {
-      const response = await axios.put(
-        `/api/order-modifications/${order._id}`,
-        {
+      await dispatch(
+        modifyOrder({
+          orderId: order._id,
           orderItems: orderItems.map((item) => ({
             _id: item.isNew ? undefined : item._id,
             menuItemId: item.menuItemId,
@@ -208,8 +209,8 @@ const ModifyOrderModalBody = ({ extraObject }) => {
           orderNote,
           reason,
           expectedVersion: order.version,
-        }
-      );
+        })
+      ).unwrap();
 
       dispatch(
         showNotification({
@@ -219,14 +220,14 @@ const ModifyOrderModalBody = ({ extraObject }) => {
       );
 
       dispatch(closeModal());
-
-      // Refresh orders
-      window.location.reload();
+      
+      // Refresh orders list
+      dispatch(fetchOrders());
     } catch (error) {
-      const message = error.response?.data?.message || "Failed to modify order";
+      const message = error.message || "Failed to modify order";
       dispatch(showNotification({ message, status: 0 }));
 
-      if (error.response?.status === 409) {
+      if (error.currentVersion) {
         setErrors({
           version:
             "Order has been modified by another user. Please refresh and try again.",
@@ -263,11 +264,15 @@ const ModifyOrderModalBody = ({ extraObject }) => {
         <div className="flex justify-between items-center">
           <h3 className="font-semibold text-lg">Order Items</h3>
           <button
-            onClick={handleAddItem}
             className="btn btn-primary btn-sm gap-2"
-            disabled={loading}
+            onClick={handleAddItem}
+            disabled={loading || menuItemLoading}
           >
-            <Plus className="w-4 h-4" />
+            {menuItemLoading ? (
+              <span className="loading loading-spinner loading-xs"></span>
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
             Add Item
           </button>
         </div>

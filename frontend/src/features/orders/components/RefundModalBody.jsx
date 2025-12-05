@@ -1,12 +1,11 @@
 // frontend/src/features/orders/components/RefundModalBody.jsx
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
-import { fetchOrders } from "../ordersSlice";
+import { fetchOrders, refundOrder } from "../ordersSlice";
 import { DollarSign, AlertTriangle } from "lucide-react";
 
 function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
@@ -78,24 +77,32 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
     return true;
   };
 
+  const [confirmRefund, setConfirmRefund] = useState(false);
+
   const handleSubmit = async () => {
     if (!validateRefund()) {
+      return;
+    }
+
+    // Safety check for large refunds (over 50% of total or > 100)
+    const isLargeRefund = refundAmount > order.totalAmount * 0.5 || refundAmount > 100;
+    
+    if (isLargeRefund && !confirmRefund) {
+      setConfirmRefund(true);
       return;
     }
 
     setLoading(true);
 
     try {
-      const refundPayload = {
-        amount: refundAmount,
-        reason: refundData.reason,
-        isPartial: refundData.refundType === "partial",
-      };
-
-      const response = await axios.post(
-        `/api/orders/${order._id}/refund`,
-        refundPayload
-      );
+      await dispatch(
+        refundOrder({
+          orderId: order._id,
+          amount: refundAmount,
+          reason: refundData.reason,
+          isPartial: refundData.refundType === "partial",
+        })
+      ).unwrap();
 
       dispatch(
         showNotification({
@@ -113,10 +120,10 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
       }
     } catch (error) {
       console.error("Refund error:", error);
-      const errorMsg =
-        error.response?.data?.message || "Failed to process refund";
+      const errorMsg = error.message || "Failed to process refund";
       setErrorMessage(errorMsg);
       dispatch(showNotification({ message: errorMsg, status: 0 }));
+      setConfirmRefund(false);
     } finally {
       setLoading(false);
     }
@@ -241,6 +248,13 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
           </div>
         </div>
       </div>
+
+      {confirmRefund && (
+        <div className="alert alert-warning animate-pulse">
+          <AlertTriangle className="w-5 h-5" />
+          <span>This is a large refund amount. Click confirm again to proceed.</span>
+        </div>
+      )}
 
       {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
 

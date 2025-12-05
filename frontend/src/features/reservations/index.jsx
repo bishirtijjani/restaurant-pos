@@ -9,18 +9,6 @@ import {
   updateReservationStatus,
   deleteReservation,
   checkInReservation,
-} from "./reservationSlice";
-import { fetchTables } from "../tables/tableSlice";
-import { fetchAllUsers } from "../users/usersSlice";
-import TitleCard from "../../components/Cards/TitleCard";
-import { showNotification } from "../common/headerSlice";
-import { openModal } from "../common/modalSlice";
-import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
-import {
-  Plus,
-  Calendar,
-  Clock,
-  Users,
   Phone,
   Mail,
   Edit3,
@@ -207,20 +195,19 @@ const ReservationManagement = () => {
       );
     }
   };
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this reservation?")) return;
-    try {
-      await dispatch(deleteReservation(id)).unwrap();
-      dispatch(showNotification({ message: "Reservation deleted", status: 1 }));
-      dispatch(getReservations());
-    } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.message || "Failed to delete",
-          status: 0,
-        })
-      );
-    }
+  const handleDelete = (id) => {
+    dispatch(
+      openModal({
+        title: "Confirmation",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message:
+            "Are you sure you want to delete this reservation? This action cannot be undone.",
+          type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_RESERVATION,
+          id,
+        },
+      })
+    );
   };
   
   const handleCheckIn = async (id) => {

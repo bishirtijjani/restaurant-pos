@@ -347,6 +347,107 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
 
         {/* Payment History */}
         {(order.paymentHistory && order.paymentHistory.length > 0) || (order.payments && order.payments.length > 0) && (
+        {/* Summary Breakdown */}
+        <div className="card bg-base-200">
+          <div className="card-body p-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Subtotal</span>
+              <span>
+                {currency}
+                {order.itemsSubtotal?.toFixed(2) || "0.00"}
+              </span>
+            </div>
+
+            {/* Discount */}
+            {order.orderDiscount?.enabled && (
+              <div className="flex justify-between text-sm text-success">
+                <span>
+                  Discount
+                  {order.orderDiscount.code && (
+                    <span className="badge badge-xs badge-success ml-2">
+                      {order.orderDiscount.code}
+                    </span>
+                  )}
+                  {order.orderDiscount.type === "percentage" &&
+                    ` (${order.orderDiscount.value}%)`}
+                </span>
+                <span>
+                  -{currency}
+                  {order.discountTotal?.toFixed(2) || "0.00"}
+                </span>
+              </div>
+            )}
+
+            {/* Tax */}
+            {settings?.taxSettings?.enabled && (
+              <div className="flex justify-between text-sm">
+                <span>Tax</span>
+                <span>
+                  {currency}
+                  {order.taxTotal?.toFixed(2) || "0.00"}
+                </span>
+              </div>
+            )}
+
+            {/* Service Charge */}
+            {settings?.serviceCharge?.enabled && (
+              <div className="flex justify-between text-sm">
+                <span>Service Charge</span>
+                <span>
+                  {currency}
+                  {order.serviceChargeTotal?.toFixed(2) || "0.00"}
+                </span>
+              </div>
+            )}
+
+            {/* Tip */}
+            {order.tipAmount > 0 && (
+              <div className="flex justify-between text-sm text-primary">
+                <span>Tip</span>
+                <span>
+                  +{currency}
+                  {order.tipAmount.toFixed(2)}
+                </span>
+              </div>
+            )}
+
+            <div className="divider my-1"></div>
+
+            <div className="flex justify-between font-bold text-lg">
+              <span>Total</span>
+              <span>
+                {currency}
+                {order.totalAmount?.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="flex justify-between text-sm">
+              <span>Amount Paid</span>
+              <span
+                className={
+                  order.paymentStatus === "paid" ? "text-success" : "text-warning"
+                }
+              >
+                {currency}
+                {order.amountPaid?.toFixed(2) || "0.00"}
+              </span>
+            </div>
+
+            {/* Change Due - Only if Cash and Paid > Total */}
+            {order.amountPaid > order.totalAmount &&
+              ["cash", "Cash"].includes(order.paymentMethod) && (
+                <div className="flex justify-between text-sm font-semibold text-info">
+                  <span>Change Due</span>
+                  <span>
+                    {currency}
+                    {(order.amountPaid - order.totalAmount).toFixed(2)}
+                  </span>
+                </div>
+              )}
+          </div>
+        </div>
+        {/* Payment History */}
+        {(order.paymentHistory && order.paymentHistory.length > 0) ? (
           <div className="card bg-base-200">
             <div className="card-body p-4">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -354,8 +455,7 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
                 Payment History
               </h3>
               <div className="space-y-2">
-                {order.paymentHistory && order.paymentHistory.length > 0 ? (
-                  order.paymentHistory.map((entry, idx) => (
+                {order.paymentHistory.map((entry, idx) => (
                     <div
                       key={idx}
                       className={`p-2 rounded-lg ${

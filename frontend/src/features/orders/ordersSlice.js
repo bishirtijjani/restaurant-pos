@@ -103,9 +103,61 @@ export const cancelOrder = createAsyncThunk(
   }
 );
 
+// Void order items
+export const voidOrderItems = createAsyncThunk(
+  "orders/voidOrderItems",
+  async ({ orderId, itemIds, reason }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/api/void/order/${orderId}/items`, {
+        itemIds,
+        reason,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Refund order
+export const refundOrder = createAsyncThunk(
+  "orders/refundOrder",
+  async ({ orderId, amount, reason, isPartial }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/api/orders/${orderId}/refund`, {
+        amount,
+        reason,
+        isPartial,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Modify order
+export const modifyOrder = createAsyncThunk(
+  "orders/modifyOrder",
+  async ({ orderId, orderItems, orderNote, reason, expectedVersion }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`/api/order-modifications/${orderId}`, {
+        orderItems,
+        orderNote,
+        reason,
+        expectedVersion,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   orders: [],
+  currentOrder: null,
   stats: null,
   filters: {
     status: "",
@@ -271,6 +323,80 @@ const ordersSlice = createSlice({
       .addCase(cancelOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to cancel order";
+        state.success = false;
+      })
+
+      // Void Order Items
+      .addCase(voidOrderItems.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(voidOrderItems.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = action.payload.success;
+        state.message = "Items voided successfully";
+        
+        // Update order in list
+        const index = state.orders.findIndex(
+          (order) => order._id === action.payload.data._id
+        );
+        if (index !== -1) {
+          state.orders[index] = action.payload.data;
+        }
+      })
+      .addCase(voidOrderItems.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to void items";
+        state.success = false;
+      })
+
+      // Refund Order
+      .addCase(refundOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(refundOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = action.payload.success;
+        state.message = "Refund processed successfully";
+        
+        const index = state.orders.findIndex(
+          (order) => order._id === action.payload.data._id
+        );
+        if (index !== -1) {
+          state.orders[index] = action.payload.data;
+        }
+      })
+      .addCase(refundOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to process refund";
+        state.success = false;
+      })
+
+      // Modify Order
+      .addCase(modifyOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(modifyOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = action.payload.success;
+        state.message = "Order modified successfully";
+        state.currentOrder = action.payload.data;
+        
+        const index = state.orders.findIndex(
+          (order) => order._id === action.payload.data._id
+        );
+        if (index !== -1) {
+          state.orders[index] = action.payload.data;
+        }
+      })
+      .addCase(modifyOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to modify order";
         state.success = false;
       });
   },
