@@ -1,7 +1,10 @@
 const asyncHandler = require("express-async-handler");
-const Order = require("../models/orderModel");
-const User = require("../models/userModel");
-const MenuItem = require("../models/menuItemModel");
+const Order = require("../models/Order");
+const User = require("../models/User");
+const MenuItem = require("../models/MenuItem");
+const InventoryItem = require("../models/InventoryItem");
+const Customer = require("../models/Customer");
+const StockAdjustment = require("../models/StockAdjustment");
 // Import other models as needed
 
 // @desc    Get Analytics Overview (Snapshot)
@@ -425,56 +428,157 @@ const getCustomerData = asyncHandler(async (req, res) => {
 // @route   GET /api/analytics/inventory
 // @access  Private
 const getInventoryData = asyncHandler(async (req, res) => {
-  const { branchId } = req.query;
+  const { branchId, startDate, endDate } = req.query;
+  
+  const start = startDate ? new Date(startDate) : new Date(new Date().setMonth(new Date().getMonth() - 1));
+  const end = endDate ? new Date(endDate) : new Date();
 
-  // 1. Inventory Value & Low Stock
-  // Assuming we have an 'InventoryItem' or 'MenuItem' model with stock fields
-  // Using MenuItem for simplicity if it has stock, otherwise InventoryItem
-  // Let's assume 'MenuItem' has 'stockQuantity' and 'costPrice'
-  const inventoryItems = await MenuItem.find({
-    // ...(branchId && { branch: branchId })
-  }).select("name stockQuantity costPrice parLevel unit");
+  // 1. Inventory Value & Low Stock from InventoryItem model
+  const inventoryItems = await InventoryItem.find({
+    isActive: true,
+  }).select("name currentStock costPrice minStockLevel unit category");
 
   let totalValue = 0;
   const lowStock = [];
 
   inventoryItems.forEach((item) => {
-    const value = (item.stockQuantity || 0) * (item.costPrice || 0);
+    const value = (item.currentStock || 0) * (item.costPrice || 0);
     totalValue += value;
 
-    if (item.stockQuantity <= (item.parLevel || 5)) {
+    if (item.currentStock <= item.minStockLevel) {
       lowStock.push({
         id: item._id,
         name: item.name,
-        current: item.stockQuantity,
-        par: item.parLevel || 5,
+        current: item.currentStock,
+        par: item.minStockLevel,
         unit: item.unit || "units",
+        category: item.category,
       });
     }
   });
 
-  // 2. Waste Analysis (Mock Data)
-  const wasteByReason = [
-    { name: "Expired", value: 450 },
-    { name: "Damaged", value: 200 },
-    { name: "Spilled", value: 150 },
-  ];
+  // 2. Waste Analysis from StockAdjustment model
+  const wasteAdjustments = await StockAdjustment.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: start, $lte: end },
+        adjustmentType: { $in: ["waste", "damage", "expired", "loss"] },
+      },
+    },
+    {
+      $group: {
+        _id: "$adjustmentType",
+        totalQuantity: { $sum: { $abs: "$quantityChange" } },
+        totalCost: { $sum: { $abs: "$costImpact" } },
+      },
+    },
+  ]);
 
-  const wasteTopItems = [
-    { id: 1, name: "Avocados", qty: 15, cost: 45.0, reason: "Expired" },
-    { id: 2, name: "Bread Buns", qty: 20, cost: 12.0, reason: "Damaged" },
-  ];
+  const wasteByReason = wasteAdjustments.map((w) => ({
+    name: w._id.charAt(0).toUpperCase() + w._id.slice(1),
+    value: w.totalCost || 0,
+    quantity: w.totalQuantity || 0,
+  }));
+
+  const totalWaste = wasteByReason.reduce((acc, w) => acc + w.value, 0);
+
+  // 3. Top Wasted Items
+  const wasteTopItems = await StockAdjustment.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: start, $lte: end },
+        adjustmentType: { $in: ["waste", "damage", "expired", "loss"] },
+      },
+    },
+    {
+      $group: {
+        _id: "$inventoryItem",
+        qty: { $sum: { $abs: "$quantityChange" } },
+        cost: { $sum: { $abs: "$costImpact" } },
+        reason: { $first: "$adjustmentType" },
+      },
+    },
+    {
+      $lookup: {
+        from: "inventoryitems",
+        localField: "_id",
+        foreignField: "_id",
+        as: "itemInfo",
+      },
+    },
+    { $unwind: { path: "$itemInfo", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        id: "$_id",
+        name: { $ifNull: ["$itemInfo.name", "Unknown Item"] },
+        qty: 1,
+        cost: 1,
+        reason: 1,
+      },
+    },
+    { $sort: { cost: -1 } },
+    { $limit: 10 },
+  ]);
+
+  // 4. Inventory Trends (Stock adjustments over time)
+  const trends = await StockAdjustment.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: start, $lte: end },
+      },
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        totalIn: {
+          $sum: {
+            $cond: [{ $gt: ["$quantityChange", 0] }, "$quantityChange", 0],
+          },
+        },
+        totalOut: {
+          $sum: {
+            $cond: [{ $lt: ["$quantityChange", 0] }, { $abs: "$quantityChange" }, 0],
+          },
+        },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  // Calculate food cost percentage (based on orders in period)
+  const orderStats = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: start, $lte: end },
+        orderStatus: { $nin: ["cancelled"] },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalRevenue: { $sum: "$totalAmount" },
+      },
+    },
+  ]);
+
+  const totalRevenue = orderStats[0]?.totalRevenue || 0;
+  const foodCostPercentage = totalRevenue > 0 ? ((totalWaste / totalRevenue) * 100).toFixed(1) : 0;
 
   res.status(200).json({
     overview: {
       totalValue,
-      foodCostPercentage: 28.5, // Mock
-      turnoverRate: "4.2x", // Mock
-      totalWaste: 800, // Mock
+      foodCostPercentage: parseFloat(foodCostPercentage),
+      turnoverRate: inventoryItems.length > 0 ? (totalRevenue / totalValue).toFixed(1) + "x" : "0x",
+      totalWaste,
+      lowStockCount: lowStock.length,
     },
-    trends: [], // Mock trends
-    wasteByReason,
-    wasteTopItems,
+    trends: trends.map((t) => ({
+      date: t._id,
+      stockIn: t.totalIn,
+      stockOut: t.totalOut,
+    })),
+    wasteByReason: wasteByReason.length > 0 ? wasteByReason : [{ name: "No waste data", value: 0 }],
+    wasteTopItems: wasteTopItems.length > 0 ? wasteTopItems : [],
     lowStock,
   });
 });
@@ -510,11 +614,33 @@ const getPaymentData = asyncHandler(async (req, res) => {
     count: p.count,
   }));
 
-  // 2. Refunds (Mock or query orders with status 'refunded')
-  const refunds = [
-    { date: "2023-10-01", amount: 45.0, reason: "Customer Complaint" },
-    { date: "2023-10-05", amount: 22.5, reason: "Mistake" },
-  ];
+  // 2. Refunds from Order.refunds array
+  const refundData = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: start, $lte: end },
+        "refunds.0": { $exists: true }, // Only orders with refunds
+      },
+    },
+    { $unwind: "$refunds" },
+    {
+      $project: {
+        date: { $dateToString: { format: "%Y-%m-%d", date: "$refunds.refundedAt" } },
+        amount: "$refunds.amount",
+        reason: "$refunds.reason",
+        orderNumber: 1,
+      },
+    },
+    { $sort: { date: -1 } },
+    { $limit: 20 },
+  ]);
+
+  const refunds = refundData.map((r) => ({
+    date: r.date,
+    amount: r.amount,
+    reason: r.reason || "No reason provided",
+    orderNumber: r.orderNumber,
+  }));
 
   const totalCollected = formattedMethods.reduce((acc, m) => acc + m.value, 0);
   const totalRefunded = refunds.reduce((acc, r) => acc + r.amount, 0);

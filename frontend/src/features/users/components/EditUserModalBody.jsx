@@ -41,6 +41,13 @@ function EditUserModalBody({ closeModal, extraObject }) {
     if (!user.email.trim()) return setErrorMessage("Email is required!");
     if (!user.role) return setErrorMessage("Role is required!");
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(user.email)) return setErrorMessage("Please enter a valid email address!");
+
+    // Password validation (only if entered)
+    if (user.password.trim() && user.password.length < 6) return setErrorMessage("Password must be at least 6 characters long!");
+
     // Create payload (only include password if it was changed)
     const payload = {
       fullname: user.fullname,

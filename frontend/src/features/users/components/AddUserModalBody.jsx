@@ -32,6 +32,13 @@ function AddUserModalBody({ closeModal }) {
     if (!user.email.trim()) return setErrorMessage("Email is required!");
     if (!user.password.trim()) return setErrorMessage("Password is required!");
     if (!user.role) return setErrorMessage("Role is required!");
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(user.email)) return setErrorMessage("Please enter a valid email address!");
+
+    // Password validation
+    if (user.password.length < 6) return setErrorMessage("Password must be at least 6 characters long!");
 
     setLoading(true);
     dispatch(addUser(user))

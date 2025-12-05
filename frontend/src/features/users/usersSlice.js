@@ -20,7 +20,6 @@ export const addUser = createAsyncThunk(
   async (newUser, { rejectWithValue }) => {
     try {
       const response = await axios.post("/api/users", newUser);
-      console.log(response.data.data);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -57,6 +56,7 @@ export const deleteUser = createAsyncThunk(
 const initialState = {
   users: [],
   status: "idle",
+  loading: false,
   error: null,
 };
 
@@ -86,7 +86,6 @@ const usersSlice = createSlice({
       })
       .addCase(addUser.fulfilled, (state, action) => {
         state.loading = false;
-        console.log("action payload: ", action.payload);
         state.users.push(action.payload);
       })
       .addCase(addUser.rejected, (state, action) => {

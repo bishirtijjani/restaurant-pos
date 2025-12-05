@@ -9,6 +9,11 @@ import {
   resetKeyboardSettings,
 } from "../ultraFastPOSSlice";
 import { showNotification } from "../../common/headerSlice";
+import { openModal } from "../../common/modalSlice";
+import {
+  MODAL_BODY_TYPES,
+  CONFIRMATION_MODAL_CLOSE_TYPES,
+} from "../../../utils/globalConstantUtil";
 
 const KeyboardSettings = () => {
   const dispatch = useDispatch();
@@ -104,26 +109,45 @@ const KeyboardSettings = () => {
     }
   };
 
-  const handleReset = async () => {
-    if (window.confirm("Reset all keyboard shortcuts to defaults?")) {
-      try {
-        await dispatch(resetKeyboardSettings()).unwrap();
-        dispatch(
-          showNotification({
-            message: "Keyboard settings reset to defaults",
-            status: 1,
-          })
-        );
-      } catch (error) {
-        dispatch(
-          showNotification({
-            message: "Failed to reset settings",
-            status: 0,
-          })
-        );
-      }
-    }
+  const handleReset = () => {
+    dispatch(
+      openModal({
+        title: "Confirm Reset",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message: "Reset all keyboard shortcuts to defaults? This action cannot be undone.",
+          type: CONFIRMATION_MODAL_CLOSE_TYPES.RESET_KEYBOARD_SETTINGS,
+        },
+      })
+    );
   };
+
+  // Handle modal confirmations
+  useEffect(() => {
+    const handleModalClose = async (event) => {
+      if (event.detail?.type === CONFIRMATION_MODAL_CLOSE_TYPES.RESET_KEYBOARD_SETTINGS) {
+        try {
+          await dispatch(resetKeyboardSettings()).unwrap();
+          dispatch(
+            showNotification({
+              message: "Keyboard settings reset to defaults",
+              status: 1,
+            })
+          );
+        } catch (error) {
+          dispatch(
+            showNotification({
+              message: "Failed to reset settings",
+              status: 0,
+            })
+          );
+        }
+      }
+    };
+
+    window.addEventListener("modalClosed", handleModalClose);
+    return () => window.removeEventListener("modalClosed", handleModalClose);
+  }, [dispatch]);
 
   const shortcutGroups = {
     "Payment Actions": [

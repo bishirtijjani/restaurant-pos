@@ -4,6 +4,7 @@ const router = express.Router();
 const reservationController = require("../controllers/reservationController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
+const { validateBody, schemas } = require("../middleware/validationMiddleware");
 
 router.use(authMiddleware);
 
@@ -22,6 +23,7 @@ router.get(
 router.post(
   "/",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  validateBody(schemas.createReservation),
   reservationController.createReservation
 );
 

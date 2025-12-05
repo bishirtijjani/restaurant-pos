@@ -103,7 +103,7 @@ const addNewMenuItem = async (req, res) => {
 
     res.status(201).json(savedMenuItem);
   } catch (error) {
-    console.log(error);
+    console.error("Error adding menu item:", error.message);
     res.status(500).json({
       message: "Failed to add the menu item. Please try again later.",
     });

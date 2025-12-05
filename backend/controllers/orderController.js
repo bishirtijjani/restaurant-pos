@@ -258,6 +258,27 @@ const createOrder = async (req, res) => {
       const itemAddOnsTotal = addOnsTotal * quantity;
       const subtotal = menuItem.price * quantity + itemAddOnsTotal;
 
+      // NEW: Track inventory deductions for menu item ingredients
+      const linkedInventory = await InventoryItem.find({
+        "linkedMenuItems.menuItemId": menuItem._id,
+        isActive: true,
+      });
+
+      for (const invItem of linkedInventory) {
+        const link = invItem.linkedMenuItems.find(
+          (l) => l.menuItemId.toString() === menuItem._id.toString()
+        );
+        if (link) {
+          inventoryDeductions.push({
+            inventoryItemId: invItem._id,
+            name: invItem.name,
+            quantityToDeduct: link.quantityUsed * quantity,
+            isMenuItem: true, // Flag to distinguish from add-on deductions
+            menuItemName: menuItem.name,
+          });
+        }
+      }
+
       processedItems.push({
         menuItemId: menuItem._id,
         name: menuItem.name,
@@ -273,7 +294,7 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Verify and deduct inventory for add-ons
+    // Verify and deduct inventory for add-ons and menu item ingredients
     for (const deduction of inventoryDeductions) {
       const inventoryItem = await InventoryItem.findById(
         deduction.inventoryItemId
@@ -281,9 +302,12 @@ const createOrder = async (req, res) => {
 
       if (inventoryItem) {
         if (inventoryItem.currentStock < deduction.quantityToDeduct) {
+          const itemType = deduction.isMenuItem
+            ? `ingredient "${deduction.name}" for "${deduction.menuItemName}"`
+            : `add-on: ${deduction.name}`;
           return res.status(400).json({
             success: false,
-            message: `Insufficient stock for add-on: ${deduction.name}`,
+            message: `Insufficient stock for ${itemType}. Available: ${inventoryItem.currentStock} ${inventoryItem.unit}`,
           });
         }
 
@@ -641,6 +665,29 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Order not found",
+      });
+    }
+
+    // Define valid status transitions
+    const validTransitions = {
+      pending: ["preparing", "cancelled"],
+      preparing: ["ready", "pending", "cancelled"],
+      ready: ["served", "preparing", "cancelled"], // preparing for recall
+      served: ["completed", "cancelled"],
+      completed: [], // Terminal state - no transitions allowed
+      cancelled: [], // Terminal state - no transitions allowed
+    };
+
+    const currentStatus = order.orderStatus;
+    const allowedTransitions = validTransitions[currentStatus] || [];
+
+    if (!allowedTransitions.includes(orderStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status transition: Cannot change from "${currentStatus}" to "${orderStatus}"`,
+        allowedTransitions: allowedTransitions.length > 0 
+          ? allowedTransitions 
+          : "No transitions allowed from this state",
       });
     }
 

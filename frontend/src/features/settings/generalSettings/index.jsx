@@ -30,6 +30,11 @@ import { showNotification } from "../../common/headerSlice";
 import CurrencySelect from "./components/CurrencySelect";
 import TaxSettings from "./components/TaxSettings";
 import { useAuth } from "../../../utils/permission";
+import { openModal, closeModal } from "../../common/modalSlice";
+import {
+  MODAL_BODY_TYPES,
+  CONFIRMATION_MODAL_CLOSE_TYPES,
+} from "../../../utils/globalConstantUtil";
 
 const GeneralSettings = () => {
   const dispatch = useDispatch();
@@ -155,30 +160,47 @@ const GeneralSettings = () => {
   };
 
   const handleReset = () => {
-    if (
-      window.confirm("Are you sure you want to reset all settings to defaults?")
-    ) {
-      dispatch(resetSettings())
-        .unwrap()
-        .then(() => {
-          setHasChanges(false);
-          dispatch(
-            showNotification({
-              message: "Settings reset to defaults successfully!",
-              status: 1,
-            })
-          );
-        })
-        .catch((error) => {
-          dispatch(
-            showNotification({
-              message: error.message || error,
-              status: 0,
-            })
-          );
-        });
-    }
+    dispatch(
+      openModal({
+        title: "Confirm Reset",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message: "Are you sure you want to reset all settings to defaults? This action cannot be undone.",
+          type: CONFIRMATION_MODAL_CLOSE_TYPES.RESET_SETTINGS,
+        },
+      })
+    );
   };
+
+  // Handle modal confirmations
+  useEffect(() => {
+    const handleModalClose = (event) => {
+      if (event.detail?.type === CONFIRMATION_MODAL_CLOSE_TYPES.RESET_SETTINGS) {
+        dispatch(resetSettings())
+          .unwrap()
+          .then(() => {
+            setHasChanges(false);
+            dispatch(
+              showNotification({
+                message: "Settings reset to defaults successfully!",
+                status: 1,
+              })
+            );
+          })
+          .catch((error) => {
+            dispatch(
+              showNotification({
+                message: error.message || error,
+                status: 0,
+              })
+            );
+          });
+      }
+    };
+
+    window.addEventListener("modalClosed", handleModalClose);
+    return () => window.removeEventListener("modalClosed", handleModalClose);
+  }, [dispatch]);
 
   const timezoneOptions = [
     { value: "Nigeria/Lagos", label: "West African Time" },

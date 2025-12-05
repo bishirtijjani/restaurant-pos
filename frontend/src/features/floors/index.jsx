@@ -106,9 +106,10 @@ const FloorManager = () => {
 
   // Native WebSocket Connection
   useEffect(() => {
-    // Connect to /ws path
-    const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//
-${import.meta.env.VITE_API_URL || window.location.host}/ws`;
+    // Connect to /ws path - FIXED: Removed line break for proper URL construction
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = import.meta.env.VITE_API_URL?.replace(/^https?:\/\//, '') || window.location.host;
+    const wsUrl = `${protocol}//${host}/ws`;
 
     const newSocket = new WebSocket(wsUrl);
 

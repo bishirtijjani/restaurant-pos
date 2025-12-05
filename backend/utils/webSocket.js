@@ -94,4 +94,9 @@ const notifyTableUpdate = (eventType, data) => {
   });
 };
 
-module.exports = { initializeWebSocket, notifyKDS, notifyTableUpdate };
+module.exports = { 
+  initializeWebSocket, 
+  notifyKDS, 
+  notifyTableUpdate,
+  notifyFloorUpdate: notifyTableUpdate // Alias for floor controller compatibility
+};

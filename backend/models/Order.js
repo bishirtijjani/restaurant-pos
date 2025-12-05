@@ -320,6 +320,12 @@ const OrderSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // NEW: Link to reservation for dine-in orders from check-in
+    reservationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Reservation",
+      default: null,
+    },
     lastAction: {
       action: {
         type: String,

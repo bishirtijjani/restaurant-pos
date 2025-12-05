@@ -197,7 +197,7 @@ const refreshToken = async (req, res) => {
     user.refreshTokens.splice(tokenIndex, 1);
 
     // Generate new tokens
-    const { accessToken, newRefreshToken } = generateTokens(user);
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
 
     // Save new refresh token
     user.refreshTokens.push({

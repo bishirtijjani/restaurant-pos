@@ -36,6 +36,10 @@ const EditMenuItemModalBody = ({ extraObject }) => {
     description: "",
     isAvailable: true,
     image: null,
+    customTax: {
+      enabled: false,
+      rate: 0,
+    },
     addOnGroups: [],
   });
 
@@ -50,9 +54,12 @@ const EditMenuItemModalBody = ({ extraObject }) => {
   // Initialize form data with the menu item data
   useEffect(() => {
     if (menuItem) {
+      // Find category ID from category name
+      const categoryId = categories.find(cat => cat.name === menuItem.category)?._id || "";
+      
       setFormData({
         name: menuItem.name || "",
-        category: menuItem.category || "",
+        category: categoryId,
         price: menuItem.price?.toString() || "",
         costPrice: menuItem.costPrice?.toString() || "",
         itemCode: menuItem.itemCode || "",
@@ -61,14 +68,23 @@ const EditMenuItemModalBody = ({ extraObject }) => {
         isAvailable:
           menuItem.isAvailable !== undefined ? menuItem.isAvailable : true,
         image: menuItem.image || null,
+        customTax: menuItem.customTax || {
+          enabled: false,
+          rate: 0,
+        },
       });
 
       // Set image preview if the menu item has an image
       if (menuItem.image) {
         setImagePreview(menuItem.image);
       }
+      
+      // Set add-on groups if they exist
+      if (menuItem.addOnGroups) {
+        setSelectedAddOnGroups(menuItem.addOnGroups.map(g => typeof g === 'object' ? g._id : g));
+      }
     }
-  }, [menuItem]);
+  }, [menuItem, categories]);
 
   const toggleAddOnGroup = (groupId) => {
     setSelectedAddOnGroups((prev) =>
@@ -185,6 +201,7 @@ const EditMenuItemModalBody = ({ extraObject }) => {
         preparationTime: formData.preparationTime
           ? parseInt(formData.preparationTime)
           : 15,
+        addOnGroups: selectedAddOnGroups,
       };
 
       // Dispatch the updateMenuItem thunk
@@ -455,6 +472,104 @@ const EditMenuItemModalBody = ({ extraObject }) => {
               }
             />
           </label>
+        </div>
+
+        <div className="divider">Tax Settings (Optional)</div>
+
+        <div className="form-control">
+          <label className="label cursor-pointer justify-start gap-3">
+            <input
+              type="checkbox"
+              className="checkbox checkbox-primary checkbox-sm"
+              checked={formData.customTax.enabled}
+              onChange={(e) =>
+                updateFormValue({
+                  updateType: "customTax",
+                  value: { ...formData.customTax, enabled: e.target.checked },
+                })
+              }
+            />
+            <div>
+              <span className="label-text font-medium">Custom Tax Rate</span>
+              <p className="text-xs opacity-70">
+                Override global tax for this item
+              </p>
+            </div>
+          </label>
+        </div>
+
+        {formData.customTax.enabled && (
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Tax Rate (%)</span>
+            </label>
+            <input
+              type="number"
+              className="input input-bordered"
+              value={formData.customTax.rate}
+              onChange={(e) =>
+                updateFormValue({
+                  updateType: "customTax",
+                  value: {
+                    ...formData.customTax,
+                    rate: parseFloat(e.target.value),
+                  },
+                })
+              }
+              min="0"
+              max="100"
+              step="0.1"
+              placeholder="Enter custom tax rate"
+            />
+          </div>
+        )}
+
+        <div className="divider">Add-On Groups (Optional)</div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">
+              Select add-on groups for this item
+            </span>
+          </label>
+          {addOnGroups.length === 0 ? (
+            <div className="alert alert-info">
+              <span>
+                No add-on groups available. Create them in the Add-On Groups
+                section.
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {addOnGroups.map((group) => (
+                <label
+                  key={group._id}
+                  className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-base-200 transition ${
+                    selectedAddOnGroups.includes(group._id)
+                      ? "border-primary bg-primary/10"
+                      : "border-base-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedAddOnGroups.includes(group._id)}
+                    onChange={() => toggleAddOnGroup(group._id)}
+                    className="checkbox checkbox-primary checkbox-sm"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{group.name}</div>
+                    <div className="text-xs text-base-content/70">
+                      {group.items?.length || 0} items •{" "}
+                      {group.isRequired ? "Required" : "Optional"}
+                    </div>
+                  </div>
+                  {selectedAddOnGroups.includes(group._id) && (
+                    <Check className="w-4 h-4 text-primary" />
+                  )}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Submit button */}

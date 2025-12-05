@@ -7,31 +7,45 @@ const fs = require("fs");
 const http = require("http");
 const connectToDB = require("./config/dbConnection");
 const { initializeWebSocket } = require("./utils/webSocket");
+const logger = require("./utils/logger");
+
+// Load environment variables first
+dotenv.config();
 
 const app = express();
 
 // Error handling for uncaught exceptions
 process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
+  logger.error("Uncaught Exception", { error: error.message, stack: error.stack });
   process.exit(1);
 });
 
 // Error handling for unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  logger.error("Unhandled Rejection", { reason: reason?.message || reason });
   process.exit(1);
 });
 
 const corsOptions = require("./config/corsOptions");
+const { generalLimiter } = require("./middleware/rateLimitMiddleware");
 
 // Middleware
-dotenv.config();
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
-  credentials: true
-}));
+app.use(cors(corsOptions));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    logger.request(req, res, duration);
+  });
+  next();
+});
+
+// Apply general rate limiting to all API routes
+app.use("/api", generalLimiter);
 
 // Database connection
 connectToDB();
@@ -52,15 +66,16 @@ if (fs.existsSync(frontendPath) && fs.existsSync(indexHtml)) {
     res.sendFile(indexHtml);
   });
 } else {
-  console.warn(
-    `Frontend build not found at ${frontendPath}. Skipping static file serving.`
-  );
+  logger.warn("Frontend build not found, skipping static file serving", { path: frontendPath });
 }
 
-// Error handler
+// Global error handler
 app.use((err, req, res, next) => {
-  console.error("Express error:", err);
-  res.status(500).json({ error: "Internal server error" });
+  logger.error("Express error", { error: err.message, stack: err.stack, url: req.originalUrl });
+  res.status(500).json({ 
+    success: false, 
+    message: "Internal server error" 
+  });
 });
 
 const PORT = process.env.PORT || 5000;
@@ -72,5 +87,5 @@ const server = http.createServer(app);
 initializeWebSocket(server);
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info("Server started", { port: PORT, env: process.env.NODE_ENV || "development" });
 });

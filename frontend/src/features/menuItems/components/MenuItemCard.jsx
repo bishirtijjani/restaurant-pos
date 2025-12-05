@@ -38,7 +38,6 @@ const ClockIcon = () => (
 const MenuItemCard = ({ item, handleToggleAvailability }) => {
   const dispatch = useDispatch();
   const { can } = useAuth();
-  const placeholderImage = "https://placehold.co/400x300?text=No+Image";
 
   const handleStatusToggle = () => {
     if (!can("viewMenu")) {

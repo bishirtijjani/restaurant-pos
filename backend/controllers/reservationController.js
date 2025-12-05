@@ -1,6 +1,19 @@
 const Reservation = require("../models/Reservation");
 const Table = require("../models/Table");
+const Order = require("../models/Order");
+const GeneralSettings = require("../models/GeneralSettings");
 const logAction = require("../utils/logAction");
+
+// Helper function to generate unique order number
+const generateOrderNumber = async () => {
+  let orderNumber;
+  let exists;
+  do {
+    orderNumber = Math.floor(100000 + Math.random() * 900000).toString();
+    exists = await Order.exists({ orderNumber });
+  } while (exists);
+  return orderNumber;
+};
 
 exports.getAllReservations = async (req, res) => {
   try {
@@ -117,12 +130,24 @@ exports.createReservation = async (req, res) => {
         }
     }
 
-    // Check for conflicts
+    // Check for conflicts with proper time overlap detection
     const resDate = new Date(reservationDate);
     const startOfDay = new Date(resDate);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(resDate);
     endOfDay.setHours(23, 59, 59, 999);
+
+    // Helper function to convert time string to minutes from midnight
+    const timeToMinutes = (timeStr) => {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      return hours * 60 + minutes;
+    };
+
+    // Buffer time in minutes (time needed between reservations for table turnover)
+    const BUFFER_MINUTES = 15;
+    const newResDuration = duration || 120; // Default 2 hours if not specified
+    const newResStartMinutes = timeToMinutes(reservationTime);
+    const newResEndMinutes = newResStartMinutes + newResDuration + BUFFER_MINUTES;
 
     if (tableId) {
         const existingReservations = await Reservation.find({
@@ -132,11 +157,47 @@ exports.createReservation = async (req, res) => {
         });
 
         for (const existing of existingReservations) {
-          if (existing.reservationTime === reservationTime) {
+          const existingStartMinutes = timeToMinutes(existing.reservationTime);
+          const existingDuration = existing.duration || 120;
+          const existingEndMinutes = existingStartMinutes + existingDuration + BUFFER_MINUTES;
+
+          // Check for overlap: new reservation starts before existing ends AND new ends after existing starts
+          const hasOverlap = 
+            newResStartMinutes < existingEndMinutes && 
+            newResEndMinutes > existingStartMinutes;
+
+          if (hasOverlap) {
+            const formatTime = (mins) => {
+              const h = Math.floor(mins / 60);
+              const m = mins % 60;
+              return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+            };
             return res.status(400).json({
               success: false,
-              message: "Table is already reserved at this time",
+              message: `Time conflict: Table is reserved from ${existing.reservationTime} to ${formatTime(existingEndMinutes - BUFFER_MINUTES)} for "${existing.customerName}"`,
+              conflictDetails: {
+                existingReservation: existing.customerName,
+                existingTime: existing.reservationTime,
+                existingDuration: existingDuration,
+              },
             });
+          }
+        }
+
+        // Also check if the table is currently occupied
+        if (table.status === "occupied") {
+          // If reservation is for today, check if table will be free in time
+          const now = new Date();
+          const isToday = resDate.toDateString() === now.toDateString();
+          if (isToday) {
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            // If trying to reserve for a time that's less than buffer time from now
+            if (newResStartMinutes < currentMinutes + BUFFER_MINUTES) {
+              return res.status(400).json({
+                success: false,
+                message: "Table is currently occupied. Please select a later time or different table.",
+              });
+            }
           }
         }
     }
@@ -382,13 +443,61 @@ exports.checkInReservation = async (req, res) => {
       });
     }
 
-    // Update reservation status
+    // Get restaurant settings for order creation
+    const settings = await GeneralSettings.findOne();
+    if (!settings) {
+      return res.status(500).json({
+        success: false,
+        message: "Restaurant settings not configured",
+      });
+    }
+
+    // Generate order number
+    const orderNumber = await generateOrderNumber();
+
+    // Create dine-in order linked to reservation
+    const newOrder = await Order.create({
+      orderNumber,
+      orderType: "dine-in",
+      table: table.tableNumber,
+      tableId: table._id,
+      orderItems: [], // Empty order - items will be added later
+      subtotal: 0,
+      totalAmount: 0,
+      status: "pending",
+      paymentStatus: "unpaid",
+      amountPaid: 0,
+      balance: 0,
+      // Link to reservation
+      reservationId: reservation._id,
+      // Customer details from reservation
+      customerDetails: {
+        name: reservation.customerName,
+        phone: reservation.customerPhone,
+        email: reservation.customerEmail || "",
+        partySize: reservation.partySize,
+      },
+      // Link to customer if exists
+      customerId: reservation.customerId || null,
+      // Tax settings from restaurant config
+      taxBreakdown: {
+        taxMode: settings.taxSettings?.mode || "per-order",
+        globalRate: settings.taxSettings?.globalRate || 0,
+        totalTax: 0,
+        serviceCharge: 0,
+      },
+      createdBy: req.user.id,
+    });
+
+    // Update reservation with order reference
     reservation.status = "seated";
+    reservation.orderId = newOrder._id;
     await reservation.save();
 
     // Update table status and link reservation
     table.status = "occupied";
     table.currentReservation = reservation._id;
+    table.currentOrder = newOrder._id;
     table.timing.seatedAt = new Date();
     await table.save();
 
@@ -398,11 +507,11 @@ exports.checkInReservation = async (req, res) => {
       req.params.id,
       "update",
       { status: "confirmed" },
-      { status: "seated" },
-      `Checked in reservation for ${reservation.customerName}`
+      { status: "seated", orderId: newOrder._id },
+      `Checked in reservation for ${reservation.customerName}, created order #${orderNumber}`
     );
 
-    // Return reservation with customer and table data for frontend
+    // Return reservation with customer, table, and order data
     const populatedReservation = await Reservation.findById(reservation._id)
       .populate("tableId", "tableNumber floorId")
       .populate("customerId")
@@ -411,7 +520,10 @@ exports.checkInReservation = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Reservation checked in successfully",
-      data: populatedReservation,
+      data: {
+        reservation: populatedReservation,
+        order: newOrder,
+      },
     });
   } catch (error) {
     console.error("Error checking in reservation:", error);
