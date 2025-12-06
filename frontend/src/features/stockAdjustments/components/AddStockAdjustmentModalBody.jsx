@@ -1,4 +1,5 @@
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
@@ -31,6 +32,24 @@ const AddStockAdjustmentModalBody = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.stockAdjustments);
   const inventoryItems = useSelector((state) => state.inventory.items || []);
+
+  const inventoryOptions = [
+    { value: "", name: "Select item" },
+    ...inventoryItems.map(item => ({
+      value: item._id,
+      name: `${item.name} - Current: ${item.currentStock} ${item.unit}`
+    }))
+  ];
+
+  const typeOptions = [
+    { value: "", name: "Select type" },
+    ...ADJUSTMENT_TYPES.map(t => ({ value: t.value, name: t.label }))
+  ];
+
+  const reasonOptions = [
+    { value: "", name: "Select reason" },
+    ...REASONS.map(r => ({ value: r.value, name: r.label }))
+  ];
 
   const [formData, setFormData] = useState({
     inventoryItem: "",
@@ -161,21 +180,16 @@ const AddStockAdjustmentModalBody = () => {
         <label className="label">
           <span className="label-text">Inventory Item *</span>
         </label>
-        <select
-          name="inventoryItem"
+        <SearchableSelect
+          options={inventoryOptions}
           value={formData.inventoryItem}
           onChange={handleChange}
-          className={`select select-bordered ${
-            errors.inventoryItem ? "select-error" : ""
-          }`}
-        >
-          <option value="">Select item</option>
-          {inventoryItems.map((item) => (
-            <option key={item._id} value={item._id}>
-              {item.name} - Current: {item.currentStock} {item.unit}
-            </option>
-          ))}
-        </select>
+          name="inventoryItem"
+          placeholder="Select item"
+          className={errors.inventoryItem ? "border-error" : ""}
+          valueKey="value"
+          labelKey="name"
+        />
         {errors.inventoryItem && <ErrorText>{errors.inventoryItem}</ErrorText>}
       </div>
 
@@ -184,21 +198,16 @@ const AddStockAdjustmentModalBody = () => {
           <label className="label">
             <span className="label-text">Adjustment Type *</span>
           </label>
-          <select
-            name="type"
+          <SearchableSelect
+            options={typeOptions}
             value={formData.type}
             onChange={handleChange}
-            className={`select select-bordered ${
-              errors.type ? "select-error" : ""
-            }`}
-          >
-            <option value="">Select type</option>
-            {ADJUSTMENT_TYPES.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
+            name="type"
+            placeholder="Select type"
+            className={errors.type ? "border-error" : ""}
+            valueKey="value"
+            labelKey="name"
+          />
           {errors.type && <ErrorText>{errors.type}</ErrorText>}
         </div>
 
@@ -206,21 +215,16 @@ const AddStockAdjustmentModalBody = () => {
           <label className="label">
             <span className="label-text">Reason *</span>
           </label>
-          <select
-            name="reason"
+          <SearchableSelect
+            options={reasonOptions}
             value={formData.reason}
             onChange={handleChange}
-            className={`select select-bordered ${
-              errors.reason ? "select-error" : ""
-            }`}
-          >
-            <option value="">Select reason</option>
-            {REASONS.map((reason) => (
-              <option key={reason.value} value={reason.value}>
-                {reason.label}
-              </option>
-            ))}
-          </select>
+            name="reason"
+            placeholder="Select reason"
+            className={errors.reason ? "border-error" : ""}
+            valueKey="value"
+            labelKey="name"
+          />
           {errors.reason && <ErrorText>{errors.reason}</ErrorText>}
         </div>
       </div>

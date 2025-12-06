@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { useDispatch, useSelector } from "react-redux";
 import { updateInventoryItem } from "../inventorySlice";
 import { fetchAllSuppliers } from "../../suppliers/suppliersSlice";
@@ -73,6 +74,21 @@ const EditInventoryModalBody = ({ extraObject }) => {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
+
+  const categoryOptions = [
+    { value: "", name: "Select category" },
+    ...CATEGORIES.map(cat => ({ value: cat, name: cat }))
+  ];
+
+  const unitOptions = [
+    { value: "", name: "Select unit" },
+    ...UNITS.map(unit => ({ value: unit, name: unit }))
+  ];
+
+  const supplierOptions = [
+    { value: "", name: "Select supplier" },
+    ...suppliers.map(s => ({ value: s._id, name: s.name }))
+  ];
 
   const validate = () => {
     const newErrors = {};
@@ -177,21 +193,16 @@ const EditInventoryModalBody = ({ extraObject }) => {
           <label className="label">
             <span className="label-text">Category *</span>
           </label>
-          <select
-            name="category"
+          <SearchableSelect
+            options={categoryOptions}
             value={formData.category}
             onChange={handleChange}
-            className={`select select-bordered ${
-              errors.category ? "select-error" : ""
-            }`}
-          >
-            <option value="">Select category</option>
-            {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            name="category"
+            placeholder="Select category"
+            className={errors.category ? "border-error" : ""}
+            valueKey="value"
+            labelKey="name"
+          />
           {errors.category && <ErrorText>{errors.category}</ErrorText>}
         </div>
 
@@ -200,21 +211,16 @@ const EditInventoryModalBody = ({ extraObject }) => {
           <label className="label">
             <span className="label-text">Unit *</span>
           </label>
-          <select
-            name="unit"
+          <SearchableSelect
+            options={unitOptions}
             value={formData.unit}
             onChange={handleChange}
-            className={`select select-bordered ${
-              errors.unit ? "select-error" : ""
-            }`}
-          >
-            <option value="">Select unit</option>
-            {UNITS.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </select>
+            name="unit"
+            placeholder="Select unit"
+            className={errors.unit ? "border-error" : ""}
+            valueKey="value"
+            labelKey="name"
+          />
           {errors.unit && <ErrorText>{errors.unit}</ErrorText>}
         </div>
 
@@ -257,19 +263,16 @@ const EditInventoryModalBody = ({ extraObject }) => {
           <label className="label">
             <span className="label-text">Supplier</span>
           </label>
-          <select
-            name="supplier"
+          <SearchableSelect
+            options={supplierOptions}
             value={formData.supplier}
             onChange={handleChange}
-            className="select select-bordered"
-          >
-            <option value="">Select supplier</option>
-            {suppliers.map((supplier) => (
-              <option key={supplier._id} value={supplier._id}>
-                {supplier.name}
-              </option>
-            ))}
-          </select>
+            name="supplier"
+            placeholder="Select supplier"
+            className=""
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
 
         {/* Notes */}

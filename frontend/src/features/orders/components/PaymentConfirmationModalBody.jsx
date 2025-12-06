@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { openModal, closeModal } from "../../common/modalSlice";
 import { closeRightDrawer } from "../../common/rightDrawerSlice";
@@ -27,6 +28,12 @@ function PaymentConfirmationModalBody(props) {
   const [tipMode, setTipMode] = useState("none"); // 'none', 'percentage', 'custom'
   const [tipPercentage, setTipPercentage] = useState(0);
   const [customTip, setCustomTip] = useState("");
+
+  const paymentMethodOptions = [
+    { value: "cash", name: "Cash" },
+    { value: "Transfer", name: "Bank Transfer" },
+    { value: "card", name: "Card" },
+  ];
 
   // Single payment state
   const [singlePayment, setSinglePayment] = useState({
@@ -324,16 +331,16 @@ function PaymentConfirmationModalBody(props) {
             <label className="label">
               <span className="label-text">Payment Method</span>
             </label>
-            <select
-              name="paymentMethod"
+            <SearchableSelect
+              options={paymentMethodOptions}
               value={singlePayment.paymentMethod}
               onChange={handleSinglePaymentChange}
-              className="select select-bordered"
-            >
-              <option value="cash">Cash</option>
-              <option value="Transfer">Bank Transfer</option>
-              <option value="card">Card</option>
-            </select>
+              name="paymentMethod"
+              placeholder="Select payment method"
+              className=""
+              valueKey="value"
+              labelKey="name"
+            />
           </div>
 
           <div className="form-control">
@@ -371,17 +378,19 @@ function PaymentConfirmationModalBody(props) {
                 <label className="label">
                   <span className="label-text text-xs">Method</span>
                 </label>
-                <select
+                <SearchableSelect
+                  options={paymentMethodOptions}
                   value={payment.method}
                   onChange={(e) =>
                     handleSplitPaymentChange(index, "method", e.target.value)
                   }
-                  className="select select-bordered select-sm"
-                >
-                  <option value="cash">Cash</option>
-                  <option value="Transfer">Transfer</option>
-                  <option value="card">Card</option>
-                </select>
+                  name="method"
+                  placeholder="Select method"
+                  className=""
+                  size="select-sm"
+                  valueKey="value"
+                  labelKey="name"
+                />
               </div>
 
               <div className="form-control flex-1">

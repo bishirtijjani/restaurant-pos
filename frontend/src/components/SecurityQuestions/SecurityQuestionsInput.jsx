@@ -1,4 +1,5 @@
 import React from "react";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 
 const PREDEFINED_QUESTIONS = [
   "What was the name of your first pet?",
@@ -41,19 +42,17 @@ const SecurityQuestionsInput = ({
           <label className="block text-sm font-medium">
             Security Question {index + 1}
           </label>
-          <select
+          <SearchableSelect
+            options={PREDEFINED_QUESTIONS.map(q => ({ value: q, label: q }))}
             value={sq.question}
             onChange={(e) => handleQuestionChange(index, e.target.value)}
-            className="select select-bordered w-full"
+            name={`securityQuestion_${index}`}
+            placeholder="Select a question..."
             required
-          >
-            <option value="">Select a question...</option>
-            {PREDEFINED_QUESTIONS.map((question, qIndex) => (
-              <option key={qIndex} value={question}>
-                {question}
-              </option>
-            ))}
-          </select>
+            className="w-full"
+            valueKey="value"
+            labelKey="label"
+          />
 
           {showAnswers && (
             <>

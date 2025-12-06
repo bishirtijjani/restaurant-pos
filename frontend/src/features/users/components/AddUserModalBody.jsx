@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import ErrorText from "../../../components/Typography/ErrorText";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { addUser } from "../usersSlice";
 import { showNotification } from "../../common/headerSlice";
 
@@ -16,6 +17,16 @@ function AddUserModalBody({ closeModal }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const roleOptions = [
+    { value: "admin", name: "Admin" },
+    { value: "manager", name: "Manager" },
+    { value: "cashier", name: "Cashier" },
+    { value: "waiter", name: "Waiter" },
+    { value: "kitchen", name: "Kitchen" },
+    { value: "accountant", name: "Accountant" },
+    { value: "staff", name: "Staff" },
+  ];
 
   const handleInputChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -132,21 +143,16 @@ function AddUserModalBody({ closeModal }) {
           <label htmlFor="role" className="block text-sm font-medium">
             Role
           </label>
-          <select
-            id="role"
-            name="role"
+          <SearchableSelect
+            options={roleOptions}
             value={user.role}
             onChange={handleInputChange}
-            className="select select-bordered w-full mt-2"
-          >
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-            <option value="cashier">Cashier</option>
-            <option value="waiter">Waiter</option>
-            <option value="kitchen">Kitchen</option>
-            <option value="accountant">Accountant</option>
-            <option value="staff">Staff</option>
-          </select>
+            name="role"
+            placeholder="Select role"
+            className="w-full mt-2"
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
 
         {/* Error Message */}

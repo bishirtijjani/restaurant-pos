@@ -25,6 +25,7 @@ import {
   AlertCircle,
   Eye,
 } from "lucide-react";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 
 const ADJUSTMENT_TYPES = {
   addition: { icon: TrendingUp, color: "text-success", label: "Addition" },
@@ -89,6 +90,18 @@ const SearchAndFilters = ({
   setItemFilter,
   inventoryItems,
 }) => {
+  const typeOptions = [
+    { value: "", name: "All Types" },
+    { value: "addition", name: "Addition" },
+    { value: "subtraction", name: "Subtraction" },
+    { value: "correction", name: "Correction" },
+  ];
+
+  const itemOptions = [
+    { value: "", name: "All Items" },
+    ...inventoryItems.map(item => ({ value: item._id, name: item.name }))
+  ];
+
   return (
     <div className="bg-base-100 rounded-lg shadow-md p-4 mb-6">
       <div className="flex flex-col lg:flex-row gap-4">
@@ -106,29 +119,29 @@ const SearchAndFilters = ({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <select
-            className="select select-bordered select-sm lg:select-md"
+          <SearchableSelect
+            options={typeOptions}
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <option value="">All Types</option>
-            <option value="addition">Addition</option>
-            <option value="subtraction">Subtraction</option>
-            <option value="correction">Correction</option>
-          </select>
+            name="typeFilter"
+            placeholder="All Types"
+            className=""
+            size="select-sm lg:select-md"
+            valueKey="value"
+            labelKey="name"
+          />
 
-          <select
-            className="select select-bordered select-sm lg:select-md"
+          <SearchableSelect
+            options={itemOptions}
             value={itemFilter}
             onChange={(e) => setItemFilter(e.target.value)}
-          >
-            <option value="">All Items</option>
-            {inventoryItems.map((item) => (
-              <option key={item._id} value={item._id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+            name="itemFilter"
+            placeholder="All Items"
+            className=""
+            size="select-sm lg:select-md"
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
       </div>
     </div>

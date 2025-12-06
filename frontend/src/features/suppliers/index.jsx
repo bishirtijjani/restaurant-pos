@@ -1,3 +1,4 @@
+// frontend/src/features/suppliers/index.jsx
 import React, { useEffect, useState, useMemo } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
 import { openModal } from "../common/modalSlice";
@@ -10,6 +11,7 @@ import { fetchAllSuppliers } from "./suppliersSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 import {
   Search,
   PlusCircle,
@@ -24,6 +26,7 @@ import {
   Calendar,
   Clock,
   UserCheck,
+  Plus,
 } from "lucide-react";
 
 const TopSideButtons = ({ onRefresh, onAddNew }) => {
@@ -301,10 +304,28 @@ const SearchAndFilters = ({
   onActionFilterChange,
   viewMode,
   onViewModeChange,
-}) => (
-  <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
-    <div className="flex flex-col lg:flex-row gap-4">
-      <div className="flex-1">
+}) => {
+  const sortOptions = [
+    { value: "", name: "Sort by..." },
+    { value: "name", name: "Name (A-Z)" },
+    { value: "name_desc", name: "Name (Z-A)" },
+    { value: "date", name: "Newest First" },
+    { value: "date_desc", name: "Oldest First" },
+    { value: "last_action", name: "Recent Action" },
+  ];
+
+  const actionFilterOptions = [
+    { value: "", name: "All Actions" },
+    { value: "create", name: "Created" },
+    { value: "update", name: "Updated" },
+    { value: "delete", name: "Deleted" },
+    { value: "no_action", name: "No Action" },
+  ];
+
+  return (
+    <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1">
         <div className="form-control w-full">
           <label className="input input-bordered flex items-center gap-2 w-full">
             <Search className="w-5 h-5 text-info" />
@@ -321,32 +342,29 @@ const SearchAndFilters = ({
 
       <div className="flex flex-wrap gap-3">
         <div className="form-control">
-          <select
-            className="select select-bordered w-full max-w-xs"
+          <SearchableSelect
+            options={sortOptions}
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-          >
-            <option value="">Sort by...</option>
-            <option value="name">Name (A-Z)</option>
-            <option value="name_desc">Name (Z-A)</option>
-            <option value="date">Newest First</option>
-            <option value="date_desc">Oldest First</option>
-            <option value="last_action">Recent Action</option>
-          </select>
+            name="sortBy"
+            placeholder="Sort by"
+            className="w-full max-w-xs"
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
 
         <div className="form-control">
-          <select
-            className="select select-bordered w-full max-w-xs"
+          <SearchableSelect
+            options={actionFilterOptions}
             value={actionFilter}
             onChange={(e) => onActionFilterChange(e.target.value)}
-          >
-            <option value="">All Actions</option>
-            <option value="create">Created</option>
-            <option value="update">Updated</option>
-            <option value="delete">Deleted</option>
-            <option value="no_action">No Action</option>
-          </select>
+            name="actionFilter"
+            placeholder="All actions"
+            className="w-full max-w-xs"
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
 
         <div className="btn-group">

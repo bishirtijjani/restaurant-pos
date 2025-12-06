@@ -9,6 +9,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllExpenses } from "./expensesSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 import {
   Search,
   Filter,
@@ -79,6 +80,25 @@ const SearchAndFilters = ({
   paymentMethods,
 }) => {
   const [showFilters, setShowFilters] = useState(false);
+
+  const categoryOptions = [
+    { value: "", name: "All Categories" },
+    ...categories.map(cat => ({ value: cat, name: cat }))
+  ];
+
+  const paymentMethodOptions = [
+    { value: "", name: "All Methods" },
+    ...paymentMethods.map(method => ({ value: method, name: method }))
+  ];
+
+  const dateRangeOptions = [
+    { value: "", name: "All Time" },
+    { value: "today", name: "Today" },
+    { value: "week", name: "This Week" },
+    { value: "month", name: "This Month" },
+    { value: "quarter", name: "This Quarter" },
+    { value: "year", name: "This Year" },
+  ];
 
   return (
     <div className="bg-base-100 border-b border-base-300 -mx-6 px-6 py-4 mb-6">
@@ -155,18 +175,17 @@ const SearchAndFilters = ({
                     Category
                   </span>
                 </label>
-                <select
-                  className="select select-bordered select-sm focus:ring-2 focus:ring-primary/20"
+                <SearchableSelect
+                  options={categoryOptions}
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
+                  name="categoryFilter"
+                  placeholder="Filter by category"
+                  className=""
+                  size="select-sm"
+                  valueKey="value"
+                  labelKey="name"
+                />
               </div>
 
               <div className="form-control">
@@ -176,18 +195,17 @@ const SearchAndFilters = ({
                     Payment Method
                   </span>
                 </label>
-                <select
-                  className="select select-bordered select-sm focus:ring-2 focus:ring-primary/20"
+                <SearchableSelect
+                  options={paymentMethodOptions}
                   value={paymentMethodFilter}
                   onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                >
-                  <option value="">All Methods</option>
-                  {paymentMethods.map((method) => (
-                    <option key={method} value={method}>
-                      {method}
-                    </option>
-                  ))}
-                </select>
+                  name="paymentMethodFilter"
+                  placeholder="Filter by payment"
+                  className=""
+                  size="select-sm"
+                  valueKey="value"
+                  labelKey="name"
+                />
               </div>
 
               <div className="form-control">
@@ -197,18 +215,17 @@ const SearchAndFilters = ({
                     Date Range
                   </span>
                 </label>
-                <select
-                  className="select select-bordered select-sm focus:ring-2 focus:ring-primary/20"
+                <SearchableSelect
+                  options={dateRangeOptions}
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
-                >
-                  <option value="">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
-                  <option value="quarter">This Quarter</option>
-                  <option value="year">This Year</option>
-                </select>
+                  name="dateRange"
+                  placeholder="Filter by date"
+                  className=""
+                  size="select-sm"
+                  valueKey="value"
+                  labelKey="name"
+                />
               </div>
             </div>
 

@@ -5,6 +5,7 @@ import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { fetchAllMenuItems } from "../../menuItems/menuItemsSlice";
 import { fetchOrders, voidOrderItems } from "../ordersSlice";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { AlertTriangle, Package, Check } from "lucide-react";
 
@@ -22,6 +23,16 @@ const VoidOrderItemsModalBody = ({ extraObject, closeModal: close }) => {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  const voidReasonOptions = [
+    { value: "", name: "Select a reason..." },
+    { value: "Customer changed mind", name: "Customer changed mind" },
+    { value: "Wrong item ordered", name: "Wrong item ordered" },
+    { value: "Item unavailable", name: "Item unavailable" },
+    { value: "Quality issue", name: "Quality issue" },
+    { value: "Duplicate entry", name: "Duplicate entry" },
+    { value: "Other", name: "Other" },
+  ];
 
   React.useEffect(() => {
     dispatch(fetchAllMenuItems());
@@ -256,24 +267,19 @@ const VoidOrderItemsModalBody = ({ extraObject, closeModal: close }) => {
         <label className="label">
           <span className="label-text">Reason for Voiding *</span>
         </label>
-        <select
+        <SearchableSelect
+          options={voidReasonOptions}
           value={reason}
           onChange={(e) => {
             setReason(e.target.value);
             if (errors.reason) setErrors((prev) => ({ ...prev, reason: "" }));
           }}
-          className={`select select-bordered ${
-            errors.reason ? "select-error" : ""
-          }`}
-        >
-          <option value="">Select a reason...</option>
-          <option value="Customer changed mind">Customer changed mind</option>
-          <option value="Wrong item ordered">Wrong item ordered</option>
-          <option value="Item unavailable">Item unavailable</option>
-          <option value="Quality issue">Quality issue</option>
-          <option value="Duplicate entry">Duplicate entry</option>
-          <option value="Other">Other</option>
-        </select>
+          name="reason"
+          placeholder="Select a reason"
+          className={`${errors.reason ? "border-error" : ""}`}
+          valueKey="value"
+          labelKey="name"
+        />
         {errors.reason && <ErrorText>{errors.reason}</ErrorText>}
       </div>
 

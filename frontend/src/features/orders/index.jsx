@@ -17,6 +17,7 @@ import {
 import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
 import SearchBar from "../../components/Input/SearchBar";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 import { showNotification } from "../common/headerSlice";
 import Datepicker from "react-tailwindcss-datepicker";
 import {
@@ -51,14 +52,20 @@ const paymentColors = {
 
 const OrderFilters = ({ currentFilters, applyFilters, clearFiltersAction }) => {
   const statusOptions = [
-    "pending",
-    "preparing",
-    "ready",
-    "served",
-    "completed",
-    "cancelled",
+    { value: "", name: "All" },
+    { value: "pending", name: "pending" },
+    { value: "preparing", name: "preparing" },
+    { value: "ready", name: "ready" },
+    { value: "served", name: "served" },
+    { value: "completed", name: "completed" },
+    { value: "cancelled", name: "cancelled" },
   ];
-  const paymentStatusOptions = ["pending", "partial", "paid"];
+  const paymentStatusOptions = [
+    { value: "", name: "All" },
+    { value: "pending", name: "pending" },
+    { value: "partial", name: "partial" },
+    { value: "paid", name: "paid" },
+  ];
 
   const [dateRange, setDateRange] = useState({
     startDate: currentFilters.startDate || null,
@@ -87,36 +94,34 @@ const OrderFilters = ({ currentFilters, applyFilters, clearFiltersAction }) => {
           <label className="label py-1">
             <span className="label-text text-xs">Status</span>
           </label>
-          <select
-            className="select select-bordered select-sm"
+          <SearchableSelect
+            options={statusOptions}
             value={currentFilters.status || ""}
             onChange={(e) => applyFilters({ status: e.target.value })}
-          >
-            <option value="">All</option>
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+            name="status"
+            placeholder="Filter by status"
+            className=""
+            size="select-sm"
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
 
         <div className="form-control">
           <label className="label py-1">
             <span className="label-text text-xs">Payment</span>
           </label>
-          <select
-            className="select select-bordered select-sm"
+          <SearchableSelect
+            options={paymentStatusOptions}
             value={currentFilters.paymentStatus || ""}
             onChange={(e) => applyFilters({ paymentStatus: e.target.value })}
-          >
-            <option value="">All</option>
-            {paymentStatusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+            name="paymentStatus"
+            placeholder="Filter by payment"
+            className=""
+            size="select-sm"
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
 
         <div className="form-control min-w-[200px]">

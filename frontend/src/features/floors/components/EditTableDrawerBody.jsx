@@ -6,6 +6,7 @@ import { showNotification } from "../../common/headerSlice";
 import { openModal } from "../../common/modalSlice";
 import { MODAL_BODY_TYPES, CONFIRMATION_MODAL_CLOSE_TYPES } from "../../../utils/globalConstantUtil";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 
 const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
   const dispatch = useDispatch();
@@ -31,6 +32,11 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
           shape: table.shape || "rectangle"
       });
   }, [table]);
+
+  const shapeOptions = [
+      { value: "rectangle", name: "Rectangle" },
+      { value: "circle", name: "Circle" }
+  ];
 
   const handleSaveTable = async () => {
     try {
@@ -106,16 +112,18 @@ const EditTableDrawerBody = ({ closeRightDrawer, table }) => {
         <label className="label">
           <span className="label-text">Shape</span>
         </label>
-        <select
+        <SearchableSelect
+          options={shapeOptions}
           value={tableData.shape || "rectangle"}
           onChange={(e) =>
             setTableData({ ...tableData, shape: e.target.value })
           }
-          className="select select-bordered w-full"
-        >
-          <option value="rectangle">Rectangle</option>
-          <option value="circle">Circle</option>
-        </select>
+          name="shape"
+          placeholder="Select shape"
+          className="w-full"
+          valueKey="value"
+          labelKey="name"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

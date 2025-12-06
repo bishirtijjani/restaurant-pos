@@ -1,6 +1,7 @@
 // frontend/src/features/tables/components/TableFormModal.jsx
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { X } from "lucide-react";
 
 const TableFormModal = ({ table, floorId, onClose, onSave }) => {
@@ -15,6 +16,19 @@ const TableFormModal = ({ table, floorId, onClose, onSave }) => {
     assignedStaff: table?.assignedStaff?._id || "",
     isActive: table?.isActive ?? true,
   });
+
+  const shapeOptions = [
+    { value: "square", name: "Square" },
+    { value: "circle", name: "Circle" },
+    { value: "rectangle", name: "Rectangle" },
+  ];
+
+  const staffOptions = [
+    { value: "", name: "None" },
+    ...users
+      ?.filter((u) => ["waiter", "staff"].includes(u.role))
+      .map((user) => ({ value: user._id, name: user.fullname })) || []
+  ];
 
   const validate = () => {
     const newErrors = {};
@@ -119,39 +133,36 @@ const TableFormModal = ({ table, floorId, onClose, onSave }) => {
               <label className="label">
                 <span className="label-text">Shape</span>
               </label>
-              <select
+              <SearchableSelect
+                options={shapeOptions}
                 value={formData.shape}
                 onChange={(e) =>
                   setFormData({ ...formData, shape: e.target.value })
                 }
-                className="select select-bordered"
-              >
-                <option value="square">Square</option>
-                <option value="circle">Circle</option>
-                <option value="rectangle">Rectangle</option>
-              </select>
+                name="shape"
+                placeholder="Select shape"
+                className=""
+                valueKey="value"
+                labelKey="name"
+              />
             </div>
 
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Assigned Staff</span>
               </label>
-              <select
+              <SearchableSelect
+                options={staffOptions}
                 value={formData.assignedStaff}
                 onChange={(e) =>
                   setFormData({ ...formData, assignedStaff: e.target.value })
                 }
-                className="select select-bordered"
-              >
-                <option value="">None</option>
-                {users
-                  ?.filter((u) => ["waiter", "staff"].includes(u.role))
-                  .map((user) => (
-                    <option key={user._id} value={user._id}>
-                      {user.fullname}
-                    </option>
-                  ))}
-              </select>
+                name="assignedStaff"
+                placeholder="Select staff"
+                className=""
+                valueKey="value"
+                labelKey="name"
+              />
             </div>
 
             <div className="form-control">

@@ -26,6 +26,7 @@ import {
   Copy,
   RefreshCw,
 } from "lucide-react";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 import Can from "../../components/Auth/Can";
 
 const DiscountTypeIcon = ({ type }) => {
@@ -425,18 +426,24 @@ const DiscountsManagement = () => {
         />
 
         {activeTab === "discounts" && (
-          <select
-            className="select select-bordered select-sm"
+          <SearchableSelect
+            options={[
+              { value: "all", name: "All Types" },
+              { value: "percentage", name: "Percentage" },
+              { value: "fixed", name: "Fixed Amount" },
+              { value: "bogo", name: "BOGO" },
+              { value: "happyHour", name: "Happy Hour" },
+              { value: "regular", name: "Regular" },
+            ]}
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-          >
-            <option value="all">All Types</option>
-            <option value="percentage">Percentage</option>
-            <option value="fixed">Fixed Amount</option>
-            <option value="bogo">BOGO</option>
-            <option value="happyHour">Happy Hour</option>
-            <option value="regular">Regular</option>
-          </select>
+            name="filterType"
+            placeholder="All Types"
+            className=""
+            size="select-sm"
+            valueKey="value"
+            labelKey="name"
+          />
         )}
 
         <button

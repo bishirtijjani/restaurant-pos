@@ -4,6 +4,7 @@ import { recordCustomerPayment } from "../customersSlice";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 
 const RecordPaymentModalBody = ({ extraObject, closeModal: close }) => {
   const dispatch = useDispatch();
@@ -63,16 +64,21 @@ const RecordPaymentModalBody = ({ extraObject, closeModal: close }) => {
         <label className="label">
           <span className="label-text">Payment Method</span>
         </label>
-        <select
-          className="select select-bordered w-full"
+        <SearchableSelect
+          options={[
+            { value: "cash", name: "Cash" },
+            { value: "card", name: "Card" },
+            { value: "transfer", name: "Transfer" },
+            { value: "other", name: "Other" },
+          ]}
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
-        >
-          <option value="cash">Cash</option>
-          <option value="card">Card</option>
-          <option value="transfer">Transfer</option>
-          <option value="other">Other</option>
-        </select>
+          name="paymentMethod"
+          placeholder="Select Payment Method"
+          className="w-full"
+          valueKey="value"
+          labelKey="name"
+        />
       </div>
 
       <div className="form-control">

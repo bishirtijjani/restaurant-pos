@@ -18,6 +18,7 @@ import {
   User,
   Filter,
 } from "lucide-react";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 import { Link } from "react-router-dom";
 
 const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete, onCheckIn }) => {
@@ -159,6 +160,15 @@ const ReservationManagement = () => {
     status: "",
     date: null,
   });
+
+  const statusOptions = [
+    { value: "", name: "All Status" },
+    { value: "pending", name: "Pending" },
+    { value: "confirmed", name: "Confirmed" },
+    { value: "seated", name: "Seated" },
+    { value: "completed", name: "Completed" },
+    { value: "cancelled", name: "Cancelled" },
+  ];
   useEffect(() => {
     dispatch(getReservations());
     dispatch(fetchTables());
@@ -267,18 +277,17 @@ const ReservationManagement = () => {
             <Filter className="w-5 h-5" />
             <span className="font-medium">Filters</span>
           </div>
-          <select
+          <SearchableSelect
+            options={statusOptions}
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="select select-bordered select-sm"
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="seated">Seated</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+            name="status"
+            placeholder="Filter by status"
+            className=""
+            size="select-sm"
+            valueKey="value"
+            labelKey="name"
+          />
           <input
             type="date"
             value={filters.date || ""}

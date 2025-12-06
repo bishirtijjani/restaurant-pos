@@ -30,6 +30,7 @@ import {
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
 import { Link } from "react-router-dom";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 
 const TopSideButtons = ({ onRefresh, onAddNew }) => {
   const { can } = useAuth();
@@ -327,33 +328,43 @@ const SearchAndFilters = ({
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="form-control">
-          <select
-            className="select select-bordered w-full max-w-xs"
+        <div className="form-control w-full max-w-xs">
+          <SearchableSelect
+            options={[
+              { value: "", name: "Sort by..." },
+              { value: "name", name: "Name (A-Z)" },
+              { value: "name_desc", name: "Name (Z-A)" },
+              { value: "date", name: "Newest First" },
+              { value: "date_desc", name: "Oldest First" },
+              { value: "debt_limit", name: "Debt Limit (Low-High)" },
+              { value: "debt_limit_desc", name: "Debt Limit (High-Low)" },
+            ]}
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-          >
-            <option value="">Sort by...</option>
-            <option value="name">Name (A-Z)</option>
-            <option value="name_desc">Name (Z-A)</option>
-            <option value="date">Newest First</option>
-            <option value="date_desc">Oldest First</option>
-            <option value="debt_limit">Debt Limit (Low-High)</option>
-            <option value="debt_limit_desc">Debt Limit (High-Low)</option>
-          </select>
+            name="sortBy"
+            placeholder="Sort by..."
+            className="w-full"
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
 
-        <div className="form-control">
-          <select
-            className="select select-bordered w-full max-w-xs"
+        <div className="form-control w-full max-w-xs">
+          <SearchableSelect
+            options={[
+              { value: "", name: "All Debt Limits" },
+              { value: "low", name: `${settings?.currency.symbol}0 - ${settings?.currency.symbol}50,000` },
+              { value: "medium", name: `${settings?.currency.symbol}50,001 - ${settings?.currency.symbol}200,000` },
+              { value: "high", name: `${settings?.currency.symbol}200,001+` },
+            ]}
             value={debtLimitFilter}
             onChange={(e) => onDebtLimitFilterChange(e.target.value)}
-          >
-            <option value="">All Debt Limits</option>
-            <option value="low">{`${settings?.currency.symbol}0 - ${settings?.currency.symbol}50,000`}</option>
-            <option value="medium">{`${settings?.currency.symbol}50,001 - ${settings?.currency.symbol}200,000`}</option>
-            <option value="high">{`${settings?.currency.symbol}200,001+`}</option>
-          </select>
+            name="debtLimitFilter"
+            placeholder="All Debt Limits"
+            className="w-full"
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
 
         {/* View Toggle */}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { Monitor, Plus, X } from "lucide-react";
 import {
   createStation,
@@ -192,23 +193,28 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
             <label className="label">
               <span className="label-text">Station Type</span>
             </label>
-            <select
+            <SearchableSelect
+              options={[
+                { value: "all", name: "All Items" },
+                { value: "grill", name: "Grill" },
+                { value: "fryer", name: "Fryer" },
+                { value: "salad", name: "Salad" },
+                { value: "pizza", name: "Pizza" },
+                { value: "dessert", name: "Dessert" },
+                { value: "beverage", name: "Beverage" },
+                { value: "expo", name: "Expo" },
+              ]}
               value={formData.type}
               onChange={(e) =>
                 setFormData({ ...formData, type: e.target.value })
               }
-              className="select select-bordered"
+              name="type"
+              placeholder="Select Station Type"
               disabled={!hasPermission}
-            >
-              <option value="all">All Items</option>
-              <option value="grill">Grill</option>
-              <option value="fryer">Fryer</option>
-              <option value="salad">Salad</option>
-              <option value="pizza">Pizza</option>
-              <option value="dessert">Dessert</option>
-              <option value="beverage">Beverage</option>
-              <option value="expo">Expo</option>
-            </select>
+              className=""
+              valueKey="value"
+              labelKey="name"
+            />
           </div>
 
           <div className="form-control">
@@ -274,7 +280,8 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
               <label className="label">
                 <span className="label-text">Columns</span>
               </label>
-              <select
+              <SearchableSelect
+                options={[1, 2, 3, 4, 5, 6].map(n => ({ value: n, label: n.toString() }))}
                 value={formData.displaySettings.columns}
                 onChange={(e) =>
                   setFormData({
@@ -285,22 +292,26 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                     },
                   })
                 }
-                className="select select-bordered select-sm"
+                name="columns"
+                size="select-sm"
+                placeholder="Select Columns"
                 disabled={!hasPermission}
-              >
-                {[1, 2, 3, 4, 5, 6].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
+                className=""
+                valueKey="value"
+                labelKey="label"
+              />
             </div>
 
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Font Size</span>
               </label>
-              <select
+              <SearchableSelect
+                options={[
+                  { value: "small", name: "Small" },
+                  { value: "medium", name: "Medium" },
+                  { value: "large", name: "Large" },
+                ]}
                 value={formData.displaySettings.fontSize}
                 onChange={(e) =>
                   setFormData({
@@ -311,13 +322,14 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                     },
                   })
                 }
-                className="select select-bordered select-sm"
+                name="fontSize"
+                size="select-sm"
+                placeholder="Select Font Size"
                 disabled={!hasPermission}
-              >
-                <option value="small">Small</option>
-                <option value="medium">Medium</option>
-                <option value="large">Large</option>
-              </select>
+                className=""
+                valueKey="value"
+                labelKey="name"
+              />
             </div>
           </div>
 

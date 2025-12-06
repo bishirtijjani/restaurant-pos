@@ -29,6 +29,7 @@ import {
   Truck,
   Calendar,
 } from "lucide-react";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 
 const STATUS_COLORS = {
   draft: "badge-ghost",
@@ -79,6 +80,20 @@ const SearchAndFilters = ({
   setSupplierFilter,
   suppliers,
 }) => {
+  const statusOptions = [
+    { value: "", name: "All Status" },
+    { value: "draft", name: "Draft" },
+    { value: "pending", name: "Pending" },
+    { value: "approved", name: "Approved" },
+    { value: "received", name: "Received" },
+    { value: "cancelled", name: "Cancelled" },
+  ];
+
+  const supplierOptions = [
+    { value: "", name: "All Suppliers" },
+    ...suppliers.map(s => ({ value: s._id, name: s.name }))
+  ];
+
   return (
     <div className="bg-base-100 rounded-lg shadow-md p-4 mb-6">
       <div className="flex flex-col lg:flex-row gap-4">
@@ -96,31 +111,29 @@ const SearchAndFilters = ({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <select
-            className="select select-bordered select-sm lg:select-md"
+          <SearchableSelect
+            options={statusOptions}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="received">Received</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+            name="statusFilter"
+            placeholder="All Status"
+            className=""
+            size="select-sm lg:select-md"
+            valueKey="value"
+            labelKey="name"
+          />
 
-          <select
-            className="select select-bordered select-sm lg:select-md"
+          <SearchableSelect
+            options={supplierOptions}
             value={supplierFilter}
             onChange={(e) => setSupplierFilter(e.target.value)}
-          >
-            <option value="">All Suppliers</option>
-            {suppliers.map((supplier) => (
-              <option key={supplier._id} value={supplier._id}>
-                {supplier.name}
-              </option>
-            ))}
-          </select>
+            name="supplierFilter"
+            placeholder="All Suppliers"
+            className=""
+            size="select-sm lg:select-md"
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
       </div>
     </div>

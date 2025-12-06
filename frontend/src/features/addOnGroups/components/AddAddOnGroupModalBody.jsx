@@ -7,6 +7,7 @@ import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { Plus, Trash2, Package } from "lucide-react";
 
 const AddAddOnGroupModalBody = () => {
@@ -217,18 +218,20 @@ const AddAddOnGroupModalBody = () => {
       {/* Selection Rules */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="form-control">
-          <label className="label">
-            <span className="label-text">Selection Type *</span>
-          </label>
-          <select
-            name="selectionType"
+          <SearchableSelect
+            options={[
+              { value: "single", name: "Single (Choose One)" },
+              { value: "multiple", name: "Multiple (Choose Many)" },
+            ]}
             value={formData.selectionType}
-            onChange={handleChange}
-            className="select select-bordered"
-          >
-            <option value="single">Single (Choose One)</option>
-            <option value="multiple">Multiple (Choose Many)</option>
-          </select>
+            onChange={(e) => handleChange({ target: { name: "selectionType", value: e.target.value } })}
+            name="selectionType"
+            label="Selection Type *"
+            placeholder="Select Type"
+            className=""
+            valueKey="value"
+            labelKey="name"
+          />
         </div>
 
         <div className="form-control">
@@ -352,20 +355,22 @@ const AddAddOnGroupModalBody = () => {
                       Link to Inventory (Optional)
                     </span>
                   </label>
-                  <select
+                  <SearchableSelect
+                    options={[
+                      { _id: "", name: "No inventory link" },
+                      ...inventoryItems
+                    ]}
                     value={item.inventoryItem || ""}
                     onChange={(e) =>
                       handleItemChange(index, "inventoryItem", e.target.value)
                     }
-                    className="select select-bordered"
-                  >
-                    <option value="">No inventory link</option>
-                    {inventoryItems.map((inv) => (
-                      <option key={inv._id} value={inv._id}>
-                        {inv.name} ({inv.currentStock} {inv.unit})
-                      </option>
-                    ))}
-                  </select>
+                    name={`inventoryItem_${index}`}
+                    placeholder="Select Inventory Item"
+                    className=""
+                    valueKey="_id"
+                    labelKey="name"
+                    formatLabel={(item) => item._id ? `${item.name} (${item.currentStock} ${item.unit})` : item.name}
+                  />
                 </div>
 
                 {item.inventoryItem && (

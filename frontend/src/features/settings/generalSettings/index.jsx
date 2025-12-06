@@ -28,6 +28,7 @@ import {
 } from "./generalSettingsSlice";
 import { showNotification } from "../../common/headerSlice";
 import CurrencySelect from "./components/CurrencySelect";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import TaxSettings from "./components/TaxSettings";
 import { useAuth } from "../../../utils/permission";
 import { openModal, closeModal } from "../../common/modalSlice";
@@ -203,12 +204,17 @@ const GeneralSettings = () => {
   }, [dispatch]);
 
   const timezoneOptions = [
-    { value: "Nigeria/Lagos", label: "West African Time" },
-    { value: "America/New_York", label: "Eastern Daylight Time" },
-    { value: "India/Mumbai", label: "India Standard Time" },
-    { value: "UAE/Dubai", label: "Gulf Standard Time" },
-    { value: "America/Los_Angeles", label: "Pacific Time" },
-    { value: "UTC", label: "UTC" },
+    { value: "Nigeria/Lagos", name: "West African Time" },
+    { value: "America/New_York", name: "Eastern Daylight Time" },
+    { value: "India/Mumbai", name: "India Standard Time" },
+    { value: "UAE/Dubai", name: "Gulf Standard Time" },
+    { value: "America/Los_Angeles", name: "Pacific Time" },
+    { value: "UTC", name: "UTC" },
+  ];
+
+  const dateFormatOptions = [
+    { value: "MM/DD/YYYY", name: "MM/DD/YYYY" },
+    { value: "DD/MM/YYYY", name: "DD/MM/YYYY" },
   ];
 
   // Check if user has permission to edit settings
@@ -393,15 +399,20 @@ const GeneralSettings = () => {
                 <label className="label">
                   <span className="label-text font-medium">Date Format</span>
                 </label>
-                <select
-                  name="dateFormat"
+                <SearchableSelect
+                  options={dateFormatOptions}
                   value={formData.dateFormat}
-                  onChange={handleInputChange}
-                  className="select select-bordered"
-                >
-                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                </select>
+                  onChange={(e) =>
+                    handleInputChange({
+                      target: { name: "dateFormat", value: e.target.value },
+                    })
+                  }
+                  name="dateFormat"
+                  placeholder="Select Date Format"
+                  className=""
+                  valueKey="value"
+                  labelKey="name"
+                />
               </div>
             </div>
           </div>
@@ -469,18 +480,20 @@ const GeneralSettings = () => {
                 <label className="label">
                   <span className="label-text font-medium">Timezone</span>
                 </label>
-                <select
-                  name="timezone"
+                <SearchableSelect
+                  options={timezoneOptions}
                   value={formData.timezone}
-                  onChange={handleInputChange}
-                  className="select select-bordered"
-                >
-                  {timezoneOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(e) =>
+                    handleInputChange({
+                      target: { name: "timezone", value: e.target.value },
+                    })
+                  }
+                  name="timezone"
+                  placeholder="Select Timezone"
+                  className=""
+                  valueKey="value"
+                  labelKey="name"
+                />
               </div>
 
               <div className="form-control">

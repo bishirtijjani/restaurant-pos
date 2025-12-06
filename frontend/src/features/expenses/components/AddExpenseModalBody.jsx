@@ -23,17 +23,23 @@ function AddExpenseModalBody({ closeModal }) {
   });
 
   const categories = [
-    "Inventory Purchase",
-    "Utilities",
-    "Rent",
-    "Transportation",
-    "Maintenance",
-    "Salaries",
-    "Miscellaneous",
-    "Other",
+    { value: "Inventory Purchase", name: "Inventory Purchase" },
+    { value: "Utilities", name: "Utilities" },
+    { value: "Rent", name: "Rent" },
+    { value: "Transportation", name: "Transportation" },
+    { value: "Maintenance", name: "Maintenance" },
+    { value: "Salaries", name: "Salaries" },
+    { value: "Miscellaneous", name: "Miscellaneous" },
+    { value: "Other", name: "Other" },
   ];
 
-  const paymentMethods = ["Cash", "Credit", "Bank Transfer", "Card", "Other"];
+  const paymentMethods = [
+    { value: "Cash", name: "Cash" },
+    { value: "Credit", name: "Credit" },
+    { value: "Bank Transfer", name: "Bank Transfer" },
+    { value: "Card", name: "Card" },
+    { value: "Other", name: "Other" },
+  ];
 
   const saveExpense = () => {
     if (expense.amount.trim() === "")
@@ -93,20 +99,16 @@ function AddExpenseModalBody({ closeModal }) {
         <label htmlFor="category" className="block text-sm font-medium">
           Category
         </label>
-        <select
-          id="category"
-          name="category"
+        <SearchableSelect
+          options={categories}
           value={expense.category}
           onChange={handleInputChange}
-          className="select select-bordered w-full mt-2"
-        >
-          <option value="">Select Category</option>
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
+          name="category"
+          placeholder="Select Category"
+          className="w-full mt-2"
+          valueKey="value"
+          labelKey="name"
+        />
       </div>
 
       {/* Amount */}
@@ -146,20 +148,16 @@ function AddExpenseModalBody({ closeModal }) {
         <label htmlFor="paymentMethod" className="block text-sm font-medium">
           Payment Method
         </label>
-        <select
-          id="paymentMethod"
-          name="paymentMethod"
+        <SearchableSelect
+          options={paymentMethods}
           value={expense.paymentMethod}
           onChange={handleInputChange}
-          className="select select-bordered w-full mt-2"
-        >
-          <option value="">Select Payment Method</option>
-          {paymentMethods.map((method) => (
-            <option key={method} value={method}>
-              {method}
-            </option>
-          ))}
-        </select>
+          name="paymentMethod"
+          placeholder="Select Payment Method"
+          className="w-full mt-2"
+          valueKey="value"
+          labelKey="name"
+        />
       </div>
 
       {/* Invoice */}

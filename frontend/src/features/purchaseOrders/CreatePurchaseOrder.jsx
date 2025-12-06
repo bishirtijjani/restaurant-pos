@@ -1,4 +1,5 @@
 import FormattedNumberInput from "../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchInventoryItems } from "../inventory/inventorySlice";
@@ -73,6 +74,19 @@ const CreatePurchaseOrder = () => {
   }, [success, message, error, dispatch, navigate]);
 
   const currency = settings?.currency.symbol || "$";
+
+  const supplierOptions = [
+    { value: "", name: "Select supplier" },
+    ...suppliers.map(s => ({ value: s._id, name: s.name }))
+  ];
+
+  const itemOptions = [
+    { value: "", name: "Select item" },
+    ...inventoryItems.map(item => ({
+      value: item._id,
+      name: `${item.name} - ${item.sku || "No SKU"} (${item.unit})`
+    }))
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -180,21 +194,16 @@ const CreatePurchaseOrder = () => {
                 Supplier *
               </span>
             </label>
-            <select
-              name="supplier"
+            <SearchableSelect
+              options={supplierOptions}
               value={formData.supplier}
               onChange={handleChange}
-              className={`select select-bordered ${
-                errors.supplier ? "select-error" : ""
-              }`}
-            >
-              <option value="">Select supplier</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier._id} value={supplier._id}>
-                  {supplier.name}
-                </option>
-              ))}
-            </select>
+              name="supplier"
+              placeholder="Select supplier"
+              className={errors.supplier ? "border-error" : ""}
+              valueKey="value"
+              labelKey="name"
+            />
             {errors.supplier && <ErrorText>{errors.supplier}</ErrorText>}
           </div>
 
@@ -287,7 +296,8 @@ const CreatePurchaseOrder = () => {
                           Inventory Item *
                         </span>
                       </label>
-                      <select
+                      <SearchableSelect
+                        options={itemOptions}
                         value={item.inventoryItem}
                         onChange={(e) =>
                           handleItemChange(
@@ -296,18 +306,12 @@ const CreatePurchaseOrder = () => {
                             e.target.value
                           )
                         }
-                        className={`select select-bordered ${
-                          errors[`item_${index}`] ? "select-error" : ""
-                        }`}
-                      >
-                        <option value="">Select item</option>
-                        {inventoryItems.map((invItem) => (
-                          <option key={invItem._id} value={invItem._id}>
-                            {invItem.name} - {invItem.sku || "No SKU"} (
-                            {invItem.unit})
-                          </option>
-                        ))}
-                      </select>
+                        name={`item_${index}`}
+                        placeholder="Select item"
+                        className={errors[`item_${index}`] ? "border-error" : ""}
+                        valueKey="value"
+                        labelKey="name"
+                      />
                       {errors[`item_${index}`] && (
                         <ErrorText>{errors[`item_${index}`]}</ErrorText>
                       )}

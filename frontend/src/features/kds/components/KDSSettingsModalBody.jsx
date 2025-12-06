@@ -9,6 +9,7 @@ import {
   Type,
   Palette,
 } from "lucide-react";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { updateSettings } from "../kdsSlice";
 
 const KDSSettingsModalBody = ({ closeModal }) => {
@@ -22,6 +23,15 @@ const KDSSettingsModalBody = ({ closeModal }) => {
   const handleSave = () => {
     closeModal();
   };
+
+  const columnOptions = [
+    { value: 1, name: "1 Column" },
+    { value: 2, name: "2 Columns" },
+    { value: 3, name: "3 Columns" },
+    { value: 4, name: "4 Columns" },
+    { value: 5, name: "5 Columns" },
+    { value: 6, name: "6 Columns" },
+  ];
 
   return (
     <div className="modal-content">
@@ -97,20 +107,18 @@ const KDSSettingsModalBody = ({ closeModal }) => {
                 <label className="label">
                   <span className="label-text">Columns</span>
                 </label>
-                <select
-                  className="select select-bordered w-full"
+                <SearchableSelect
+                  options={columnOptions}
                   value={settings.columns}
                   onChange={(e) =>
                     handleSettingChange("columns", parseInt(e.target.value))
                   }
-                >
-                  <option value={1}>1 Column</option>
-                  <option value={2}>2 Columns</option>
-                  <option value={3}>3 Columns</option>
-                  <option value={4}>4 Columns</option>
-                  <option value={5}>5 Columns</option>
-                  <option value={6}>6 Columns</option>
-                </select>
+                  name="columns"
+                  placeholder="Select columns"
+                  className="w-full"
+                  valueKey="value"
+                  labelKey="name"
+                />
               </div>
 
               <div className="form-control">

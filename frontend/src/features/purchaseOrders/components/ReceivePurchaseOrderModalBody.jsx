@@ -1,4 +1,5 @@
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { Package, Calendar, DollarSign, Check } from "lucide-react";
 
 const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
@@ -25,6 +26,20 @@ const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
   });
 
   const [errors, setErrors] = useState({});
+
+  const paymentStatusOptions = [
+    { value: "unpaid", name: "Unpaid" },
+    { value: "partial", name: "Partial" },
+    { value: "paid", name: "Paid" },
+  ];
+
+  const paymentMethodOptions = [
+    { value: "", name: "Select method" },
+    { value: "cash", name: "Cash" },
+    { value: "card", name: "Card" },
+    { value: "transfer", name: "Bank Transfer" },
+    { value: "credit", name: "Credit" },
+  ];
 
   const handleReceivedQuantityChange = (itemId, value) => {
     const quantity = parseFloat(value) || 0;
@@ -229,16 +244,16 @@ const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
             <label className="label">
               <span className="label-text">Payment Status</span>
             </label>
-            <select
-              name="paymentStatus"
+            <SearchableSelect
+              options={paymentStatusOptions}
               value={paymentData.paymentStatus}
               onChange={handlePaymentChange}
-              className="select select-bordered"
-            >
-              <option value="unpaid">Unpaid</option>
-              <option value="partial">Partial</option>
-              <option value="paid">Paid</option>
-            </select>
+              name="paymentStatus"
+              placeholder="Select status"
+              className=""
+              valueKey="value"
+              labelKey="name"
+            />
           </div>
 
           <div className="form-control">
@@ -265,20 +280,16 @@ const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
           <label className="label">
             <span className="label-text">Payment Method</span>
           </label>
-          <select
-            name="paymentMethod"
+          <SearchableSelect
+            options={paymentMethodOptions}
             value={paymentData.paymentMethod}
             onChange={handlePaymentChange}
-            className={`select select-bordered ${
-              errors.paymentMethod ? "select-error" : ""
-            }`}
-          >
-            <option value="">Select method</option>
-            <option value="cash">Cash</option>
-            <option value="card">Card</option>
-            <option value="transfer">Bank Transfer</option>
-            <option value="credit">Credit</option>
-          </select>
+            name="paymentMethod"
+            placeholder="Select method"
+            className={errors.paymentMethod ? "border-error" : ""}
+            valueKey="value"
+            labelKey="name"
+          />
           {errors.paymentMethod && (
             <ErrorText>{errors.paymentMethod}</ErrorText>
           )}

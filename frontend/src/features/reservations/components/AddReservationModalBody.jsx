@@ -4,6 +4,7 @@ import { createReservation } from "../reservationSlice";
 import { closeModal, openModal } from "../../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { showNotification } from "../../common/headerSlice";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import CustomerSearch from "../../../components/Common/CustomerSearch";
@@ -29,6 +30,14 @@ const AddReservationModalBody = ({ closeModal: close }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [conflicts, setConflicts] = useState([]);
+
+  const tableOptions = [
+    { value: "", name: "Select table..." },
+    ...tables?.filter(t => t.isActive || t._id === formData.tableId).map(table => ({
+      value: table._id,
+      name: `Table ${table.tableNumber} (Capacity: ${table.capacity})`
+    })) || []
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -184,20 +193,17 @@ const AddReservationModalBody = ({ closeModal: close }) => {
             <label className="label">
                 <span className="label-text">Table (Optional)</span>
             </label>
-            <select
-                name="tableId"
+            <SearchableSelect
+                options={tableOptions}
                 value={formData.tableId}
                 onChange={handleChange}
-                className={`select select-bordered w-full ${errors.tableId ? "select-error" : ""}`}
+                name="tableId"
+                placeholder="Select table"
+                className={`w-full ${errors.tableId ? "border-error" : ""}`}
                 disabled={isSubmitting}
-            >
-                <option value="">Select table...</option>
-                {tables?.filter(t => t.isActive || t._id === formData.tableId).map(table => (
-                    <option key={table._id} value={table._id}>
-                        Table {table.tableNumber} (Capacity: {table.capacity})
-                    </option>
-                ))}
-            </select>
+                valueKey="value"
+                labelKey="name"
+            />
             {errors.tableId && <ErrorText>{errors.tableId}</ErrorText>}
         </div>
 

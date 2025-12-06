@@ -1,4 +1,5 @@
 import FormattedNumberInput from "../../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../../components/Input/SearchableSelect";
 import {
   ReceiptPercentIcon,
   CurrencyDollarIcon,
@@ -18,6 +19,12 @@ const TaxSettings = ({ formData, onTaxChange, onServiceChange }) => {
       [field]: value,
     });
   };
+
+  const applyToOptions = [
+    { value: "all", name: "All Orders" },
+    { value: "dine-in", name: "Dine-in Only" },
+    { value: "delivery", name: "Delivery Only" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -207,17 +214,18 @@ const TaxSettings = ({ formData, onTaxChange, onServiceChange }) => {
                 <label className="label">
                   <span className="label-text font-medium">Apply To</span>
                 </label>
-                <select
-                  className="select select-bordered"
+                <SearchableSelect
+                  options={applyToOptions}
                   value={formData.serviceCharge?.applyTo || "all"}
                   onChange={(e) =>
                     handleServiceChange("applyTo", e.target.value)
                   }
-                >
-                  <option value="all">All Orders</option>
-                  <option value="dine-in">Dine-in Only</option>
-                  <option value="delivery">Delivery Only</option>
-                </select>
+                  name="applyTo"
+                  placeholder="Apply To"
+                  className=""
+                  valueKey="value"
+                  labelKey="name"
+                />
               </div>
             </div>
           )}

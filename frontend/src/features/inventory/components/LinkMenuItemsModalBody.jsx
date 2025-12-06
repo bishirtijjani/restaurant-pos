@@ -11,6 +11,7 @@ import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { Search, Link as LinkIcon, Unlink, Trash2 } from "lucide-react";
 import ErrorText from "../../../components/Typography/ErrorText";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 
 const LinkMenuItemsModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
@@ -31,15 +32,19 @@ const LinkMenuItemsModalBody = ({ extraObject }) => {
     }
   }, [dispatch, inventoryItem]);
 
-  const filteredMenuItems = menuItems.filter((item) => {
-    const matchesSearch = item.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const notLinked = !linkedItems.find(
-      (linked) => linked.menuItemId._id === item._id
-    );
-    return matchesSearch && notLinked;
-  });
+  // Search log is handled by SearchableSelect now, so we just filter out already linked items
+  
+  const availableMenuItems = menuItems.filter(item => 
+    !linkedItems.find(linked => linked.menuItemId._id === item._id)
+  );
+
+  const menuItemOptions = [
+    { value: "", name: "Select a menu item" },
+    ...availableMenuItems.map(item => ({ 
+        value: item._id, 
+        name: `${item.name} - ${item.category}` 
+    }))
+  ];
 
   const handleLink = async () => {
     if (!selectedMenuItem) {
@@ -140,42 +145,26 @@ const LinkMenuItemsModalBody = ({ extraObject }) => {
 
           <div className="space-y-4">
             {/* Search */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Search Menu Items</span>
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 w-5 h-5 text-base-content/50" />
-                <input
-                  type="text"
-                  placeholder="Search by menu item name..."
-                  className="input input-bordered w-full pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
+
 
             {/* Select Menu Item */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Select Menu Item</span>
               </label>
-              <select
-                className="select select-bordered w-full"
+              <SearchableSelect
+                options={menuItemOptions}
                 value={selectedMenuItem}
                 onChange={(e) => {
                   setSelectedMenuItem(e.target.value);
                   setError("");
                 }}
-              >
-                <option value="">-- Select a menu item --</option>
-                {filteredMenuItems.map((item) => (
-                  <option key={item._id} value={item._id}>
-                    {item.name} - {item.category}
-                  </option>
-                ))}
-              </select>
+                name="selectedMenuItem"
+                placeholder="Select Menu Item"
+                className="w-full"
+                valueKey="value"
+                labelKey="name"
+              />
             </div>
 
             {/* Quantity Used */}

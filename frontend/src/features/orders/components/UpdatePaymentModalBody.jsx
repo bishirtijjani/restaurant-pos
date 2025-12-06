@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { updatePayment, fetchOrders } from "../ordersSlice";
@@ -22,6 +23,12 @@ function UpdatePaymentModalBody({ extraObject, closeModal: close }) {
     paymentMethod: order.paymentMethod || "cash",
     reason: "",
   });
+
+  const paymentMethodOptions = [
+    { value: "cash", name: "Cash" },
+    { value: "card", name: "Card" },
+    { value: "Transfer", name: "Bank Transfer" },
+  ];
 
   const remainingBalance = order.totalAmount - order.amountPaid;
 
@@ -130,16 +137,16 @@ function UpdatePaymentModalBody({ extraObject, closeModal: close }) {
         <label className="label">
           <span className="label-text">Payment Method</span>
         </label>
-        <select
-          name="paymentMethod"
+        <SearchableSelect
+          options={paymentMethodOptions}
           value={paymentData.paymentMethod}
           onChange={handleInputChange}
-          className="select select-bordered"
-        >
-          <option value="cash">Cash</option>
-          <option value="card">Card</option>
-          <option value="Transfer">Bank Transfer</option>
-        </select>
+          name="paymentMethod"
+          placeholder="Select payment method"
+          className=""
+          valueKey="value"
+          labelKey="name"
+        />
       </div>
 
       <div className="form-control">

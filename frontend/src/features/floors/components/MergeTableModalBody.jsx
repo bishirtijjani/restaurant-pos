@@ -5,6 +5,7 @@ import { showNotification } from "../../common/headerSlice";
 import { closeModal } from "../../common/modalSlice";
 import { Combine } from "lucide-react";
 import { canMergeTables } from "../../tables/tableUtils";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 
 const MergeTableModalBody = ({ closeModal, extraObject }) => {
     const dispatch = useDispatch();
@@ -29,6 +30,14 @@ const MergeTableModalBody = ({ closeModal, extraObject }) => {
         const targetFloorId = typeof floorId === 'object' ? floorId?._id : floorId;
         return t._id !== tableId && String(tFloorId) === String(targetFloorId);
     });
+
+    const tableOptions = [
+        { value: "", name: "Select a table..." },
+        ...availableTables.map(t => ({
+            value: t._id,
+            name: `Table ${t.tableNumber} (${t.seats} seats) - ${t.status}`
+        }))
+    ];
 
     const handleMerge = async () => {
         if (!selectedTargetId) {
@@ -72,18 +81,16 @@ const MergeTableModalBody = ({ closeModal, extraObject }) => {
                 <label className="label">
                     <span className="label-text">Merge with:</span>
                 </label>
-                <select 
-                    className="select select-bordered w-full"
+                <SearchableSelect 
+                    options={tableOptions}
                     value={selectedTargetId}
                     onChange={(e) => setSelectedTargetId(e.target.value)}
-                >
-                    <option value="">Select a table...</option>
-                    {availableTables.map(t => (
-                        <option key={t._id} value={t._id}>
-                            Table {t.tableNumber} ({t.seats} seats) - {t.status}
-                        </option>
-                    ))}
-                </select>
+                    name="selectedTargetId"
+                    placeholder="Select a table..."
+                    className="w-full"
+                    valueKey="value"
+                    labelKey="name"
+                />
             </div>
 
             <div className="modal-action">

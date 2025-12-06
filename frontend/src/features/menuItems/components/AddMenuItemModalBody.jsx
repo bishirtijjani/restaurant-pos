@@ -4,11 +4,10 @@ import { addMenuItem } from "../menuItemsSlice";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
-
 import { fetchAddOnGroups } from "../../addOnGroups/addOnGroupsSlice";
 import { Check } from "lucide-react";
-
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 
 const AddMenuItemModalBody = () => {
   const dispatch = useDispatch();
@@ -220,8 +219,8 @@ const AddMenuItemModalBody = () => {
                 {errors.category}
               </span>
             </label>
-            <select
-              className="select select-bordered w-full"
+            <SearchableSelect
+              options={categories || []}
               value={formData.category}
               onChange={(e) =>
                 updateFormValue({
@@ -229,21 +228,13 @@ const AddMenuItemModalBody = () => {
                   value: e.target.value,
                 })
               }
-              required
+              name="category"
+              placeholder={categoriesLoading ? "Loading categories..." : "Select category"}
               disabled={categoriesLoading}
-            >
-              <option value="" disabled>
-                {categoriesLoading
-                  ? "Loading categories..."
-                  : "---- Select category ----"}
-              </option>
-              {categories &&
-                categories.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
-            </select>
+              className="w-full"
+              valueKey="_id"
+              labelKey="name"
+            />
           </div>
 
           {/* Selling Price field with FormattedNumberInput */}

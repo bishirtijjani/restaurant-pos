@@ -38,6 +38,7 @@ import {
   Grid3x3,
   List,
 } from "lucide-react";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 
 const CATEGORIES = [
   "Raw Materials",
@@ -103,6 +104,18 @@ const SearchAndFilters = ({
   viewMode,
   setViewMode,
 }) => {
+  const categoryOptions = [
+    { value: "", name: "All Categories" },
+    ...CATEGORIES.map(cat => ({ value: cat, name: cat }))
+  ];
+
+  const stockOptions = [
+    { value: "", name: "All Stock" },
+    { value: "low", name: "Low Stock" },
+    { value: "in-stock", name: "In Stock" },
+    { value: "out-of-stock", name: "Out of Stock" },
+  ];
+
   return (
     <div className="bg-base-100 rounded-lg shadow-md p-4 mb-6">
       <div className="flex flex-col lg:flex-row gap-4">
@@ -122,29 +135,29 @@ const SearchAndFilters = ({
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
-          <select
-            className="select select-bordered select-sm lg:select-md"
+          <SearchableSelect
+            options={categoryOptions}
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option value="">All Categories</option>
-            {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            name="categoryFilter"
+            placeholder="All Categories"
+            className=""
+            size="select-sm lg:select-md"
+            valueKey="value"
+            labelKey="name"
+          />
 
-          <select
-            className="select select-bordered select-sm lg:select-md"
+          <SearchableSelect
+            options={stockOptions}
             value={stockFilter}
             onChange={(e) => setStockFilter(e.target.value)}
-          >
-            <option value="">All Stock</option>
-            <option value="low">Low Stock</option>
-            <option value="in-stock">In Stock</option>
-            <option value="out-of-stock">Out of Stock</option>
-          </select>
+            name="stockFilter"
+            placeholder="All Stock"
+            className=""
+            size="select-sm lg:select-md"
+            valueKey="value"
+            labelKey="name"
+          />
 
           {/* View Toggle */}
           <div className="btn-group">

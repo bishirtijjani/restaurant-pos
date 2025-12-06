@@ -8,6 +8,7 @@ import { fetchAllMenuItems } from "../../menuItems/menuItemsSlice";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { Percent, DollarSign, Gift, Clock } from "lucide-react";
 
 const DAYS_OF_WEEK = [
@@ -451,16 +452,20 @@ const AddDiscountModalBody = ({ extraObject, closeModal: close }) => {
         <label className="label">
           <span className="label-text font-medium">Applies To</span>
         </label>
-        <select
-          name="scope"
+        <SearchableSelect
+          options={[
+            { value: "all", name: "All Items" },
+            { value: "category", name: "Specific Categories" },
+            { value: "items", name: "Specific Items" },
+          ]}
           value={formData.scope}
           onChange={handleChange}
-          className="select select-bordered"
-        >
-          <option value="all">All Items</option>
-          <option value="category">Specific Categories</option>
-          <option value="items">Specific Items</option>
-        </select>
+          name="scope"
+          placeholder="Select Scope"
+          className=""
+          valueKey="value"
+          labelKey="name"
+        />
       </div>
 
       {/* Category Selection */}

@@ -1,6 +1,7 @@
 // frontend/src/features/orders/components/DiscountSection.jsx
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 import {
   fetchActiveDiscounts,
   validatePromoCode,
@@ -39,6 +40,11 @@ const DiscountSection = ({
     name: "Manual Discount",
   });
   const [expanded, setExpanded] = useState(false);
+
+  const discountTypeOptions = [
+    { value: "percentage", name: "%" },
+    { value: "fixed", name: currency },
+  ];
 
   useEffect(() => {
     dispatch(fetchActiveDiscounts(orderType));
@@ -271,7 +277,8 @@ const DiscountSection = ({
             {showManual && (
               <div className="space-y-2 p-3 bg-base-100 rounded-lg border border-base-300">
                 <div className="flex gap-2">
-                  <select
+                  <SearchableSelect
+                    options={discountTypeOptions}
                     value={manualDiscount.type}
                     onChange={(e) =>
                       setManualDiscount((prev) => ({
@@ -279,11 +286,13 @@ const DiscountSection = ({
                         type: e.target.value,
                       }))
                     }
-                    className="select select-sm select-bordered"
-                  >
-                    <option value="percentage">%</option>
-                    <option value="fixed">{currency}</option>
-                  </select>
+                    name="discountType"
+                    placeholder="Type"
+                    className=""
+                    size="select-sm"
+                    valueKey="value"
+                    labelKey="name"
+                  />
                   <input
                     type="number"
                     value={manualDiscount.value}

@@ -10,14 +10,23 @@ import { fetchSettings } from "../../settings/generalSettings/generalSettingsSli
 import SearchableSelect from "../../../components/Input/SearchableSelect";
 
 const CATEGORIES = [
-  "Raw Materials",
-  "Beverages",
-  "Packaging",
-  "Cleaning Supplies",
-  "Other",
+  { value: "Raw Materials", name: "Raw Materials" },
+  { value: "Beverages", name: "Beverages" },
+  { value: "Packaging", name: "Packaging" },
+  { value: "Cleaning Supplies", name: "Cleaning Supplies" },
+  { value: "Other", name: "Other" },
 ];
 
-const UNITS = ["kg", "g", "L", "ml", "pcs", "pack", "box", "bag"];
+const UNITS = [
+  { value: "kg", name: "kg" },
+  { value: "g", name: "g" },
+  { value: "L", name: "L" },
+  { value: "ml", name: "ml" },
+  { value: "pcs", name: "pcs" },
+  { value: "pack", name: "pack" },
+  { value: "box", name: "box" },
+  { value: "bag", name: "bag" },
+];
 
 const AddInventoryModalBody = () => {
   const dispatch = useDispatch();
@@ -155,22 +164,17 @@ const AddInventoryModalBody = () => {
           <label className="label">
             <span className="label-text">Category *</span>
           </label>
-          <select
-            name="category"
+          <SearchableSelect
+            options={CATEGORIES}
             value={formData.category}
             onChange={handleChange}
-            className={`select select-bordered ${
-              errors.category ? "select-error" : ""
-            }`}
+            name="category"
+            placeholder="Select category"
+            className={`w-full ${errors.category ? "border-error" : ""}`}
+            valueKey="value"
+            labelKey="name"
             disabled={isSubmitting}
-          >
-            <option value="">Select category</option>
-            {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+          />
           {errors.category && <ErrorText>{errors.category}</ErrorText>}
         </div>
 
@@ -179,22 +183,17 @@ const AddInventoryModalBody = () => {
           <label className="label">
             <span className="label-text">Unit *</span>
           </label>
-          <select
-            name="unit"
+          <SearchableSelect
+            options={UNITS}
             value={formData.unit}
             onChange={handleChange}
-            className={`select select-bordered ${
-              errors.unit ? "select-error" : ""
-            }`}
+            name="unit"
+            placeholder="Select unit"
+            className={`w-full ${errors.unit ? "border-error" : ""}`}
+            valueKey="value"
+            labelKey="name"
             disabled={isSubmitting}
-          >
-            <option value="">Select unit</option>
-            {UNITS.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </select>
+          />
           {errors.unit && <ErrorText>{errors.unit}</ErrorText>}
         </div>
 
@@ -258,11 +257,8 @@ const AddInventoryModalBody = () => {
           <SearchableSelect
             options={suppliers}
             value={formData.supplier}
-            onChange={(e) =>
-              handleChange({
-                target: { name: "supplier", value: e?.target?.value },
-              })
-            }
+            onChange={handleChange}
+            name="supplier"
             placeholder="Select supplier"
             className=""
             isLoading={false}
