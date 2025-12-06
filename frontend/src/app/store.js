@@ -10,6 +10,7 @@ import menuItemsReducer from "../features/menuItems/menuItemsSlice";
 import categoriesReducer from "../features/categories/categoriesSlice";
 import suppliersReducer from "../features/suppliers/suppliersSlice";
 import ordersReducer from "../features/orders/ordersSlice";
+import posReducer from "../features/orders/posSlice";
 import expensesReducer from "../features/expenses/expensesSlice";
 import generalSettingsReducer from "../features/settings/generalSettings/generalSettingsSlice";
 import kdsReducer from "../features/kds/kdsSlice";
@@ -47,6 +48,7 @@ const combinedReducer = {
   categories: categoriesReducer,
   suppliers: suppliersReducer,
   orders: ordersReducer,
+  pos: posReducer,
   expenses: expensesReducer,
   generalSettings: generalSettingsReducer,
   kds: kdsReducer,

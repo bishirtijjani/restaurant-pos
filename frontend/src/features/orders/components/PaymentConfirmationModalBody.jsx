@@ -7,6 +7,7 @@ import { openModal, closeModal } from "../../common/modalSlice";
 import { closeRightDrawer } from "../../common/rightDrawerSlice";
 import { showNotification } from "../../common/headerSlice";
 import { createOrder, fetchOrders } from "../ordersSlice";
+import { clearCart } from "../posSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { Plus, Trash2, DollarSign } from "lucide-react";
 
@@ -189,6 +190,7 @@ function PaymentConfirmationModalBody(props) {
           })
         );
         dispatch(fetchOrders());
+        dispatch(clearCart()); // Clear POS cart after successful payment
         dispatch(closeModal());
         dispatch(closeRightDrawer());
         dispatch(

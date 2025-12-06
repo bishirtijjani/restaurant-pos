@@ -33,6 +33,23 @@ import TitleCard from "../../components/Cards/TitleCard";
 import { showNotification } from "../common/headerSlice";
 import CustomerSearch from "../../components/Common/CustomerSearch";
 import TableSelectionModal from "./components/TableSelectionModal";
+import {
+  addToCart,
+  removeFromCart,
+  updateCartItemQuantity,
+  updateCartItemNote,
+  setOrderType,
+  setCustomerDetails,
+  setOrderNote,
+  setOrderDiscount,
+  setPackagingFee,
+  setDeliveryFee,
+  setSearchQuery,
+  setActiveCategory,
+  setSelectedTable,
+  clearCart,
+} from "./posSlice";
+import { createOrder } from "./ordersSlice";
 
 const OrderTypeSelector = ({ orderType, setOrderType, disabled }) => (
   <div className="join mb-4 join-vertical lg:join-horizontal w-full">
@@ -344,23 +361,26 @@ export default function POS() {
   const menuItems = useSelector((state) => state.menuItems.menuItems);
   const categories = useSelector((state) => state.categories.categories);
 
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [orderType, setOrderType] = useState("dine-in");
-  const [cart, setCart] = useState([]);
-  const [orderNote, setOrderNote] = useState("");
-  const [packagingFee, setPackagingFee] = useState("0");
-  const [deliveryFee, setDeliveryFee] = useState("0");
-  const [tableNumber, setTableNumber] = useState("1");
-  const [selectedTable, setSelectedTable] = useState(null);
+  /* Redux State Selectors */
+  const {
+    cart,
+    orderType,
+    selectedTable,
+    customerDetails,
+    orderNote,
+    orderDiscount,
+    packagingFee,
+    deliveryFee,
+    searchQuery,
+    activeCategory,
+  } = useSelector((state) => state.pos);
+
   const [showTableModal, setShowTableModal] = useState(false);
-  const [customerDetails, setCustomerDetails] = useState({
-    customerId: null,
-    name: "",
-    phone: "",
-    address: "",
-  });
-  const [orderDiscount, setOrderDiscount] = useState(null);
+
+  // Local state for packaging/delivery fee inputs (to handle typing)
+  // We sync with Redux on blur or enter, or just update directly if formatted
+  // Actually, FormattedNumberInput or simple input can update Redux directly but let's be careful with re-renders.
+  // For simplicity, we can update Redux directly as these are small frequent updates.
 
   const canCreateOrders = can("createOrders");
 
@@ -377,7 +397,7 @@ export default function POS() {
       item.isAvailable
   );
 
-  const addToCart = (item) => {
+  const handleAddToCart = (item) => {
     if (!canCreateOrders) return;
 
     if (item.addOnGroups && item.addOnGroups.length > 0) {
@@ -387,79 +407,31 @@ export default function POS() {
           bodyType: MODAL_BODY_TYPES.ADDON_SELECTOR,
           extraObject: {
             menuItem: item,
-            onConfirm: (addOnData) => addItemToCart(item, addOnData),
+            onConfirm: (addOnData) => dispatch(addToCart({ item, addOnData })),
           },
           size: "lg",
         })
       );
     } else {
-      addItemToCart(item, { addOns: [], itemNote: "", total: item.price });
-    }
-  };
-
-  const addItemToCart = (item, addOnData) => {
-    const cartKey = JSON.stringify({
-      id: item._id,
-      addOns: addOnData.addOns.map((a) => ({
-        groupId: a.groupId,
-        items: a.selectedItemIds?.sort(),
-      })),
-      note: addOnData.itemNote,
-    });
-
-    const existingIndex = cart.findIndex((cartItem) => {
-      const itemKey = JSON.stringify({
-        id: cartItem._id,
-        addOns: (cartItem.addOns || []).map((a) => ({
-          groupId: a.groupId,
-          items: a.selectedItemIds?.sort(),
-        })),
-        note: cartItem.itemNote,
-      });
-      return itemKey === cartKey;
-    });
-
-    if (existingIndex >= 0) {
-      setCart(
-        cart.map((c, i) =>
-          i === existingIndex ? { ...c, quantity: c.quantity + 1 } : c
-        )
-      );
-    } else {
-      setCart([
-        ...cart,
-        {
-          ...item,
-          quantity: 1,
-          addOns: addOnData.addOns,
-          itemNote: addOnData.itemNote,
-          addOnsTotal: addOnData.total - item.price,
-          cartId: Date.now(),
-        },
-      ]);
-    }
-  };
-
-  const updateQuantity = (index, newQuantity) => {
-    if (newQuantity <= 0) {
-      setCart(cart.filter((_, i) => i !== index));
-    } else {
-      setCart(
-        cart.map((item, i) =>
-          i === index ? { ...item, quantity: newQuantity } : item
-        )
+      dispatch(
+        addToCart({
+          item,
+          addOnData: { addOns: [], itemNote: "", total: item.price },
+        })
       );
     }
   };
 
-  const updateNote = (index, note) => {
-    setCart(
-      cart.map((item, i) => (i === index ? { ...item, itemNote: note } : item))
-    );
+  const handleUpdateQuantity = (index, newQuantity) => {
+    dispatch(updateCartItemQuantity({ index, quantity: newQuantity }));
   };
 
-  const removeItem = (index) => {
-    setCart(cart.filter((_, i) => i !== index));
+  const handleUpdateNote = (index, note) => {
+    dispatch(updateCartItemNote({ index, note }));
+  };
+
+  const handleRemoveItem = (index) => {
+    dispatch(removeFromCart(index));
   };
 
   const calculateTotals = () => {
@@ -530,6 +502,91 @@ export default function POS() {
   };
 
   const totals = calculateTotals();
+
+  const handleSendToKitchen = () => {
+    if (!canCreateOrders || cart.length === 0) return;
+
+    if (orderType === "dine-in" && !selectedTable) {
+      dispatch(
+        showNotification({
+          message: "Please select a table for dine-in orders",
+          status: 0,
+        })
+      );
+      return;
+    }
+
+    // Determine effective table (Primary table if merged)
+    let effectiveTableNumber = selectedTable?.tableNumber;
+    // We can reuse the logic from handleCheckout or refactor it into a helper, 
+    // but for now let's copy the robust logic to ensure consistency.
+    // Actually, let's verify if `selectedTable` object from Redux is full object. Yes it is.
+    if (orderType === "dine-in" && selectedTable && selectedTable._id && tables && tables.length > 0) {
+        try {
+            const group = getGroup(selectedTable._id, tables);
+            if (group && group.length > 1) {
+                const primary = getPrimary(group);
+                if (primary && primary.tableNumber) {
+                    effectiveTableNumber = primary.tableNumber;
+                }
+            }
+        } catch (error) {
+            console.error('Error determining primary table:', error);
+        }
+    }
+
+    const orderPayload = {
+      table: orderType === "dine-in" ? effectiveTableNumber : "Takeaway",
+      customerDetails: {
+        customerId: customerDetails.customerId || null,
+        name: customerDetails.name || "Walk-in",
+        phone: customerDetails.phone,
+        address: orderType === "delivery" ? customerDetails.address : "",
+      },
+      orderType,
+      orderItems: cart.map((item) => ({
+        menuItemId: item._id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        itemNote: item.itemNote || "",
+        addOns:
+          item.addOns?.map((a) => ({
+            groupId: a.groupId,
+            selectedItemIds: a.selectedItemIds,
+          })) || [],
+        subtotal: (item.price + (item.addOnsTotal || 0)) * item.quantity,
+        preparationTime: item.preparationTime || 15,
+      })),
+      packagingFee: totals.packaging,
+      deliveryFee: totals.delivery,
+      totalAmount: totals.total,
+      orderNote,
+      note: orderNote,
+      orderDiscount: orderDiscount?.enabled ? orderDiscount : null,
+      promoCode: orderDiscount?.promoCode || null,
+      taxBreakdown: {
+        subtotal: totals.discountedSubtotal,
+        totalTax: totals.totalTax,
+        serviceCharge: totals.serviceCharge,
+      },
+      paymentStatus: "pending",
+      paymentMethod: "cash", // Default to cash for pending orders? Or null? Model defaults to cash.
+      amountPaid: 0,
+      balance: totals.total, 
+      payments: [], // No payments yet
+    };
+
+    dispatch(createOrder({ order: orderPayload }))
+      .unwrap()
+      .then(() => {
+        dispatch(showNotification({ message: "Order sent to kitchen!", status: 1 }));
+        dispatch(clearCart());
+      })
+      .catch((err) => {
+        dispatch(showNotification({ message: err.message || "Failed to create order", status: 0 }));
+      });
+  };
 
   const handleCheckout = () => {
     if (!canCreateOrders || cart.length === 0) return;
@@ -631,13 +688,13 @@ export default function POS() {
             placeholder="Search items..."
             className="input input-bordered w-full pl-10"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => dispatch(setSearchQuery(e.target.value))}
           />
         </div>
 
         <CategoryFilter
           activeCategory={activeCategory}
-          setActiveCategory={setActiveCategory}
+          setActiveCategory={(cat) => dispatch(setActiveCategory(cat))}
           categories={categories}
           disabled={!canCreateOrders}
         />
@@ -647,7 +704,7 @@ export default function POS() {
             <MenuItem
               key={item._id}
               item={item}
-              onAdd={addToCart}
+              onAdd={handleAddToCart}
               currency={currency}
               disabled={!canCreateOrders}
             />
@@ -666,7 +723,7 @@ export default function POS() {
 
         <OrderTypeSelector
           orderType={orderType}
-          setOrderType={setOrderType}
+          setOrderType={(type) => dispatch(setOrderType(type))}
           disabled={!canCreateOrders}
         />
 
@@ -707,7 +764,7 @@ export default function POS() {
         {(orderType === "delivery" || orderType === "takeaway") && (
           <CustomerDetailsForm
             customerDetails={customerDetails}
-            setCustomerDetails={setCustomerDetails}
+            setCustomerDetails={(details) => dispatch(setCustomerDetails(details))}
             orderType={orderType}
             disabled={!canCreateOrders}
           />
@@ -726,9 +783,9 @@ export default function POS() {
                 key={item.cartId || index}
                 item={item}
                 cartIndex={index}
-                updateQuantity={updateQuantity}
-                updateNote={updateNote}
-                removeItem={removeItem}
+                updateQuantity={handleUpdateQuantity}
+                updateNote={handleUpdateNote}
+                removeItem={handleRemoveItem}
                 currency={currency}
                 disabled={!canCreateOrders}
               />
@@ -742,7 +799,7 @@ export default function POS() {
             className="textarea textarea-bordered w-full textarea-sm"
             placeholder="Order note (allergies, special requests...)"
             value={orderNote}
-            onChange={(e) => setOrderNote(e.target.value)}
+            onChange={(e) => dispatch(setOrderNote(e.target.value))}
             rows="2"
           />
         </div>
@@ -753,8 +810,8 @@ export default function POS() {
             orderType={orderType}
             subtotal={totals.subtotal}
             appliedDiscount={orderDiscount}
-            onApplyDiscount={setOrderDiscount}
-            onRemoveDiscount={() => setOrderDiscount(null)}
+            onApplyDiscount={(d) => dispatch(setOrderDiscount(d))}
+            onRemoveDiscount={() => dispatch(setOrderDiscount(null))}
             currency={currency}
           />
         </div>
@@ -767,7 +824,7 @@ export default function POS() {
               type="number"
               className="input input-xs input-bordered w-20 text-right"
               value={packagingFee}
-              onChange={(e) => setPackagingFee(e.target.value)}
+              onChange={(e) => dispatch(setPackagingFee(e.target.value))}
               min="0"
             />
           </div>
@@ -779,7 +836,7 @@ export default function POS() {
               type="number"
               className="input input-xs input-bordered w-20 text-right"
               value={deliveryFee}
-              onChange={(e) => setDeliveryFee(e.target.value)}
+              onChange={(e) => dispatch(setDeliveryFee(e.target.value))}
               min="0"
             />
           </div>
@@ -870,38 +927,53 @@ export default function POS() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2">
-          <button
-            className="btn btn-outline flex-1"
-            onClick={() => setCart([])}
-            disabled={cart.length === 0}
-          >
-            Clear
-          </button>
-          <button
-            className="btn btn-primary flex-1"
-            onClick={handleCheckout}
-            disabled={cart.length === 0}
-          >
-            Pay {currency}
-            {totals.total.toFixed(2)}
-          </button>
+        <div className="flex flex-col gap-2 mt-2">
+            {orderType === "dine-in" && (
+                <button
+                    onClick={handleSendToKitchen}
+                    className="btn btn-secondary btn-outline w-full"
+                    disabled={!canCreateOrders || cart.length === 0}
+                >
+                    Send to Kitchen (Pay Later)
+                </button>
+            )}
+            <div className="flex gap-2">
+              <button
+                className="btn btn-outline flex-1"
+                onClick={() => dispatch(clearCart())}
+                disabled={cart.length === 0}
+              >
+                Clear
+              </button>
+              <button
+                className="btn btn-primary flex-1"
+                onClick={handleCheckout}
+                disabled={cart.length === 0}
+              >
+                Pay {currency}
+                {totals.total.toFixed(2)}
+              </button>
+            </div>
         </div>
       </div>
 
       {/* Table Selection Modal */}
       {showTableModal && (
         <div className="modal modal-open">
-          <div className="modal-box max-w-4xl">
+          <div className="modal-box max-w-4xl h-[80vh]">
             <TableSelectionModal
+              selectedTableId={selectedTable?._id}
               onSelect={(table) => {
-                setSelectedTable(table);
-                setTableNumber(table.tableNumber);
+                  dispatch(setSelectedTable(table)); 
+                  // Also set tableNumber if needed, but we used selectedTable mostly.
+                  // tableNumber state is unused in new logic? Let's check.
               }}
               onClose={() => setShowTableModal(false)}
-              selectedTableId={selectedTable?._id}
             />
           </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowTableModal(false)}>close</button>
+          </form>
         </div>
       )}
     </div>

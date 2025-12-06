@@ -214,7 +214,7 @@ function ModalLayout() {
                 ),
 
                 [MODAL_BODY_TYPES.ADD_ORDER]: (
-                  <POSModalBody
+                  <POS
                     closeModal={close}
                     extraObject={extraObject}
                   />
