@@ -95,17 +95,32 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
   const handleConfirm = () => {
     if (!validate()) return;
 
+    // Rich data construction
+    const summary = [];
     const addOns = Object.entries(selections)
       .filter(([_, selectedIds]) => selectedIds.length > 0)
-      .map(([groupId, selectedIds]) => ({
-        groupId,
-        selectedItemIds: selectedIds,
-      }));
+      .map(([groupId, selectedIds]) => {
+        const group = menuItemGroups.find((g) => g._id === groupId);
+        
+        // Collect names for summary
+        if (group) {
+            selectedIds.forEach(id => {
+                const item = group.items.find(i => i._id === id);
+                if (item) summary.push(item.name);
+            });
+        }
+
+        return {
+          groupId,
+          selectedItemIds: selectedIds,
+        };
+      });
 
     onConfirm({
       addOns,
       itemNote: itemNote.trim(),
       total: calculateTotal(),
+      addOnSummary: summary, // NEW: Pass back names for display
     });
 
     dispatch(closeModal());
