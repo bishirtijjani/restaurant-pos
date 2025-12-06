@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import TitleCard from "../../components/Cards/TitleCard";
 import { openModal } from "../common/modalSlice";
-import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
+import { MODAL_BODY_TYPES, CONFIRMATION_MODAL_CLOSE_TYPES } from "../../utils/globalConstantUtil";
 import {
   fetchDiscounts,
   fetchPromoCodes,
@@ -326,28 +326,32 @@ const DiscountsManagement = () => {
     );
   };
 
-  const handleDeleteDiscount = async (discount) => {
-    if (window.confirm(`Delete discount "${discount.name}"?`)) {
-      try {
-        await dispatch(deleteDiscount(discount._id)).unwrap();
-        dispatch(showNotification({ message: "Discount deleted", status: 1 }));
-      } catch (error) {
-        dispatch(showNotification({ message: error.message, status: 0 }));
-      }
-    }
+  const handleDeleteDiscount = (discount) => {
+    dispatch(
+      openModal({
+        title: "Confirmation",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message: `Are you sure you want to delete discount "${discount.name}"?`,
+          type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_DISCOUNT,
+          id: discount._id,
+        },
+      })
+    );
   };
 
-  const handleDeletePromoCode = async (promo) => {
-    if (window.confirm(`Delete promo code "${promo.code}"?`)) {
-      try {
-        await dispatch(deletePromoCode(promo._id)).unwrap();
-        dispatch(
-          showNotification({ message: "Promo code deleted", status: 1 })
-        );
-      } catch (error) {
-        dispatch(showNotification({ message: error.message, status: 0 }));
-      }
-    }
+  const handleDeletePromoCode = (promo) => {
+    dispatch(
+      openModal({
+        title: "Confirmation",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message: `Are you sure you want to delete promo code "${promo.code}"?`,
+          type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_PROMO_CODE,
+          id: promo._id,
+        },
+      })
+    );
   };
 
   const handleToggleDiscount = async (id) => {

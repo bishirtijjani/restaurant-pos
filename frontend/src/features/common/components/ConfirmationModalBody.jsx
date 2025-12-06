@@ -19,6 +19,7 @@ import {
 import { deleteTable, mergeTables, splitTables, safeUnmergeTables } from "../../tables/tableSlice";
 import { updateTableStatus } from "../../tables/tableSlice";
 import { updateReservation, deleteReservation } from "../../reservations/reservationSlice";
+import { deleteDiscount, deletePromoCode, fetchDiscounts, fetchPromoCodes } from "../../discounts/discountsSlice";
 
 function ConfirmationModalBody({ extraObject, closeModal }) {
   const dispatch = useDispatch();
@@ -101,6 +102,16 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
         case CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_RESERVATION:
           await dispatch(deleteReservation(id)).unwrap();
           successMessage = "Reservation Deleted Successfully!";
+          break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_DISCOUNT:
+          await dispatch(deleteDiscount(id)).unwrap();
+          dispatch(fetchDiscounts());
+          successMessage = "Discount Deleted Successfully!";
+          break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_PROMO_CODE:
+          await dispatch(deletePromoCode(id)).unwrap();
+          dispatch(fetchPromoCodes());
+          successMessage = "Promo Code Deleted Successfully!";
           break;
         default:
           successMessage = "Action completed!";

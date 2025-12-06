@@ -338,8 +338,13 @@ const calculateOrderDiscounts = async ({
     });
 
     runningSubtotal -= orderDiscAmount;
-  } else {
-    // 3. If no order discount, check item-level discounts
+  }
+  
+  // 3. Check item-level discounts if no order discount OR if order discount is stackable
+  const shouldCheckOtherDiscounts = !orderDiscount || !orderDiscount.enabled || orderDiscount.stackable;
+
+  if (shouldCheckOtherDiscounts) {
+    // 3. Apply item-level discounts
     let totalItemDiscount = 0;
     for (const item of orderItems) {
       if (item.discount && item.discount.enabled) {

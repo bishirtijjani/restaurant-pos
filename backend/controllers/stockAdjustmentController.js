@@ -1,17 +1,7 @@
 const StockAdjustment = require("../models/StockAdjustment");
 const InventoryItem = require("../models/InventoryItem");
 
-// Generate adjustment number
-const generateAdjustmentNumber = async () => {
-  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const count = await StockAdjustment.countDocuments({
-    createdAt: {
-      $gte: new Date(new Date().setHours(0, 0, 0, 0)),
-      $lt: new Date(new Date().setHours(23, 59, 59, 999)),
-    },
-  });
-  return `ADJ${dateStr}${(count + 1).toString().padStart(3, "0")}`;
-};
+
 
 // Get all stock adjustments
 exports.getAllStockAdjustments = async (req, res) => {
@@ -123,10 +113,7 @@ exports.createStockAdjustment = async (req, res) => {
         });
     }
 
-    const adjustmentNumber = await generateAdjustmentNumber();
-
     const adjustment = await StockAdjustment.create({
-      adjustmentNumber,
       inventoryItem,
       type,
       reason,

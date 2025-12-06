@@ -343,6 +343,7 @@ const createOrder = async (req, res) => {
           maxDiscount: promoValidation.promoCode.maximumDiscountAmount,
           name: `Promo: ${promoValidation.promoCode.code}`,
           promoCode: promoValidation.promoCode.code,
+          stackable: promoValidation.promoCode.stackable,
         };
         promoCodeData = {
           code: promoValidation.promoCode.code,
