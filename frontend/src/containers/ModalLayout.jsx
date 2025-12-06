@@ -81,6 +81,7 @@ import EditReservationModalBody from "../features/reservations/components/EditRe
 
 // Common modals
 import ConfirmationModalBody from "../features/common/components/ConfirmationModalBody";
+import InputModalBody from "../features/common/components/InputModalBody";
 import EditItemNoteModalBody from "../features/common/components/EditItemNoteModalBody";
 import Receipt from "../features/common/components/Receipt";
 
@@ -408,6 +409,12 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.EDIT_ITEM_NOTE]: (
                   <EditItemNoteModalBody
+                    extraObject={extraObject}
+                    closeModal={close}
+                  />
+                ),
+                [MODAL_BODY_TYPES.INPUT]: (
+                  <InputModalBody
                     extraObject={extraObject}
                     closeModal={close}
                   />

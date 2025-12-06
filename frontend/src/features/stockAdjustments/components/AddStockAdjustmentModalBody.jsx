@@ -11,22 +11,10 @@ import {
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-const ADJUSTMENT_TYPES = [
-  { value: "addition", label: "Addition (Add Stock)" },
-  { value: "subtraction", label: "Subtraction (Remove Stock)" },
-  { value: "correction", label: "Correction (Set Exact Amount)" },
-];
-
-const REASONS = [
-  { value: "wastage", label: "Wastage" },
-  { value: "damage", label: "Damage" },
-  { value: "theft", label: "Theft" },
-  { value: "return", label: "Return" },
-  { value: "donation", label: "Donation" },
-  { value: "correction", label: "Stock Correction" },
-  { value: "stock_take", label: "Stock Take" },
-  { value: "other", label: "Other" },
-];
+import {
+  STOCK_ADJUSTMENT_TYPES,
+  STOCK_ADJUSTMENT_REASONS,
+} from "../../../utils/globalConstantUtil";
 
 const AddStockAdjustmentModalBody = () => {
   const dispatch = useDispatch();
@@ -43,12 +31,12 @@ const AddStockAdjustmentModalBody = () => {
 
   const typeOptions = [
     { value: "", name: "Select type" },
-    ...ADJUSTMENT_TYPES.map(t => ({ value: t.value, name: t.label }))
+    ...STOCK_ADJUSTMENT_TYPES.map(t => ({ value: t.value, name: t.label }))
   ];
 
   const reasonOptions = [
     { value: "", name: "Select reason" },
-    ...REASONS.map(r => ({ value: r.value, name: r.label }))
+    ...STOCK_ADJUSTMENT_REASONS.map(r => ({ value: r.value, name: r.label }))
   ];
 
   const [formData, setFormData] = useState({

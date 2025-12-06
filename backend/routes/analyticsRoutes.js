@@ -10,10 +10,10 @@ const {
   getPaymentData,
   getAdvancedData,
 } = require("../controllers/analyticsController");
-const { protect } = require("../middleware/authMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
 
-// All analytics routes are protected
-router.use(protect);
+// All analytics routes are authMiddlewareed
+router.use(authMiddleware);
 
 router.get("/overview", getOverviewData);
 router.get("/sales", getSalesData);

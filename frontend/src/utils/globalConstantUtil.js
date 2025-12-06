@@ -70,6 +70,8 @@ export const MODAL_BODY_TYPES = Object.freeze({
   ADD_RESERVATION: "ADD_RESERVATION",
   EDIT_RESERVATION: "EDIT_RESERVATION",
 
+  INPUT: "INPUT", // General purpose input modal
+
   DEFAULT: "",
 });
 
@@ -103,3 +105,38 @@ export const CONFIRMATION_MODAL_CLOSE_TYPES = Object.freeze({
   RESET_KEYBOARD_SETTINGS: "RESET_KEYBOARD_SETTINGS",
   DELETE_RESERVATION: "DELETE_RESERVATION",
 });
+
+export const INVENTORY_CATEGORIES = [
+  "Raw Materials",
+  "Beverages",
+  "Packaging",
+  "Cleaning Supplies",
+  "Other",
+];
+
+export const INVENTORY_UNITS = ["kg", "g", "L", "ml", "pcs", "pack", "box", "bag"];
+
+export const PO_STATUS_ENUM = Object.freeze({
+  DRAFT: "draft",
+  PENDING: "pending",
+  APPROVED: "approved",
+  RECEIVED: "received",
+  CANCELLED: "cancelled",
+});
+
+export const STOCK_ADJUSTMENT_TYPES = [
+  { value: "addition", label: "Addition (Add Stock)" },
+  { value: "subtraction", label: "Subtraction (Remove Stock)" },
+  { value: "correction", label: "Correction (Set Exact Amount)" },
+];
+
+export const STOCK_ADJUSTMENT_REASONS = [
+  { value: "wastage", label: "Wastage" },
+  { value: "damage", label: "Damage" },
+  { value: "theft", label: "Theft" },
+  { value: "return", label: "Return" },
+  { value: "donation", label: "Donation" },
+  { value: "correction", label: "Stock Correction" },
+  { value: "stock_take", label: "Stock Take" },
+  { value: "other", label: "Other" },
+];

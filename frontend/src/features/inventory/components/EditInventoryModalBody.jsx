@@ -9,15 +9,10 @@ import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
 
-const CATEGORIES = [
-  "Raw Materials",
-  "Beverages",
-  "Packaging",
-  "Cleaning Supplies",
-  "Other",
-];
-
-const UNITS = ["kg", "g", "L", "ml", "pcs", "pack", "box", "bag"];
+import {
+  INVENTORY_CATEGORIES,
+  INVENTORY_UNITS,
+} from "../../../utils/globalConstantUtil";
 
 const EditInventoryModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
@@ -77,12 +72,12 @@ const EditInventoryModalBody = ({ extraObject }) => {
 
   const categoryOptions = [
     { value: "", name: "Select category" },
-    ...CATEGORIES.map(cat => ({ value: cat, name: cat }))
+    ...INVENTORY_CATEGORIES.map(cat => ({ value: cat, name: cat }))
   ];
 
   const unitOptions = [
     { value: "", name: "Select unit" },
-    ...UNITS.map(unit => ({ value: unit, name: unit }))
+    ...INVENTORY_UNITS.map(unit => ({ value: unit, name: unit }))
   ];
 
   const supplierOptions = [
@@ -106,7 +101,6 @@ const EditInventoryModalBody = ({ extraObject }) => {
 
     // Prevent double submission
     if (isSubmitting) {
-      console.log("Already submitting, ignoring duplicate submit");
       return;
     }
 

@@ -9,6 +9,8 @@ import { showNotification } from "../common/headerSlice";
 import {
   MODAL_BODY_TYPES,
   CONFIRMATION_MODAL_CLOSE_TYPES,
+  INVENTORY_CATEGORIES,
+  INVENTORY_UNITS,
 } from "../../utils/globalConstantUtil";
 import {
   fetchInventoryItems,
@@ -40,20 +42,13 @@ import {
 } from "lucide-react";
 import SearchableSelect from "../../components/Input/SearchableSelect";
 
-const CATEGORIES = [
-  "Raw Materials",
-  "Beverages",
-  "Packaging",
-  "Cleaning Supplies",
-  "Other",
-];
 
-const UNITS = ["kg", "g", "L", "ml", "pcs", "pack", "box", "bag"];
 
-const TopSideButtons = () => {
+const TopSideButtons = ({ onRefresh }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { can } = useAuth();
+
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -84,7 +79,7 @@ const TopSideButtons = () => {
       </Can>
 
       <button
-        onClick={() => window.location.reload()}
+        onClick={onRefresh}
         className="btn btn-ghost btn-sm lg:btn-md gap-2"
       >
         <RefreshCw className="w-4 h-4" />
@@ -106,7 +101,7 @@ const SearchAndFilters = ({
 }) => {
   const categoryOptions = [
     { value: "", name: "All Categories" },
-    ...CATEGORIES.map(cat => ({ value: cat, name: cat }))
+    ...INVENTORY_CATEGORIES.map(cat => ({ value: cat, name: cat }))
   ];
 
   const stockOptions = [
@@ -437,8 +432,11 @@ const InventoryManagement = () => {
   const [viewMode, setViewMode] = useState("grid");
 
   useEffect(() => {
-    if (status === "idle") dispatch(fetchInventoryItems());
-  }, [dispatch, status]);
+    dispatch(fetchInventoryItems({
+      category: categoryFilter,
+      lowStock: stockFilter === "low"
+    }));
+  }, [dispatch, categoryFilter, stockFilter]);
 
   useEffect(() => {
     if (success && message) {
@@ -458,32 +456,24 @@ const InventoryManagement = () => {
     const q = (searchQuery || "").toLowerCase();
 
     return list.filter((item) => {
+      // Server handles category and low_stock filtering (mostly)
+      // We double-check or handle cases server doesn't (like out-of-stock, in-stock, search)
+      
       const matchesSearch =
         item.name?.toLowerCase().includes(q) ||
         item.sku?.toLowerCase().includes(q);
 
-      const matchesCategory = categoryFilter
-        ? item.category === categoryFilter
-        : true;
-
+      // Extra client-side stock filtering for non-standard cases
       const matchesStock = (() => {
-        if (!stockFilter) return true;
-        const isLowStock = item.currentStock <= item.minStockLevel;
-        switch (stockFilter) {
-          case "low":
-            return isLowStock;
-          case "in-stock":
-            return !isLowStock && item.currentStock > 0;
-          case "out-of-stock":
-            return item.currentStock === 0;
-          default:
-            return true;
-        }
+        if (!stockFilter || stockFilter === "low") return true; // Handled by server or redundant
+        if (stockFilter === "out-of-stock") return item.currentStock === 0;
+        if (stockFilter === "in-stock") return item.currentStock > 0;
+        return true;
       })();
 
-      return matchesSearch && matchesCategory && matchesStock;
+      return matchesSearch && matchesStock;
     });
-  }, [items, searchQuery, categoryFilter, stockFilter]);
+  }, [items, searchQuery, stockFilter]);
 
   const handleEdit = (item) => {
     dispatch(
@@ -550,14 +540,13 @@ const InventoryManagement = () => {
           <span className="badge badge-primary">{filteredItems.length}</span>
         </div>
       }
-      TopSideButtons={<TopSideButtons />}
+      TopSideButtons={<TopSideButtons onRefresh={handleRefresh} />}
       topMargin="mt-2"
     >
       <SearchAndFilters
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         categoryFilter={categoryFilter}
-        setCategoryFilter={setCategoryFilter}
         stockFilter={stockFilter}
         setStockFilter={setStockFilter}
         viewMode={viewMode}

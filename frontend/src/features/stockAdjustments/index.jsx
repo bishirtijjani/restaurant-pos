@@ -48,8 +48,9 @@ const REASON_LABELS = {
   other: "Other",
 };
 
-const TopSideButtons = () => {
+const TopSideButtons = ({ onRefresh }) => {
   const dispatch = useDispatch();
+
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -71,7 +72,7 @@ const TopSideButtons = () => {
         </button>
       </Can>
       <button
-        onClick={() => window.location.reload()}
+        onClick={onRefresh}
         className="btn btn-ghost btn-sm lg:btn-md gap-2"
       >
         <RefreshCw className="w-4 h-4" />
@@ -261,9 +262,13 @@ const StockAdjustmentsManagement = () => {
   const [itemFilter, setItemFilter] = useState("");
 
   useEffect(() => {
-    dispatch(fetchStockAdjustments());
-    dispatch(fetchInventoryItems());
-  }, [dispatch]);
+    dispatch(fetchStockAdjustments({
+      type: typeFilter,
+      inventoryItem: itemFilter
+    }));
+    // Only fetch items once or if needed, but here we just need it for the dropdown
+    if (inventoryItems.length === 0) dispatch(fetchInventoryItems()); 
+  }, [dispatch, typeFilter, itemFilter]);
 
   useEffect(() => {
     if (success && message) {
@@ -281,6 +286,8 @@ const StockAdjustmentsManagement = () => {
 
   const filteredAdjustments = useMemo(() => {
     return adjustments.filter((adjustment) => {
+      // Server handles type and item filtering
+      // We only handle client-side text search
       const matchesSearch =
         adjustment.adjustmentNumber
           .toLowerCase()
@@ -290,14 +297,9 @@ const StockAdjustmentsManagement = () => {
           .includes(searchQuery.toLowerCase()) ||
         adjustment.reason?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesType = typeFilter ? adjustment.type === typeFilter : true;
-      const matchesItem = itemFilter
-        ? adjustment.inventoryItem?._id === itemFilter
-        : true;
-
-      return matchesSearch && matchesType && matchesItem;
+      return matchesSearch;
     });
-  }, [adjustments, searchQuery, typeFilter, itemFilter]);
+  }, [adjustments, searchQuery]);
 
   const handleView = (adjustment) => {
     dispatch(
@@ -330,6 +332,13 @@ const StockAdjustmentsManagement = () => {
     );
   }
 
+  const handleRefresh = () => {
+    dispatch(fetchStockAdjustments({
+      type: typeFilter,
+      inventoryItem: itemFilter
+    }));
+  };
+
   return (
     <TitleCard
       title={
@@ -341,7 +350,7 @@ const StockAdjustmentsManagement = () => {
           </span>
         </div>
       }
-      TopSideButtons={<TopSideButtons />}
+      TopSideButtons={<TopSideButtons onRefresh={handleRefresh} />}
       topMargin="mt-2"
     >
       <SearchAndFilters

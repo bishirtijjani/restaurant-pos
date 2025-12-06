@@ -2,6 +2,13 @@ import FormattedNumberInput from "../../../components/Input/FormattedNumberInput
 import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { Package, Calendar, DollarSign, Check } from "lucide-react";
 
+import { fetchInventoryItems } from "../../../inventory/inventorySlice";
+import {
+  receivePurchaseOrder,
+  fetchPurchaseOrders,
+  fetchPurchaseOrderById,
+} from "../../purchaseOrdersSlice";
+
 const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
   const order = extraObject;
@@ -121,6 +128,8 @@ const ReceivePurchaseOrderModalBody = ({ extraObject }) => {
         })
       );
       dispatch(fetchPurchaseOrders());
+      dispatch(fetchPurchaseOrderById(order._id));
+      dispatch(fetchInventoryItems());
       dispatch(closeModal());
     } catch (error) {
       dispatch(

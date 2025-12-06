@@ -73,28 +73,28 @@ const PurchaseOrderDetails = () => {
     });
   };
 
-  const handleApprove = async () => {
-    if (
-      window.confirm("Are you sure you want to approve this purchase order?")
-    ) {
-      try {
-        await dispatch(approvePurchaseOrder(id)).unwrap();
-        dispatch(
-          showNotification({
-            message: "Purchase order approved successfully",
-            status: 1,
-          })
-        );
-        dispatch(fetchPurchaseOrderById(id));
-      } catch (error) {
-        dispatch(
-          showNotification({
-            message: error.message || "Failed to approve purchase order",
-            status: 0,
-          })
-        );
-      }
-    }
+  const handleApprove = () => {
+    dispatch(
+      openModal({
+        title: "Approve Purchase Order",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message: "Are you sure you want to approve this purchase order?",
+          type: MODAL_BODY_TYPES.CONFIRMATION,
+          _id: id,
+          title: "Approve Purchase Order",
+          action: async () => {
+            try {
+              await dispatch(approvePurchaseOrder(id)).unwrap();
+              dispatch(showNotification({ message: "Purchase order approved successfully", status: 1 }));
+              dispatch(fetchPurchaseOrderById(id));
+            } catch (error) {
+              dispatch(showNotification({ message: error.message || "Failed to approve purchase order", status: 0 }));
+            }
+          },
+        },
+      })
+    );
   };
 
   const handleReceive = () => {
@@ -108,27 +108,28 @@ const PurchaseOrderDetails = () => {
     );
   };
 
-  const handleCancel = async () => {
-    const reason = window.prompt("Please provide a reason for cancellation:");
-    if (reason) {
-      try {
-        await dispatch(cancelPurchaseOrder({ id, reason })).unwrap();
-        dispatch(
-          showNotification({
-            message: "Purchase order cancelled successfully",
-            status: 1,
-          })
-        );
-        dispatch(fetchPurchaseOrderById(id));
-      } catch (error) {
-        dispatch(
-          showNotification({
-            message: error.message || "Failed to cancel purchase order",
-            status: 0,
-          })
-        );
-      }
-    }
+  const handleCancel = () => {
+    dispatch(
+      openModal({
+        title: "Cancel Purchase Order",
+        bodyType: MODAL_BODY_TYPES.INPUT,
+        extraObject: {
+          title: "Cancellation Reason",
+          message: "Please provide a reason for cancellation:",
+          inputType: "text",
+          placeholder: "Reason...",
+          confirmAction: async (reason) => {
+            try {
+              await dispatch(cancelPurchaseOrder({ id, reason })).unwrap();
+              dispatch(showNotification({ message: "Purchase order cancelled successfully", status: 1 }));
+              dispatch(fetchPurchaseOrderById(id));
+            } catch (error) {
+              dispatch(showNotification({ message: error.message || "Failed to cancel purchase order", status: 0 }));
+            }
+          },
+        },
+      })
+    );
   };
 
   const handlePrint = () => {

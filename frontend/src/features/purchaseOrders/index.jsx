@@ -45,9 +45,10 @@ const PAYMENT_COLORS = {
   paid: "text-success",
 };
 
-const TopSideButtons = () => {
+const TopSideButtons = ({ onRefresh }) => {
   const navigate = useNavigate();
   const { can } = useAuth();
+
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -61,7 +62,7 @@ const TopSideButtons = () => {
         </button>
       </Can>
       <button
-        onClick={() => window.location.reload()}
+        onClick={onRefresh}
         className="btn btn-ghost btn-sm lg:btn-md gap-2"
       >
         <RefreshCw className="w-4 h-4" />
@@ -295,8 +296,11 @@ const PurchaseOrdersManagement = () => {
   const [supplierFilter, setSupplierFilter] = useState("");
 
   useEffect(() => {
-    dispatch(fetchPurchaseOrders());
-  }, [dispatch]);
+    dispatch(fetchPurchaseOrders({
+      status: statusFilter,
+      supplier: supplierFilter
+    }));
+  }, [dispatch, statusFilter, supplierFilter]);
 
   useEffect(() => {
     if (success && message) {
@@ -314,6 +318,8 @@ const PurchaseOrdersManagement = () => {
 
   const filteredOrders = useMemo(() => {
     return (orders || []).filter((order) => {
+      // Server handles status and supplier filtering
+      // We only handle client-side text search
       const matchesSearch =
         order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.supplier?.name
@@ -321,29 +327,35 @@ const PurchaseOrdersManagement = () => {
           .includes(searchQuery.toLowerCase()) ||
         order.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus = statusFilter ? order.status === statusFilter : true;
-      const matchesSupplier = supplierFilter
-        ? order.supplier?._id === supplierFilter
-        : true;
-
-      return matchesSearch && matchesStatus && matchesSupplier;
+      return matchesSearch;
     });
-  }, [orders, searchQuery, statusFilter, supplierFilter]);
+  }, [orders, searchQuery]);
 
   const handleView = (order) => {
     navigate(`/app/purchase-orders/${order._id}`);
   };
 
-  const handleApprove = async (id) => {
-    if (
-      window.confirm("Are you sure you want to approve this purchase order?")
-    ) {
-      try {
-        await dispatch(approvePurchaseOrder(id)).unwrap();
-      } catch (err) {
-        // Error handled in useEffect
-      }
-    }
+  const handleApprove = (id) => {
+    dispatch(
+      openModal({
+        title: "Approve Purchase Order",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message: "Are you sure you want to approve this purchase order?",
+          type: MODAL_BODY_TYPES.CONFIRMATION,
+          _id: id,
+          title: "Approve Purchase Order",
+          action: async () => {
+            try {
+              await dispatch(approvePurchaseOrder(id)).unwrap();
+              dispatch(showNotification({ message: "Purchase order approved successfully", status: 1 }));
+            } catch (err) {
+              dispatch(showNotification({ message: err.message || "Failed to approve order", status: 0 }));
+            }
+          },
+        },
+      })
+    );
   };
 
   const handleReceive = (order) => {
@@ -357,15 +369,27 @@ const PurchaseOrdersManagement = () => {
     );
   };
 
-  const handleCancel = async (id) => {
-    const reason = window.prompt("Please provide a reason for cancellation:");
-    if (reason) {
-      try {
-        await dispatch(cancelPurchaseOrder({ id, reason })).unwrap();
-      } catch (err) {
-        // Error handled in useEffect
-      }
-    }
+  const handleCancel = (id) => {
+    dispatch(
+      openModal({
+        title: "Cancel Purchase Order",
+        bodyType: MODAL_BODY_TYPES.INPUT,
+        extraObject: {
+          title: "Cancellation Reason",
+          message: "Please provide a reason for cancellation:",
+          inputType: "text",
+          placeholder: "Reason...",
+          confirmAction: async (reason) => {
+            try {
+              await dispatch(cancelPurchaseOrder({ id, reason })).unwrap();
+              dispatch(showNotification({ message: "Purchase order cancelled successfully", status: 1 }));
+            } catch (err) {
+              dispatch(showNotification({ message: err.message || "Failed to cancel order", status: 0 }));
+            }
+          },
+        },
+      })
+    );
   };
 
   if (loading) return <SuspenseContent />;
@@ -388,6 +412,13 @@ const PurchaseOrdersManagement = () => {
     );
   }
 
+  const handleRefresh = () => {
+    dispatch(fetchPurchaseOrders({
+      status: statusFilter,
+      supplier: supplierFilter
+    }));
+  };
+
   return (
     <TitleCard
       title={
@@ -397,7 +428,7 @@ const PurchaseOrdersManagement = () => {
           <span className="badge badge-primary">{filteredOrders.length}</span>
         </div>
       }
-      TopSideButtons={<TopSideButtons />}
+      TopSideButtons={<TopSideButtons onRefresh={handleRefresh} />}
       topMargin="mt-2"
     >
       <SearchAndFilters

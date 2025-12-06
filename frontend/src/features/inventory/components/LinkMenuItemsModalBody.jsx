@@ -32,7 +32,7 @@ const LinkMenuItemsModalBody = ({ extraObject }) => {
     }
   }, [dispatch, inventoryItem]);
 
-  // Search log is handled by SearchableSelect now, so we just filter out already linked items
+  // Search logic is handled by SearchableSelect now, so we just filter out already linked items
   
   const availableMenuItems = menuItems.filter(item => 
     !linkedItems.find(linked => linked.menuItemId._id === item._id)

@@ -9,24 +9,10 @@ import FormattedNumberInput from "../../../components/Input/FormattedNumberInput
 import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
 
-const CATEGORIES = [
-  { value: "Raw Materials", name: "Raw Materials" },
-  { value: "Beverages", name: "Beverages" },
-  { value: "Packaging", name: "Packaging" },
-  { value: "Cleaning Supplies", name: "Cleaning Supplies" },
-  { value: "Other", name: "Other" },
-];
-
-const UNITS = [
-  { value: "kg", name: "kg" },
-  { value: "g", name: "g" },
-  { value: "L", name: "L" },
-  { value: "ml", name: "ml" },
-  { value: "pcs", name: "pcs" },
-  { value: "pack", name: "pack" },
-  { value: "box", name: "box" },
-  { value: "bag", name: "bag" },
-];
+import {
+  INVENTORY_CATEGORIES,
+  INVENTORY_UNITS,
+} from "../../../utils/globalConstantUtil";
 
 const AddInventoryModalBody = () => {
   const dispatch = useDispatch();
@@ -83,7 +69,6 @@ const AddInventoryModalBody = () => {
 
     // Prevent double submission
     if (isSubmitting) {
-      console.log("Already submitting, ignoring duplicate submit");
       return;
     }
 
@@ -165,7 +150,7 @@ const AddInventoryModalBody = () => {
             <span className="label-text">Category *</span>
           </label>
           <SearchableSelect
-            options={CATEGORIES}
+            options={INVENTORY_CATEGORIES.map((c) => ({ value: c, name: c }))}
             value={formData.category}
             onChange={handleChange}
             name="category"
@@ -184,7 +169,7 @@ const AddInventoryModalBody = () => {
             <span className="label-text">Unit *</span>
           </label>
           <SearchableSelect
-            options={UNITS}
+            options={INVENTORY_UNITS.map((u) => ({ value: u, name: u }))}
             value={formData.unit}
             onChange={handleChange}
             name="unit"
