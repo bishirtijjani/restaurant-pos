@@ -83,7 +83,7 @@ module.exports = {
   // Auth rate limiter (stricter for login/register - 5 per minute)
   authLimiter: createRateLimiter({
     windowMs: 60000,
-    max: 5,
+    max: 20,
     message: "Too many authentication attempts. Please wait a minute before trying again.",
   }),
 

@@ -136,6 +136,25 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
     }));
   };
 
+  const toggleUser = (userId) => {
+    if (!hasPermission) {
+      dispatch(
+        showNotification({
+          message: "You don't have permission to modify assigned users",
+          status: 0,
+        })
+      );
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      assignedUsers: prev.assignedUsers.includes(userId)
+        ? prev.assignedUsers.filter((id) => id !== userId)
+        : [...prev.assignedUsers, userId],
+    }));
+  };
+
   // Show permission denied message if user doesn't have access
   if (!hasPermission) {
     return (
@@ -269,6 +288,39 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
           </div>
         </div>
       )}
+
+      {/* Assigned Users */}
+      <div className="card bg-base-200">
+        <div className="card-body p-4">
+          <h3 className="font-semibold mb-3">Assigned Users</h3>
+          <p className="text-xs opacity-70 mb-2">
+            Limit access to this station to specific users. Leave empty to allow
+            all kitchen staff.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {users.map((user) => (
+              <button
+                key={user._id}
+                type="button"
+                onClick={() => toggleUser(user._id)}
+                className={`btn btn-sm ${
+                  formData.assignedUsers.includes(user._id)
+                    ? "btn-primary"
+                    : "btn-outline"
+                }`}
+                disabled={!hasPermission}
+              >
+                {user.fullname || user.name || user.email}
+              </button>
+            ))}
+          </div>
+          {formData.assignedUsers.length > 0 && (
+            <div className="text-xs opacity-70 mt-2">
+              Selected: {formData.assignedUsers.length} user(s)
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Display Settings */}
       <div className="card bg-base-200">

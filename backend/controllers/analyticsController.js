@@ -72,7 +72,7 @@ const getOverviewData = asyncHandler(async (req, res) => {
   // 4. Active Staff (Staff who have logged in or created orders today - simplified to just count of staff with orders today for now)
   // A better metric might be "Clocked In" users if we had a timeclock feature.
   // We'll count unique staff who handled orders today.
-  const activeStaffCount = await Order.distinct("server", matchStage);
+  const activeStaffCount = await Order.distinct("servedBy", matchStage);
 
   res.status(200).json({
     kpis: {
@@ -304,10 +304,19 @@ const getStaffData = asyncHandler(async (req, res) => {
     { $match: matchStage },
     {
       $group: {
-        _id: "$server", // Assuming 'server' field stores User ID
+        _id: "$servedBy", // Use servedBy instead of server (User ID)
         sales: { $sum: "$totalAmount" },
         orders: { $count: {} },
-        // avgTime: { $avg: "$duration" } // If we tracked duration
+        // Calculate average duration if completedAt exists
+        avgTime: {
+          $avg: {
+            $cond: [
+              { $and: [{ $ne: ["$completedAt", null] }, { $ne: ["$createdAt", null] }] },
+              { $divide: [{ $subtract: ["$completedAt", "$createdAt"] }, 60000] }, // mins
+              null
+            ]
+          }
+        }
       },
     },
     {
@@ -321,28 +330,23 @@ const getStaffData = asyncHandler(async (req, res) => {
     { $unwind: "$userInfo" },
     {
       $project: {
-        name: "$userInfo.name",
+        name: "$userInfo.fullname", // Use fullname from User model
         sales: 1,
         orders: 1,
-        avgTime: { $literal: 25 }, // Mock avg time in mins
+        avgTime: { $ifNull: [{ $round: ["$avgTime", 0] }, 0] }, // Default to 0 if no data
       },
     },
     { $sort: { sales: -1 } },
   ]);
 
-  // 2. Labor Cost (Mock Data for now)
-  // In a real system, we'd query a 'Shifts' or 'Payroll' collection
-  const laborCost = [
-    { date: "Week 1", cost: 1200, sales: 5000, percentage: 24 },
-    { date: "Week 2", cost: 1150, sales: 4800, percentage: 23.9 },
-    { date: "Week 3", cost: 1300, sales: 5500, percentage: 23.6 },
-    { date: "Week 4", cost: 1250, sales: 5200, percentage: 24.0 },
-  ];
+  // 2. Labor Cost - Not tracking wages yet, so return empty or specific error state
+  // Frontend has been updated to use "Revenue per Staff" derived from performance stats
+  const laborCost = []; 
 
   res.status(200).json({
     performance: staffStats,
     laborCost,
-    staffList: staffStats, // Reusing stats for the list view
+    staffList: staffStats,
   });
 });
 
@@ -354,19 +358,18 @@ const getCustomerData = asyncHandler(async (req, res) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-  // 1. Top Customers
+  // 1. Top Customers (By Spend)
   const topCustomers = await Order.aggregate([
     {
       $match: {
         createdAt: { $gte: start, $lte: end },
         status: { $ne: "cancelled" },
-        // Ensure we only count orders with a linked customer/user
-        // user: { $exists: true }
+        "customerDetails.customerId": { $ne: null } // Only registered customers
       },
     },
     {
       $group: {
-        _id: "$user", // Assuming 'user' field links to Customer/User
+        _id: "$customerDetails.customerId",
         totalSpent: { $sum: "$totalAmount" },
         visits: { $count: {} },
         lastVisit: { $max: "$createdAt" },
@@ -374,16 +377,16 @@ const getCustomerData = asyncHandler(async (req, res) => {
     },
     {
       $lookup: {
-        from: "users", // or customers collection
+        from: "customers",
         localField: "_id",
         foreignField: "_id",
-        as: "userInfo",
+        as: "info",
       },
     },
-    { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$info" },
     {
       $project: {
-        name: { $ifNull: ["$userInfo.name", "Guest"] },
+        name: "$info.fullname",
         totalSpent: 1,
         visits: 1,
         lastVisit: 1,
@@ -393,32 +396,63 @@ const getCustomerData = asyncHandler(async (req, res) => {
     { $limit: 20 },
   ]);
 
-  // 2. Overview KPIs
-  const totalCustomers = topCustomers.length; // Approximation for this range
+  const totalCustomersInRange = topCustomers.length;
   const totalRevenue = topCustomers.reduce((acc, c) => acc + c.totalSpent, 0);
-  const avgLTV = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
+  const avgLTV = totalCustomersInRange > 0 ? totalRevenue / totalCustomersInRange : 0;
 
-  // Mocking Retention & Segmentation for now as they require complex historical analysis
-  const retention = [
-    { month: "Jan", retentionRate: 85 },
-    { month: "Feb", retentionRate: 82 },
-    { month: "Mar", retentionRate: 88 },
-  ];
+  // 2. New vs Returning Logic (Real)
+  // New = Created in this range AND first order is in this range? 
+  // Simplified: If Customer.createdAt is in range => New. Else => Returning (if they ordered).
+  let newCount = 0;
+  let returningCount = 0;
+
+  // We need to fetch the customer docs to check creation date
+  // Optimization: In a huge DB, do this via aggregation. For now, we iterate the top list (limited result) 
+  // BUT we need accurate counts for KPIs, so let's do a separate count query.
+  
+  // Count unique customers who ordered in range
+  const uniqueCustomerIds = await Order.distinct("customerDetails.customerId", {
+    createdAt: { $gte: start, $lte: end },
+    status: { $ne: "cancelled" },
+    "customerDetails.customerId": { $ne: null }
+  });
+
+  // Check how many were created in this range
+  newCount = await Customer.countDocuments({
+    _id: { $in: uniqueCustomerIds },
+    createdAt: { $gte: start, $lte: end }
+  });
+
+  returningCount = uniqueCustomerIds.length - newCount;
+  const repeatRate = uniqueCustomerIds.length > 0 
+    ? ((returningCount / uniqueCustomerIds.length) * 100).toFixed(1) + "%" 
+    : "0%";
+
+  // 3. Simple Segmentation (Real)
+  // VIP = > $500 spend (example threshold) or Top 10%
+  // Regular = > 3 visits
+  const vipCount = topCustomers.filter(c => c.totalSpent > 200).length; // Threshold example
+  const regularCount = topCustomers.filter(c => c.visits > 3).length;
 
   const segmentation = [
-    { name: "New", value: 30 },
-    { name: "Returning", value: 50 },
-    { name: "VIP", value: 20 },
+    { name: "New", value: newCount },
+    { name: "Returning", value: returningCount },
+    { name: "VIP (> $200)", value: vipCount },
+    { name: "Regular (> 3 visits)", value: regularCount }
   ];
+
+  // 4. Retention (Mock for graph - hard to do real cohort in one go without heavy query)
+  // Providing a flat line for now or empty
+  const retention = []; 
 
   res.status(200).json({
     overview: {
-      totalCustomers,
-      newCustomers: Math.floor(totalCustomers * 0.3), // Mock 30% new
-      repeatRate: "70%",
-      avgLTV,
+      totalCustomers: uniqueCustomerIds.length,
+      newCustomers: newCount,
+      repeatRate,
+      avgLTV: Math.round(avgLTV),
     },
-    retention,
+    retention, // Keeping empty for now
     segmentation,
     topCustomers,
   });
@@ -696,23 +730,83 @@ const getAdvancedData = asyncHandler(async (req, res) => {
     value: h.value,
   }));
 
-  // 2. Forecasting (Mock - Simple Linear Projection)
-  const forecasting = [
-    { date: "2023-11-01", actual: 1200, predicted: 1150 },
-    { date: "2023-11-02", actual: 1350, predicted: 1300 },
-    { date: "2023-11-03", actual: null, predicted: 1400 }, // Future
-    { date: "2023-11-04", actual: null, predicted: 1600 }, // Future
-  ];
+  // 2. Forecasting (Same-Day Averaging)
+  // Logic: For the next 7 days, look at the ANY order from the last 30 days that matches the weekday
+  const forecasting = [];
+  const today = new Date();
+  const insights = []; // Rule-based insights
 
-  // 3. Anomalies (Mock)
-  const anomalyDetection = [
-    { date: "2023-10-25", type: "Low Sales", description: "Sales 30% below avg" },
-  ];
+  for (let i = 1; i <= 7; i++) {
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + i);
+    const dayOfWeek = futureDate.getDay() + 1; // Mongo 1-7
+
+    // Aggregate average sales for this specific day of week over last 90 days
+    const pastStats = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { 
+            $gte: new Date(new Date().setDate(today.getDate() - 90)), // Last 90 days
+            $lte: today 
+          },
+          status: { $ne: "cancelled" },
+          $expr: { $eq: [{ $dayOfWeek: "$createdAt" }, dayOfWeek] } // Same day of week
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          avgTotal: { $avg: "$totalAmount" }
+        }
+      }
+    ]);
+
+    const predicted = pastStats[0]?.avgTotal || 0;
+    forecasting.push({
+      date: futureDate.toISOString().split("T")[0],
+      predicted: Math.round(predicted),
+      actual: null // It's future
+    });
+  }
+
+  // 3. Rule-Based Insights Generation
+  const totalRev = formattedHeatmap.reduce((acc, h) => acc + h.value, 0);
+  
+  // Insight: Busiest Day
+  if (formattedHeatmap.length > 0) {
+    // Group by day
+    const dayTotals = {};
+    formattedHeatmap.forEach(h => {
+        if (!dayTotals[h.day]) dayTotals[h.day] = 0;
+        dayTotals[h.day] += h.value;
+    });
+    const busiestDayIndex = Object.keys(dayTotals).reduce((a, b) => dayTotals[a] > dayTotals[b] ? a : b);
+    const days = ["Unknown", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    insights.push(`Your busiest day is usually ${days[busiestDayIndex]}.`);
+  }
+
+  // Insight: Busiest Hour
+  if (formattedHeatmap.length > 0) {
+     const hourTotals = {};
+     formattedHeatmap.forEach(h => {
+          if (!hourTotals[h.hour]) hourTotals[h.hour] = 0;
+          hourTotals[h.hour] += h.value;
+     });
+     const busiestHour = Object.keys(hourTotals).reduce((a, b) => hourTotals[a] > hourTotals[b] ? a : b);
+     insights.push(`Peak hours are around ${busiestHour}:00.`);
+  }
+
+  // Insight: Forecast Trend
+  const nextDayForecast = forecasting[0];
+  if (nextDayForecast && nextDayForecast.predicted > 0) {
+     insights.push(`Forecast for tomorrow: ~$${nextDayForecast.predicted.toLocaleString()} in sales.`);
+  }
 
   res.status(200).json({
     heatmap: formattedHeatmap,
     forecasting,
-    anomalyDetection,
+    anomalyDetection: [], // Cleared mocks
+    insights // New field
   });
 });
 

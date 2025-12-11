@@ -81,6 +81,13 @@ const initialState = {
       name: "Service Charge",
       applyTo: "dine-in",
     },
+    printerSettings: {
+      mode: "browser",
+      paperWidth: "80mm",
+      vendorId: null,
+      productId: null,
+      deviceName: null,
+    },
   },
   loading: false,
   error: null,

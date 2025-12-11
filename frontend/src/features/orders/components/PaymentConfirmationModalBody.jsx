@@ -11,6 +11,7 @@ import { createOrder, fetchOrders } from "../ordersSlice";
 import { clearCart } from "../posSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import { Plus, Trash2, DollarSign } from "lucide-react";
+import { printerService } from "../../../services/PrinterService";
 
 function PaymentConfirmationModalBody(props) {
   const extraObject = props.extraObject || props;
@@ -200,14 +201,41 @@ function PaymentConfirmationModalBody(props) {
         dispatch(clearCart()); // Clear POS cart after successful payment
         dispatch(closeModal());
         dispatch(closeRightDrawer());
-        dispatch(
-          openModal({
-            title: "Order Receipt",
-            bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
-            extraObject: createdOrder,
-            size: "lg",
-          })
-        );
+        dispatch(closeRightDrawer());
+
+        // Check Printer Mode
+        if (settings?.printerSettings?.mode === 'webusb') {
+             printerService.printReceipt(createdOrder, {
+                currencySymbol: settings?.currency?.symbol || "₦",
+                restaurantName: settings?.restaurantName,
+                restaurantAddress: settings?.restaurantAddress,
+                restaurantPhone: settings?.restaurantPhone,
+                paperWidth: settings?.printerSettings?.paperWidth || '80mm'
+            }).then(() => {
+                dispatch(showNotification({ message: "Receipt printed successfully", status: 1 }));
+            }).catch(err => {
+                 console.error("USB Print Failed", err);
+                 // Fallback to modal if USB fails
+                 dispatch(
+                  openModal({
+                    title: "Order Receipt",
+                    bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
+                    extraObject: createdOrder,
+                    size: "lg",
+                  })
+                );
+            });
+        } else {
+            // Default Browser Print (Popup Modal)
+            dispatch(
+              openModal({
+                title: "Order Receipt",
+                bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
+                extraObject: createdOrder,
+                size: "lg",
+              })
+            );
+        }
       })
       .catch((error) => {
         dispatch(showNotification({ message: error.message, status: 0 }));

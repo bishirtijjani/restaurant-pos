@@ -42,12 +42,19 @@ function AdvancedInsights() {
           <div className="card-body">
             <h3 className="card-title text-lg flex items-center gap-2">
               <LightBulbIcon className="h-5 w-5 text-yellow-500" />
-              AI Insights
+              Smart Insights
             </h3>
             <ul className="space-y-2 text-sm">
-              {/* Mock insights for now, or derive from forecasting data */}
-              <li>• Sales are predicted to increase by 15% next weekend.</li>
-              <li>• "Spicy Wings" demand correlates with rainy weather.</li>
+               {/* Backend now sends dynamic rule-based insights */}
+               {forecasting.insights && forecasting.insights.length > 0 ? (
+                  forecasting.insights.map((insight, idx) => (
+                    <li key={idx}>• {insight}</li>
+                  ))
+               ) : (
+                  <li className="text-base-content/50 italic">
+                    Not enough data to generate insights yet.
+                  </li>
+               )}
             </ul>
           </div>
         </div>

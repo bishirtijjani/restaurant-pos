@@ -116,6 +116,31 @@ const GeneralSettingsSchema = new mongoose.Schema(
       },
       minimumOrderAmount: { type: Number, default: 0 },
     },
+    // Printer Settings (New Hybrid Strategy)
+    printerSettings: {
+      mode: {
+        type: String,
+        enum: ["browser", "webusb"],
+        default: "browser",
+      },
+      paperWidth: {
+        type: String,
+        enum: ["58mm", "80mm"],
+        default: "80mm",
+      },
+      vendorId: {
+        type: Number,
+        default: null,
+      },
+      productId: {
+        type: Number,
+        default: null,
+      },
+      deviceName: {
+        type: String,
+        default: null,
+      },
+    },
   },
   {
     timestamps: true,

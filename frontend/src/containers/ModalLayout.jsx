@@ -38,11 +38,12 @@ import AddItemToOrderModalBody from "../features/orders/components/AddItemToOrde
 import VoidOrderItemsModalBody from "../features/orders/components/VoidOrderItemsModalBody";
 import RefundModalBody from "../features/orders/components/RefundModalBody";
 import AddOnSelectorModalBody from "../features/orders/components/AddOnSelectorModalBody";
+
 // order/kds/confirmation/session components
-import POSModalBody from "../features/orders/components/POSModalBody";
 import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
 import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
 import SessionExpiredModalBody from "../features/common/components/SessionExpiredModalBody";
+import POS from "../features/orders/POS"
 
 // Add-on group modals
 import AddAddOnGroupModalBody from "../features/addOnGroups/components/AddAddOnGroupModalBody";

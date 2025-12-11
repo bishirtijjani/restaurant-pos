@@ -73,14 +73,50 @@ function PaymentAnalytics() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <PaymentMethodsChart data={paymentMethods.data} loading={paymentMethods.status === "loading"} />
-        {/* Placeholder for another chart or metrics */}
+        
+        {/* Cash vs Digital Split */}
         <div className="card bg-base-100 shadow-sm border border-base-200">
-          <div className="card-body p-4">
-            <h3 className="card-title text-lg mb-4">Cash vs Digital</h3>
-            <div className="flex items-center justify-center h-64">
-              <p className="text-base-content/50">Chart Placeholder</p>
-            </div>
-          </div>
+           <div className="card-body">
+              <h3 className="card-title text-lg mb-4">Cash vs Digital Split</h3>
+              {isLoading ? (
+                <div className="animate-pulse space-y-4">
+                  <div className="h-4 bg-base-300 rounded w-3/4"></div>
+                  <div className="h-4 bg-base-300 rounded w-1/2"></div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                   {(() => {
+                      const total = paymentMethods.data.reduce((acc, curr) => acc + curr.value, 0) || 1;
+                      const cash = paymentMethods.data.find(p => p.name.toLowerCase() === 'cash')?.value || 0;
+                      const digital = total - cash;
+                      
+                      const cashPct = Math.round((cash / total) * 100);
+                      const digitalPct = 100 - cashPct;
+
+                      return (
+                        <>
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="font-medium">Cash</span>
+                              <span>{cashPct}%</span>
+                            </div>
+                            <progress className="progress progress-accent w-full" value={cashPct} max="100"></progress>
+                            <p className="text-xs text-base-content/60 mt-1">${cash.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="font-medium">Digital (Card/Transfer)</span>
+                              <span>{digitalPct}%</span>
+                            </div>
+                            <progress className="progress progress-primary w-full" value={digitalPct} max="100"></progress>
+                            <p className="text-xs text-base-content/60 mt-1">${digital.toLocaleString()}</p>
+                          </div>
+                        </>
+                      );
+                   })()}
+                </div>
+              )}
+           </div>
         </div>
       </div>
 

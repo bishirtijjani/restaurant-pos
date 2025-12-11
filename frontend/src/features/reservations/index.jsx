@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import TitleCard from "../../components/Cards/TitleCard";
 import {
   getReservations,
   createReservation,
@@ -9,6 +10,10 @@ import {
   updateReservationStatus,
   deleteReservation,
   checkInReservation,
+} from "./reservationSlice";
+import { fetchTables } from "../tables/tableSlice";
+import { fetchAllUsers } from "../users/usersSlice";
+import {
   Phone,
   Mail,
   Edit3,
@@ -17,11 +22,22 @@ import {
   XCircle,
   User,
   Filter,
+  UserCheck,
+  Plus,
+  Calendar,
+  Clock,
+  Users,
 } from "lucide-react";
 import SearchableSelect from "../../components/Input/SearchableSelect";
 import { Link } from "react-router-dom";
 
-const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete, onCheckIn }) => {
+const ReservationCard = ({
+  reservation,
+  onEdit,
+  onUpdateStatus,
+  onDelete,
+  onCheckIn,
+}) => {
   const statusColors = {
     pending: "badge-warning",
     confirmed: "badge-info",
@@ -46,11 +62,16 @@ const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete, onChec
             <h3 className="font-bold text-lg flex items-center gap-2">
               <User className="w-5 h-5 text-primary" />
               {reservation.customerId ? (
-                  <Link to={`/app/customers/${reservation.customerId._id || reservation.customerId}`} className="link link-hover hover:text-primary">
-                    {reservation.customerName}
-                  </Link>
+                <Link
+                  to={`/app/customers/${
+                    reservation.customerId._id || reservation.customerId
+                  }`}
+                  className="link link-hover hover:text-primary"
+                >
+                  {reservation.customerName}
+                </Link>
               ) : (
-                  <span>{reservation.customerName}</span>
+                <span>{reservation.customerName}</span>
               )}
             </h3>
             <span
@@ -113,6 +134,7 @@ const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete, onChec
                 className="btn btn-xs btn-success gap-1"
                 onClick={() => onCheckIn(reservation._id)}
               >
+                <UserCheck className="w-3 h-3" />
                 Check-in
               </button>
               <button
@@ -142,9 +164,6 @@ const ReservationCard = ({ reservation, onEdit, onUpdateStatus, onDelete, onChec
     </div>
   );
 };
-
-
-
 
 const ReservationManagement = () => {
   const dispatch = useDispatch();
@@ -219,12 +238,17 @@ const ReservationManagement = () => {
       })
     );
   };
-  
+
   const handleCheckIn = async (id) => {
     try {
       const result = await dispatch(checkInReservation(id)).unwrap();
-      dispatch(showNotification({ message: "Reservation checked in successfully", status: 1 }));
-      
+      dispatch(
+        showNotification({
+          message: "Reservation checked in successfully",
+          status: 1,
+        })
+      );
+
       // Navigate to POS with pre-filled data
       const reservation = result;
       navigate("/app/pos", {

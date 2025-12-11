@@ -53,18 +53,11 @@ const KDS = () => {
     const hasPermission = can("viewKDS");
     setCanViewKDS(hasPermission);
     setPermissionChecked(true);
-
-    console.log("KDS Permission check:", {
-      role,
-      hasPermission,
-      canFunction: can,
-    });
   }, [can, role]);
 
   // Initialize stations (only if has permission)
   useEffect(() => {
     if (permissionChecked && canViewKDS) {
-      console.log("Fetching stations...");
       dispatch(fetchStations());
     }
   }, [dispatch, permissionChecked, canViewKDS]);
@@ -81,7 +74,6 @@ const KDS = () => {
           : stations.find((s) => s._id === stationId);
 
       if (station) {
-        console.log("Setting current station:", station);
         dispatch(setCurrentStation(station));
       }
     }
@@ -93,8 +85,6 @@ const KDS = () => {
       if (!canViewKDS) return;
 
       const { type, data: orderData } = data;
-
-      console.log("WebSocket message received:", type);
 
       switch (type) {
         case "order:created":
@@ -137,17 +127,11 @@ const KDS = () => {
   // Initial fetch and refresh when filters change
   useEffect(() => {
     if (!canViewKDS || !currentStation) {
-      console.log("Skipping fetch - no permission or station", {
-        canViewKDS,
-        currentStation,
-      });
       return;
     }
 
     const stationId =
       currentStation.type === "all" ? "all" : currentStation._id;
-
-    console.log("Fetching KDS orders:", { stationId, showCompleted });
 
     dispatch(fetchKDSOrders({ stationId, showCompleted }))
       .unwrap()

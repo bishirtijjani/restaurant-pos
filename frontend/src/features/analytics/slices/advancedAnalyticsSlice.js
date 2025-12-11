@@ -49,6 +49,8 @@ export const advancedAnalyticsSlice = createSlice({
         state.heatmap.status = "succeeded";
         state.heatmap.data = action.payload.heatmap;
         state.forecasting.data = action.payload.forecasting;
+        // Store rule-based insights if provided
+        state.forecasting.insights = action.payload.insights || [];
         state.anomalyDetection.data = action.payload.anomalyDetection;
       })
       .addCase(fetchAdvancedData.rejected, (state) => {

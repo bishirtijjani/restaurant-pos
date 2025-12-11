@@ -15,6 +15,7 @@ import {
   Edit3,
   Tag,
 } from "lucide-react";
+import { printerService } from "../../services/PrinterService";
 import {
   MODAL_BODY_TYPES,
   RIGHT_DRAWER_TYPES,

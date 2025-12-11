@@ -512,6 +512,112 @@ const GeneralSettings = () => {
               </div>
             </div>
           </div>
+        {/* Printer Settings (Hybrid Mode) */}
+        <div className="card bg-base-100 shadow-lg">
+          <div className="card-body">
+            <div className="flex items-center gap-2 mb-4">
+              <PrinterIcon className="w-5 h-5 text-primary" />
+              <h2 className="card-title">Printer Configuration</h2>
+            </div>
+            
+            <div className="alert alert-info shadow-sm mb-4">
+              <div>
+                <h3 className="font-bold text-xs">Hybrid Printing Strategy</h3>
+                <div className="text-xs opacity-90">
+                  Mode A: <b>Universal (Default)</b> uses standard browser printing (Popup).<br/>
+                  Mode B: <b>WebUSB (Turbo)</b> uses direct USB connection for instant silent printing.
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">Printing Mode</span>
+                </label>
+                <select
+                  className="select select-bordered w-full"
+                  name="printerSettings.mode" // We handle nested change manually below
+                  value={formData.printerSettings?.mode || "browser"}
+                  onChange={(e) =>
+                    setFormData(prev => ({
+                        ...prev,
+                        printerSettings: { ...prev.printerSettings, mode: e.target.value }
+                    }))
+                  }
+                >
+                  <option value="browser">Universal (Browser Popup)</option>
+                  <option value="webusb">Turbo (Direct USB)</option>
+                </select>
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">Paper Width</span>
+                </label>
+                <select
+                  className="select select-bordered w-full"
+                  value={formData.printerSettings?.paperWidth || "80mm"}
+                  onChange={(e) =>
+                    setFormData(prev => ({
+                        ...prev,
+                        printerSettings: { ...prev.printerSettings, paperWidth: e.target.value }
+                    }))
+                  }
+                >
+                  <option value="80mm">80mm (Standard)</option>
+                  <option value="58mm">58mm (Small)</option>
+                </select>
+              </div>
+
+              {formData.printerSettings?.mode === 'webusb' && (
+                  <div className="col-span-1 md:col-span-2">
+                       <div className="card bg-base-200 border border-base-300">
+                          <div className="card-body p-4">
+                              <h3 className="card-title text-sm">USB Connection</h3>
+                              <div className="flex items-center gap-4">
+                                  <div className="flex-1">
+                                      {formData.printerSettings?.vendorId ? (
+                                           <div className="badge badge-success gap-2 p-3">
+                                               Connected: {formData.printerSettings.deviceName || "USB Printer"} 
+                                               (ID: {formData.printerSettings.vendorId})
+                                           </div>
+                                      ) : (
+                                          <div className="text-sm opacity-60">No printer connected yet</div>
+                                      )}
+                                  </div>
+                                  <button 
+                                    type="button"
+                                    className="btn btn-primary btn-sm"
+                                    onClick={async () => {
+                                        try {
+                                            const { printerService } = await import("../../../../services/PrinterService");
+                                            const device = await printerService.connect();
+                                            
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                printerSettings: { 
+                                                    ...prev.printerSettings, 
+                                                    vendorId: device.vendorId,
+                                                    productId: device.productId,
+                                                    deviceName: device.productName
+                                                }
+                                            }));
+                                            setHasChanges(true); // Ensure save button enables
+                                        } catch (e) {
+                                            alert("Connection failed: " + e.message);
+                                        }
+                                    }}
+                                  >
+                                      Connect USB Device
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Action Buttons */}

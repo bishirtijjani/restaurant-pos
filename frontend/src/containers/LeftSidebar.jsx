@@ -4,6 +4,7 @@ import SidebarSubmenu from "./SidebarSubmenu";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowLeftStartOnRectangleIcon from "@heroicons/react/24/outline/ArrowLeftStartOnRectangleIcon";
 import { jwtDecode } from "jwt-decode";
+import SessionExpired from "../features/common/components/SessionExpiredModalBody";
 
 // Helpers
 const token = localStorage.getItem("token");

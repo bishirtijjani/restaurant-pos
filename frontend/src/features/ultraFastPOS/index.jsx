@@ -18,8 +18,11 @@ import {
   X,
   DollarSign,
   CreditCard,
+  DollarSign,
+  CreditCard,
   Banknote,
 } from "lucide-react";
+import { printerService } from "../../services/PrinterService";
 
 const UltraFastPOS = () => {
   const dispatch = useDispatch();
@@ -295,6 +298,23 @@ const UltraFastPOS = () => {
 
   // Instant print (no delays)
   const printReceipt = async (order, cartItems = []) => {
+    // Check for Hybrid Printing Mode
+    if (settings?.printerSettings?.mode === 'webusb') {
+        try {
+            await printerService.printReceipt(order, {
+                currencySymbol: settings?.currency?.symbol || "₦",
+                restaurantName: settings?.restaurantName,
+                restaurantAddress: settings?.restaurantAddress,
+                restaurantPhone: settings?.restaurantPhone,
+                paperWidth: settings?.printerSettings?.paperWidth || '80mm'
+            });
+            return;
+        } catch (error) {
+            console.warn("WebUSB Print failed, falling back to browser print:", error);
+            dispatch(showNotification({ message: "Printer disconnected. Using fallback.", status: 0 }));
+        }
+    }
+
     try {
       const printWindow = window.open("", "_blank");
       printWindow.document.write(`
@@ -344,13 +364,13 @@ const UltraFastPOS = () => {
                         ? item.addOns
                             .map((group) =>
                               group.selectedItems
-                                .map((i) => \`+ \${i.name}\`)
+                                .map((i) => `+ ${i.name}`)
                                 .join("<br>")
                             )
                             .join("<br>")
                         : cartItem.addOnSummary
                         ? cartItem.addOnSummary
-                            .map((s) => \`+ \${s}\`)
+                            .map((s) => `+ ${s}`)
                             .join("<br>")
                         : "";
 

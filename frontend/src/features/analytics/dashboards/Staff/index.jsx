@@ -49,20 +49,23 @@ function StaffAnalytics() {
           loading={isLoading}
         />
         <KPICard
-          title="Labor Cost %"
-          value="22%" // Mock for now as backend sends array
+          title="Rev. / Active Staff"
+          value={`$${(activeStaff > 0 && performance.data 
+            ? Math.round(performance.data.reduce((acc, curr) => acc + curr.sales, 0) / activeStaff) 
+            : 0).toLocaleString()}`}
           icon={CurrencyDollarIcon}
-          trend={true}
-          trendValue={-1.5}
+          trend={false}
           color="secondary"
           loading={isLoading}
         />
         <KPICard
-          title="Avg Sales / Waiter"
-          value="$850" // Mock for now
+          title="Top Performer Sales"
+          value={`$${(performance.data && performance.data.length > 0 
+            ? performance.data[0].sales.toLocaleString() 
+            : "0")}`}
           icon={CurrencyDollarIcon}
           trend={true}
-          trendValue={5.0}
+          trendValue={null} 
           color="success"
           loading={isLoading}
         />

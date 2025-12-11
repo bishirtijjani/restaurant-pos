@@ -511,6 +511,14 @@ const InventoryManagement = () => {
     );
   };
 
+  const handleRefresh = () => {
+    dispatch(fetchInventoryItems({
+      category: categoryFilter,
+      lowStock: stockFilter === "low"
+    }));
+  };
+
+
   if (status === "loading") return <SuspenseContent />;
 
   if (!can("viewInventory")) {

@@ -3,6 +3,7 @@ import axios from "axios";
 import offlineStorage from "./storage";
 import { syncQueue } from "./syncQueue";
 import store from "../../app/store";
+import { isTokenExpired } from "../../utils/Helpers";
 
 export class SyncManager {
   constructor() {
@@ -35,6 +36,15 @@ export class SyncManager {
   }
 
   async syncAll() {
+    // Check if user is logged in
+    const state = store.getState();
+    const token = state.auth?.token;
+    
+    if (!token || isTokenExpired(token)) {
+      // console.log("Sync skipped: Not logged in or token expired");
+      return;
+    }
+
     if (this.syncing) {
       console.log("Sync already in progress");
       return;
@@ -82,6 +92,12 @@ export class SyncManager {
         await this.pullStore(storeName);
       } catch (error) {
         console.error(`Failed to pull ${storeName}:`, error);
+        
+        // If we get a 401, stop the loop immediately to prevent request storm
+        if (error.response?.status === 401) {
+             console.log("Aborting sync loop due to authentication failure");
+             throw error; // Re-throw to stop syncAll
+        }
       }
     }
   }

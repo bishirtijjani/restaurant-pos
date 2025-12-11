@@ -7,7 +7,7 @@ function InternalPage() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(setPageTitle({ title: "Kitchen Dislay" }));
+    dispatch(setPageTitle({ title: "Kitchen Display" }));
   }, []);
 
   return <KDS />;

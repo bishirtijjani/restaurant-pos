@@ -39,7 +39,7 @@ export const adminRoutes = [
   },
   {
     path: "/app/analytics",
-    icon: <ChartBarIcon className={iconClasses} />,
+    icon: <ChartBarIcon  className={`${iconClasses} inline`}  />,
     name: "Analytics",
     submenu: [
       {
@@ -227,7 +227,7 @@ export const managerRoutes = [
   },
   {
     path: "/app/analytics",
-    icon: <ChartBarIcon className={iconClasses} />,
+    icon: <ChartBarIcon  className={`${iconClasses} inline`}  />,
     name: "Analytics",
     submenu: [
       {

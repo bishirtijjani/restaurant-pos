@@ -45,7 +45,45 @@ const Users = () => {
     }
   }, [dispatch, status]);
 
-  // ... (skipping filteredAndSortedUsers logic)
+  const filteredAndSortedUsers = useMemo(() => {
+    let result = [...users];
+
+    // Filter by search term
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase();
+      result = result.filter(
+        (u) =>
+          u.fullname?.toLowerCase().includes(lowerTerm) ||
+          u.email?.toLowerCase().includes(lowerTerm) ||
+          u.role?.toLowerCase().includes(lowerTerm)
+      );
+    }
+
+    // Filter by role
+    if (roleFilter) {
+      result = result.filter((u) => u.role === roleFilter);
+    }
+
+    // Sort
+    if (sortBy) {
+      result.sort((a, b) => {
+        switch (sortBy) {
+          case "name":
+            return (a.fullname || "").localeCompare(b.fullname || "");
+          case "name_desc":
+            return (b.fullname || "").localeCompare(a.fullname || "");
+          case "date":
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+          case "date_desc":
+            return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return result;
+  }, [users, searchTerm, roleFilter, sortBy]);
 
   const handleAddNew = () => {
     dispatch(

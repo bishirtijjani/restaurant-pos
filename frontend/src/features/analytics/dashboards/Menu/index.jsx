@@ -9,7 +9,11 @@ import KPICard from "../../components/cards/KPICard";
 import TagIcon from "@heroicons/react/24/solid/TagIcon";
 import StarIcon from "@heroicons/react/24/solid/StarIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/solid/ExclamationTriangleIcon";
-import { fetchMenuData, selectMenuMatrix, selectCategoryPerformance } from "../../slices/menuAnalyticsSlice";
+import {
+  fetchMenuData,
+  selectMenuMatrix,
+  selectCategoryPerformance,
+} from "../../slices/menuAnalyticsSlice";
 
 function MenuIntelligence() {
   const dispatch = useDispatch();
@@ -19,19 +23,22 @@ function MenuIntelligence() {
 
   useEffect(() => {
     if (dateRange.startDate && dateRange.endDate) {
-      dispatch(fetchMenuData({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-      }));
+      dispatch(
+        fetchMenuData({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+      );
     }
   }, [dispatch, dateRange]);
 
   const isLoading = matrix.status === "loading";
-  
+
   // Calculate KPIs from data
-  const totalItems = matrix.data.length;
-  const starItems = matrix.data.filter(i => i.quadrant === "Star").length;
-  const dogItems = matrix.data.filter(i => i.quadrant === "Dog").length;
+  const data = matrix.data || [];
+  const totalItems = data.length;
+  const starItems = data.filter((i) => i.quadrant === "Star").length;
+  const dogItems = data.filter((i) => i.quadrant === "Dog").length;
 
   return (
     <AnalyticsContainer>
@@ -73,7 +80,10 @@ function MenuIntelligence() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <MenuEngineeringMatrix data={matrix.data} loading={isLoading} />
-        <CategoryPerformance data={categoryPerformance.data} loading={categoryPerformance.status === "loading"} />
+        <CategoryPerformance
+          data={categoryPerformance.data}
+          loading={categoryPerformance.status === "loading"}
+        />
       </div>
 
       {/* Analysis Text / Recommendations */}
@@ -82,13 +92,16 @@ function MenuIntelligence() {
           <h3 className="card-title text-lg">Recommendations</h3>
           <ul className="list-disc list-inside text-sm text-base-content/80 space-y-2">
             <li>
-              Promote <strong>Steak</strong> (Puzzle): High profit but low sales. Consider a special offer.
+              Promote <strong>Steak</strong> (Puzzle): High profit but low
+              sales. Consider a special offer.
             </li>
             <li>
-              Review <strong>Salad</strong> (Dog): Low profit and low sales. Consider removing or reformulating.
+              Review <strong>Salad</strong> (Dog): Low profit and low sales.
+              Consider removing or reformulating.
             </li>
             <li>
-              Maintain <strong>Burger</strong> (Star): Doing great! Ensure consistent quality.
+              Maintain <strong>Burger</strong> (Star): Doing great! Ensure
+              consistent quality.
             </li>
           </ul>
         </div>

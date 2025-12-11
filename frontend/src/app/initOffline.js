@@ -1,6 +1,7 @@
 // frontend/src/app/initOffline.js
 import { syncManager } from "../utils/offline/syncManager";
 import { connectionMonitor } from "../utils/offline/connectionMonitor";
+import store from "./store";
 
 export const initializeOfflineSupport = () => {
   console.log("Initializing offline support...");
@@ -40,15 +41,39 @@ export const initializeOfflineSupport = () => {
   }
 
   // Start automatic sync (every 30 seconds)
-  syncManager.startAutoSync(30000);
+  // Handle sync based on auth state
+  let currentToken = store.getState().auth.token;
+
+  // Initial check
+  if (currentToken) {
+    syncManager.startAutoSync(30000);
+  }
+
+  // Subscribe to store changes
+  store.subscribe(() => {
+    const previousToken = currentToken;
+    const state = store.getState();
+    currentToken = state.auth.token;
+
+    if (currentToken && !previousToken) {
+      console.log("User logged in, starting sync...");
+      syncManager.startAutoSync(30000);
+    } else if (!currentToken && previousToken) {
+      console.log("User logged out, stopping sync...");
+      syncManager.stopAutoSync();
+    }
+  });
 
   // Listen for online/offline events
   connectionMonitor.addListener((status) => {
     console.log("Connection status changed:", status);
 
     if (status.online) {
-      // Trigger sync when coming online
-      syncManager.syncAll();
+      // Trigger sync when coming online only if logged in
+      const state = store.getState();
+      if (state.auth?.token) {
+        syncManager.syncAll();
+      }
     }
   });
 

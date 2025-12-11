@@ -1,13 +1,15 @@
-// frontend/src/hooks/useOffline.js
-import { useState, useEffect } from "react";
+import React from "react";
 import { connectionMonitor } from "../../../utils/offline/connectionMonitor";
 import { syncManager } from "../../../utils/offline/syncManager";
 import { syncQueue } from "../../../utils/offline/syncQueue";
+import { offlineStorage } from "../../../utils/offline/storage";
 
 export const useOnlineStatus = () => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = React.useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
 
-  useEffect(() => {
+  React.useEffect(() => {
     const unsubscribe = connectionMonitor.addListener((status) => {
       setIsOnline(status.online);
     });
@@ -19,13 +21,13 @@ export const useOnlineStatus = () => {
 };
 
 export const useSyncStatus = () => {
-  const [syncStatus, setSyncStatus] = useState({
+  const [syncStatus, setSyncStatus] = React.useState({
     syncing: false,
     lastSync: null,
     error: null,
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     const unsubscribe = syncManager.addListener((event) => {
       switch (event.type) {
         case "sync:start":
@@ -50,13 +52,13 @@ export const useSyncStatus = () => {
 };
 
 export const useSyncQueue = () => {
-  const [queueStats, setQueueStats] = useState({
+  const [queueStats, setQueueStats] = React.useState({
     pending: 0,
     failed: 0,
     total: 0,
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     const updateStats = async () => {
       const stats = await syncQueue.getStats();
       setQueueStats(stats);
@@ -81,10 +83,10 @@ export const useSyncQueue = () => {
 };
 
 export const useOfflineStorage = (storeName) => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     loadData();
   }, [storeName]);
 

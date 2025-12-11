@@ -192,13 +192,13 @@ const schemas = {
   // Auth schemas
   login: {
     email: { required: true, email: true },
-    password: { required: true, type: "string", minLength: 6 },
+    password: { required: true, type: "string", minLength: 5 },
   },
 
   register: {
     fullname: { required: true, type: "string", minLength: 2 },
     email: { required: true, email: true },
-    password: { required: true, type: "string", minLength: 6 },
+    password: { required: true, type: "string", minLength: 5 },
     role: { required: true, enum: ["admin", "manager", "cashier", "waiter", "kitchen"] },
   },
 };

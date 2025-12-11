@@ -18,7 +18,7 @@ export const fetchKDSOrders = createAsyncThunk(
       }
 
       const query = params.toString() ? `?${params.toString()}` : "";
-      console.log("Fetching KDS Orders with query:", query); // Debug log
+
       const response = await axios.get(
         `${API_URL}/orders/${stationId}${query}`
       );

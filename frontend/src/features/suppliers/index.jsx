@@ -6,6 +6,7 @@ import {
   MODAL_BODY_TYPES,
   CONFIRMATION_MODAL_CLOSE_TYPES,
 } from "../../utils/globalConstantUtil";
+
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSuppliers } from "./suppliersSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
@@ -139,40 +140,9 @@ const SupplierCard = ({ supplier, onEdit, onDelete }) => {
             </span>
           </div>
 
-          {supplier.lastAction?.action && <div className="divider my-2"></div>}
 
-          {supplier.lastAction?.action && (
-            <div className="bg-base-200 rounded-lg p-3 space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-4 h-4 text-info" />
-                <span className="font-semibold text-info">Last Action</span>
-              </div>
-              <div className="text-xs space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="badge badge-info badge-xs"></span>
-                  <span className="capitalize">
-                    {supplier.lastAction.action}
-                  </span>
-                </div>
-                {supplier.lastAction.performedBy && (
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="w-3 h-3 text-success" />
-                    <span>By: {supplier.lastAction.performedBy.fullname}</span>
-                  </div>
-                )}
-                {supplier.lastAction.reason && (
-                  <div className="text-base-content/60">
-                    {supplier.lastAction.reason}
-                  </div>
-                )}
-                {supplier.lastAction.createdAt && (
-                  <div className="text-base-content/50">
-                    {new Date(supplier.lastAction.createdAt).toLocaleString()}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+
+
         </div>
       </div>
     </div>
@@ -190,7 +160,7 @@ const SupplierTable = ({ suppliers, onEdit, onDelete }) => {
             <th className="font-bold">Supplier</th>
             <th className="font-bold">Contact</th>
             <th className="font-bold">Address</th>
-            <th className="font-bold">Last Action</th>
+
             <th className="font-bold">Created</th>
             <Can do="editInventory">
               <th className="font-bold">Actions</th>
@@ -244,24 +214,7 @@ const SupplierTable = ({ suppliers, onEdit, onDelete }) => {
                   </span>
                 </div>
               </td>
-              <td>
-                {supplier.lastAction?.action ? (
-                  <div className="space-y-1">
-                    <div className="badge badge-info badge-sm capitalize">
-                      {supplier.lastAction.action}
-                    </div>
-                    {supplier.lastAction.performedBy && (
-                      <div className="text-xs text-base-content/70">
-                        By: {supplier.lastAction.performedBy.fullname}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-base-content/50 text-sm">
-                    No action
-                  </span>
-                )}
-              </td>
+
               <td>
                 <div className="text-sm">
                   {new Date(supplier.createdAt).toLocaleDateString()}
@@ -300,27 +253,19 @@ const SearchAndFilters = ({
   onSearchChange,
   sortBy,
   onSortChange,
-  actionFilter,
-  onActionFilterChange,
   viewMode,
   onViewModeChange,
 }) => {
+
   const sortOptions = [
     { value: "", name: "Sort by..." },
     { value: "name", name: "Name (A-Z)" },
     { value: "name_desc", name: "Name (Z-A)" },
     { value: "date", name: "Newest First" },
     { value: "date_desc", name: "Oldest First" },
-    { value: "last_action", name: "Recent Action" },
   ];
 
-  const actionFilterOptions = [
-    { value: "", name: "All Actions" },
-    { value: "create", name: "Created" },
-    { value: "update", name: "Updated" },
-    { value: "delete", name: "Deleted" },
-    { value: "no_action", name: "No Action" },
-  ];
+
 
   return (
     <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
@@ -354,18 +299,7 @@ const SearchAndFilters = ({
           />
         </div>
 
-        <div className="form-control">
-          <SearchableSelect
-            options={actionFilterOptions}
-            value={actionFilter}
-            onChange={(e) => onActionFilterChange(e.target.value)}
-            name="actionFilter"
-            placeholder="All actions"
-            className="w-full max-w-xs"
-            valueKey="value"
-            labelKey="name"
-          />
-        </div>
+
 
         <div className="btn-group">
           <button
@@ -391,6 +325,7 @@ const SearchAndFilters = ({
     </div>
   </div>
 );
+}
 
 const Suppliers = () => {
   const dispatch = useDispatch();
@@ -401,7 +336,6 @@ const Suppliers = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
-  const [actionFilter, setActionFilter] = useState("");
   const [viewMode, setViewMode] = useState("card");
 
   useEffect(() => {
@@ -417,23 +351,9 @@ const Suppliers = () => {
         supplier.phone?.includes(searchTerm) ||
         supplier.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesAction = (() => {
-        const action = supplier.lastAction?.action;
-        switch (actionFilter) {
-          case "create":
-            return action === "create";
-          case "update":
-            return action === "update";
-          case "delete":
-            return action === "delete";
-          case "no_action":
-            return !action;
-          default:
-            return true;
-        }
-      })();
 
-      return matchesSearch && matchesAction;
+
+      return matchesSearch;
     });
 
     filtered.sort((a, b) => {
@@ -446,21 +366,13 @@ const Suppliers = () => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         case "date_desc":
           return new Date(a.createdAt) - new Date(b.createdAt);
-        case "last_action":
-          const aActionDate = a.lastAction?.createdAt
-            ? new Date(a.lastAction.createdAt)
-            : new Date(0);
-          const bActionDate = b.lastAction?.createdAt
-            ? new Date(b.lastAction.createdAt)
-            : new Date(0);
-          return bActionDate - aActionDate;
         default:
           return 0;
       }
     });
 
     return filtered;
-  }, [suppliers, searchTerm, sortBy, actionFilter]);
+  }, [suppliers, searchTerm, sortBy]);
 
   const handleAddNew = () => {
     dispatch(
@@ -536,8 +448,6 @@ const Suppliers = () => {
           onSearchChange={setSearchTerm}
           sortBy={sortBy}
           onSortChange={setSortBy}
-          actionFilter={actionFilter}
-          onActionFilterChange={setActionFilter}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
         />
