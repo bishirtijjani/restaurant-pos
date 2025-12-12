@@ -11,7 +11,14 @@ import UserGroupIcon from "@heroicons/react/24/solid/UserGroupIcon";
 import UserPlusIcon from "@heroicons/react/24/solid/UserPlusIcon";
 import ArrowPathIcon from "@heroicons/react/24/solid/ArrowPathIcon";
 import CurrencyDollarIcon from "@heroicons/react/24/solid/CurrencyDollarIcon";
-import { fetchCustomerData, selectCustomerOverview, selectCustomerRetention, selectCustomerSegmentation, selectTopCustomers } from "../../slices/customerAnalyticsSlice";
+import {
+  fetchCustomerData,
+  selectCustomerOverview,
+  selectCustomerRetention,
+  selectCustomerSegmentation,
+  selectTopCustomers,
+} from "../../slices/customerAnalyticsSlice";
+import { selectSettings } from "../../../settings/generalSettings/generalSettingsSlice";
 
 function CustomerInsights() {
   const dispatch = useDispatch();
@@ -20,20 +27,29 @@ function CustomerInsights() {
   const retention = useSelector(selectCustomerRetention);
   const segmentation = useSelector(selectCustomerSegmentation);
   const topCustomers = useSelector(selectTopCustomers);
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   const { data: kpis, status } = overview;
 
   useEffect(() => {
     if (dateRange.startDate && dateRange.endDate) {
-      dispatch(fetchCustomerData({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-      }));
+      dispatch(
+        fetchCustomerData({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+      );
     }
   }, [dispatch, dateRange]);
 
   const isLoading = status === "loading";
-  const kpiData = kpis || { totalCustomers: 0, newCustomers: 0, repeatRate: 0, avgLTV: 0 };
+  const kpiData = kpis || {
+    totalCustomers: 0,
+    newCustomers: 0,
+    repeatRate: 0,
+    avgLTV: 0,
+  };
 
   return (
     <AnalyticsContainer>
@@ -74,7 +90,7 @@ function CustomerInsights() {
         />
         <KPICard
           title="Avg Lifetime Value"
-          value={`$${kpiData.avgLTV.toLocaleString()}`}
+          value={`${currency}${kpiData.avgLTV.toLocaleString()}`}
           icon={CurrencyDollarIcon}
           trend={true}
           trendValue={5.0}
@@ -85,13 +101,22 @@ function CustomerInsights() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <CustomerRetentionChart data={retention.data} loading={retention.status === "loading"} />
-        <CustomerSegmentationChart data={segmentation.data} loading={segmentation.status === "loading"} />
+        <CustomerRetentionChart
+          data={retention.data}
+          loading={retention.status === "loading"}
+        />
+        <CustomerSegmentationChart
+          data={segmentation.data}
+          loading={segmentation.status === "loading"}
+        />
       </div>
 
       {/* Table */}
       <div className="grid grid-cols-1 gap-6">
-        <TopCustomersTable data={topCustomers.data} loading={topCustomers.status === "loading"} />
+        <TopCustomersTable
+          data={topCustomers.data}
+          loading={topCustomers.status === "loading"}
+        />
       </div>
     </AnalyticsContainer>
   );

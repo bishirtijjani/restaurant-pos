@@ -33,6 +33,8 @@ import { useNavigate } from "react-router-dom";
 import TitleCard from "../../components/Cards/TitleCard";
 import { showNotification } from "../common/headerSlice";
 import CustomerSearch from "../../components/Common/CustomerSearch";
+import { fetchTables } from "../tables/tableSlice";
+import { getMergedGroup, getPrimaryTable } from "../tables/tableUtils";
 import TableSelectionModal from "./components/TableSelectionModal";
 import {
   addToCart,
@@ -299,16 +301,26 @@ const CustomerDetailsForm = ({
       <h3 className="font-medium text-sm mb-2 flex items-center gap-1">
         <User size={14} /> Customer Details
       </h3>
-      
+
       {!disabled && (
         <div className="mb-3">
-            <CustomerSearch 
-                onSelect={handleCustomerSelect} 
-                label="Link Customer (Optional)" 
-                placeholder="Search..."
-                initialValue={customerDetails.customerId ? { fullname: customerDetails.name, phone: customerDetails.phone, _id: customerDetails.customerId } : null}
-            />
-            <div className="divider my-1 text-xs text-base-content/50">OR ENTER MANUALLY</div>
+          <CustomerSearch
+            onSelect={handleCustomerSelect}
+            label="Link Customer (Optional)"
+            placeholder="Search..."
+            initialValue={
+              customerDetails.customerId
+                ? {
+                    fullname: customerDetails.name,
+                    phone: customerDetails.phone,
+                    _id: customerDetails.customerId,
+                  }
+                : null
+            }
+          />
+          <div className="divider my-1 text-xs text-base-content/50">
+            OR ENTER MANUALLY
+          </div>
         </div>
       )}
 
@@ -338,7 +350,10 @@ const CustomerDetailsForm = ({
             className="textarea textarea-sm textarea-bordered w-full"
             value={customerDetails.address}
             onChange={(e) =>
-              setCustomerDetails({ ...customerDetails, address: e.target.value })
+              setCustomerDetails({
+                ...customerDetails,
+                address: e.target.value,
+              })
             }
             placeholder="Delivery address"
             rows="2"
@@ -360,7 +375,9 @@ export default function POS() {
   );
   const currency = settings?.currency?.symbol || "$";
   const menuItems = useSelector((state) => state.menuItems.menuItems);
+
   const categories = useSelector((state) => state.categories.categories);
+  const { tables } = useSelector((state) => state.tables);
 
   /* Redux State Selectors */
   const {
@@ -388,7 +405,9 @@ export default function POS() {
   useEffect(() => {
     dispatch(fetchAllMenuItems());
     dispatch(fetchAllCategories());
+
     dispatch(fetchSettings());
+    dispatch(fetchTables());
   }, [dispatch]);
 
   const filteredItems = menuItems.filter(
@@ -519,21 +538,27 @@ export default function POS() {
 
     // Determine effective table (Primary table if merged)
     let effectiveTableNumber = selectedTable?.tableNumber;
-    // We can reuse the logic from handleCheckout or refactor it into a helper, 
+    // We can reuse the logic from handleCheckout or refactor it into a helper,
     // but for now let's copy the robust logic to ensure consistency.
     // Actually, let's verify if `selectedTable` object from Redux is full object. Yes it is.
-    if (orderType === "dine-in" && selectedTable && selectedTable._id && tables && tables.length > 0) {
-        try {
-            const group = getGroup(selectedTable._id, tables);
-            if (group && group.length > 1) {
-                const primary = getPrimary(group);
-                if (primary && primary.tableNumber) {
-                    effectiveTableNumber = primary.tableNumber;
-                }
-            }
-        } catch (error) {
-            console.error('Error determining primary table:', error);
+    if (
+      orderType === "dine-in" &&
+      selectedTable &&
+      selectedTable._id &&
+      tables &&
+      tables.length > 0
+    ) {
+      try {
+        const group = getMergedGroup(selectedTable._id, tables);
+        if (group && group.length > 1) {
+          const primary = getPrimaryTable(group);
+          if (primary && primary.tableNumber) {
+            effectiveTableNumber = primary.tableNumber;
+          }
         }
+      } catch (error) {
+        console.error("Error determining primary table:", error);
+      }
     }
 
     const orderPayload = {
@@ -574,18 +599,25 @@ export default function POS() {
       paymentStatus: "pending",
       paymentMethod: "cash", // Default to cash for pending orders? Or null? Model defaults to cash.
       amountPaid: 0,
-      balance: totals.total, 
+      balance: totals.total,
       payments: [], // No payments yet
     };
 
     dispatch(createOrder({ order: orderPayload }))
       .unwrap()
       .then(() => {
-        dispatch(showNotification({ message: "Order sent to kitchen!", status: 1 }));
+        dispatch(
+          showNotification({ message: "Order sent to kitchen!", status: 1 })
+        );
         dispatch(clearCart());
       })
       .catch((err) => {
-        dispatch(showNotification({ message: err.message || "Failed to create order", status: 0 }));
+        dispatch(
+          showNotification({
+            message: err.message || "Failed to create order",
+            status: 0,
+          })
+        );
       });
   };
 
@@ -675,7 +707,6 @@ export default function POS() {
   }
 
   return (
-
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_24rem] h-[calc(100vh-2rem)] overflow-hidden bg-base-200 gap-4 p-2">
       {/* Left - Menu */}
       <div className="bg-base-100 rounded-xl shadow-lg p-4 flex flex-col h-full overflow-hidden">
@@ -744,7 +775,9 @@ export default function POS() {
             {selectedTable ? (
               <div className="flex items-center gap-2 p-2 bg-base-100 rounded border border-primary">
                 <div className="flex-1">
-                  <div className="font-bold">Table {selectedTable.tableNumber}</div>
+                  <div className="font-bold">
+                    Table {selectedTable.tableNumber}
+                  </div>
                   <div className="text-xs text-base-content/70">
                     {selectedTable.capacity} seats
                   </div>
@@ -765,7 +798,9 @@ export default function POS() {
         {(orderType === "delivery" || orderType === "takeaway") && (
           <CustomerDetailsForm
             customerDetails={customerDetails}
-            setCustomerDetails={(details) => dispatch(setCustomerDetails(details))}
+            setCustomerDetails={(details) =>
+              dispatch(setCustomerDetails(details))
+            }
             orderType={orderType}
             disabled={!canCreateOrders}
           />
@@ -929,32 +964,32 @@ export default function POS() {
 
         {/* Actions */}
         <div className="flex flex-col gap-2 mt-2">
-            {orderType === "dine-in" && (
-                <button
-                    onClick={handleSendToKitchen}
-                    className="btn btn-secondary btn-outline w-full"
-                    disabled={!canCreateOrders || cart.length === 0}
-                >
-                    Send to Kitchen (Pay Later)
-                </button>
-            )}
-            <div className="flex gap-2">
-              <button
-                className="btn btn-outline flex-1"
-                onClick={() => dispatch(clearCart())}
-                disabled={cart.length === 0}
-              >
-                Clear
-              </button>
-              <button
-                className="btn btn-primary flex-1"
-                onClick={handleCheckout}
-                disabled={cart.length === 0}
-              >
-                Pay {currency}
-                {totals.total.toFixed(2)}
-              </button>
-            </div>
+          {orderType === "dine-in" && (
+            <button
+              onClick={handleSendToKitchen}
+              className="btn btn-secondary btn-outline w-full"
+              disabled={!canCreateOrders || cart.length === 0}
+            >
+              Send to Kitchen (Pay Later)
+            </button>
+          )}
+          <div className="flex gap-2">
+            <button
+              className="btn btn-outline flex-1"
+              onClick={() => dispatch(clearCart())}
+              disabled={cart.length === 0}
+            >
+              Clear
+            </button>
+            <button
+              className="btn btn-primary flex-1"
+              onClick={handleCheckout}
+              disabled={cart.length === 0}
+            >
+              Pay {currency}
+              {totals.total.toFixed(2)}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -965,9 +1000,9 @@ export default function POS() {
             <TableSelectionModal
               selectedTableId={selectedTable?._id}
               onSelect={(table) => {
-                  dispatch(setSelectedTable(table)); 
-                  // Also set tableNumber if needed, but we used selectedTable mostly.
-                  // tableNumber state is unused in new logic? Let's check.
+                dispatch(setSelectedTable(table));
+                // Also set tableNumber if needed, but we used selectedTable mostly.
+                // tableNumber state is unused in new logic? Let's check.
               }}
               onClose={() => setShowTableModal(false)}
             />

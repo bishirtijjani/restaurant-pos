@@ -6,21 +6,13 @@ import BaseChart, {
   ChartTooltip,
 } from "../../../components/charts/BaseChart";
 import { AreaChart, Area } from "recharts";
+import { useSelector } from "react-redux";
+import { selectSettings } from "../../../../settings/generalSettings/generalSettingsSlice";
 
 function HourlyTrendChart({ data }) {
-  // Mock data
-  const chartData = data || [
-    { time: "10:00", sales: 120 },
-    { time: "11:00", sales: 300 },
-    { time: "12:00", sales: 800 },
-    { time: "13:00", sales: 950 },
-    { time: "14:00", sales: 600 },
-    { time: "15:00", sales: 400 },
-    { time: "16:00", sales: 550 },
-    { time: "17:00", sales: 900 },
-    { time: "18:00", sales: 1200 },
-    { time: "19:00", sales: 1100 },
-  ];
+  const chartData = data || [];
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "$";
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200">
@@ -35,16 +27,16 @@ function HourlyTrendChart({ data }) {
               </linearGradient>
             </defs>
             <ChartGrid />
-            <ChartXAxis dataKey="time" />
+            <ChartXAxis dataKey="hour" />
             <ChartYAxis />
-            <ChartTooltip />
+            <ChartTooltip formatter={(value) => `${currency}${value}`} />
             <Area
               type="monotone"
-              dataKey="sales"
+              dataKey="revenue"
               stroke="#4f46e5"
               fillOpacity={1}
               fill="url(#colorSales)"
-              name="Sales ($)"
+              name={`Sales (${currency})`}
             />
           </AreaChart>
         </BaseChart>

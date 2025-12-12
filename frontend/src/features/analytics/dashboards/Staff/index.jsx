@@ -9,7 +9,13 @@ import KPICard from "../../components/cards/KPICard";
 import UserGroupIcon from "@heroicons/react/24/solid/UserGroupIcon";
 import CurrencyDollarIcon from "@heroicons/react/24/solid/CurrencyDollarIcon";
 import ClockIcon from "@heroicons/react/24/solid/ClockIcon";
-import { fetchStaffData, selectStaffPerformance, selectLaborCost, selectStaffList } from "../../slices/staffAnalyticsSlice";
+import {
+  fetchStaffData,
+  selectStaffPerformance,
+  selectLaborCost,
+  selectStaffList,
+} from "../../slices/staffAnalyticsSlice";
+import { selectSettings } from "../../../settings/generalSettings/generalSettingsSlice";
 
 function StaffAnalytics() {
   const dispatch = useDispatch();
@@ -17,18 +23,23 @@ function StaffAnalytics() {
   const performance = useSelector(selectStaffPerformance);
   const laborCost = useSelector(selectLaborCost);
   const staffList = useSelector(selectStaffList);
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   useEffect(() => {
     if (dateRange.startDate && dateRange.endDate) {
-      dispatch(fetchStaffData({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-      }));
+      dispatch(
+        fetchStaffData({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+      );
     }
   }, [dispatch, dateRange]);
 
   const isLoading = performance.status === "loading";
-  const activeStaff = performance.data.length;
+  const staffData = performance.data || [];
+  const activeStaff = staffData.length;
 
   return (
     <AnalyticsContainer>
@@ -50,9 +61,13 @@ function StaffAnalytics() {
         />
         <KPICard
           title="Rev. / Active Staff"
-          value={`$${(activeStaff > 0 && performance.data 
-            ? Math.round(performance.data.reduce((acc, curr) => acc + curr.sales, 0) / activeStaff) 
-            : 0).toLocaleString()}`}
+          value={`${currency}${(activeStaff > 0 && performance.data
+            ? Math.round(
+                performance.data.reduce((acc, curr) => acc + curr.sales, 0) /
+                  activeStaff
+              )
+            : 0
+          ).toLocaleString()}`}
           icon={CurrencyDollarIcon}
           trend={false}
           color="secondary"
@@ -60,12 +75,14 @@ function StaffAnalytics() {
         />
         <KPICard
           title="Top Performer Sales"
-          value={`$${(performance.data && performance.data.length > 0 
-            ? performance.data[0].sales.toLocaleString() 
-            : "0")}`}
+          value={`${currency}${
+            performance.data && performance.data.length > 0
+              ? performance.data[0].sales.toLocaleString()
+              : "0"
+          }`}
           icon={CurrencyDollarIcon}
           trend={true}
-          trendValue={null} 
+          trendValue={null}
           color="success"
           loading={isLoading}
         />
@@ -78,7 +95,10 @@ function StaffAnalytics() {
 
       {/* Table */}
       <div className="grid grid-cols-1 gap-6">
-        <StaffTable data={staffList.data} loading={staffList.status === "loading"} />
+        <StaffTable
+          data={staffList.data}
+          loading={staffList.status === "loading"}
+        />
       </div>
     </AnalyticsContainer>
   );

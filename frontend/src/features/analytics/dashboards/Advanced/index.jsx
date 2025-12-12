@@ -8,7 +8,12 @@ import SalesForecastChart from "./components/SalesForecastChart";
 import KPICard from "../../components/cards/KPICard";
 import LightBulbIcon from "@heroicons/react/24/solid/LightBulbIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/solid/ExclamationCircleIcon";
-import { fetchAdvancedData, selectHeatmapData, selectForecastingData, selectAnomalies } from "../../slices/advancedAnalyticsSlice";
+import {
+  fetchAdvancedData,
+  selectHeatmapData,
+  selectForecastingData,
+  selectAnomalies,
+} from "../../slices/advancedAnalyticsSlice";
 
 function AdvancedInsights() {
   const dispatch = useDispatch();
@@ -19,10 +24,12 @@ function AdvancedInsights() {
 
   useEffect(() => {
     if (dateRange.startDate && dateRange.endDate) {
-      dispatch(fetchAdvancedData({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-      }));
+      dispatch(
+        fetchAdvancedData({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+      );
     }
   }, [dispatch, dateRange]);
 
@@ -45,16 +52,16 @@ function AdvancedInsights() {
               Smart Insights
             </h3>
             <ul className="space-y-2 text-sm">
-               {/* Backend now sends dynamic rule-based insights */}
-               {forecasting.insights && forecasting.insights.length > 0 ? (
-                  forecasting.insights.map((insight, idx) => (
-                    <li key={idx}>• {insight}</li>
-                  ))
-               ) : (
-                  <li className="text-base-content/50 italic">
-                    Not enough data to generate insights yet.
-                  </li>
-               )}
+              {/* Backend now sends dynamic rule-based insights */}
+              {forecasting.insights && forecasting.insights.length > 0 ? (
+                forecasting.insights.map((insight, idx) => (
+                  <li key={idx}>• {insight}</li>
+                ))
+              ) : (
+                <li className="text-base-content/50 italic">
+                  Not enough data to generate insights yet.
+                </li>
+              )}
             </ul>
           </div>
         </div>
@@ -65,9 +72,11 @@ function AdvancedInsights() {
               Anomalies Detected
             </h3>
             <ul className="space-y-2 text-sm">
-              {anomalies.data.length > 0 ? (
+              {anomalies.data && anomalies.data.length > 0 ? (
                 anomalies.data.map((anomaly, index) => (
-                  <li key={index}>• {anomaly.description || "Anomaly detected"}</li>
+                  <li key={index}>
+                    • {anomaly.description || "Anomaly detected"}
+                  </li>
                 ))
               ) : (
                 <li>• No anomalies detected in this period.</li>
@@ -80,7 +89,10 @@ function AdvancedInsights() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SalesHeatmap data={heatmap.data} loading={isLoading} />
-        <SalesForecastChart data={forecasting.data} loading={forecasting.status === "loading"} />
+        <SalesForecastChart
+          data={forecasting.data}
+          loading={forecasting.status === "loading"}
+        />
       </div>
     </AnalyticsContainer>
   );

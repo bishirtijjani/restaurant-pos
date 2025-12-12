@@ -2,12 +2,7 @@ import React from "react";
 import ExclamationTriangleIcon from "@heroicons/react/24/solid/ExclamationTriangleIcon";
 
 function LowStockAlerts({ data }) {
-  const items = data || [
-    { id: 1, name: "Fresh Milk", current: 2, par: 10, unit: "L" },
-    { id: 2, name: "Coffee Beans", current: 1.5, par: 5, unit: "kg" },
-    { id: 3, name: "Tomatoes", current: 3, par: 8, unit: "kg" },
-    { id: 4, name: "Napkins", current: 50, par: 200, unit: "pcs" },
-  ];
+  const items = data || [];
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200 h-full">

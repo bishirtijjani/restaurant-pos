@@ -1,11 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import AnalyticsContainer from "../../components/common/AnalyticsContainer";
 import AnalyticsHeader from "../../components/common/AnalyticsHeader";
 import FilterBar from "../../components/common/FilterBar";
 import ReportBuilder from "./components/ReportBuilder";
 import SavedReportsList from "./components/SavedReportsList";
+import { fetchReports } from "../../slices/customReportsSlice";
 
 function CustomReports() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchReports());
+  }, [dispatch]);
+
   return (
     <AnalyticsContainer>
       <AnalyticsHeader

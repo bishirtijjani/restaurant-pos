@@ -7,22 +7,18 @@ import BaseChart, {
   ChartLegend,
 } from "../../../components/charts/BaseChart";
 import { ScatterChart, Scatter, Cell, ZAxis } from "recharts";
+import { useSelector } from "react-redux";
+import { selectSettings } from "../../../../settings/generalSettings/generalSettingsSlice";
 
 function SalesHeatmap({ data }) {
-  // Mock data: x=Hour (0-23), y=Day (0-6), z=Intensity
-  // Days: 0=Sun, 1=Mon, ..., 6=Sat
-  const chartData = data || [
-    { day: 1, hour: 12, value: 50 },
-    { day: 1, hour: 13, value: 80 },
-    { day: 1, hour: 19, value: 90 },
-    { day: 5, hour: 20, value: 100 },
-    { day: 6, hour: 14, value: 60 },
-  ];
+  const chartData = data || [];
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const formatXAxis = (tickItem) => `${tickItem}:00`;
-  const formatYAxis = (tickItem) => days[tickItem];
+  const formatYAxis = (tickItem) => days[tickItem - 1] || "";
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200">
@@ -42,17 +38,29 @@ function SalesHeatmap({ data }) {
               type="number"
               dataKey="day"
               name="Day"
-              domain={[0, 6]}
+              domain={[1, 7]}
               tickFormatter={formatYAxis}
               tickCount={7}
             />
-            <ZAxis type="number" dataKey="value" range={[50, 500]} name="Sales" />
-            <ChartTooltip cursor={{ strokeDasharray: "3 3" }} />
+            <ZAxis
+              type="number"
+              dataKey="value"
+              range={[50, 500]}
+              name="Sales"
+              unit={currency}
+            />
+            <ChartTooltip
+              cursor={{ strokeDasharray: "3 3" }}
+              formatter={(value) => `${currency}${value}`}
+            />
             <Scatter name="Sales Intensity" data={chartData} fill="#4f46e5">
               {chartData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={`rgba(79, 70, 229, ${Math.min(0.2 + entry.value / 100, 1)})`}
+                  fill={`rgba(79, 70, 229, ${Math.min(
+                    0.2 + entry.value / 100,
+                    1
+                  )})`}
                 />
               ))}
             </Scatter>

@@ -1,13 +1,11 @@
 import React from "react";
+import { useSelector } from "react-redux";
+import { selectSettings } from "../../../../settings/generalSettings/generalSettingsSlice";
 
 function TopCustomersTable({ data }) {
-  const customers = data || [
-    { id: 1, name: "Alice Johnson", visits: 12, totalSpent: 1200, lastVisit: "2023-10-25" },
-    { id: 2, name: "Bob Smith", visits: 10, totalSpent: 950, lastVisit: "2023-10-24" },
-    { id: 3, name: "Charlie Brown", visits: 8, totalSpent: 800, lastVisit: "2023-10-20" },
-    { id: 4, name: "Diana Prince", visits: 15, totalSpent: 1500, lastVisit: "2023-10-26" },
-    { id: 5, name: "Evan Wright", visits: 6, totalSpent: 600, lastVisit: "2023-10-18" },
-  ];
+  const customers = data || [];
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200">
@@ -30,7 +28,10 @@ function TopCustomersTable({ data }) {
                     <div className="font-bold">{customer.name}</div>
                   </td>
                   <td className="text-right">{customer.visits}</td>
-                  <td className="text-right">${customer.totalSpent}</td>
+                  <td className="text-right">
+                    {currency}
+                    {customer.totalSpent.toLocaleString()}
+                  </td>
                   <td className="text-right">{customer.lastVisit}</td>
                 </tr>
               ))}

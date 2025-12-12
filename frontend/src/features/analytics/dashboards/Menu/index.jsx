@@ -90,20 +90,46 @@ function MenuIntelligence() {
       <div className="card bg-base-100 shadow-sm border border-base-200">
         <div className="card-body">
           <h3 className="card-title text-lg">Recommendations</h3>
-          <ul className="list-disc list-inside text-sm text-base-content/80 space-y-2">
-            <li>
-              Promote <strong>Steak</strong> (Puzzle): High profit but low
-              sales. Consider a special offer.
-            </li>
-            <li>
-              Review <strong>Salad</strong> (Dog): Low profit and low sales.
-              Consider removing or reformulating.
-            </li>
-            <li>
-              Maintain <strong>Burger</strong> (Star): Doing great! Ensure
-              consistent quality.
-            </li>
-          </ul>
+          {data.length > 0 ? (
+            <ul className="list-disc list-inside text-sm text-base-content/80 space-y-2">
+              {data
+                .filter((i) => i.quadrant === "Puzzle")
+                .slice(0, 1)
+                .map((i) => (
+                  <li key={i.id || i.name}>
+                    Promote <strong>{i.name}</strong> (Puzzle): High profit but
+                    low sales. Consider a special offer.
+                  </li>
+                ))}
+              {data
+                .filter((i) => i.quadrant === "Dog")
+                .slice(0, 1)
+                .map((i) => (
+                  <li key={i.id || i.name}>
+                    Review <strong>{i.name}</strong> (Dog): Low profit and low
+                    sales. Consider removing or reformulating.
+                  </li>
+                ))}
+              {data
+                .filter((i) => i.quadrant === "Star")
+                .slice(0, 1)
+                .map((i) => (
+                  <li key={i.id || i.name}>
+                    Maintain <strong>{i.name}</strong> (Star): Doing great!
+                    Ensure consistent quality.
+                  </li>
+                ))}
+              {data.filter(
+                (i) => ["Puzzle", "Dog", "Star"].includes(i.quadrant) === false
+              ).length === data.length && (
+                <li>No specific recommendations available at this time.</li>
+              )}
+            </ul>
+          ) : (
+            <p className="text-sm text-base-content/60 italic">
+              No menu data available for recommendations.
+            </p>
+          )}
         </div>
       </div>
     </AnalyticsContainer>

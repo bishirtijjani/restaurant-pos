@@ -6,12 +6,7 @@ import BaseChart, {
 import { PieChart, Pie, Cell } from "recharts";
 
 function CustomerSegmentationChart({ data }) {
-  const chartData = data || [
-    { name: "New", value: 400 },
-    { name: "Regular", value: 300 },
-    { name: "VIP", value: 100 },
-    { name: "At Risk", value: 50 },
-  ];
+  const chartData = data || [];
 
   const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444"];
 

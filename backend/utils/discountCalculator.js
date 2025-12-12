@@ -339,9 +339,10 @@ const calculateOrderDiscounts = async ({
 
     runningSubtotal -= orderDiscAmount;
   }
-  
+
   // 3. Check item-level discounts if no order discount OR if order discount is stackable
-  const shouldCheckOtherDiscounts = !orderDiscount || !orderDiscount.enabled || orderDiscount.stackable;
+  const shouldCheckOtherDiscounts =
+    !orderDiscount || !orderDiscount.enabled || orderDiscount.stackable;
 
   if (shouldCheckOtherDiscounts) {
     // 3. Apply item-level discounts
@@ -422,19 +423,26 @@ const calculateOrderDiscounts = async ({
 /**
  * Increment promo code usage
  */
-const incrementPromoCodeUsage = async (code, customerId = null) => {
+const incrementPromoCodeUsage = async (
+  code,
+  customerId = null,
+  session = null
+) => {
   const update = {
     $inc: { usageCount: 1 },
   };
 
   if (customerId) {
     // Update or add customer usage tracking
+    // Note: findOneAndUpdate does not support session in the same way as save() for some older mongoose versions,
+    // but in modern mongoose it's passed in options.
     await PromoCode.findOneAndUpdate(
       { code: code.toUpperCase(), "usedBy.customerId": customerId },
       {
         $inc: { usageCount: 1, "usedBy.$.usageCount": 1 },
         $set: { "usedBy.$.lastUsed": new Date() },
-      }
+      },
+      { session }
     ).then(async (doc) => {
       if (!doc) {
         // Customer not in usedBy array, add them
@@ -449,12 +457,15 @@ const incrementPromoCodeUsage = async (code, customerId = null) => {
                 lastUsed: new Date(),
               },
             },
-          }
+          },
+          { session }
         );
       }
     });
   } else {
-    await PromoCode.findOneAndUpdate({ code: code.toUpperCase() }, update);
+    await PromoCode.findOneAndUpdate({ code: code.toUpperCase() }, update, {
+      session,
+    });
   }
 };
 

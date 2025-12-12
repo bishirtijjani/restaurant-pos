@@ -1,11 +1,11 @@
 import React from "react";
+import { useSelector } from "react-redux";
+import { selectSettings } from "../../../../settings/generalSettings/generalSettingsSlice";
 
 function StaffTable({ data }) {
-  const staff = data || [
-    { id: 1, name: "John Doe", role: "Waiter", sales: 1200, tips: 150, rating: 4.8 },
-    { id: 2, name: "Jane Smith", role: "Waiter", sales: 1500, tips: 200, rating: 4.9 },
-    { id: 3, name: "Bob Johnson", role: "Bartender", sales: 900, tips: 100, rating: 4.5 },
-  ];
+  const staff = data || [];
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200">
@@ -28,11 +28,19 @@ function StaffTable({ data }) {
                   <td>
                     <div className="font-bold">{member.name}</div>
                   </td>
-                  <td>{member.role}</td>
-                  <td className="text-right">${member.sales}</td>
-                  <td className="text-right">${member.tips}</td>
+                  <td>{member.role || "Staff"}</td>
                   <td className="text-right">
-                    <div className="badge badge-ghost">{member.rating} ⭐</div>
+                    {currency}
+                    {member.sales.toLocaleString()}
+                  </td>
+                  <td className="text-right">
+                    {currency}
+                    {member.tips?.toLocaleString() || "0"}
+                  </td>
+                  <td className="text-right">
+                    <div className="badge badge-ghost">
+                      {member.rating || "N/A"} ⭐
+                    </div>
                   </td>
                 </tr>
               ))}

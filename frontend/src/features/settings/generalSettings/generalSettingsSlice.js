@@ -59,7 +59,7 @@ const initialState = {
     currency: {
       code: "USD",
       name: "US Dollar",
-      symbol: "$",
+      symbol: "",
     },
     dateFormat: "MM/DD/YYYY",
     lowStockAlert: 10,

@@ -29,5 +29,6 @@ router.use("/floors", require("./floorRoutes"));
 router.use("/tables", require("./tableRoutes"));
 router.use("/reservations", require("./reservationRoutes"));
 router.use("/analytics", require("./analyticsRoutes"));
+router.use("/reports", require("./reportRoutes"));
 
 module.exports = router;

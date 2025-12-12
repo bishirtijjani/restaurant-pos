@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const InventoryItem = require("../models/InventoryItem");
 const MenuItem = require("../models/MenuItem");
 const logAction = require("../utils/logAction");
@@ -273,31 +274,31 @@ exports.getLowStockItems = async (req, res) => {
   }
 };
 
-// Link inventory item to menu item
+// Link inventory item to a menu item
 exports.linkToMenuItem = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
+    const { inventoryItemId } = req.params;
     const { menuItemId, quantityUsed } = req.body;
 
     if (!menuItemId || !quantityUsed) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
-        message: "Menu item ID and quantity used are required",
+        message: "Menu Item ID and Quantity Used are required",
       });
     }
 
-    const inventoryItem = await InventoryItem.findById(req.params.id);
+    const inventoryItem = await InventoryItem.findById(inventoryItemId).session(
+      session
+    );
+
     if (!inventoryItem) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Inventory item not found",
-      });
-    }
-
-    const menuItem = await MenuItem.findById(menuItemId);
-    if (!menuItem) {
-      return res.status(404).json({
-        success: false,
-        message: "Menu item not found",
       });
     }
 
@@ -307,70 +308,109 @@ exports.linkToMenuItem = async (req, res) => {
     );
 
     if (existingLink) {
-      existingLink.quantityUsed = quantityUsed;
-    } else {
-      inventoryItem.linkedMenuItems.push({
-        menuItemId,
-        quantityUsed,
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "This menu item is already linked",
       });
     }
 
-    await inventoryItem.save();
+    const oldItem = { ...inventoryItem.toObject() };
 
-    const populatedItem = await InventoryItem.findById(inventoryItem._id)
-      .populate("supplier", "name phone email")
-      .populate("linkedMenuItems.menuItemId", "name price");
+    inventoryItem.linkedMenuItems.push({
+      menuItemId,
+      quantityUsed,
+      linkedAt: new Date(),
+    });
+
+    await inventoryItem.save({ session });
+
+    await logAction(
+      req.user.id,
+      "InventoryItem",
+      inventoryItem._id,
+      "link_menu_item",
+      oldItem,
+      inventoryItem,
+      `Linked to menu item ${menuItemId} (Qty: ${quantityUsed})`,
+      session
+    );
+
+    await session.commitTransaction();
 
     res.status(200).json({
       success: true,
       message: "Menu item linked successfully",
-      data: populatedItem,
+      data: inventoryItem,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error linking menu item:", error);
     res.status(500).json({
       success: false,
       message: "Failed to link menu item",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
 // Unlink menu item
 exports.unlinkMenuItem = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const { menuItemId } = req.params;
+    const { inventoryItemId, menuItemId } = req.params;
 
-    const inventoryItem = await InventoryItem.findById(req.params.id);
+    const inventoryItem = await InventoryItem.findById(inventoryItemId).session(
+      session
+    );
+
     if (!inventoryItem) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Inventory item not found",
       });
     }
 
+    const oldItem = { ...inventoryItem.toObject() };
+
     inventoryItem.linkedMenuItems = inventoryItem.linkedMenuItems.filter(
       (link) => link.menuItemId.toString() !== menuItemId
     );
 
-    await inventoryItem.save();
+    await inventoryItem.save({ session });
 
-    const populatedItem = await InventoryItem.findById(inventoryItem._id)
-      .populate("supplier", "name phone email")
-      .populate("linkedMenuItems.menuItemId", "name price");
+    await logAction(
+      req.user.id,
+      "InventoryItem",
+      inventoryItem._id,
+      "unlink_menu_item",
+      oldItem,
+      inventoryItem,
+      `Unlinked menu item ${menuItemId}`,
+      session
+    );
+
+    await session.commitTransaction();
 
     res.status(200).json({
       success: true,
       message: "Menu item unlinked successfully",
-      data: populatedItem,
+      data: inventoryItem,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error unlinking menu item:", error);
     res.status(500).json({
       success: false,
       message: "Failed to unlink menu item",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 

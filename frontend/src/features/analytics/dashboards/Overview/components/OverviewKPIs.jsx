@@ -1,54 +1,58 @@
 import React from "react";
+import { useSelector } from "react-redux";
 import KPICard from "../../../components/cards/KPICard";
 import CurrencyDollarIcon from "@heroicons/react/24/solid/CurrencyDollarIcon";
 import ShoppingCartIcon from "@heroicons/react/24/solid/ShoppingCartIcon";
 import UserGroupIcon from "@heroicons/react/24/solid/UserGroupIcon";
 import ClockIcon from "@heroicons/react/24/solid/ClockIcon";
+import { selectSettings } from "../../../../settings/generalSettings/generalSettingsSlice";
 
-function OverviewKPIs({ data, loading }) {
-  // Mock data if loading or null
-  const kpis = data || {
-    netSales: 1250.5,
-    activeOrders: 8,
-    occupancy: 45,
-    avgWaitTime: 12,
-  };
+export default function OverviewKPIs({ data, loading }) {
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
+
+  if (loading || !data) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="skeleton h-32 w-full"></div>
+        ))}
+      </div>
+    );
+  }
+
+  const { totalRevenue, totalOrders, avgOrderValue, activeStaff } = data;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       <KPICard
         title="Net Sales (Today)"
-        value={`$${kpis.netSales.toLocaleString()}`}
+        value={`${currency}${(totalRevenue || 0).toLocaleString()}`}
         icon={CurrencyDollarIcon}
-        trend={true}
-        trendValue={12}
+        trend={false}
         color="primary"
       />
       <KPICard
         title="Active Orders"
-        value={kpis.activeOrders}
+        value={totalOrders || 0}
         icon={ShoppingCartIcon}
         trend={false}
         color="secondary"
       />
       <KPICard
-        title="Occupancy"
-        value={`${kpis.occupancy}%`}
-        icon={UserGroupIcon}
-        trend={true}
-        trendValue={-5}
+        title="Avg Order Value"
+        value={`${currency}${Math.round(avgOrderValue || 0)}`}
+        icon={CurrencyDollarIcon}
+        trend={false}
         color="accent"
       />
       <KPICard
-        title="Avg Wait Time"
-        value={`${kpis.avgWaitTime} min`}
-        icon={ClockIcon}
-        trend={true}
-        trendValue={-2} // Negative wait time is good? Maybe handle color logic
+        title="Active Staff"
+        value={activeStaff || 0}
+        icon={UserGroupIcon}
+        trend={false}
         color="info"
       />
     </div>
   );
 }
-
-export default OverviewKPIs;

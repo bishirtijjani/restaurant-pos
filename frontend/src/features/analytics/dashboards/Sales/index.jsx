@@ -11,7 +11,14 @@ import CurrencyDollarIcon from "@heroicons/react/24/solid/CurrencyDollarIcon";
 import ShoppingBagIcon from "@heroicons/react/24/solid/ShoppingBagIcon";
 import CreditCardIcon from "@heroicons/react/24/solid/CreditCardIcon";
 import ChartPieIcon from "@heroicons/react/24/solid/ChartPieIcon";
-import { fetchSalesData, selectSalesOverview, selectSalesTrends, selectSalesByOrderType, selectTopSellingItems } from "../../slices/salesAnalyticsSlice";
+import {
+  fetchSalesData,
+  selectSalesOverview,
+  selectSalesTrends,
+  selectSalesByOrderType,
+  selectTopSellingItems,
+} from "../../slices/salesAnalyticsSlice";
+import { selectSettings } from "../../../settings/generalSettings/generalSettingsSlice";
 
 function SalesOverview() {
   const dispatch = useDispatch();
@@ -20,20 +27,29 @@ function SalesOverview() {
   const trends = useSelector(selectSalesTrends);
   const byOrderType = useSelector(selectSalesByOrderType);
   const topItems = useSelector(selectTopSellingItems);
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   const { data: kpis, status } = overview;
 
   useEffect(() => {
     if (dateRange.startDate && dateRange.endDate) {
-      dispatch(fetchSalesData({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-      }));
+      dispatch(
+        fetchSalesData({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+      );
     }
   }, [dispatch, dateRange]);
 
   const isLoading = status === "loading";
-  const kpiData = kpis || { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, netProfit: 0 };
+  const kpiData = kpis || {
+    totalRevenue: 0,
+    totalOrders: 0,
+    avgOrderValue: 0,
+    netProfit: 0,
+  };
 
   return (
     <AnalyticsContainer>
@@ -47,7 +63,7 @@ function SalesOverview() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <KPICard
           title="Total Revenue"
-          value={`$${kpiData.totalRevenue.toLocaleString()}`}
+          value={`${currency}${kpiData.totalRevenue.toLocaleString()}`}
           icon={CurrencyDollarIcon}
           trend={true}
           trendValue={8.5} // Calculate trend if available
@@ -65,7 +81,7 @@ function SalesOverview() {
         />
         <KPICard
           title="Avg Order Value"
-          value={`$${kpiData.avgOrderValue.toFixed(2)}`}
+          value={`${currency}${kpiData.avgOrderValue.toFixed(2)}`}
           icon={CreditCardIcon}
           trend={true}
           trendValue={-1.2}
@@ -74,7 +90,7 @@ function SalesOverview() {
         />
         <KPICard
           title="Net Profit"
-          value={`$${kpiData.netProfit.toLocaleString()}`}
+          value={`${currency}${kpiData.netProfit.toLocaleString()}`}
           icon={ChartPieIcon}
           trend={true}
           trendValue={10.5}
@@ -86,16 +102,25 @@ function SalesOverview() {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="lg:col-span-2">
-          <SalesTrends data={trends.data} loading={trends.status === "loading"} />
+          <SalesTrends
+            data={trends.data}
+            loading={trends.status === "loading"}
+          />
         </div>
         <div className="lg:col-span-1">
-          <SalesByOrderType data={byOrderType.data} loading={byOrderType.status === "loading"} />
+          <SalesByOrderType
+            data={byOrderType.data}
+            loading={byOrderType.status === "loading"}
+          />
         </div>
       </div>
 
       {/* Tables Row */}
       <div className="grid grid-cols-1 gap-6">
-        <TopSellingItemsTable data={topItems.data} loading={topItems.status === "loading"} />
+        <TopSellingItemsTable
+          data={topItems.data}
+          loading={topItems.status === "loading"}
+        />
       </div>
     </AnalyticsContainer>
   );

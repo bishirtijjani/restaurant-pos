@@ -8,7 +8,10 @@ import { fetchAllCategories } from "../../features/categories/categoriesSlice";
 import { fetchSettings } from "../../features/settings/generalSettings/generalSettingsSlice";
 import { showNotification } from "../../features/common/headerSlice";
 import { openModal } from "../../features/common/modalSlice";
-import { MODAL_BODY_TYPES, CONFIRMATION_MODAL_CLOSE_TYPES } from "../../utils/globalConstantUtil";
+import {
+  MODAL_BODY_TYPES,
+  CONFIRMATION_MODAL_CLOSE_TYPES,
+} from "../../utils/globalConstantUtil";
 import axios from "axios";
 import {
   ShoppingCart,
@@ -16,8 +19,6 @@ import {
   Calculator,
   Keyboard as KeyboardIcon,
   X,
-  DollarSign,
-  CreditCard,
   DollarSign,
   CreditCard,
   Banknote,
@@ -299,20 +300,28 @@ const UltraFastPOS = () => {
   // Instant print (no delays)
   const printReceipt = async (order, cartItems = []) => {
     // Check for Hybrid Printing Mode
-    if (settings?.printerSettings?.mode === 'webusb') {
-        try {
-            await printerService.printReceipt(order, {
-                currencySymbol: settings?.currency?.symbol || "₦",
-                restaurantName: settings?.restaurantName,
-                restaurantAddress: settings?.restaurantAddress,
-                restaurantPhone: settings?.restaurantPhone,
-                paperWidth: settings?.printerSettings?.paperWidth || '80mm'
-            });
-            return;
-        } catch (error) {
-            console.warn("WebUSB Print failed, falling back to browser print:", error);
-            dispatch(showNotification({ message: "Printer disconnected. Using fallback.", status: 0 }));
-        }
+    if (settings?.printerSettings?.mode === "webusb") {
+      try {
+        await printerService.printReceipt(order, {
+          currencySymbol: settings?.currency?.symbol || "₦",
+          restaurantName: settings?.restaurantName,
+          restaurantAddress: settings?.restaurantAddress,
+          restaurantPhone: settings?.restaurantPhone,
+          paperWidth: settings?.printerSettings?.paperWidth || "80mm",
+        });
+        return;
+      } catch (error) {
+        console.warn(
+          "WebUSB Print failed, falling back to browser print:",
+          error
+        );
+        dispatch(
+          showNotification({
+            message: "Printer disconnected. Using fallback.",
+            status: 0,
+          })
+        );
+      }
     }
 
     try {

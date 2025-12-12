@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
+import SearchableSelect from "../../components/Input/SearchableSelect";
 import { openModal } from "../common/modalSlice";
 import { showNotification } from "../common/headerSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,8 +24,314 @@ import {
   Settings,
   Eye,
 } from "lucide-react";
+import SuspenseContent from "../../containers/SuspenseContent";
 
-// ... (skipping TopSideButtons to UserCard components)
+const TopSideButtons = ({ onRefresh, onAddNew }) => {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Can do="manageUsers">
+        <button
+          onClick={onAddNew}
+          className="btn btn-primary btn-sm lg:btn-md gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Add User</span>
+        </button>
+      </Can>
+      <button
+        onClick={onRefresh}
+        className="btn btn-ghost btn-sm lg:btn-md gap-2"
+      >
+        <RefreshCw className="w-4 h-4" />
+        <span className="hidden sm:inline">Refresh</span>
+      </button>
+    </div>
+  );
+};
+
+const UserCard = ({ user, onView, onEdit, onDelete }) => {
+  const { can } = useAuth();
+  const currentUser = useSelector((state) => state.auth.user);
+
+  const getRoleColor = (role) => {
+    switch (role) {
+      case "admin":
+        return "badge-primary";
+      case "manager":
+        return "badge-secondary";
+      default:
+        return "badge-ghost";
+    }
+  };
+
+  return (
+    <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300">
+      <div className="card-body p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="avatar placeholder">
+              <div className="bg-neutral text-neutral-content rounded-full w-12 h-12">
+                <span className="text-lg font-semibold">
+                  {user.fullname?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            </div>
+            <div>
+              <h3 className="card-title text-lg font-bold">{user.fullname}</h3>
+              <div
+                className={`badge ${getRoleColor(
+                  user.role
+                )} badge-sm capitalize`}
+              >
+                {user.role}
+              </div>
+            </div>
+          </div>
+          <div className="dropdown dropdown-end">
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+              </svg>
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
+            >
+              <li>
+                <button onClick={() => onView(user)}>
+                  <Eye className="w-4 h-4" /> View
+                </button>
+              </li>
+              <Can do="manageUsers">
+                <li>
+                  <button onClick={() => onEdit(user)} className="text-primary">
+                    <Edit3 className="w-4 h-4" /> Edit
+                  </button>
+                </li>
+                {currentUser?._id !== user._id && (
+                  <li>
+                    <button
+                      onClick={() => onDelete(user)}
+                      className="text-error"
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </li>
+                )}
+              </Can>
+            </ul>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Mail className="w-4 h-4 text-secondary" />
+            <span className="truncate">{user.email}</span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-base-content/70">
+            <Calendar className="w-4 h-4" />
+            <span>Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const UserTable = ({ users, onView, onEdit, onDelete }) => {
+  const { can } = useAuth();
+  const currentUser = useSelector((state) => state.auth.user);
+
+  const getRoleColor = (role) => {
+    switch (role) {
+      case "admin":
+        return "badge-primary";
+      case "manager":
+        return "badge-secondary";
+      default:
+        return "badge-ghost";
+    }
+  };
+
+  return (
+    <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg">
+      <table className="table table-zebra w-full">
+        <thead className="bg-primary text-primary-content">
+          <tr>
+            <th className="font-bold">User</th>
+            <th className="font-bold">Role</th>
+            <th className="font-bold">Email</th>
+            <th className="font-bold">Joined</th>
+            <th className="font-bold">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user._id} className="hover:bg-base-200 transition-colors">
+              <td>
+                <div className="flex items-center gap-3">
+                  <div className="avatar placeholder">
+                    <div className="bg-neutral text-neutral-content rounded-full w-12 h-12">
+                      <span className="text-lg font-semibold">
+                        {user.fullname?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-bold">{user.fullname}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div
+                  className={`badge ${getRoleColor(
+                    user.role
+                  )} badge-sm capitalize`}
+                >
+                  {user.role}
+                </div>
+              </td>
+              <td>
+                <div className="flex items-center gap-1 text-sm">
+                  <Mail className="w-3 h-3 text-base-content/70" />
+                  {user.email}
+                </div>
+              </td>
+              <td>
+                <div className="text-sm">
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </div>
+              </td>
+              <td>
+                <div className="flex gap-2">
+                  <button
+                    className="btn btn-ghost btn-xs gap-1"
+                    onClick={() => onView(user)}
+                  >
+                    <Eye className="w-3 h-3" />
+                  </button>
+                  <Can do="manageUsers">
+                    <button
+                      className="btn btn-ghost btn-xs gap-1 text-primary"
+                      onClick={() => onEdit(user)}
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </button>
+                    {currentUser?._id !== user._id && (
+                      <button
+                        className="btn btn-ghost btn-xs gap-1 text-error"
+                        onClick={() => onDelete(user)}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </Can>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const SearchAndFilters = ({
+  searchTerm,
+  onSearchChange,
+  sortBy,
+  onSortChange,
+  roleFilter,
+  onRoleFilterChange,
+  viewMode,
+  onViewModeChange,
+}) => {
+  const sortOptions = [
+    { value: "", name: "Sort by..." },
+    { value: "name", name: "Name (A-Z)" },
+    { value: "name_desc", name: "Name (Z-A)" },
+    { value: "date", name: "Newest First" },
+    { value: "date_desc", name: "Oldest First" },
+  ];
+
+  const roleOptions = [
+    { value: "", name: "All Roles" },
+    { value: "admin", name: "Admin" },
+    { value: "manager", name: "Manager" },
+    { value: "staff", name: "Staff" },
+  ];
+
+  return (
+    <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1">
+          <div className="form-control w-full">
+            <label className="input input-bordered flex items-center gap-2 w-full">
+              <Search className="w-5 h-5 text-info" />
+              <input
+                type="text"
+                className="grow"
+                placeholder="Search users by name or email..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <div className="form-control">
+            <SearchableSelect
+              options={sortOptions}
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value)}
+              name="sortBy"
+              placeholder="Sort by"
+              className="w-full max-w-xs"
+              valueKey="value"
+              labelKey="name"
+            />
+          </div>
+
+          <div className="form-control">
+            <SearchableSelect
+              options={roleOptions}
+              value={roleFilter}
+              onChange={(e) => onRoleFilterChange(e.target.value)}
+              name="roleFilter"
+              placeholder="Filter by Role"
+              className="w-full max-w-xs"
+              valueKey="value"
+              labelKey="name"
+            />
+          </div>
+
+          <div className="btn-group">
+            <button
+              className={`btn btn-sm ${
+                viewMode === "table" ? "btn-primary" : "btn-outline"
+              }`}
+              onClick={() => onViewModeChange("table")}
+            >
+              <Table className="w-4 h-4" />
+              <span className="hidden sm:inline ml-1">Table</span>
+            </button>
+            <button
+              className={`btn btn-sm ${
+                viewMode === "card" ? "btn-primary" : "btn-outline"
+              }`}
+              onClick={() => onViewModeChange("card")}
+            >
+              <Grid3X3 className="w-4 h-4" />
+              <span className="hidden sm:inline ml-1">Cards</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Users = () => {
   const dispatch = useDispatch();

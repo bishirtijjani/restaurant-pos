@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const PurchaseOrder = require("../models/PurchaseOrder");
 const InventoryItem = require("../models/InventoryItem");
 const Supplier = require("../models/Supplier");
@@ -73,12 +74,15 @@ exports.getPurchaseOrderById = async (req, res) => {
 
 // Create purchase order with SERVER-SIDE calculation
 exports.createPurchaseOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { supplier, expectedDeliveryDate, items, notes, invoiceNumber } =
       req.body;
 
     // Validate required fields
     if (!supplier || !items || items.length === 0) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Supplier and at least one item are required",
@@ -86,8 +90,9 @@ exports.createPurchaseOrder = async (req, res) => {
     }
 
     // Verify supplier exists
-    const supplierExists = await Supplier.findById(supplier);
+    const supplierExists = await Supplier.findById(supplier).session(session);
     if (!supplierExists) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Supplier not found",
@@ -100,8 +105,11 @@ exports.createPurchaseOrder = async (req, res) => {
 
     for (const item of items) {
       // Validate inventory item exists
-      const inventoryItem = await InventoryItem.findById(item.inventoryItem);
+      const inventoryItem = await InventoryItem.findById(
+        item.inventoryItem
+      ).session(session);
       if (!inventoryItem) {
+        await session.abortTransaction();
         return res.status(404).json({
           success: false,
           message: `Inventory item not found`,
@@ -113,6 +121,7 @@ exports.createPurchaseOrder = async (req, res) => {
       const unitPrice = parseFloat(item.unitPrice);
 
       if (isNaN(quantity) || quantity <= 0) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: `Invalid quantity for ${inventoryItem.name}`,
@@ -120,6 +129,7 @@ exports.createPurchaseOrder = async (req, res) => {
       }
 
       if (isNaN(unitPrice) || unitPrice < 0) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: `Invalid unit price for ${inventoryItem.name}`,
@@ -144,7 +154,7 @@ exports.createPurchaseOrder = async (req, res) => {
     // Round total to 2 decimal places
     totalAmount = Math.round(totalAmount * 100) / 100;
 
-    const purchaseOrder = await PurchaseOrder.create({
+    const purchaseOrder = new PurchaseOrder({
       supplier,
       expectedDeliveryDate,
       items: processedItems,
@@ -155,6 +165,8 @@ exports.createPurchaseOrder = async (req, res) => {
       status: "draft",
     });
 
+    await purchaseOrder.save({ session });
+
     // Log the action
     await logAction(
       req.user.id,
@@ -163,8 +175,11 @@ exports.createPurchaseOrder = async (req, res) => {
       "create",
       null,
       purchaseOrder,
-      `Created purchase order: ${purchaseOrder.orderNumber}`
+      `Created purchase order: ${purchaseOrder.orderNumber}`,
+      session
     );
+
+    await session.commitTransaction();
 
     const populatedOrder = await PurchaseOrder.findById(purchaseOrder._id)
       .populate("supplier", "name phone email")
@@ -177,21 +192,27 @@ exports.createPurchaseOrder = async (req, res) => {
       data: populatedOrder,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error creating purchase order:", error);
     res.status(500).json({
       success: false,
       message: "Failed to create purchase order",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
 // Update purchase order with SERVER-SIDE calculation
 exports.updatePurchaseOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const order = await PurchaseOrder.findById(req.params.id);
+    const order = await PurchaseOrder.findById(req.params.id).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Purchase order not found",
@@ -200,6 +221,7 @@ exports.updatePurchaseOrder = async (req, res) => {
 
     // Prevent editing received or cancelled orders
     if (["received", "cancelled"].includes(order.status)) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: `Cannot edit ${order.status} purchase order`,
@@ -214,8 +236,11 @@ exports.updatePurchaseOrder = async (req, res) => {
       const processedItems = [];
 
       for (const item of req.body.items) {
-        const inventoryItem = await InventoryItem.findById(item.inventoryItem);
+        const inventoryItem = await InventoryItem.findById(
+          item.inventoryItem
+        ).session(session);
         if (!inventoryItem) {
+          await session.abortTransaction();
           return res.status(404).json({
             success: false,
             message: `Inventory item not found`,
@@ -226,6 +251,7 @@ exports.updatePurchaseOrder = async (req, res) => {
         const unitPrice = parseFloat(item.unitPrice);
 
         if (isNaN(quantity) || quantity <= 0) {
+          await session.abortTransaction();
           return res.status(400).json({
             success: false,
             message: `Invalid quantity for ${inventoryItem.name}`,
@@ -233,6 +259,7 @@ exports.updatePurchaseOrder = async (req, res) => {
         }
 
         if (isNaN(unitPrice) || unitPrice < 0) {
+          await session.abortTransaction();
           return res.status(400).json({
             success: false,
             message: `Invalid unit price for ${inventoryItem.name}`,
@@ -261,11 +288,8 @@ exports.updatePurchaseOrder = async (req, res) => {
     const updatedOrder = await PurchaseOrder.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true }
-    )
-      .populate("supplier", "name phone email")
-      .populate("items.inventoryItem", "name unit")
-      .populate("createdBy", "fullname");
+      { new: true, runValidators: true, session }
+    );
 
     // Log the action
     await logAction(
@@ -275,8 +299,15 @@ exports.updatePurchaseOrder = async (req, res) => {
       "update",
       oldOrder,
       updatedOrder,
-      req.body.reason || `Updated purchase order: ${updatedOrder.orderNumber}`
+      req.body.reason || `Updated purchase order: ${updatedOrder.orderNumber}`,
+      session
     );
+
+    await session.commitTransaction();
+
+    await updatedOrder.populate("supplier", "name phone email");
+    await updatedOrder.populate("items.inventoryItem", "name unit");
+    await updatedOrder.populate("createdBy", "fullname");
 
     res.status(200).json({
       success: true,
@@ -284,21 +315,27 @@ exports.updatePurchaseOrder = async (req, res) => {
       data: updatedOrder,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error updating purchase order:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update purchase order",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
 // Approve purchase order
 exports.approvePurchaseOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const order = await PurchaseOrder.findById(req.params.id);
+    const order = await PurchaseOrder.findById(req.params.id).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Purchase order not found",
@@ -306,6 +343,7 @@ exports.approvePurchaseOrder = async (req, res) => {
     }
 
     if (order.status !== "draft") {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Only draft orders can be approved",
@@ -315,7 +353,7 @@ exports.approvePurchaseOrder = async (req, res) => {
     const oldOrder = { ...order.toObject() };
 
     order.status = "approved";
-    await order.save();
+    await order.save({ session });
 
     // Log the action
     await logAction(
@@ -325,8 +363,11 @@ exports.approvePurchaseOrder = async (req, res) => {
       "approve",
       oldOrder,
       order,
-      `Approved purchase order: ${order.orderNumber}`
+      `Approved purchase order: ${order.orderNumber}`,
+      session
     );
+
+    await session.commitTransaction();
 
     const populatedOrder = await PurchaseOrder.findById(order._id)
       .populate("supplier", "name phone email")
@@ -339,24 +380,30 @@ exports.approvePurchaseOrder = async (req, res) => {
       data: populatedOrder,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error approving purchase order:", error);
     res.status(500).json({
       success: false,
       message: "Failed to approve purchase order",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
 // Receive purchase order
 exports.receivePurchaseOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { receivedItems, actualDeliveryDate, paymentStatus, amountPaid } =
       req.body;
 
-    const order = await PurchaseOrder.findById(req.params.id);
+    const order = await PurchaseOrder.findById(req.params.id).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Purchase order not found",
@@ -364,6 +411,7 @@ exports.receivePurchaseOrder = async (req, res) => {
     }
 
     if (order.status !== "approved") {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Only approved orders can be received",
@@ -382,6 +430,7 @@ exports.receivePurchaseOrder = async (req, res) => {
         const receivedQty = parseFloat(receivedItem.receivedQuantity);
 
         if (isNaN(receivedQty) || receivedQty < 0) {
+          await session.abortTransaction();
           return res.status(400).json({
             success: false,
             message: "Invalid received quantity",
@@ -389,6 +438,7 @@ exports.receivePurchaseOrder = async (req, res) => {
         }
 
         if (receivedQty > orderItem.quantity) {
+          await session.abortTransaction();
           return res.status(400).json({
             success: false,
             message: `Received quantity cannot exceed ordered quantity for ${orderItem.name}`,
@@ -400,11 +450,11 @@ exports.receivePurchaseOrder = async (req, res) => {
         // Update inventory stock
         const inventoryItem = await InventoryItem.findById(
           orderItem.inventoryItem
-        );
+        ).session(session);
         if (inventoryItem) {
           inventoryItem.currentStock += receivedQty;
           inventoryItem.lastRestockDate = new Date();
-          await inventoryItem.save();
+          await inventoryItem.save({ session });
         }
       }
     }
@@ -418,7 +468,7 @@ exports.receivePurchaseOrder = async (req, res) => {
       order.amountPaid = paidAmount;
     }
 
-    await order.save();
+    await order.save({ session });
 
     // Log the action
     await logAction(
@@ -428,8 +478,11 @@ exports.receivePurchaseOrder = async (req, res) => {
       "receive",
       oldOrder,
       order,
-      `Received purchase order: ${order.orderNumber}`
+      `Received purchase order: ${order.orderNumber}`,
+      session
     );
+
+    await session.commitTransaction();
 
     const populatedOrder = await PurchaseOrder.findById(order._id)
       .populate("supplier", "name phone email")
@@ -442,30 +495,37 @@ exports.receivePurchaseOrder = async (req, res) => {
       data: populatedOrder,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error receiving purchase order:", error);
     res.status(500).json({
       success: false,
       message: "Failed to receive purchase order",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
 // Cancel purchase order
 exports.cancelPurchaseOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { reason } = req.body;
 
     if (!reason || reason.trim() === "") {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Cancellation reason is required",
       });
     }
 
-    const order = await PurchaseOrder.findById(req.params.id);
+    const order = await PurchaseOrder.findById(req.params.id).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Purchase order not found",
@@ -473,6 +533,7 @@ exports.cancelPurchaseOrder = async (req, res) => {
     }
 
     if (order.status === "received") {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Cannot cancel a received purchase order",
@@ -482,7 +543,7 @@ exports.cancelPurchaseOrder = async (req, res) => {
     const oldOrder = { ...order.toObject() };
 
     order.status = "cancelled";
-    await order.save();
+    await order.save({ session });
 
     // Log the action
     await logAction(
@@ -492,8 +553,11 @@ exports.cancelPurchaseOrder = async (req, res) => {
       "cancel",
       oldOrder,
       order,
-      reason || `Cancelled purchase order: ${order.orderNumber}`
+      reason || `Cancelled purchase order: ${order.orderNumber}`,
+      session
     );
+
+    await session.commitTransaction();
 
     const populatedOrder = await PurchaseOrder.findById(order._id)
       .populate("supplier", "name phone email")
@@ -506,23 +570,29 @@ exports.cancelPurchaseOrder = async (req, res) => {
       data: populatedOrder,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error cancelling purchase order:", error);
     res.status(500).json({
       success: false,
       message: "Failed to cancel purchase order",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
 // Update payment status
 exports.updatePaymentStatus = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { paymentStatus, amountPaid, paymentMethod } = req.body;
 
-    const order = await PurchaseOrder.findById(req.params.id);
+    const order = await PurchaseOrder.findById(req.params.id).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Purchase order not found",
@@ -536,12 +606,14 @@ exports.updatePaymentStatus = async (req, res) => {
     if (amountPaid !== undefined) {
       const paidAmount = parseFloat(amountPaid);
       if (isNaN(paidAmount) || paidAmount < 0) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: "Invalid amount paid",
         });
       }
       if (paidAmount > order.totalAmount) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: "Amount paid cannot exceed total amount",
@@ -552,7 +624,7 @@ exports.updatePaymentStatus = async (req, res) => {
 
     if (paymentMethod) order.paymentMethod = paymentMethod;
 
-    await order.save();
+    await order.save({ session });
 
     // Log the action
     await logAction(
@@ -562,8 +634,11 @@ exports.updatePaymentStatus = async (req, res) => {
       "update",
       oldOrder,
       order,
-      `Updated payment for purchase order: ${order.orderNumber}`
+      `Updated payment for purchase order: ${order.orderNumber}`,
+      session
     );
+
+    await session.commitTransaction();
 
     const populatedOrder = await PurchaseOrder.findById(order._id)
       .populate("supplier", "name phone email")
@@ -575,12 +650,15 @@ exports.updatePaymentStatus = async (req, res) => {
       data: populatedOrder,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error updating payment status:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update payment status",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 

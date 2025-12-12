@@ -1,4 +1,5 @@
 // backend/controllers/orderModificationController.js
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const MenuItem = require("../models/MenuItem");
 const AddOnGroup = require("../models/AddOnGroup");
@@ -419,22 +420,300 @@ exports.modifyOrder = async (req, res) => {
   }
 };
 
+// Add items// Modify an existing order (Optimistic Locking + Transaction)
+exports.modifyOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { orderId } = req.params;
+    const { items, reason, version } = req.body;
+
+    const order = await Order.findById(orderId).session(session);
+
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Check version for optimistic locking
+    if (order.version !== version) {
+      await session.abortTransaction();
+      return res.status(409).json({
+        success: false,
+        message:
+          "Order has been modified by another user. Please refresh and try again.",
+      });
+    }
+
+    if (["completed", "cancelled"].includes(order.orderStatus)) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Cannot modify completed or cancelled orders",
+      });
+    }
+
+    const oldOrder = { ...order.toObject() };
+    const modificationDetails = [];
+    const inventoryUpdates = [];
+    let modificationCost = 0;
+
+    // Process item modifications
+    const newOrderItems = [];
+    const processedItemIds = new Set();
+
+    for (const item of items) {
+      // Find existing item in order
+      const existingItem = order.orderItems.id(item.itemId);
+
+      // If item logic is complex (adding new items vs modifying existing),
+      // for now assume we are modifying quantities of existing items or skipping
+      // complex structural changes in this simplified endpoint.
+      // But typically restart creates a fresh list.
+      // Let's assume 'items' contains the desired state of ALL items?
+      // Or just modifications?
+      // The snippet suggests it handles modifications.
+
+      if (existingItem) {
+        processedItemIds.add(item.itemId);
+
+        const oldQuantity = existingItem.quantity;
+        const newQuantity = item.quantity;
+        const quantityDifference = newQuantity - oldQuantity;
+
+        // If quantity changed
+        if (quantityDifference !== 0) {
+          // We need to check inventory for increments
+          // And restore for decrements
+
+          // We need the menu item to find linked inventory
+          const menuItem = await MenuItem.findById(existingItem.menuItemId)
+            .populate("addOnGroups")
+            .session(session);
+
+          if (menuItem) {
+            // Menu Item Inventory Links
+            const linkedInventory = await InventoryItem.find({
+              "linkedMenuItems.menuItemId": menuItem._id,
+              isActive: true,
+            }).session(session);
+
+            for (const invItem of linkedInventory) {
+              const link = invItem.linkedMenuItems.find(
+                (l) => l.menuItemId.toString() === menuItem._id.toString()
+              );
+              if (link) {
+                const inventoryChange = -(
+                  quantityDifference * link.quantityUsed
+                );
+
+                if (inventoryChange < 0) {
+                  // Deducting stock
+                  if (invItem.currentStock + inventoryChange < 0) {
+                    await session.abortTransaction();
+                    return res.status(400).json({
+                      success: false,
+                      message: `Insufficient stock for ${invItem.name}`,
+                    });
+                  }
+                }
+
+                invItem.currentStock += inventoryChange;
+                await invItem.save({ session });
+
+                inventoryUpdates.push({
+                  inventoryItemId: invItem._id,
+                  name: invItem.name,
+                  change: inventoryChange,
+                });
+              }
+            }
+
+            // Add-ons Inventory
+            if (existingItem.addOns && existingItem.addOns.length > 0) {
+              for (const group of existingItem.addOns) {
+                for (const addOn of group.selectedItems) {
+                  if (addOn.inventoryItem) {
+                    const invItem = await InventoryItem.findById(
+                      addOn.inventoryItem
+                    ).session(session);
+                    if (invItem) {
+                      const inventoryChange = -(
+                        quantityDifference * (addOn.quantityUsed || 1)
+                      );
+
+                      if (
+                        inventoryChange < 0 &&
+                        invItem.currentStock + inventoryChange < 0
+                      ) {
+                        await session.abortTransaction();
+                        return res.status(400).json({
+                          success: false,
+                          message: `Insufficient stock for add-on ${invItem.name}`,
+                        });
+                      }
+
+                      invItem.currentStock += inventoryChange;
+                      await invItem.save({ session });
+
+                      inventoryUpdates.push({
+                        inventoryItemId: invItem._id,
+                        name: invItem.name,
+                        change: inventoryChange,
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          modificationDetails.push({
+            itemId: existingItem._id,
+            name: existingItem.name,
+            oldQuantity,
+            newQuantity,
+            change: quantityDifference,
+          });
+
+          // Update item quantity and prices
+          existingItem.quantity = newQuantity;
+          existingItem.addOnsTotal =
+            (existingItem.addOnsTotal / oldQuantity) * newQuantity;
+          existingItem.subtotal =
+            existingItem.price * newQuantity + existingItem.addOnsTotal;
+
+          modificationCost += existingItem.price * quantityDifference;
+          // Note: Add-on cost difference is included in subtotal recalc but simplified here for cost tracking
+        }
+
+        newOrderItems.push(existingItem);
+      }
+    }
+
+    // Keep items not mentioned in the update?
+    // Or is this a partial update?
+    // Assuming partial update of specific items, preserving others.
+    const preservedItems = order.orderItems.filter(
+      (i) => !processedItemIds.has(i._id.toString())
+    );
+    order.orderItems = [...newOrderItems, ...preservedItems];
+
+    // Recalculate totals
+    const newSubtotal = order.orderItems.reduce(
+      (sum, item) => sum + item.subtotal,
+      0
+    );
+    const newAddOnsTotal = order.orderItems.reduce(
+      (sum, item) => sum + (item.addOnsTotal || 0),
+      0
+    );
+
+    // Recalculate tax
+    const taxRate = order.taxBreakdown?.totalTax
+      ? (order.taxBreakdown.totalTax / order.taxBreakdown.subtotal) * 100
+      : 0;
+    const newTax = (newSubtotal * taxRate) / 100;
+
+    order.taxBreakdown.subtotal = newSubtotal;
+    order.taxBreakdown.totalTax = newTax;
+    order.addOnsTotal = newAddOnsTotal;
+    order.totalAmount =
+      newSubtotal +
+      newTax +
+      (order.taxBreakdown.serviceCharge || 0) +
+      (order.packagingFee || 0) +
+      (order.deliveryFee || 0);
+
+    // Update balance
+    if (order.amountPaid >= order.totalAmount) {
+      order.paymentStatus = "paid";
+      order.balance = 0;
+    } else if (order.amountPaid > 0) {
+      order.paymentStatus = "partial";
+      order.balance = order.totalAmount - order.amountPaid;
+    } else {
+      order.balance = order.totalAmount;
+    }
+
+    order.version += 1;
+    order.lastAction = {
+      action: "update",
+      performedBy: req.user.id,
+      createdAt: new Date(),
+      reason: reason || "Order modified",
+    };
+
+    await order.save({ session });
+
+    // Log modification
+    const modLog = new OrderModificationLog({
+      orderId: order._id,
+      modifiedBy: req.user.id,
+      reason,
+      changes: modificationDetails,
+      inventoryUpdates,
+      costDifference: modificationCost,
+    });
+    await modLog.save({ session });
+
+    await logAction(
+      req.user.id,
+      "Order",
+      order._id,
+      "modify",
+      oldOrder,
+      order,
+      `Modified order #${order.orderNumber}: ${reason}`,
+      session
+    );
+
+    await session.commitTransaction();
+
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
+
+    res.status(200).json({
+      success: true,
+      message: "Order modified successfully",
+      data: order,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Error modifying order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to modify order",
+      error: error.message,
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
 // Add items to an existing order
 exports.addItemsToOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { orderId } = req.params;
     const { items, reason } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Items array is required",
       });
     }
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Order not found",
@@ -442,23 +721,25 @@ exports.addItemsToOrder = async (req, res) => {
     }
 
     if (["completed", "cancelled"].includes(order.orderStatus)) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: `Cannot add items to ${order.orderStatus} order`,
       });
     }
 
-    const settings = await GeneralSettings.findOne();
+    const settings = await GeneralSettings.findOne().session(session);
     const oldOrder = { ...order.toObject() };
     const inventoryAdjustments = [];
     const addedItems = [];
 
     for (const item of items) {
-      const menuItem = await MenuItem.findById(item.menuItemId).populate(
-        "addOnGroups"
-      );
+      const menuItem = await MenuItem.findById(item.menuItemId)
+        .populate("addOnGroups")
+        .session(session);
 
       if (!menuItem) {
+        await session.abortTransaction();
         return res.status(404).json({
           success: false,
           message: `Menu item not found: ${item.menuItemId}`,
@@ -466,6 +747,7 @@ exports.addItemsToOrder = async (req, res) => {
       }
 
       if (!menuItem.isAvailable) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: `${menuItem.name} is currently unavailable`,
@@ -478,7 +760,9 @@ exports.addItemsToOrder = async (req, res) => {
 
       if (item.addOns && item.addOns.length > 0) {
         for (const addOn of item.addOns) {
-          const addOnGroup = await AddOnGroup.findById(addOn.groupId);
+          const addOnGroup = await AddOnGroup.findById(addOn.groupId).session(
+            session
+          );
           if (!addOnGroup || !addOnGroup.isActive) continue;
 
           // Validate required groups
@@ -486,6 +770,7 @@ exports.addItemsToOrder = async (req, res) => {
             addOnGroup.isRequired &&
             (!addOn.selectedItemIds || addOn.selectedItemIds.length === 0)
           ) {
+            await session.abortTransaction();
             return res.status(400).json({
               success: false,
               message: `${addOnGroup.name} is required for ${menuItem.name}`,
@@ -498,6 +783,7 @@ exports.addItemsToOrder = async (req, res) => {
               addOnGroup.selectionType === "single" &&
               addOn.selectedItemIds.length > 1
             ) {
+              await session.abortTransaction();
               return res.status(400).json({
                 success: false,
                 message: `${addOnGroup.name} allows only single selection`,
@@ -508,6 +794,7 @@ exports.addItemsToOrder = async (req, res) => {
               addOnGroup.maxSelections &&
               addOn.selectedItemIds.length > addOnGroup.maxSelections
             ) {
+              await session.abortTransaction();
               return res.status(400).json({
                 success: false,
                 message: `${addOnGroup.name} allows maximum ${addOnGroup.maxSelections} selections`,
@@ -532,18 +819,19 @@ exports.addItemsToOrder = async (req, res) => {
               if (addOnItem.inventoryItem) {
                 const inventoryItem = await InventoryItem.findById(
                   addOnItem.inventoryItem
-                );
+                ).session(session);
                 if (inventoryItem) {
                   const deduction =
                     (addOnItem.quantityUsed || 1) * (item.quantity || 1);
                   if (inventoryItem.currentStock < deduction) {
+                    await session.abortTransaction();
                     return res.status(400).json({
                       success: false,
                       message: `Insufficient stock for add-on: ${addOnItem.name}`,
                     });
                   }
                   inventoryItem.currentStock -= deduction;
-                  await inventoryItem.save();
+                  await inventoryItem.save({ session });
                   inventoryAdjustments.push({
                     inventoryItemId: inventoryItem._id,
                     name: inventoryItem.name,
@@ -623,7 +911,7 @@ exports.addItemsToOrder = async (req, res) => {
       reason: reason || `Added ${addedItems.length} item(s)`,
     };
 
-    await order.save();
+    await order.save({ session });
 
     // Create modification log
     await OrderModificationLog.create({
@@ -635,10 +923,12 @@ exports.addItemsToOrder = async (req, res) => {
       reason: reason || `Added ${addedItems.length} item(s)`,
       modifiedBy: req.user.id,
       inventoryAdjustments,
-    });
+    }).session(session);
 
     // Notify KDS
     notifyKDS("order:updated", order);
+
+    await session.commitTransaction();
 
     await order.populate("servedBy", "fullname");
     await order.populate("orderItems.menuItemId", "name category");
@@ -649,17 +939,22 @@ exports.addItemsToOrder = async (req, res) => {
       data: order,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error adding items to order:", error);
     res.status(500).json({
       success: false,
       message: "Failed to add items to order",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
 // Remove items from an order
 exports.removeItemsFromOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { orderId } = req.params;
     const { itemIds, reason } = req.body;

@@ -9,14 +9,7 @@ import BaseChart, {
 import { LineChart, Line } from "recharts";
 
 function CustomerRetentionChart({ data }) {
-  const chartData = data || [
-    { month: "Jan", rate: 65 },
-    { month: "Feb", rate: 68 },
-    { month: "Mar", rate: 72 },
-    { month: "Apr", rate: 70 },
-    { month: "May", rate: 75 },
-    { month: "Jun", rate: 78 },
-  ];
+  const chartData = data || [];
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200">

@@ -8,7 +8,8 @@ const logAction = async (
   action,
   oldValue,
   newValue,
-  reason
+  reason,
+  session = null
 ) => {
   try {
     // Create and save audit log entry
@@ -21,20 +22,24 @@ const logAction = async (
       newValue,
       reason,
     });
-    await auditLog.save();
+    await auditLog.save({ session });
 
     // Get the model dynamically based on entityType
     const Model = mongoose.model(entityType);
 
     // Update the lastAction field of the corresponding document
-    await Model.findByIdAndUpdate(entityId, {
-      lastAction: {
-        action: action,
-        performedBy: userId,
-        createdAt: new Date(),
-        reason: reason,
+    await Model.findByIdAndUpdate(
+      entityId,
+      {
+        lastAction: {
+          action: action,
+          performedBy: userId,
+          createdAt: new Date(),
+          reason: reason,
+        },
       },
-    });
+      { session }
+    );
   } catch (error) {
     console.error("Error in logAction:", error);
     throw error;

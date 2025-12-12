@@ -6,12 +6,7 @@ import BaseChart, {
 import { PieChart, Pie, Cell } from "recharts";
 
 function PaymentMethodsChart({ data }) {
-  const chartData = data || [
-    { name: "Cash", value: 1200 },
-    { name: "Credit Card", value: 3500 },
-    { name: "Mobile Payment", value: 800 },
-    { name: "Gift Card", value: 200 },
-  ];
+  const chartData = data || [];
 
   const COLORS = ["#10b981", "#4f46e5", "#f59e0b", "#6366f1"];
 

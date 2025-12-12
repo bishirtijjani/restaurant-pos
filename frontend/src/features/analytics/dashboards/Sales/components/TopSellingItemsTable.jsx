@@ -1,13 +1,11 @@
 import React from "react";
+import { useSelector } from "react-redux";
+import { selectSettings } from "../../../../settings/generalSettings/generalSettingsSlice";
 
 function TopSellingItemsTable({ data }) {
-  const items = data || [
-    { id: 1, name: "Cheeseburger", quantity: 120, revenue: 1200 },
-    { id: 2, name: "Fries", quantity: 200, revenue: 800 },
-    { id: 3, name: "Coke", quantity: 150, revenue: 300 },
-    { id: 4, name: "Pizza", quantity: 50, revenue: 750 },
-    { id: 5, name: "Salad", quantity: 30, revenue: 300 },
-  ];
+  const items = data || [];
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200">
@@ -29,7 +27,10 @@ function TopSellingItemsTable({ data }) {
                   <th>{index + 1}</th>
                   <td>{item.name}</td>
                   <td className="text-right">{item.quantity}</td>
-                  <td className="text-right">${item.revenue}</td>
+                  <td className="text-right">
+                    {currency}
+                    {item.revenue.toLocaleString()}
+                  </td>
                 </tr>
               ))}
             </tbody>

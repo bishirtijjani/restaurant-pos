@@ -1,11 +1,11 @@
 import React from "react";
+import { useSelector } from "react-redux";
+import { selectSettings } from "../../../../settings/generalSettings/generalSettingsSlice";
 
 function RefundsTable({ data }) {
-  const refunds = data || [
-    { id: 1, date: "2023-10-25", amount: 45.0, reason: "Customer Complaint", method: "Credit Card" },
-    { id: 2, date: "2023-10-24", amount: 12.5, reason: "Wrong Item", method: "Cash" },
-    { id: 3, date: "2023-10-22", amount: 30.0, reason: "Order Cancelled", method: "Mobile Payment" },
-  ];
+  const refunds = data || [];
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200">
@@ -27,7 +27,10 @@ function RefundsTable({ data }) {
                   <td>{refund.date}</td>
                   <td>{refund.reason}</td>
                   <td>{refund.method}</td>
-                  <td className="text-right text-error">-${refund.amount.toFixed(2)}</td>
+                  <td className="text-right text-error">
+                    -{currency}
+                    {refund.amount.toFixed(2)}
+                  </td>
                 </tr>
               ))}
             </tbody>

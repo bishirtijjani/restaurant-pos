@@ -139,10 +139,6 @@ const SupplierCard = ({ supplier, onEdit, onDelete }) => {
               Created: {new Date(supplier.createdAt).toLocaleDateString()}
             </span>
           </div>
-
-
-
-
         </div>
       </div>
     </div>
@@ -256,7 +252,6 @@ const SearchAndFilters = ({
   viewMode,
   onViewModeChange,
 }) => {
-
   const sortOptions = [
     { value: "", name: "Sort by..." },
     { value: "name", name: "Name (A-Z)" },
@@ -265,67 +260,63 @@ const SearchAndFilters = ({
     { value: "date_desc", name: "Oldest First" },
   ];
 
-
-
   return (
     <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
-        <div className="form-control w-full">
-          <label className="input input-bordered flex items-center gap-2 w-full">
-            <Search className="w-5 h-5 text-info" />
-            <input
-              type="text"
-              className="grow"
-              placeholder="Search suppliers by name, phone, or email..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
+          <div className="form-control w-full">
+            <label className="input input-bordered flex items-center gap-2 w-full">
+              <Search className="w-5 h-5 text-info" />
+              <input
+                type="text"
+                className="grow"
+                placeholder="Search suppliers by name, phone, or email..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <div className="form-control">
+            <SearchableSelect
+              options={sortOptions}
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value)}
+              name="sortBy"
+              placeholder="Sort by"
+              className="w-full max-w-xs"
+              valueKey="value"
+              labelKey="name"
             />
-          </label>
-        </div>
-      </div>
+          </div>
 
-      <div className="flex flex-wrap gap-3">
-        <div className="form-control">
-          <SearchableSelect
-            options={sortOptions}
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value)}
-            name="sortBy"
-            placeholder="Sort by"
-            className="w-full max-w-xs"
-            valueKey="value"
-            labelKey="name"
-          />
-        </div>
-
-
-
-        <div className="btn-group">
-          <button
-            className={`btn btn-sm ${
-              viewMode === "table" ? "btn-primary" : "btn-outline"
-            }`}
-            onClick={() => onViewModeChange("table")}
-          >
-            <Table className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">Table</span>
-          </button>
-          <button
-            className={`btn btn-sm ${
-              viewMode === "card" ? "btn-primary" : "btn-outline"
-            }`}
-            onClick={() => onViewModeChange("card")}
-          >
-            <SquareGanttChart className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">Cards</span>
-          </button>
+          <div className="btn-group">
+            <button
+              className={`btn btn-sm ${
+                viewMode === "table" ? "btn-primary" : "btn-outline"
+              }`}
+              onClick={() => onViewModeChange("table")}
+            >
+              <Table className="w-4 h-4" />
+              <span className="hidden sm:inline ml-1">Table</span>
+            </button>
+            <button
+              className={`btn btn-sm ${
+                viewMode === "card" ? "btn-primary" : "btn-outline"
+              }`}
+              onClick={() => onViewModeChange("card")}
+            >
+              <SquareGanttChart className="w-4 h-4" />
+              <span className="hidden sm:inline ml-1">Cards</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
-}
+  );
+};
 
 const Suppliers = () => {
   const dispatch = useDispatch();
@@ -350,8 +341,6 @@ const Suppliers = () => {
         supplier.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         supplier.phone?.includes(searchTerm) ||
         supplier.email?.toLowerCase().includes(searchTerm.toLowerCase());
-
-
 
       return matchesSearch;
     });
@@ -494,7 +483,7 @@ const Suppliers = () => {
                 <div className="text-6xl mb-4">🏢</div>
                 <h1 className="text-2xl font-bold">No suppliers found</h1>
                 <p className="py-4">
-                  {searchTerm || sortBy || actionFilter
+                  {searchTerm || sortBy
                     ? "Try adjusting your search or filters"
                     : "Get started by adding your first supplier"}
                 </p>

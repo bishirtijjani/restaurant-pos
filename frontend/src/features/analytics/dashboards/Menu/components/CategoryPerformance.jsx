@@ -7,14 +7,13 @@ import BaseChart, {
   ChartLegend,
 } from "../../../components/charts/BaseChart";
 import { BarChart, Bar } from "recharts";
+import { useSelector } from "react-redux";
+import { selectSettings } from "../../../../settings/generalSettings/generalSettingsSlice";
 
 function CategoryPerformance({ data }) {
-  const chartData = data || [
-    { category: "Main Course", revenue: 5000, profit: 2500 },
-    { category: "Appetizers", revenue: 2000, profit: 1200 },
-    { category: "Drinks", revenue: 1500, profit: 1000 },
-    { category: "Desserts", revenue: 800, profit: 500 },
-  ];
+  const chartData = data || [];
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200">
@@ -27,8 +26,16 @@ function CategoryPerformance({ data }) {
             <ChartYAxis />
             <ChartTooltip />
             <ChartLegend />
-            <Bar dataKey="revenue" fill="#4f46e5" name="Revenue" />
-            <Bar dataKey="profit" fill="#10b981" name="Profit" />
+            <Bar
+              dataKey="revenue"
+              fill="#4f46e5"
+              name={`Revenue (${currency})`}
+            />
+            <Bar
+              dataKey="profit"
+              fill="#10b981"
+              name={`Profit (${currency})`}
+            />
           </BarChart>
         </BaseChart>
       </div>

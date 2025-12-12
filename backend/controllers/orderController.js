@@ -1,4 +1,5 @@
 // backend/controllers/orderController.js
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const MenuItem = require("../models/MenuItem");
 const AddOnGroup = require("../models/AddOnGroup");
@@ -13,13 +14,13 @@ const {
 } = require("../utils/discountCalculator");
 
 // Function to generate unique order numbers
-const generateOrderNumber = async () => {
+const generateOrderNumber = async (session) => {
   let orderNumber;
   let exists;
 
   do {
     orderNumber = Math.floor(100000 + Math.random() * 900000).toString();
-    exists = await Order.exists({ orderNumber });
+    exists = await Order.exists({ orderNumber }).session(session);
   } while (exists);
 
   return orderNumber;
@@ -96,6 +97,8 @@ const calculateOrderTax = (
 
 // Create a new order (UPDATED)
 const createOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const {
       table,
@@ -116,6 +119,7 @@ const createOrder = async (req, res) => {
 
     // VALIDATION: Dine-in requires a table
     if (orderType === "dine-in" && (!table || table === "Takeaway")) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Dine-in orders must have a table assigned",
@@ -123,14 +127,16 @@ const createOrder = async (req, res) => {
     }
 
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Order must contain at least one item",
       });
     }
 
-    const settings = await GeneralSettings.findOne();
+    const settings = await GeneralSettings.findOne().session(session);
     if (!settings) {
+      await session.abortTransaction();
       return res.status(500).json({
         success: false,
         message: "Restaurant settings not configured",
@@ -141,12 +147,15 @@ const createOrder = async (req, res) => {
     const inventoryDeductions = [];
 
     for (const item of orderItems) {
-      const menuItem = await MenuItem.findById(item.menuItemId).populate({
-        path: "addOnGroups",
-        match: { isActive: true },
-      });
+      const menuItem = await MenuItem.findById(item.menuItemId)
+        .populate({
+          path: "addOnGroups",
+          match: { isActive: true },
+        })
+        .session(session);
 
       if (!menuItem) {
+        await session.abortTransaction();
         return res.status(404).json({
           success: false,
           message: `Menu item with ID ${item.menuItemId} not found`,
@@ -154,6 +163,7 @@ const createOrder = async (req, res) => {
       }
 
       if (!menuItem.isAvailable) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: `${menuItem.name} is currently unavailable`,
@@ -169,7 +179,9 @@ const createOrder = async (req, res) => {
 
       if (item.addOns && item.addOns.length > 0) {
         for (const addOn of item.addOns) {
-          const addOnGroup = await AddOnGroup.findById(addOn.groupId);
+          const addOnGroup = await AddOnGroup.findById(addOn.groupId).session(
+            session
+          );
 
           if (!addOnGroup || !addOnGroup.isActive) continue;
 
@@ -178,6 +190,7 @@ const createOrder = async (req, res) => {
             addOnGroup.isRequired &&
             (!addOn.selectedItemIds || addOn.selectedItemIds.length === 0)
           ) {
+            await session.abortTransaction();
             return res.status(400).json({
               success: false,
               message: `${addOnGroup.name} is required for ${menuItem.name}`,
@@ -190,6 +203,7 @@ const createOrder = async (req, res) => {
               addOnGroup.selectionType === "single" &&
               addOn.selectedItemIds.length > 1
             ) {
+              await session.abortTransaction();
               return res.status(400).json({
                 success: false,
                 message: `${addOnGroup.name} allows only single selection`,
@@ -200,6 +214,7 @@ const createOrder = async (req, res) => {
               addOnGroup.minSelections &&
               addOn.selectedItemIds.length < addOnGroup.minSelections
             ) {
+              await session.abortTransaction();
               return res.status(400).json({
                 success: false,
                 message: `${addOnGroup.name} requires at least ${addOnGroup.minSelections} selection(s)`,
@@ -210,6 +225,7 @@ const createOrder = async (req, res) => {
               addOnGroup.maxSelections &&
               addOn.selectedItemIds.length > addOnGroup.maxSelections
             ) {
+              await session.abortTransaction();
               return res.status(400).json({
                 success: false,
                 message: `${addOnGroup.name} allows maximum ${addOnGroup.maxSelections} selections`,
@@ -262,7 +278,7 @@ const createOrder = async (req, res) => {
       const linkedInventory = await InventoryItem.find({
         "linkedMenuItems.menuItemId": menuItem._id,
         isActive: true,
-      });
+      }).session(session);
 
       for (const invItem of linkedInventory) {
         const link = invItem.linkedMenuItems.find(
@@ -298,10 +314,11 @@ const createOrder = async (req, res) => {
     for (const deduction of inventoryDeductions) {
       const inventoryItem = await InventoryItem.findById(
         deduction.inventoryItemId
-      );
+      ).session(session);
 
       if (inventoryItem) {
         if (inventoryItem.currentStock < deduction.quantityToDeduct) {
+          await session.abortTransaction();
           const itemType = deduction.isMenuItem
             ? `ingredient "${deduction.name}" for "${deduction.menuItemName}"`
             : `add-on: ${deduction.name}`;
@@ -312,7 +329,7 @@ const createOrder = async (req, res) => {
         }
 
         inventoryItem.currentStock -= deduction.quantityToDeduct;
-        await inventoryItem.save();
+        await inventoryItem.save({ session });
       }
     }
 
@@ -408,25 +425,31 @@ const createOrder = async (req, res) => {
 
     if (payments && Array.isArray(payments) && payments.length > 0) {
       // Split payment scenario
-      paidAmount = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-      
+      paidAmount = payments.reduce(
+        (sum, p) => sum + (parseFloat(p.amount) || 0),
+        0
+      );
+
       // Validate: total payments must equal or exceed bill total
       if (paidAmount < finalTotal) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
-          message: `Insufficient payment. Total: ${finalTotal.toFixed(2)}, Paid: ${paidAmount.toFixed(2)}`,
+          message: `Insufficient payment. Total: ${finalTotal.toFixed(
+            2
+          )}, Paid: ${paidAmount.toFixed(2)}`,
         });
       }
 
       // Store payments array
-      paymentsArray = payments.map(p => ({
+      paymentsArray = payments.map((p) => ({
         method: p.method,
         amount: parseFloat(p.amount),
         timestamp: new Date(),
       }));
 
       // Initialize payment history with all payment entries
-      paymentHistoryArray = payments.map(p => ({
+      paymentHistoryArray = payments.map((p) => ({
         type: "payment",
         method: p.method,
         amount: parseFloat(p.amount),
@@ -437,7 +460,7 @@ const createOrder = async (req, res) => {
 
       // Set primary payment method as the first one
       primaryPaymentMethod = payments[0].method;
-      
+
       // Calculate change
       changeAmount = paidAmount - finalTotal;
       paymentStatus = "paid";
@@ -462,25 +485,29 @@ const createOrder = async (req, res) => {
 
       // Create single payment entry
       if (paidAmount > 0) {
-        paymentsArray = [{
-          method: paymentMethod || "cash",
-          amount: paidAmount,
-          timestamp: new Date(),
-        }];
+        paymentsArray = [
+          {
+            method: paymentMethod || "cash",
+            amount: paidAmount,
+            timestamp: new Date(),
+          },
+        ];
 
-        paymentHistoryArray = [{
-          type: "payment",
-          method: paymentMethod || "cash",
-          amount: paidAmount,
-          timestamp: new Date(),
-          performedBy: req.user.id,
-          note: "Initial payment",
-        }];
+        paymentHistoryArray = [
+          {
+            type: "payment",
+            method: paymentMethod || "cash",
+            amount: paidAmount,
+            timestamp: new Date(),
+            performedBy: req.user.id,
+            note: "Initial payment",
+          },
+        ];
       }
     }
 
     const newOrder = new Order({
-      orderNumber: await generateOrderNumber(),
+      orderNumber: await generateOrderNumber(session),
       table: table || "Takeaway",
       customerDetails: customerDetails || { name: "Walk-in" },
       orderType: orderType || "dine-in",
@@ -534,13 +561,14 @@ const createOrder = async (req, res) => {
       },
     });
 
-    await newOrder.save();
+    await newOrder.save({ session });
 
     // After saving order, increment promo code usage
     if (promoCodeData) {
       await incrementPromoCodeUsage(
         promoCodeData.code,
-        customerDetails?.customerId
+        customerDetails?.customerId,
+        session
       );
     }
 
@@ -551,8 +579,11 @@ const createOrder = async (req, res) => {
       "create",
       null,
       newOrder,
-      `Created new order #${newOrder.orderNumber}`
+      `Created new order #${newOrder.orderNumber}`,
+      session
     );
+
+    await session.commitTransaction();
 
     const populatedOrder = await Order.findById(newOrder._id)
       .populate("servedBy", "fullname")
@@ -567,12 +598,15 @@ const createOrder = async (req, res) => {
       data: populatedOrder,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error creating order:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to create order. Please try again.",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -650,19 +684,23 @@ const getOrderById = async (req, res) => {
 
 // Update order status
 const updateOrderStatus = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { orderStatus, reason } = req.body;
 
     if (!orderStatus) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Order status is required",
       });
     }
 
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Order not found",
@@ -683,12 +721,14 @@ const updateOrderStatus = async (req, res) => {
     const allowedTransitions = validTransitions[currentStatus] || [];
 
     if (!allowedTransitions.includes(orderStatus)) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: `Invalid status transition: Cannot change from "${currentStatus}" to "${orderStatus}"`,
-        allowedTransitions: allowedTransitions.length > 0 
-          ? allowedTransitions 
-          : "No transitions allowed from this state",
+        allowedTransitions:
+          allowedTransitions.length > 0
+            ? allowedTransitions
+            : "No transitions allowed from this state",
       });
     }
 
@@ -709,10 +749,7 @@ const updateOrderStatus = async (req, res) => {
       reason: reason || `Updated order status to ${orderStatus}`,
     };
 
-    await order.save();
-
-    await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
+    await order.save({ session });
 
     await logAction(
       req.user.id,
@@ -721,8 +758,14 @@ const updateOrderStatus = async (req, res) => {
       "edit",
       oldOrder,
       order,
-      `Updated order #${order.orderNumber} status to ${orderStatus}`
+      `Updated order #${order.orderNumber} status to ${orderStatus}`,
+      session
     );
+
+    await session.commitTransaction();
+
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
 
     // Notify KDS via WebSocket
     notifyKDS("order:updated", order);
@@ -732,6 +775,7 @@ const updateOrderStatus = async (req, res) => {
       data: order,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error updating order status:", error);
     if (error.kind === "ObjectId") {
       return res.status(400).json({
@@ -744,24 +788,30 @@ const updateOrderStatus = async (req, res) => {
       message: "Failed to update order status. Please try again.",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
 // Update payment information
 const updatePayment = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { amountPaid, paymentMethod, reason } = req.body;
 
     if (amountPaid === undefined) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Amount paid is required",
       });
     }
 
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Order not found",
@@ -794,10 +844,7 @@ const updatePayment = async (req, res) => {
       reason: reason || "Updated payment information",
     };
 
-    await order.save();
-
-    await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
+    await order.save({ session });
 
     await logAction(
       req.user.id,
@@ -806,14 +853,21 @@ const updatePayment = async (req, res) => {
       "edit",
       oldOrder,
       order,
-      `Updated payment for order #${order.orderNumber}`
+      `Updated payment for order #${order.orderNumber}`,
+      session
     );
+
+    await session.commitTransaction();
+
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
 
     return res.status(200).json({
       success: true,
       data: order,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error updating payment:", error);
     if (error.kind === "ObjectId") {
       return res.status(400).json({
@@ -826,6 +880,8 @@ const updatePayment = async (req, res) => {
       message: "Failed to update payment information. Please try again.",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -948,12 +1004,14 @@ const refundOrder = async (req, res) => {
     }
 
     const refundAmount = parseFloat(amount);
-    
+
     // Validate: refund amount cannot exceed amount paid
     if (refundAmount > order.amountPaid) {
       return res.status(400).json({
         success: false,
-        message: `Refund amount (${refundAmount.toFixed(2)}) cannot exceed amount paid (${order.amountPaid.toFixed(2)})`,
+        message: `Refund amount (${refundAmount.toFixed(
+          2
+        )}) cannot exceed amount paid (${order.amountPaid.toFixed(2)})`,
       });
     }
 
@@ -1013,7 +1071,9 @@ const refundOrder = async (req, res) => {
       "edit",
       oldOrder,
       order,
-      `Refunded ${refundAmount.toFixed(2)} for order #${order.orderNumber}: ${reason}`
+      `Refunded ${refundAmount.toFixed(2)} for order #${
+        order.orderNumber
+      }: ${reason}`
     );
 
     return res.status(200).json({

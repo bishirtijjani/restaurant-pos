@@ -7,14 +7,13 @@ import BaseChart, {
   ChartLegend,
 } from "../../../components/charts/BaseChart";
 import { AreaChart, Area } from "recharts";
+import { useSelector } from "react-redux";
+import { selectSettings } from "../../../../settings/generalSettings/generalSettingsSlice";
 
 function InventoryValueChart({ data }) {
-  const chartData = data || [
-    { date: "Week 1", value: 15000 },
-    { date: "Week 2", value: 14500 },
-    { date: "Week 3", value: 16000 },
-    { date: "Week 4", value: 15200 },
-  ];
+  const chartData = data || [];
+  const settings = useSelector(selectSettings);
+  const currency = settings?.currency?.symbol || "";
 
   return (
     <div className="card bg-base-100 shadow-sm border border-base-200">
@@ -39,7 +38,7 @@ function InventoryValueChart({ data }) {
               stroke="#4f46e5"
               fillOpacity={1}
               fill="url(#colorValue)"
-              name="Stock Value ($)"
+              name={`Stock Value (${currency})`}
             />
           </AreaChart>
         </BaseChart>

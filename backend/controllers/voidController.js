@@ -1,4 +1,5 @@
 // backend/controllers/voidController.js
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const VoidLog = require("../models/VoidLog");
 const InventoryItem = require("../models/InventoryItem");
@@ -6,11 +7,14 @@ const logAction = require("../utils/logAction");
 
 // Void specific items from an order
 exports.voidOrderItems = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { orderId } = req.params;
     const { itemIds, reason } = req.body;
 
     if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Item IDs array is required",
@@ -18,15 +22,17 @@ exports.voidOrderItems = async (req, res) => {
     }
 
     if (!reason || reason.trim() === "") {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Void reason is required",
       });
     }
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Order not found",
@@ -35,6 +41,7 @@ exports.voidOrderItems = async (req, res) => {
 
     // Cannot void items from completed or cancelled orders
     if (["completed", "cancelled"].includes(order.orderStatus)) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: `Cannot void items from ${order.orderStatus} order`,
@@ -96,11 +103,11 @@ exports.voidOrderItems = async (req, res) => {
 
               const inventoryItem = await InventoryItem.findById(
                 selectedItem.inventoryItem
-              );
+              ).session(session);
 
               if (inventoryItem) {
                 inventoryItem.currentStock += quantityToRestore;
-                await inventoryItem.save();
+                await inventoryItem.save({ session });
 
                 restoredInventoryItems.push({
                   inventoryItemId: inventoryItem._id,
@@ -115,6 +122,7 @@ exports.voidOrderItems = async (req, res) => {
     }
 
     if (voidedItems.length === 0) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "No valid items to void",
@@ -175,10 +183,11 @@ exports.voidOrderItems = async (req, res) => {
 
     order.version += 1;
 
-    await order.save();
+    await order.save({ session });
 
     // Create void log entry
-    const voidLog = await VoidLog.create({
+    // Use create with array for session support, or new VoidLog + save
+    const voidLog = new VoidLog({
       orderId: order._id,
       orderNumber: order.orderNumber,
       voidedItems,
@@ -188,6 +197,7 @@ exports.voidOrderItems = async (req, res) => {
       inventoryRestored: restoredInventoryItems.length > 0,
       restoredItems: restoredInventoryItems,
     });
+    await voidLog.save({ session });
 
     // Log the action
     await logAction(
@@ -197,8 +207,11 @@ exports.voidOrderItems = async (req, res) => {
       "void_item",
       oldOrder,
       order,
-      `Voided ${voidedItems.length} items from order #${order.orderNumber}: ${reason}`
+      `Voided ${voidedItems.length} items from order #${order.orderNumber}: ${reason}`,
+      session
     );
+
+    await session.commitTransaction();
 
     // Populate for response
     await order.populate("servedBy", "fullname");
@@ -215,12 +228,15 @@ exports.voidOrderItems = async (req, res) => {
       },
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error voiding order items:", error);
     res.status(500).json({
       success: false,
       message: "Failed to void order items",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 

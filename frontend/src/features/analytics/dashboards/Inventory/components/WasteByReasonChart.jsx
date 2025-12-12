@@ -6,12 +6,7 @@ import BaseChart, {
 import { PieChart, Pie, Cell } from "recharts";
 
 function WasteByReasonChart({ data }) {
-  const chartData = data || [
-    { name: "Expired", value: 450 },
-    { name: "Damaged", value: 200 },
-    { name: "Spilled", value: 150 },
-    { name: "Theft/Unknown", value: 100 },
-  ];
+  const chartData = data || [];
 
   const COLORS = ["#ef4444", "#f59e0b", "#3b82f6", "#6b7280"];
 
