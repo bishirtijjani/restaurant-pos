@@ -8,6 +8,7 @@ const http = require("http");
 const connectToDB = require("./config/dbConnection");
 const { initializeWebSocket } = require("./utils/webSocket");
 const logger = require("./utils/logger");
+const setupSecurity = require("./config/security");
 
 // Load environment variables first
 dotenv.config();
@@ -30,7 +31,7 @@ const corsOptions = require("./config/corsOptions");
 const { generalLimiter } = require("./middleware/rateLimitMiddleware");
 
 // Middleware
-app.use(express.json());
+setupSecurity(app);
 app.use(cookieParser());
 app.use(cors(corsOptions));
 
