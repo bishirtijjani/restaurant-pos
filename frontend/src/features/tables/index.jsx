@@ -8,7 +8,7 @@ import {
   updateTable,
   deleteTable,
   updateTableStatus,
-} from "./tablesSlice";
+} from "./tableSlice";
 import { fetchOrders } from "../orders/ordersSlice";
 import { fetchAllUsers } from "../users/usersSlice";
 import TitleCard from "../../components/Cards/TitleCard";
