@@ -105,7 +105,7 @@ const initialState = {
   message: "",
 };
 
-const floorsSlice = createSlice({
+const floorSlice = createSlice({
   name: "floors",
   initialState,
   reducers: {
@@ -223,5 +223,5 @@ export const {
   resetFloorState,
   clearCurrentFloor,
   optimisticUpdateTablePosition,
-} = floorsSlice.actions;
-export default floorsSlice.reducer;
+} = floorSlice.actions;
+export default floorSlice.reducer;
