@@ -1,3 +1,15 @@
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams, useNavigate } from "react-router-dom";
+import { fetchFloorById } from "../floors/floorsSlice";
+import {
+  fetchTables,
+  createTable,
+  updateTable,
+  deleteTable,
+  updateTableStatus,
+} from "./tablesSlice";
+import { fetchOrders } from "../orders/ordersSlice";
 import { fetchAllUsers } from "../users/usersSlice";
 import TitleCard from "../../components/Cards/TitleCard";
 import TableFormModal from "./components/TableFormModalBody";
@@ -95,6 +107,31 @@ const TableManagement = () => {
       dispatch(
         showNotification({
           message: error.message || "Failed to update status",
+          status: 0,
+        })
+      );
+    }
+  };
+
+  const handleDeleteTable = async (tableId) => {
+    // Logic to delete table
+    if (window.confirm("Are you sure you want to delete this table?")) {
+      try {
+        await dispatch(deleteTable(tableId)).unwrap();
+        dispatch(showNotification({ message: "Table deleted", status: 1 }));
+        dispatch(fetchTables({ floorId }));
+      } catch (error) {
+        dispatch(
+          showNotification({ message: "Failed to delete table", status: 0 })
+        );
+      }
+    }
+  };
+
+  return (
+    <TitleCard
+      title={
+        <div className="flex items-center gap-2">
           <button
             onClick={() => navigate("/app/floors")}
             className="btn btn-ghost btn-circle btn-sm"
