@@ -207,7 +207,7 @@ exports.updateFloorLayout = async (req, res) => {
     }
 
     // Notify via WebSocket
-    notifyFloorUpdate("floor:layout_updated", floor);
+    notifyFloorUpdate("floor:layout_updated", floor, req.storeId);
 
     res.status(200).json({
       success: true,
@@ -247,7 +247,7 @@ exports.updateTablePositions = async (req, res) => {
     await Promise.all(updatePromises);
 
     // Notify via WebSocket
-    notifyFloorUpdate("tables:positions_updated", { tables });
+    notifyFloorUpdate("tables:positions_updated", { tables }, req.storeId);
 
     res.status(200).json({
       success: true,

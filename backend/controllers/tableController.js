@@ -144,7 +144,7 @@ exports.updateTable = async (req, res) => {
     }
 
     // Broadcast update via WebSocket
-    notifyTableUpdate("table:updated", updatedTable);
+    notifyTableUpdate("table:updated", updatedTable, req.storeId);
 
     res.status(200).json({
       success: true,
@@ -426,6 +426,9 @@ exports.updateTableStatus = async (req, res) => {
       .populate("assignedStaff", "fullname")
       .populate("currentOrder", "orderNumber");
 
+    // Broadcast update via WebSocket
+    notifyTableUpdate("table:updated", populatedTable, req.storeId);
+
     res.status(200).json({
       success: true,
       message: "Table status updated successfully",
@@ -500,6 +503,9 @@ exports.linkTableToOrder = async (req, res) => {
       .populate("floorId", "name")
       .populate("currentOrder", "orderNumber orderStatus totalAmount");
 
+    // Broadcast update
+    notifyTableUpdate("table:updated", populatedTable, req.storeId);
+
     res.status(200).json({
       success: true,
       message: "Table linked to order successfully",
@@ -544,6 +550,9 @@ exports.unlinkTableFromOrder = async (req, res) => {
     const populatedTable = await Table.findById(table._id)
       .populate("floorId", "name")
       .populate("assignedStaff", "fullname");
+
+    // Broadcast update
+    notifyTableUpdate("table:updated", populatedTable, req.storeId);
 
     res.status(200).json({
       success: true,

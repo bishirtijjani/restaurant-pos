@@ -1,5 +1,6 @@
 const Reservation = require("../models/Reservation");
 const Table = require("../models/Table");
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Store = require("../models/Store"); // Replaces GeneralSettings
 const logAction = require("../utils/logAction");
@@ -480,90 +481,106 @@ exports.checkInReservation = async (req, res) => {
       });
     }
 
-    // Get restaurant settings for order creation
-    const store = await Store.findById(req.storeId);
-    if (!store || !store.settings) {
-      return res.status(500).json({
-        success: false,
-        message: "Store settings not configured",
+    // Start transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      // Get restaurant settings for order creation
+      const store = await Store.findById(req.storeId).session(session);
+      if (!store || !store.settings) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(500).json({
+          success: false,
+          message: "Store settings not configured",
+        });
+      }
+      const settings = store.settings;
+
+      // Generate order number
+      const orderNumber = await generateOrderNumber(req.storeId);
+
+      // Create dine-in order linked to reservation
+      // Use new Order + save({ session }) to ensure transaction context
+      const newOrder = new Order({
+        orderNumber,
+        storeId: req.storeId,
+        orderType: "dine-in",
+        table: table.tableNumber,
+        tableId: table._id,
+        orderItems: [], // Empty order - items will be added later
+        subtotal: 0,
+        totalAmount: 0,
+        status: "pending",
+        paymentStatus: "unpaid",
+        amountPaid: 0,
+        balance: 0,
+        reservationId: reservation._id,
+        customerDetails: {
+          name: reservation.customerName,
+          phone: reservation.customerPhone,
+          email: reservation.customerEmail || "",
+          partySize: reservation.partySize,
+        },
+        customerId: reservation.customerId || null,
+        taxBreakdown: {
+          taxMode: settings.taxSettings?.mode || "per-order",
+          globalRate: settings.taxSettings?.globalRate || 0,
+          totalTax: 0,
+          serviceCharge: 0,
+        },
+        createdBy: req.user.id,
       });
+
+      await newOrder.save({ session });
+
+      // Update reservation with order reference
+      reservation.status = "seated";
+      reservation.orderId = newOrder._id;
+      await reservation.save({ session });
+
+      // Update table status and link reservation
+      table.status = "occupied";
+      table.currentReservation = reservation._id;
+      table.currentOrder = newOrder._id;
+      table.timing.seatedAt = new Date();
+      await table.save({ session });
+
+      await logAction(
+        req.user.id,
+        "Reservation",
+        req.params.id,
+        "update",
+        { status: "confirmed" },
+        { status: "seated", orderId: newOrder._id },
+        `Checked in reservation for ${reservation.customerName}, created order #${orderNumber}`,
+        session, // Pass session
+        req.storeId
+      );
+
+      await session.commitTransaction();
+      session.endSession();
+
+      // Return reservation with customer, table, and order data
+      const populatedReservation = await Reservation.findById(reservation._id)
+        .populate("tableId", "tableNumber floorId")
+        .populate("customerId")
+        .populate("createdBy", "fullname");
+
+      res.status(200).json({
+        success: true,
+        message: "Reservation checked in successfully",
+        data: {
+          reservation: populatedReservation,
+          order: newOrder,
+        },
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
     }
-    const settings = store.settings;
-
-    // Generate order number
-    const orderNumber = await generateOrderNumber(req.storeId);
-
-    // Create dine-in order linked to reservation
-    const newOrder = await Order.create({
-      orderNumber,
-      storeId: req.storeId,
-      orderType: "dine-in",
-      table: table.tableNumber,
-      tableId: table._id,
-      orderItems: [], // Empty order - items will be added later
-      subtotal: 0,
-      totalAmount: 0,
-      status: "pending",
-      paymentStatus: "unpaid",
-      amountPaid: 0,
-      balance: 0,
-      // Link to reservation
-      reservationId: reservation._id,
-      // Customer details from reservation
-      customerDetails: {
-        name: reservation.customerName,
-        phone: reservation.customerPhone,
-        email: reservation.customerEmail || "",
-        partySize: reservation.partySize,
-      },
-      // Link to customer if exists
-      customerId: reservation.customerId || null,
-      // Tax settings from restaurant config
-      taxBreakdown: {
-        taxMode: settings.taxSettings?.mode || "per-order",
-        globalRate: settings.taxSettings?.globalRate || 0,
-        totalTax: 0,
-        serviceCharge: 0,
-      },
-      createdBy: req.user.id,
-    });
-
-    // Update reservation with order reference
-    reservation.status = "seated";
-    reservation.orderId = newOrder._id;
-    await reservation.save();
-
-    // Update table status and link reservation
-    table.status = "occupied";
-    table.currentReservation = reservation._id;
-    table.currentOrder = newOrder._id;
-    table.timing.seatedAt = new Date();
-    await table.save();
-
-    await logAction(
-      req.user.id,
-      "Reservation",
-      req.params.id,
-      "update",
-      { status: "confirmed" },
-      { status: "seated", orderId: newOrder._id },
-      `Checked in reservation for ${reservation.customerName}, created order #${orderNumber}`
-    );
-
-    // Return reservation with customer, table, and order data
-    const populatedReservation = await Reservation.findById(reservation._id)
-      .populate("tableId", "tableNumber floorId")
-      .populate("customerId")
-      .populate("createdBy", "fullname");
-
-    res.status(200).json({
-      success: true,
-      message: "Reservation checked in successfully",
-      data: {
-        reservation: populatedReservation,
-        order: newOrder,
-      },
-    });
   } catch (error) {
     console.error("Error checking in reservation:", error);
     res.status(500).json({
