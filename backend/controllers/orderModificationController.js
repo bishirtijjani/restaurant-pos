@@ -801,7 +801,7 @@ exports.removeItemsFromOrder = async (req, res) => {
     await modLog.save({ session });
 
     // Notify KDS
-    notifyKDS("order:updated", order);
+    notifyKDS("order:updated", order, null, req.storeId);
 
     await order.populate("servedBy", "fullname");
     await order.populate("orderItems.menuItemId", "name category");
@@ -972,7 +972,7 @@ exports.updateItemQuantity = async (req, res) => {
       storeId: req.storeId,
     });
 
-    notifyKDS("order:updated", order);
+    notifyKDS("order:updated", order, null, req.storeId);
 
     await order.populate("servedBy", "fullname");
     await order.populate("orderItems.menuItemId", "name category");
@@ -1047,7 +1047,7 @@ exports.updateItemNote = async (req, res) => {
       storeId: req.storeId,
     });
 
-    notifyKDS("order:updated", order);
+    notifyKDS("order:updated", order, null, req.storeId);
 
     await order.populate("servedBy", "fullname");
 
@@ -1113,7 +1113,7 @@ exports.updateOrderNote = async (req, res) => {
       storeId: req.storeId,
     });
 
-    notifyKDS("order:updated", order);
+    notifyKDS("order:updated", order, null, req.storeId);
 
     await order.populate("servedBy", "fullname");
 

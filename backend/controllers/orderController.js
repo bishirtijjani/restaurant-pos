@@ -883,6 +883,7 @@ const updatePayment = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Order",
       order._id,
       "edit",
@@ -973,6 +974,7 @@ const cancelOrder = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Order",
       order._id,
       "delete",
@@ -982,7 +984,7 @@ const cancelOrder = async (req, res) => {
     );
 
     // Notify KDS via WebSocket
-    notifyKDS("order:cancelled", order);
+    notifyKDS("order:cancelled", order, null, req.storeId);
 
     return res.status(200).json({
       success: true,
@@ -1107,6 +1109,7 @@ const refundOrder = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Order",
       order._id,
       "edit",
