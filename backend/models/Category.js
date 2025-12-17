@@ -2,7 +2,13 @@ const mongoose = require("mongoose");
 
 const categorySchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
+    },
     description: { type: String, required: false },
     lastAction: {
       action: {
@@ -21,5 +27,8 @@ const categorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Scoped uniqueness
+categorySchema.index({ storeId: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model("Category", categorySchema);

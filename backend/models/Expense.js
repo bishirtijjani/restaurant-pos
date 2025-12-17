@@ -38,7 +38,12 @@ const ExpenseSchema = new mongoose.Schema(
     invoice: {
       type: String, // Invoice number or ID
       required: true,
-      unique: true,
+    },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -62,5 +67,8 @@ const ExpenseSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Scoped uniqueness
+ExpenseSchema.index({ storeId: 1, invoice: 1 }, { unique: true });
 
 module.exports = mongoose.model("Expense", ExpenseSchema);

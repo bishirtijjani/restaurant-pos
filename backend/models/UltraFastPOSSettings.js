@@ -7,7 +7,12 @@ const ultraFastPOSSettingsSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
+    },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
     },
     keyboardShortcuts: {
       type: Object,
@@ -31,6 +36,9 @@ const ultraFastPOSSettingsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Settings are unique per user per store
+ultraFastPOSSettingsSchema.index({ storeId: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model(
   "UltraFastPOSSettings",

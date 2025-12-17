@@ -5,7 +5,12 @@ const stockAdjustmentSchema = new mongoose.Schema(
     adjustmentNumber: {
       type: String,
       required: true,
-      unique: true,
+    },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
     },
     inventoryItem: {
       type: mongoose.Schema.Types.ObjectId,
@@ -66,6 +71,7 @@ stockAdjustmentSchema.pre("save", async function (next) {
         mongoose.models.StockAdjustment || this.constructor;
 
       const count = await StockAdjustment.countDocuments({
+        storeId: this.storeId,
         createdAt: {
           $gte: new Date(new Date().setHours(0, 0, 0, 0)),
           $lt: new Date(new Date().setHours(23, 59, 59, 999)),
@@ -82,5 +88,11 @@ stockAdjustmentSchema.pre("save", async function (next) {
     next(error);
   }
 });
+
+// Scoped uniqueness
+stockAdjustmentSchema.index(
+  { storeId: 1, adjustmentNumber: 1 },
+  { unique: true }
+);
 
 module.exports = mongoose.model("StockAdjustment", stockAdjustmentSchema);

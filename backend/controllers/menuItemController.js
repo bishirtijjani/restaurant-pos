@@ -5,7 +5,10 @@ const logAction = require("../utils/logAction");
 // Get all menu items
 const getAllMenuItems = async (req, res) => {
   try {
-    const menuItems = await MenuItem.find().sort({ category: 1, name: 1 });
+    const menuItems = await MenuItem.find({ storeId: req.storeId }).sort({
+      category: 1,
+      name: 1,
+    });
     res.status(200).json(menuItems);
   } catch (error) {
     console.error("Error fetching menu items:", error.message);
@@ -19,7 +22,7 @@ const getAllMenuItems = async (req, res) => {
 const getMenuItemById = async (req, res) => {
   const { id } = req.params;
   try {
-    const menuItem = await MenuItem.findById(id);
+    const menuItem = await MenuItem.findOne({ _id: id, storeId: req.storeId });
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found." });
     }
@@ -56,9 +59,12 @@ const addNewMenuItem = async (req, res) => {
   }
 
   try {
-    // Only check for duplicates if itemCode is provided
+    // Only check for duplicates if itemCode is provided (within the same store)
     if (itemCode) {
-      const duplicateMenuItem = await MenuItem.findOne({ itemCode });
+      const duplicateMenuItem = await MenuItem.findOne({
+        itemCode,
+        storeId: req.storeId,
+      });
       if (duplicateMenuItem) {
         return res.status(409).json({
           message: "A menu item with the same item code already exists.",
@@ -82,6 +88,7 @@ const addNewMenuItem = async (req, res) => {
       description,
       preparationTime: preparationTime || 15,
       isAvailable: isAvailable !== undefined ? isAvailable : true,
+      storeId: req.storeId, // Store scoping
       // Only set itemCode if it's not an empty string
       ...(itemCode ? { itemCode } : {}),
       // Only add image if provided
@@ -126,7 +133,7 @@ const updateMenuItem = async (req, res) => {
   } = req.body;
 
   try {
-    const menuItem = await MenuItem.findById(id);
+    const menuItem = await MenuItem.findOne({ _id: id, storeId: req.storeId });
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found." });
     }
@@ -148,6 +155,7 @@ const updateMenuItem = async (req, res) => {
     if (itemCode && itemCode !== menuItem.itemCode) {
       const existingMenuItemWithCode = await MenuItem.findOne({
         itemCode,
+        storeId: req.storeId,
         _id: { $ne: id }, // Exclude the current item from the check
       });
       if (existingMenuItemWithCode) {
@@ -158,6 +166,7 @@ const updateMenuItem = async (req, res) => {
     if (name && name !== menuItem.name) {
       const existingMenuItemWithName = await MenuItem.findOne({
         name,
+        storeId: req.storeId,
         _id: { $ne: id }, // Exclude the current item from the check
       });
       if (existingMenuItemWithName) {
@@ -226,7 +235,7 @@ const deleteMenuItem = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const menuItem = await MenuItem.findById(id);
+    const menuItem = await MenuItem.findOne({ _id: id, storeId: req.storeId });
 
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found." });
@@ -235,7 +244,7 @@ const deleteMenuItem = async (req, res) => {
     // Store menu item info for logging before deletion
     const deletedMenuItem = { ...menuItem.toObject() };
 
-    await MenuItem.deleteOne({ _id: id });
+    await MenuItem.deleteOne({ _id: id, storeId: req.storeId });
 
     // Log the deletion action
     await logAction(
@@ -265,7 +274,7 @@ const toggleAvailability = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const menuItem = await MenuItem.findById(id);
+    const menuItem = await MenuItem.findOne({ _id: id, storeId: req.storeId });
 
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found." });

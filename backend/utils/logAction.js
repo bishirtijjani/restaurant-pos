@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const logAction = async (
   userId,
+  storeId, // NEW: Required store context
   entityType,
   entityId,
   action,
@@ -15,6 +16,7 @@ const logAction = async (
     // Create and save audit log entry
     const auditLog = new AuditLog({
       userId,
+      storeId,
       entityType,
       entityId,
       action,

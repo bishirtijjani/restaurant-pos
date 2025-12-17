@@ -13,6 +13,7 @@ exports.createSupplier = async (req, res) => {
 
     const existingSupplier = await Supplier.findOne({
       $or: [{ email }, { phone }],
+      storeId: req.storeId,
     });
 
     if (existingSupplier) {
@@ -21,7 +22,13 @@ exports.createSupplier = async (req, res) => {
         .json({ message: "A supplier with this email already exists" });
     }
 
-    const newSupplier = new Supplier({ name, phone, email, address });
+    const newSupplier = new Supplier({
+      name,
+      phone,
+      email,
+      address,
+      storeId: req.storeId,
+    });
     await newSupplier.save();
     // Log the action
     await logAction(
@@ -46,7 +53,7 @@ exports.createSupplier = async (req, res) => {
 // Get all suppliers
 exports.getAllSuppliers = async (req, res) => {
   try {
-    const suppliers = await Supplier.find()
+    const suppliers = await Supplier.find({ storeId: req.storeId })
       .populate("lastAction.performedBy", "fullname")
       .sort({ createdAt: -1 });
     if (!suppliers.length) {
@@ -70,7 +77,7 @@ exports.getSupplierById = async (req, res) => {
       return res.status(400).json({ message: "Supplier ID is required" });
     }
 
-    const supplier = await Supplier.findById(id);
+    const supplier = await Supplier.findOne({ _id: id, storeId: req.storeId });
     if (!supplier) {
       return res.status(404).json({ message: "Supplier not found" });
     }
@@ -95,14 +102,15 @@ exports.updateSupplier = async (req, res) => {
         message: "Supplier ID and at least one field to update are required",
       });
     }
-    const oldSupplier = await Supplier.findById(id);
-
-    const updatedSupplier = await Supplier.findByIdAndUpdate(id, {
-      name,
-      phone,
-      email,
-      address,
+    const oldSupplier = await Supplier.findOne({
+      _id: id,
+      storeId: req.storeId,
     });
+
+    const updatedSupplier = await Supplier.findOneAndUpdate(
+      { _id: id, storeId: req.storeId },
+      { name, phone, email, address }
+    );
 
     if (!updatedSupplier) {
       return res.status(404).json({ message: "Supplier not found" });
@@ -137,7 +145,10 @@ exports.deleteSupplier = async (req, res) => {
       return res.status(400).json({ message: "Supplier ID is required" });
     }
 
-    const deletedSupplier = await Supplier.findByIdAndDelete(id);
+    const deletedSupplier = await Supplier.findOneAndDelete({
+      _id: id,
+      storeId: req.storeId,
+    });
     if (!deletedSupplier) {
       return res.status(404).json({ message: "Supplier not found" });
     }

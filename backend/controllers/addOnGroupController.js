@@ -8,7 +8,7 @@ exports.getAllAddOnGroups = async (req, res) => {
   try {
     const { isActive } = req.query;
 
-    let filter = {};
+    let filter = { storeId: req.storeId };
     if (isActive !== undefined) {
       filter.isActive = isActive === "true";
     }
@@ -35,10 +35,10 @@ exports.getAllAddOnGroups = async (req, res) => {
 // Get single add-on group
 exports.getAddOnGroupById = async (req, res) => {
   try {
-    const group = await AddOnGroup.findById(req.params.id).populate(
-      "items.inventoryItem",
-      "name unit currentStock"
-    );
+    const group = await AddOnGroup.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    }).populate("items.inventoryItem", "name unit currentStock");
 
     if (!group) {
       return res.status(404).json({
@@ -120,6 +120,7 @@ exports.createAddOnGroup = async (req, res) => {
     const addOnGroup = await AddOnGroup.create({
       name,
       description,
+      storeId: req.storeId,
       items: items.map((item) => ({
         name: item.name,
         price: parseFloat(item.price) || 0,
@@ -167,7 +168,10 @@ exports.createAddOnGroup = async (req, res) => {
 // Update add-on group
 exports.updateAddOnGroup = async (req, res) => {
   try {
-    const oldGroup = await AddOnGroup.findById(req.params.id);
+    const oldGroup = await AddOnGroup.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!oldGroup) {
       return res.status(404).json({
@@ -215,8 +219,8 @@ exports.updateAddOnGroup = async (req, res) => {
       }));
     }
 
-    const updatedGroup = await AddOnGroup.findByIdAndUpdate(
-      req.params.id,
+    const updatedGroup = await AddOnGroup.findOneAndUpdate(
+      { _id: req.params.id, storeId: req.storeId },
       updateData,
       { new: true, runValidators: true }
     ).populate("items.inventoryItem", "name unit");
@@ -250,7 +254,10 @@ exports.updateAddOnGroup = async (req, res) => {
 // Delete add-on group (soft delete)
 exports.deleteAddOnGroup = async (req, res) => {
   try {
-    const group = await AddOnGroup.findById(req.params.id);
+    const group = await AddOnGroup.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!group) {
       return res.status(404).json({
@@ -259,9 +266,10 @@ exports.deleteAddOnGroup = async (req, res) => {
       });
     }
 
-    // Check if group is used by any menu items
+    // Check if group is used by any menu items (scoped to store)
     const menuItemsUsingGroup = await MenuItem.countDocuments({
       addOnGroups: req.params.id,
+      storeId: req.storeId,
     });
 
     if (menuItemsUsingGroup > 0) {
@@ -288,7 +296,10 @@ exports.deleteAddOnGroup = async (req, res) => {
     }
 
     // Hard delete if not used
-    await AddOnGroup.findByIdAndDelete(req.params.id);
+    await AddOnGroup.findOneAndDelete({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     // Log the action
     await logAction(
@@ -318,9 +329,12 @@ exports.deleteAddOnGroup = async (req, res) => {
 // Get add-on groups for a specific menu item
 exports.getAddOnGroupsForMenuItem = async (req, res) => {
   try {
-    const menuItem = await MenuItem.findById(req.params.menuItemId).populate({
+    const menuItem = await MenuItem.findOne({
+      _id: req.params.menuItemId,
+      storeId: req.storeId,
+    }).populate({
       path: "addOnGroups",
-      match: { isActive: true },
+      match: { isActive: true, storeId: req.storeId },
       populate: {
         path: "items.inventoryItem",
         select: "name unit currentStock",

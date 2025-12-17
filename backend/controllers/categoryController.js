@@ -5,7 +5,9 @@ const logAction = require("../utils/logAction");
 // Get all categories
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.find().sort({ createdAt: -1 });
+    const categories = await Category.find({ storeId: req.storeId }).sort({
+      createdAt: -1,
+    });
     res.status(200).json(categories);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -15,7 +17,10 @@ exports.getCategories = async (req, res) => {
 // Get a category by ID
 exports.getCategoryById = async (req, res) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
     if (!category)
       return res.status(404).json({ message: "Category not found" });
     res.status(200).json(category);
@@ -26,7 +31,10 @@ exports.getCategoryById = async (req, res) => {
 
 // Create a new category
 exports.createCategory = async (req, res) => {
-  const duplicateCategory = await Category.findOne({ name: req.body.name });
+  const duplicateCategory = await Category.findOne({
+    name: req.body.name,
+    storeId: req.storeId,
+  });
   if (duplicateCategory) {
     return res.status(400).json({ message: "This category already exists" });
   }
@@ -35,6 +43,7 @@ exports.createCategory = async (req, res) => {
     const category = new Category({
       name,
       description,
+      storeId: req.storeId,
     });
 
     const savedCategory = await category.save();
@@ -62,13 +71,16 @@ exports.updateCategory = async (req, res) => {
     const { name, description } = req.body;
 
     // Get the old category data for logging
-    const oldCategory = await Category.findById(req.params.id);
+    const oldCategory = await Category.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
     if (!oldCategory) {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    const updatedCategory = await Category.findByIdAndUpdate(
-      req.params.id,
+    const updatedCategory = await Category.findOneAndUpdate(
+      { _id: req.params.id, storeId: req.storeId },
       { name, description },
       { new: true }
     );
@@ -95,22 +107,28 @@ exports.deleteCategory = async (req, res) => {
   const categoryId = req.params.id;
 
   try {
-    const categoryToDelete = await Category.findById(categoryId);
+    const categoryToDelete = await Category.findOne({
+      _id: categoryId,
+      storeId: req.storeId,
+    });
     if (!categoryToDelete) {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    // Get affected menuItems for logging
-    const affectedMenuItems = await MenuItem.find({ category: categoryId });
+    // Get affected menuItems for logging (scoped to store)
+    const affectedMenuItems = await MenuItem.find({
+      category: categoryId,
+      storeId: req.storeId,
+    });
 
-    // Update menuItems to disassociate from the deleted category
+    // Update menuItems to disassociate from the deleted category (scoped to store)
     await MenuItem.updateMany(
-      { category: categoryId },
+      { category: categoryId, storeId: req.storeId },
       { $set: { category: null } }
     );
 
     // Delete the category
-    await Category.findByIdAndDelete(categoryId);
+    await Category.findOneAndDelete({ _id: categoryId, storeId: req.storeId });
 
     // Log the category deletion with additional context about affected menuItems
     await logAction(

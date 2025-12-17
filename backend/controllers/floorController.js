@@ -7,7 +7,7 @@ const { notifyFloorUpdate } = require("../utils/webSocket");
 exports.getAllFloors = async (req, res) => {
   try {
     const { isActive } = req.query;
-    const filter = {};
+    const filter = { storeId: req.storeId };
     if (isActive !== undefined) filter.isActive = isActive === "true";
 
     const floors = await Floor.find(filter).sort({ order: 1, name: 1 });
@@ -29,7 +29,10 @@ exports.getAllFloors = async (req, res) => {
 
 exports.getFloorById = async (req, res) => {
   try {
-    const floor = await Floor.findById(req.params.id);
+    const floor = await Floor.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!floor) {
       return res.status(404).json({
@@ -38,7 +41,11 @@ exports.getFloorById = async (req, res) => {
       });
     }
 
-    const tables = await Table.find({ floorId: floor._id, isActive: true })
+    const tables = await Table.find({
+      floorId: floor._id,
+      storeId: req.storeId,
+      isActive: true,
+    })
       .populate("assignedStaff", "fullname")
       .populate("currentOrder", "orderNumber orderStatus")
       .sort({ tableNumber: 1 });
@@ -70,6 +77,7 @@ exports.createFloor = async (req, res) => {
 
     const existingFloor = await Floor.findOne({
       name: name.trim(),
+      storeId: req.storeId,
       isActive: true,
     });
 
@@ -84,6 +92,7 @@ exports.createFloor = async (req, res) => {
       name: name.trim(),
       description: description || "",
       order: order || 0,
+      storeId: req.storeId,
     });
 
     await logAction(
@@ -113,7 +122,10 @@ exports.createFloor = async (req, res) => {
 
 exports.updateFloor = async (req, res) => {
   try {
-    const oldFloor = await Floor.findById(req.params.id);
+    const oldFloor = await Floor.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!oldFloor) {
       return res.status(404).json({
@@ -127,6 +139,7 @@ exports.updateFloor = async (req, res) => {
     if (name && name !== oldFloor.name) {
       const existingFloor = await Floor.findOne({
         name: name.trim(),
+        storeId: req.storeId,
         _id: { $ne: req.params.id },
         isActive: true,
       });
@@ -145,8 +158,8 @@ exports.updateFloor = async (req, res) => {
     if (order !== undefined) updateData.order = order;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    const updatedFloor = await Floor.findByIdAndUpdate(
-      req.params.id,
+    const updatedFloor = await Floor.findOneAndUpdate(
+      { _id: req.params.id, storeId: req.storeId },
       updateData,
       { new: true, runValidators: true }
     );
@@ -180,8 +193,8 @@ exports.updateFloorLayout = async (req, res) => {
   try {
     const { layout } = req.body;
 
-    const floor = await Floor.findByIdAndUpdate(
-      req.params.id,
+    const floor = await Floor.findOneAndUpdate(
+      { _id: req.params.id, storeId: req.storeId },
       { layout },
       { new: true, runValidators: true }
     );
@@ -252,7 +265,10 @@ exports.updateTablePositions = async (req, res) => {
 
 exports.deleteFloor = async (req, res) => {
   try {
-    const floor = await Floor.findById(req.params.id);
+    const floor = await Floor.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!floor) {
       return res.status(404).json({
@@ -263,6 +279,7 @@ exports.deleteFloor = async (req, res) => {
 
     const tablesCount = await Table.countDocuments({
       floorId: req.params.id,
+      storeId: req.storeId,
       isActive: true,
     });
 
@@ -287,7 +304,7 @@ exports.deleteFloor = async (req, res) => {
       });
     }
 
-    await Floor.findByIdAndDelete(req.params.id);
+    await Floor.findOneAndDelete({ _id: req.params.id, storeId: req.storeId });
 
     await logAction(
       req.user.id,

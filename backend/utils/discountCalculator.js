@@ -162,8 +162,9 @@ const processBOGODiscount = (orderItems, discount) => {
 /**
  * Get active happy hour discounts
  */
-const getActiveHappyHourDiscounts = async () => {
+const getActiveHappyHourDiscounts = async (storeId) => {
   const discounts = await Discount.find({
+    storeId,
     isActive: true,
     isHappyHour: true,
   });
@@ -175,12 +176,14 @@ const getActiveHappyHourDiscounts = async () => {
  * Validate and get promo code discount
  */
 const validatePromoCode = async (
+  storeId,
   code,
   orderAmount,
   orderType,
   customerId = null
 ) => {
   const promoCode = await PromoCode.findOne({
+    storeId,
     code: code.toUpperCase(),
     isActive: true,
   });
@@ -263,6 +266,7 @@ const validatePromoCode = async (
  * @param {Number} params.subtotal - Order subtotal before discounts
  */
 const calculateOrderDiscounts = async ({
+  storeId,
   orderItems,
   globalDiscount,
   orderDiscount,
@@ -284,7 +288,7 @@ const calculateOrderDiscounts = async ({
   let runningSubtotal = subtotal;
 
   // 1. Check for active Happy Hour discounts (automatic)
-  const happyHourDiscounts = await getActiveHappyHourDiscounts();
+  const happyHourDiscounts = await getActiveHappyHourDiscounts(storeId);
   for (const hhDiscount of happyHourDiscounts) {
     if (hhDiscount.applicableOrderTypes.includes(orderType)) {
       if (hhDiscount.type === "bogo") {
@@ -425,6 +429,7 @@ const calculateOrderDiscounts = async ({
  */
 const incrementPromoCodeUsage = async (
   code,
+  storeId,
   customerId = null,
   session = null
 ) => {
@@ -434,10 +439,12 @@ const incrementPromoCodeUsage = async (
 
   if (customerId) {
     // Update or add customer usage tracking
-    // Note: findOneAndUpdate does not support session in the same way as save() for some older mongoose versions,
-    // but in modern mongoose it's passed in options.
     await PromoCode.findOneAndUpdate(
-      { code: code.toUpperCase(), "usedBy.customerId": customerId },
+      {
+        code: code.toUpperCase(),
+        storeId,
+        "usedBy.customerId": customerId,
+      },
       {
         $inc: { usageCount: 1, "usedBy.$.usageCount": 1 },
         $set: { "usedBy.$.lastUsed": new Date() },
@@ -447,7 +454,7 @@ const incrementPromoCodeUsage = async (
       if (!doc) {
         // Customer not in usedBy array, add them
         await PromoCode.findOneAndUpdate(
-          { code: code.toUpperCase() },
+          { code: code.toUpperCase(), storeId },
           {
             $inc: { usageCount: 1 },
             $push: {
@@ -463,9 +470,13 @@ const incrementPromoCodeUsage = async (
       }
     });
   } else {
-    await PromoCode.findOneAndUpdate({ code: code.toUpperCase() }, update, {
-      session,
-    });
+    await PromoCode.findOneAndUpdate(
+      { code: code.toUpperCase(), storeId },
+      update,
+      {
+        session,
+      }
+    );
   }
 };
 

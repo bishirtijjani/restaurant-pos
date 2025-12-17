@@ -7,7 +7,9 @@ const Report = require("../models/Report");
 const getReports = asyncHandler(async (req, res) => {
   // Filter by branch if applicable, otherwise just by user or global
   // For now, assuming reports are visible to all users (or filtered by creator if needed)
-  const reports = await Report.find({}).sort({ createdAt: -1 }).limit(50); // Limit to 50 most recent for now
+  const reports = await Report.find({ storeId: req.storeId })
+    .sort({ createdAt: -1 })
+    .limit(50);
 
   res.status(200).json({
     success: true,
@@ -33,8 +35,8 @@ const createReport = asyncHandler(async (req, res) => {
     dateRange,
     filters,
     type: type || "custom",
-    createdBy: req.user.id, // Auth middleware populates req.user with 'id'
-    // branch: req.user.branch // matching existing pattern if any
+    createdBy: req.user.id,
+    storeId: req.storeId,
   });
 
   res.status(201).json({
@@ -47,7 +49,10 @@ const createReport = asyncHandler(async (req, res) => {
 // @route   DELETE /api/reports/:id
 // @access  Private
 const deleteReport = asyncHandler(async (req, res) => {
-  const report = await Report.findById(req.params.id);
+  const report = await Report.findOne({
+    _id: req.params.id,
+    storeId: req.storeId,
+  });
 
   if (!report) {
     res.status(404);

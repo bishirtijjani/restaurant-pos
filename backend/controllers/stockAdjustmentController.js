@@ -1,14 +1,12 @@
 const StockAdjustment = require("../models/StockAdjustment");
 const InventoryItem = require("../models/InventoryItem");
 
-
-
 // Get all stock adjustments
 exports.getAllStockAdjustments = async (req, res) => {
   try {
     const { inventoryItem, type, startDate, endDate } = req.query;
 
-    let filter = {};
+    let filter = { storeId: req.storeId };
 
     if (inventoryItem) filter.inventoryItem = inventoryItem;
     if (type) filter.type = type;
@@ -42,7 +40,10 @@ exports.getAllStockAdjustments = async (req, res) => {
 // Get single stock adjustment
 exports.getStockAdjustmentById = async (req, res) => {
   try {
-    const adjustment = await StockAdjustment.findById(req.params.id)
+    const adjustment = await StockAdjustment.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    })
       .populate("inventoryItem", "name unit sku category")
       .populate("performedBy", "fullname email");
 
@@ -79,7 +80,10 @@ exports.createStockAdjustment = async (req, res) => {
       });
     }
 
-    const item = await InventoryItem.findById(inventoryItem);
+    const item = await InventoryItem.findOne({
+      _id: inventoryItem,
+      storeId: req.storeId,
+    });
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -124,6 +128,7 @@ exports.createStockAdjustment = async (req, res) => {
       newStock,
       notes,
       performedBy: req.user.id,
+      storeId: req.storeId,
     });
 
     item.currentStock = newStock;
@@ -153,6 +158,7 @@ exports.getAdjustmentsByItem = async (req, res) => {
   try {
     const adjustments = await StockAdjustment.find({
       inventoryItem: req.params.itemId,
+      storeId: req.storeId,
     })
       .populate("performedBy", "fullname")
       .sort({ createdAt: -1 });

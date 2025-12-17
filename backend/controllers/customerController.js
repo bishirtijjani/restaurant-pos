@@ -8,7 +8,9 @@ const mongoose = require("mongoose");
 // Fetch all customers
 const getAllCustomers = async (req, res) => {
   try {
-    const customers = await Customer.find().sort({ createdAt: -1 });
+    const customers = await Customer.find({ storeId: req.storeId }).sort({
+      createdAt: -1,
+    });
     res.status(200).json({ success: true, data: customers });
   } catch (error) {
     console.error("Error fetching customers:", error);
@@ -22,7 +24,7 @@ const getAllCustomers = async (req, res) => {
 const getCustomerById = async (req, res) => {
   const { id } = req.params;
   try {
-    const customer = await Customer.findById(id);
+    const customer = await Customer.findOne({ _id: id, storeId: req.storeId });
     if (!customer) {
       return res
         .status(404)
@@ -41,19 +43,19 @@ const getCustomerById = async (req, res) => {
 const getCustomerProfile = async (req, res) => {
   const { id } = req.params;
   try {
-    const customer = await Customer.findById(id);
+    const customer = await Customer.findOne({ _id: id, storeId: req.storeId });
     if (!customer) {
       return res
         .status(404)
         .json({ success: false, message: "Customer not found" });
     }
 
-    // Fetch related data in parallel
+    // Fetch related data in parallel (scoped to store)
     const [reservations, orders, payments] = await Promise.all([
-      Reservation.find({ customerId: id })
+      Reservation.find({ customerId: id, storeId: req.storeId })
         .sort({ reservationDate: -1, reservationTime: -1 })
         .limit(20),
-      Order.find({ "customerDetails.customerId": id })
+      Order.find({ "customerDetails.customerId": id, storeId: req.storeId })
         .sort({ createdAt: -1 })
         .limit(20),
       CustomerPayment.find({ customerId: id })
@@ -63,17 +65,22 @@ const getCustomerProfile = async (req, res) => {
     ]);
 
     // Calculate Stats
-    // Note: For production with large data, these aggregations should be optimized or cached
     const orderStats = await Order.aggregate([
-      { $match: { "customerDetails.customerId": new mongoose.Types.ObjectId(id), orderStatus: { $ne: "cancelled" } } },
+      {
+        $match: {
+          "customerDetails.customerId": new mongoose.Types.ObjectId(id),
+          storeId: new mongoose.Types.ObjectId(req.storeId),
+          orderStatus: { $ne: "cancelled" },
+        },
+      },
       {
         $group: {
           _id: null,
           totalSpent: { $sum: "$totalAmount" },
           visitCount: { $sum: 1 },
-          totalDebt: { $sum: "$balance" } // Assuming balance tracks unpaid amount on order
-        }
-      }
+          totalDebt: { $sum: "$balance" }, // Assuming balance tracks unpaid amount on order
+        },
+      },
     ]);
 
     const paymentStats = await CustomerPayment.aggregate([
@@ -81,9 +88,9 @@ const getCustomerProfile = async (req, res) => {
       {
         $group: {
           _id: null,
-          totalPaid: { $sum: "$amount" }
-        }
-      }
+          totalPaid: { $sum: "$amount" },
+        },
+      },
     ]);
 
     const stats = {
@@ -100,7 +107,8 @@ const getCustomerProfile = async (req, res) => {
       // OR simpler: Customer has a `debtLimit`.
       // Let's calculate outstanding balance as: (Total Order Amounts where paymentStatus != paid) - (Total Payments)
       // For now, let's just return what we have.
-      outstandingBalance: (orderStats[0]?.totalDebt || 0) - (paymentStats[0]?.totalPaid || 0)
+      outstandingBalance:
+        (orderStats[0]?.totalDebt || 0) - (paymentStats[0]?.totalPaid || 0),
     };
 
     res.status(200).json({
@@ -110,8 +118,8 @@ const getCustomerProfile = async (req, res) => {
         reservations,
         orders,
         payments,
-        stats
-      }
+        stats,
+      },
     });
   } catch (error) {
     console.error("Error fetching customer profile:", error);
@@ -127,19 +135,23 @@ const addCustomerNote = async (req, res) => {
   const { content } = req.body;
 
   if (!content) {
-    return res.status(400).json({ success: false, message: "Note content is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Note content is required" });
   }
 
   try {
-    const customer = await Customer.findById(id);
+    const customer = await Customer.findOne({ _id: id, storeId: req.storeId });
     if (!customer) {
-      return res.status(404).json({ success: false, message: "Customer not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Customer not found" });
     }
 
     customer.notes.push({
       content,
       createdBy: req.user.id,
-      createdAt: new Date()
+      createdAt: new Date(),
     });
 
     await customer.save();
@@ -157,13 +169,17 @@ const recordCustomerPayment = async (req, res) => {
   const { amount, paymentMethod, note } = req.body;
 
   if (!amount || amount <= 0) {
-    return res.status(400).json({ success: false, message: "Valid amount is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Valid amount is required" });
   }
 
   try {
-    const customer = await Customer.findById(id);
+    const customer = await Customer.findOne({ _id: id, storeId: req.storeId });
     if (!customer) {
-      return res.status(404).json({ success: false, message: "Customer not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Customer not found" });
     }
 
     const newPayment = new CustomerPayment({
@@ -171,7 +187,7 @@ const recordCustomerPayment = async (req, res) => {
       amount,
       paymentMethod,
       note,
-      createdBy: req.user.id
+      createdBy: req.user.id,
     });
 
     await newPayment.save();
@@ -190,7 +206,9 @@ const recordCustomerPayment = async (req, res) => {
     res.status(201).json({ success: true, data: newPayment });
   } catch (error) {
     console.error("Error recording payment:", error);
-    res.status(500).json({ success: false, message: "Failed to record payment" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to record payment" });
   }
 };
 
@@ -204,7 +222,10 @@ const createCustomer = async (req, res) => {
       .json({ success: false, message: "Fullname and phone are required" });
   }
 
-  const existingCustomer = await Customer.findOne({ phone });
+  const existingCustomer = await Customer.findOne({
+    phone,
+    storeId: req.storeId,
+  });
   if (existingCustomer) {
     return res
       .status(400)
@@ -218,6 +239,7 @@ const createCustomer = async (req, res) => {
       email,
       address,
       debtLimit,
+      storeId: req.storeId,
     });
 
     await newCustomer.save();
@@ -247,15 +269,18 @@ const updateCustomer = async (req, res) => {
   const { id } = req.params;
   const { fullname, phone, email, address, debtLimit } = req.body;
   try {
-    const oldCustomer = await Customer.findById(id); // Get existing customer details
+    const oldCustomer = await Customer.findOne({
+      _id: id,
+      storeId: req.storeId,
+    }); // Get existing customer details
     if (!oldCustomer) {
       return res
         .status(404)
         .json({ success: false, message: "Customer not found" });
     }
 
-    const updatedCustomer = await Customer.findByIdAndUpdate(
-      id,
+    const updatedCustomer = await Customer.findOneAndUpdate(
+      { _id: id, storeId: req.storeId },
       { fullname, phone, email, address, debtLimit },
       { new: true, runValidators: true }
     );
@@ -284,7 +309,10 @@ const updateCustomer = async (req, res) => {
 const deleteCustomer = async (req, res) => {
   const { id } = req.params;
   try {
-    const deletedCustomer = await Customer.findByIdAndDelete(id);
+    const deletedCustomer = await Customer.findOneAndDelete({
+      _id: id,
+      storeId: req.storeId,
+    });
     if (!deletedCustomer) {
       return res
         .status(404)

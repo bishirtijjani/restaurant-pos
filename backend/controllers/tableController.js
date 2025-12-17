@@ -10,7 +10,10 @@ const QRCode = require("qrcode");
 // NEW: Generate QR code for table
 exports.generateTableQR = async (req, res) => {
   try {
-    const table = await Table.findById(req.params.id);
+    const table = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!table) {
       return res.status(404).json({
@@ -48,7 +51,10 @@ exports.generateTableQR = async (req, res) => {
 // ENHANCED: Update table with real-time broadcast
 exports.updateTable = async (req, res) => {
   try {
-    const oldTable = await Table.findById(req.params.id);
+    const oldTable = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!oldTable) {
       return res.status(404).json({
@@ -69,11 +75,12 @@ exports.updateTable = async (req, res) => {
       styling,
     } = req.body;
 
-    // Check for duplicate table number
+    // Check for duplicate table number (within same store and floor)
     if (tableNumber && tableNumber !== oldTable.tableNumber) {
       const existingTable = await Table.findOne({
         floorId: oldTable.floorId,
         tableNumber: tableNumber.trim(),
+        storeId: req.storeId,
         _id: { $ne: req.params.id },
         isActive: true,
       });
@@ -110,8 +117,8 @@ exports.updateTable = async (req, res) => {
       updateData.lastOccupiedAt = new Date();
     }
 
-    const updatedTable = await Table.findByIdAndUpdate(
-      req.params.id,
+    const updatedTable = await Table.findOneAndUpdate(
+      { _id: req.params.id, storeId: req.storeId },
       updateData,
       { new: true, runValidators: true }
     )
@@ -159,7 +166,10 @@ exports.getTableTimeline = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    const table = await Table.findById(req.params.id);
+    const table = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
     if (!table) {
       return res.status(404).json({
         success: false,
@@ -167,9 +177,10 @@ exports.getTableTimeline = async (req, res) => {
       });
     }
 
-    // Get orders for this table
+    // Get orders for this table (scoped to store)
     const orders = await Order.find({
       table: table.tableNumber,
+      storeId: req.storeId,
       createdAt: {
         $gte: startDate
           ? new Date(startDate)
@@ -178,9 +189,10 @@ exports.getTableTimeline = async (req, res) => {
       },
     }).sort({ createdAt: -1 });
 
-    // Get reservations
+    // Get reservations (scoped to store)
     const reservations = await Reservation.find({
       tableId: table._id,
+      storeId: req.storeId,
       reservationDate: {
         $gte: startDate
           ? new Date(startDate)
@@ -220,7 +232,7 @@ exports.getTableTimeline = async (req, res) => {
 exports.getAllTables = async (req, res) => {
   try {
     const { floorId, status, isActive } = req.query;
-    const filter = {};
+    const filter = { storeId: req.storeId };
 
     if (floorId) filter.floorId = floorId;
     if (status) filter.status = status;
@@ -250,7 +262,10 @@ exports.getAllTables = async (req, res) => {
 
 exports.getTableById = async (req, res) => {
   try {
-    const table = await Table.findById(req.params.id)
+    const table = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    })
       .populate("floorId", "name")
       .populate("assignedStaff", "fullname email")
       .populate("currentOrder")
@@ -307,6 +322,7 @@ exports.createTable = async (req, res) => {
     const existingTable = await Table.findOne({
       floorId,
       tableNumber: tableNumber.trim(),
+      storeId: req.storeId,
       isActive: true,
     });
 
@@ -326,6 +342,7 @@ exports.createTable = async (req, res) => {
       notes: notes || "",
       assignedStaff: assignedStaff || null,
       status: "available",
+      storeId: req.storeId,
     });
 
     await logAction(
@@ -368,7 +385,10 @@ exports.updateTableStatus = async (req, res) => {
       });
     }
 
-    const table = await Table.findById(req.params.id);
+    const table = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!table) {
       return res.status(404).json({
@@ -432,7 +452,10 @@ exports.linkTableToOrder = async (req, res) => {
       });
     }
 
-    const table = await Table.findById(req.params.id);
+    const table = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
     if (!table) {
       return res.status(404).json({
         success: false,
@@ -440,7 +463,7 @@ exports.linkTableToOrder = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, storeId: req.storeId });
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -548,7 +571,11 @@ exports.mergeTables = async (req, res) => {
       });
     }
 
-    const tables = await Table.find({ _id: { $in: tableIds }, isActive: true });
+    const tables = await Table.find({
+      _id: { $in: tableIds },
+      storeId: req.storeId,
+      isActive: true,
+    });
 
     if (tables.length !== tableIds.length) {
       return res.status(404).json({

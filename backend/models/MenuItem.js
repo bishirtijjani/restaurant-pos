@@ -7,6 +7,12 @@ const menuItemSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
+    },
     category: {
       type: String,
       required: true,
@@ -87,7 +93,7 @@ const menuItemSchema = new mongoose.Schema(
 
 // Create index for itemCode field, making it unique but optional
 menuItemSchema.index(
-  { itemCode: 1 },
+  { storeId: 1, itemCode: 1 },
   {
     unique: true,
     sparse: true,

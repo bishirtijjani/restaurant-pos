@@ -37,6 +37,12 @@ const addOnGroupSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
+    },
     description: {
       type: String,
       default: "",

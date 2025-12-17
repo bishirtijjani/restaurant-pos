@@ -9,7 +9,7 @@ exports.getAllPurchaseOrders = async (req, res) => {
   try {
     const { status, supplier, startDate, endDate } = req.query;
 
-    let filter = {};
+    let filter = { storeId: req.storeId };
 
     if (status) filter.status = status;
     if (supplier) filter.supplier = supplier;
@@ -45,7 +45,10 @@ exports.getAllPurchaseOrders = async (req, res) => {
 // Get single purchase order
 exports.getPurchaseOrderById = async (req, res) => {
   try {
-    const order = await PurchaseOrder.findById(req.params.id)
+    const order = await PurchaseOrder.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    })
       .populate("supplier", "name phone email address")
       .populate("items.inventoryItem", "name unit sku")
       .populate("createdBy", "fullname email")
@@ -89,8 +92,11 @@ exports.createPurchaseOrder = async (req, res) => {
       });
     }
 
-    // Verify supplier exists
-    const supplierExists = await Supplier.findById(supplier).session(session);
+    // Verify supplier exists (scoped to store)
+    const supplierExists = await Supplier.findOne({
+      _id: supplier,
+      storeId: req.storeId,
+    }).session(session);
     if (!supplierExists) {
       await session.abortTransaction();
       return res.status(404).json({
@@ -104,10 +110,11 @@ exports.createPurchaseOrder = async (req, res) => {
     const processedItems = [];
 
     for (const item of items) {
-      // Validate inventory item exists
-      const inventoryItem = await InventoryItem.findById(
-        item.inventoryItem
-      ).session(session);
+      // Validate inventory item exists (scoped to store)
+      const inventoryItem = await InventoryItem.findOne({
+        _id: item.inventoryItem,
+        storeId: req.storeId,
+      }).session(session);
       if (!inventoryItem) {
         await session.abortTransaction();
         return res.status(404).json({
@@ -163,6 +170,7 @@ exports.createPurchaseOrder = async (req, res) => {
       invoiceNumber,
       createdBy: req.user.id,
       status: "draft",
+      storeId: req.storeId,
     });
 
     await purchaseOrder.save({ session });
@@ -209,7 +217,10 @@ exports.updatePurchaseOrder = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const order = await PurchaseOrder.findById(req.params.id).session(session);
+    const order = await PurchaseOrder.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -236,9 +247,10 @@ exports.updatePurchaseOrder = async (req, res) => {
       const processedItems = [];
 
       for (const item of req.body.items) {
-        const inventoryItem = await InventoryItem.findById(
-          item.inventoryItem
-        ).session(session);
+        const inventoryItem = await InventoryItem.findOne({
+          _id: item.inventoryItem,
+          storeId: req.storeId,
+        }).session(session);
         if (!inventoryItem) {
           await session.abortTransaction();
           return res.status(404).json({
@@ -332,7 +344,10 @@ exports.approvePurchaseOrder = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const order = await PurchaseOrder.findById(req.params.id).session(session);
+    const order = await PurchaseOrder.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -400,7 +415,10 @@ exports.receivePurchaseOrder = async (req, res) => {
     const { receivedItems, actualDeliveryDate, paymentStatus, amountPaid } =
       req.body;
 
-    const order = await PurchaseOrder.findById(req.params.id).session(session);
+    const order = await PurchaseOrder.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -447,10 +465,11 @@ exports.receivePurchaseOrder = async (req, res) => {
 
         orderItem.receivedQuantity = receivedQty;
 
-        // Update inventory stock
-        const inventoryItem = await InventoryItem.findById(
-          orderItem.inventoryItem
-        ).session(session);
+        // Update inventory stock (scoped to store)
+        const inventoryItem = await InventoryItem.findOne({
+          _id: orderItem.inventoryItem,
+          storeId: req.storeId,
+        }).session(session);
         if (inventoryItem) {
           inventoryItem.currentStock += receivedQty;
           inventoryItem.lastRestockDate = new Date();
@@ -522,7 +541,10 @@ exports.cancelPurchaseOrder = async (req, res) => {
       });
     }
 
-    const order = await PurchaseOrder.findById(req.params.id).session(session);
+    const order = await PurchaseOrder.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -589,7 +611,10 @@ exports.updatePaymentStatus = async (req, res) => {
   try {
     const { paymentStatus, amountPaid, paymentMethod } = req.body;
 
-    const order = await PurchaseOrder.findById(req.params.id).session(session);
+    const order = await PurchaseOrder.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();

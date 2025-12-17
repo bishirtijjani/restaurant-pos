@@ -6,9 +6,14 @@ const promoCodeSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true,
+    },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
     },
     description: {
       type: String,
@@ -95,7 +100,7 @@ const promoCodeSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-promoCodeSchema.index({ code: 1 });
+promoCodeSchema.index({ storeId: 1, code: 1 }, { unique: true });
 promoCodeSchema.index({ isActive: 1, startDate: 1, endDate: 1 });
 
 module.exports = mongoose.model("PromoCode", promoCodeSchema);

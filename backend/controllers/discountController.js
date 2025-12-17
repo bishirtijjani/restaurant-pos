@@ -21,6 +21,7 @@ const createDiscount = async (req, res) => {
 
     const discount = new Discount({
       ...discountData,
+      storeId: req.storeId,
       lastAction: {
         action: "create",
         performedBy: req.user.id,
@@ -60,7 +61,7 @@ const getAllDiscounts = async (req, res) => {
   try {
     const { active, type, isHappyHour } = req.query;
 
-    const filter = {};
+    const filter = { storeId: req.storeId };
     if (active !== undefined) filter.isActive = active === "true";
     if (type) filter.type = type;
     if (isHappyHour !== undefined) filter.isHappyHour = isHappyHour === "true";
@@ -94,7 +95,10 @@ const getAllDiscounts = async (req, res) => {
 // Get single discount
 const getDiscountById = async (req, res) => {
   try {
-    const discount = await Discount.findById(req.params.id)
+    const discount = await Discount.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    })
       .populate("applicableItems", "name price category")
       .populate("bogoConfig.applicableItems", "name price category");
 
@@ -136,7 +140,10 @@ const updateDiscount = async (req, res) => {
       });
     }
 
-    const oldDiscount = await Discount.findById(id);
+    const oldDiscount = await Discount.findOne({
+      _id: id,
+      storeId: req.storeId,
+    });
     if (!oldDiscount) {
       return res.status(404).json({
         success: false,
@@ -144,8 +151,8 @@ const updateDiscount = async (req, res) => {
       });
     }
 
-    const discount = await Discount.findByIdAndUpdate(
-      id,
+    const discount = await Discount.findOneAndUpdate(
+      { _id: id, storeId: req.storeId },
       {
         ...updateData,
         lastAction: {
@@ -187,7 +194,7 @@ const deleteDiscount = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const discount = await Discount.findById(id);
+    const discount = await Discount.findOne({ _id: id, storeId: req.storeId });
     if (!discount) {
       return res.status(404).json({
         success: false,
@@ -195,7 +202,7 @@ const deleteDiscount = async (req, res) => {
       });
     }
 
-    await Discount.findByIdAndDelete(id);
+    await Discount.findOneAndDelete({ _id: id, storeId: req.storeId });
 
     await logAction(
       req.user.id,
@@ -226,8 +233,11 @@ const getActiveDiscountsForPOS = async (req, res) => {
   try {
     const { orderType = "dine-in" } = req.query;
 
-    // Get all active discounts
-    const discounts = await Discount.find({ isActive: true })
+    // Get all active discounts (scoped to store)
+    const discounts = await Discount.find({
+      isActive: true,
+      storeId: req.storeId,
+    })
       .populate("applicableItems", "name price")
       .populate("bogoConfig.applicableItems", "name price");
 
@@ -265,7 +275,7 @@ const toggleDiscountStatus = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const discount = await Discount.findById(id);
+    const discount = await Discount.findOne({ _id: id, storeId: req.storeId });
     if (!discount) {
       return res.status(404).json({
         success: false,

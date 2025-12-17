@@ -1,13 +1,21 @@
 const User = require("../models/User");
+const Store = require("../models/Store");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 // Helper to generate tokens
 const generateTokens = (user) => {
+  // Use the global role or the first store role - mainly for initial auth
+  // The storeMiddleware will refine this per request.
+  // We prefer the 'admin' if they have it anywhere, or just 'staff'
+  const effectiveRole =
+    user.role ||
+    (user.stores && user.stores.length > 0 ? user.stores[0].role : "staff");
+
   const accessToken = jwt.sign(
     {
       id: user._id,
-      role: user.role,
+      role: effectiveRole,
       email: user.email,
       fullname: user.fullname,
     },
@@ -15,11 +23,9 @@ const generateTokens = (user) => {
     { expiresIn: "15m" }
   );
 
-  const refreshToken = jwt.sign(
-    { id: user._id },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
+  const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
 
   return { accessToken, refreshToken };
 };
@@ -53,35 +59,58 @@ const register = async (req, res) => {
       }
     }
 
-    // Check if user already exists with the same email
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User Email already registered" });
     }
 
-    // Check if this is the first user (to make them admin)
-    const userCount = await User.countDocuments({});
-    const role = userCount === 0 ? "admin" : "staff";
+    // --- SaaS Logic: Registration = New Tenant (User + Store) ---
 
-    // Create new user with appropriate role
-    const user = await User.create({
+    // 1. Create the User
+    const user = new User({
       fullname,
       email,
       password,
-      role,
       securityQuestions,
+      // Global role is deprecated but set to admin for the signup user
+      role: "admin",
     });
 
+    // 2. Create their first Store
+    const newStore = await Store.create({
+      name: `${fullname.split(" ")[0]}'s Restaurant`,
+      ownerId: user._id,
+      status: "active",
+      settings: {
+        restaurantName: `${fullname}'s Restaurant`,
+        // Inherits default settings from Schema
+      },
+    });
+
+    // 3. Link Store to User
+    user.stores = [
+      {
+        storeId: newStore._id,
+        role: "admin",
+        isDefault: true,
+        permissions: ["all"],
+        status: "active",
+      },
+    ];
+    user.lastActiveStore = newStore._id;
+
+    // 4. Save User
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user);
 
-    // Save refresh token to DB
     user.refreshTokens.push({
       token: await bcrypt.hash(refreshToken, 10),
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       ip: req.ip,
       userAgent: req.headers["user-agent"],
     });
+
     await user.save();
 
     // Send refresh token in HttpOnly cookie
@@ -89,23 +118,26 @@ const register = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    // Populate store info for response
+    await user.populate("stores.storeId", "name settings.restaurantName");
+
     res.status(201).json({
-      message:
-        userCount === 0
-          ? "Admin user created successfully"
-          : "User created successfully",
+      message: "Account and Store created successfully",
       user: {
         _id: user._id,
         fullname: user.fullname,
         email: user.email,
-        role: user.role,
+        role: "admin",
+        stores: user.stores, // Important: Sends back the new store
+        lastActiveStore: user.lastActiveStore,
       },
       token: accessToken,
     });
   } catch (error) {
+    console.error("Register Error", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -113,7 +145,12 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email, deletedAt: null });
+    // Populate stores to return to frontend
+    const user = await User.findOne({ email, deletedAt: null }).populate(
+      "stores.storeId",
+      "name settings.restaurantName settings.restaurantLogo"
+    );
+
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -123,7 +160,7 @@ const login = async (req, res) => {
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user);
 
-    // Remove old refresh tokens (optional cleanup)
+    // Remove old refresh tokens
     user.refreshTokens = user.refreshTokens.filter(
       (rt) => rt.expiresAt > Date.now()
     );
@@ -149,7 +186,11 @@ const login = async (req, res) => {
       _id: user._id,
       fullname: user.fullname,
       email: user.email,
-      role: user.role,
+      role: user.role, // Legacy global role
+      stores: user.stores, // The crucial list for the switcher
+      lastActiveStore:
+        user.lastActiveStore ||
+        (user.stores[0] ? user.stores[0].storeId : null),
     };
 
     res.json({ token: accessToken, user: userResponse });
@@ -220,7 +261,7 @@ const refreshToken = async (req, res) => {
   } catch (error) {
     console.log(error);
     if (error.name === "JsonWebTokenError") {
-        return res.status(403).json({ message: "Invalid refresh token" });
+      return res.status(403).json({ message: "Invalid refresh token" });
     }
     res.status(500).json({ message: "Internal Server Error" });
   }
@@ -229,39 +270,42 @@ const refreshToken = async (req, res) => {
 const logout = async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
-    
-    if (refreshToken) {
-        try {
-            const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
-            if (decoded && decoded.id) {
-                const user = await User.findById(decoded.id);
-                if (user) {
-                    // Find and remove the specific refresh token
-                    let tokenIndex = -1;
-                    for (let i = 0; i < user.refreshTokens.length; i++) {
-                        const isMatch = await bcrypt.compare(refreshToken, user.refreshTokens[i].token);
-                        if (isMatch) {
-                            tokenIndex = i;
-                            break;
-                        }
-                    }
 
-                    if (tokenIndex !== -1) {
-                        user.refreshTokens.splice(tokenIndex, 1);
-                        await user.save();
-                    }
-                }
+    if (refreshToken) {
+      try {
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+        if (decoded && decoded.id) {
+          const user = await User.findById(decoded.id);
+          if (user) {
+            // Find and remove the specific refresh token
+            let tokenIndex = -1;
+            for (let i = 0; i < user.refreshTokens.length; i++) {
+              const isMatch = await bcrypt.compare(
+                refreshToken,
+                user.refreshTokens[i].token
+              );
+              if (isMatch) {
+                tokenIndex = i;
+                break;
+              }
             }
-        } catch (err) {
-            // Token might be invalid or expired, just ignore and clear cookie
-            console.log("Logout token verification failed:", err.message);
+
+            if (tokenIndex !== -1) {
+              user.refreshTokens.splice(tokenIndex, 1);
+              await user.save();
+            }
+          }
         }
+      } catch (err) {
+        // Token might be invalid or expired, just ignore and clear cookie
+        console.log("Logout token verification failed:", err.message);
+      }
     }
 
     res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict"
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
     });
     res.json({ message: "Logged out successfully" });
   } catch (error) {
@@ -359,7 +403,14 @@ const verifySecurityAnswers = async (req, res) => {
 const getCurrentUser = async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findById(userId).select("-password");
+    // Populate stores
+    const user = await User.findById(userId)
+      .select("-password")
+      .populate(
+        "stores.storeId",
+        "name settings.restaurantName settings.restaurantLogo"
+      );
+
     if (!user)
       return res
         .status(404)
@@ -367,6 +418,11 @@ const getCurrentUser = async (req, res) => {
 
     // Remove hashed security answers from response
     const userResponse = user.toObject();
+
+    // Ensure we send back the useful store info (populated)
+    // The previous .toObject() keeps it populated.
+    // Explicitly ensure 'stores' is included (it is by default in Mongoose object)
+
     if (userResponse.securityQuestions) {
       userResponse.securityQuestions = userResponse.securityQuestions.map(
         (sq) => ({
@@ -378,6 +434,7 @@ const getCurrentUser = async (req, res) => {
 
     res.status(200).json({ success: true, user: userResponse });
   } catch (error) {
+    console.error("GetCurrentUser Error", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

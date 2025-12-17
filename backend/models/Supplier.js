@@ -4,7 +4,13 @@ const supplierSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     phone: { type: String, required: false },
-    email: { type: String, required: false, unique: true },
+    email: { type: String, required: false },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
+    },
     address: { type: String, required: true },
     lastAction: {
       action: {
@@ -23,5 +29,8 @@ const supplierSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Scoped uniqueness
+supplierSchema.index({ storeId: 1, email: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("Supplier", supplierSchema);

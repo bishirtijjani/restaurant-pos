@@ -30,10 +30,11 @@ const reportSchema = mongoose.Schema(
       ref: "User",
       required: true,
     },
-    branch: {
+    storeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Branch",
-      // required: true, // Uncomment when branch logic is fully enforced
+      ref: "Store",
+      required: true,
+      index: true,
     },
   },
   {

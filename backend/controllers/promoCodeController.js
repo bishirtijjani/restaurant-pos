@@ -11,8 +11,11 @@ const createPromoCode = async (req, res) => {
     // Ensure code is uppercase
     promoData.code = promoData.code.toUpperCase().trim();
 
-    // Check if code already exists
-    const existingCode = await PromoCode.findOne({ code: promoData.code });
+    // Check if code already exists (scoped to store)
+    const existingCode = await PromoCode.findOne({
+      code: promoData.code,
+      storeId: req.storeId,
+    });
     if (existingCode) {
       return res.status(400).json({
         success: false,
@@ -33,6 +36,7 @@ const createPromoCode = async (req, res) => {
 
     const promoCode = new PromoCode({
       ...promoData,
+      storeId: req.storeId,
       lastAction: {
         action: "create",
         performedBy: req.user.id,
@@ -72,7 +76,7 @@ const getAllPromoCodes = async (req, res) => {
   try {
     const { active } = req.query;
 
-    const filter = {};
+    const filter = { storeId: req.storeId };
     if (active !== undefined) filter.isActive = active === "true";
 
     const promoCodes = await PromoCode.find(filter).sort({ createdAt: -1 });
@@ -117,7 +121,10 @@ const getAllPromoCodes = async (req, res) => {
 // Get single promo code
 const getPromoCodeById = async (req, res) => {
   try {
-    const promoCode = await PromoCode.findById(req.params.id);
+    const promoCode = await PromoCode.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!promoCode) {
       return res.status(404).json({
@@ -199,9 +206,10 @@ const updatePromoCode = async (req, res) => {
     if (updateData.code) {
       updateData.code = updateData.code.toUpperCase().trim();
 
-      // Check if new code already exists (excluding current)
+      // Check if new code already exists (excluding current, scoped to store)
       const existingCode = await PromoCode.findOne({
         code: updateData.code,
+        storeId: req.storeId,
         _id: { $ne: id },
       });
       if (existingCode) {
@@ -212,7 +220,10 @@ const updatePromoCode = async (req, res) => {
       }
     }
 
-    const oldPromoCode = await PromoCode.findById(id);
+    const oldPromoCode = await PromoCode.findOne({
+      _id: id,
+      storeId: req.storeId,
+    });
     if (!oldPromoCode) {
       return res.status(404).json({
         success: false,
@@ -220,8 +231,8 @@ const updatePromoCode = async (req, res) => {
       });
     }
 
-    const promoCode = await PromoCode.findByIdAndUpdate(
-      id,
+    const promoCode = await PromoCode.findOneAndUpdate(
+      { _id: id, storeId: req.storeId },
       {
         ...updateData,
         lastAction: {
@@ -263,7 +274,10 @@ const deletePromoCode = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const promoCode = await PromoCode.findById(id);
+    const promoCode = await PromoCode.findOne({
+      _id: id,
+      storeId: req.storeId,
+    });
     if (!promoCode) {
       return res.status(404).json({
         success: false,
@@ -271,7 +285,7 @@ const deletePromoCode = async (req, res) => {
       });
     }
 
-    await PromoCode.findByIdAndDelete(id);
+    await PromoCode.findOneAndDelete({ _id: id, storeId: req.storeId });
 
     await logAction(
       req.user.id,
@@ -302,7 +316,10 @@ const togglePromoCodeStatus = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const promoCode = await PromoCode.findById(id);
+    const promoCode = await PromoCode.findOne({
+      _id: id,
+      storeId: req.storeId,
+    });
     if (!promoCode) {
       return res.status(404).json({
         success: false,

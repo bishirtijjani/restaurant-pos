@@ -1,8 +1,15 @@
 const express = require("express");
 const router = express.Router();
 
-// does not need authMiddleware
+// Public Routes
 router.use("/auth", require("./authRoutes"));
+
+// Global Middleware for Protected Routes
+const authMiddleware = require("../middleware/authMiddleware");
+const storeMiddleware = require("../middleware/storeMiddleware");
+
+router.use(authMiddleware);
+router.use(storeMiddleware);
 
 router.use("/users", require("./userRoutes"));
 router.use("/general-settings", require("./generalSettingsRoutes"));

@@ -5,7 +5,8 @@ const MenuItem = require("../models/MenuItem");
 const AddOnGroup = require("../models/AddOnGroup");
 const InventoryItem = require("../models/InventoryItem");
 const OrderModificationLog = require("../models/OrderModificationLog");
-const GeneralSettings = require("../models/GeneralSettings");
+const GeneralSettings = require("../models/GeneralSettings"); // Keeping for legacy reference, but should use Store
+const Store = require("../models/Store");
 const logAction = require("../utils/logAction");
 const { notifyKDS } = require("../utils/webSocket");
 
@@ -95,330 +96,7 @@ const recalculateOrderTotals = async (order, settings) => {
   };
 };
 
-// Modify an existing order
-exports.modifyOrder = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { orderItems, orderNote, reason, expectedVersion } = req.body;
-
-    const order = await Order.findById(orderId);
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    // Check if order can be modified
-    if (["completed", "cancelled"].includes(order.orderStatus)) {
-      return res.status(400).json({
-        success: false,
-        message: `Cannot modify ${order.orderStatus} order`,
-      });
-    }
-
-    // Optimistic locking check
-    if (expectedVersion && order.version !== expectedVersion) {
-      return res.status(409).json({
-        success: false,
-        message:
-          "Order has been modified by another user. Please refresh and try again.",
-        currentVersion: order.version,
-      });
-    }
-
-    const settings = await GeneralSettings.findOne();
-    const oldOrder = { ...order.toObject() };
-    const inventoryAdjustments = [];
-
-    // Process order items modifications
-    if (orderItems && Array.isArray(orderItems)) {
-      const newOrderItems = [];
-
-      for (const item of orderItems) {
-        // Check if this is an existing item or new item
-        const existingItem = order.orderItems.id(item._id);
-
-        if (existingItem && !existingItem.voidInfo?.isVoided) {
-          // Existing item - check for changes
-          const quantityChange = item.quantity - existingItem.quantity;
-
-          // Handle inventory for add-ons if quantity changed
-          if (quantityChange !== 0 && existingItem.addOns) {
-            for (const addOnGroup of existingItem.addOns) {
-              for (const selectedItem of addOnGroup.selectedItems) {
-                if (selectedItem.inventoryItem) {
-                  const inventoryChange =
-                    -quantityChange * (selectedItem.quantityUsed || 1);
-                  const inventoryItem = await InventoryItem.findById(
-                    selectedItem.inventoryItem
-                  );
-                  if (inventoryItem) {
-                    inventoryItem.currentStock += inventoryChange;
-                    if (inventoryItem.currentStock < 0) {
-                      return res.status(400).json({
-                        success: false,
-                        message: `Insufficient stock for add-on: ${selectedItem.name}`,
-                      });
-                    }
-                    await inventoryItem.save();
-                    inventoryAdjustments.push({
-                      inventoryItemId: inventoryItem._id,
-                      name: inventoryItem.name,
-                      quantityChange: inventoryChange,
-                    });
-                  }
-                }
-              }
-            }
-          }
-
-          // Calculate new add-ons total
-          const addOnsTotal = calculateAddOnsTotal(
-            item.addOns || existingItem.addOns
-          );
-
-          // Update existing item
-          existingItem.quantity = item.quantity;
-          existingItem.itemNote = item.itemNote || existingItem.itemNote;
-          existingItem.addOns = item.addOns || existingItem.addOns;
-          existingItem.addOnsTotal = addOnsTotal;
-          existingItem.subtotal =
-            existingItem.price * item.quantity + addOnsTotal;
-
-          newOrderItems.push(existingItem);
-        } else if (!item._id || item.isNew) {
-          // New item being added
-          const menuItem = await MenuItem.findById(item.menuItemId);
-          if (!menuItem) {
-            return res.status(404).json({
-              success: false,
-              message: `Menu item not found: ${item.menuItemId}`,
-            });
-          }
-
-          if (!menuItem.isAvailable) {
-            return res.status(400).json({
-              success: false,
-              message: `${menuItem.name} is currently unavailable`,
-            });
-          }
-
-          // Process add-ons for new item
-          let addOnsTotal = 0;
-          const processedAddOns = [];
-
-          if (item.addOns && item.addOns.length > 0) {
-            for (const addOn of item.addOns) {
-              const addOnGroup = await AddOnGroup.findById(addOn.groupId);
-              if (!addOnGroup || !addOnGroup.isActive) continue;
-
-              const selectedItems = [];
-              for (const selectedItemId of addOn.selectedItemIds || []) {
-                const addOnItem = addOnGroup.items.id(selectedItemId);
-                if (addOnItem && addOnItem.isAvailable) {
-                  selectedItems.push({
-                    itemId: addOnItem._id,
-                    name: addOnItem.name,
-                    price: addOnItem.price,
-                    inventoryItem: addOnItem.inventoryItem,
-                    quantityUsed: addOnItem.quantityUsed || 1,
-                  });
-                  addOnsTotal += addOnItem.price;
-
-                  // Deduct inventory for add-on
-                  if (addOnItem.inventoryItem) {
-                    const inventoryItem = await InventoryItem.findById(
-                      addOnItem.inventoryItem
-                    );
-                    if (inventoryItem) {
-                      const deduction =
-                        (addOnItem.quantityUsed || 1) * item.quantity;
-                      if (inventoryItem.currentStock < deduction) {
-                        return res.status(400).json({
-                          success: false,
-                          message: `Insufficient stock for add-on: ${addOnItem.name}`,
-                        });
-                      }
-                      inventoryItem.currentStock -= deduction;
-                      await inventoryItem.save();
-                      inventoryAdjustments.push({
-                        inventoryItemId: inventoryItem._id,
-                        name: inventoryItem.name,
-                        quantityChange: -deduction,
-                      });
-                    }
-                  }
-                }
-              }
-
-              if (selectedItems.length > 0) {
-                processedAddOns.push({
-                  groupId: addOnGroup._id,
-                  groupName: addOnGroup.name,
-                  selectedItems,
-                  addOnSubtotal: selectedItems.reduce(
-                    (sum, i) => sum + i.price,
-                    0
-                  ),
-                });
-              }
-            }
-          }
-
-          const newItem = {
-            menuItemId: menuItem._id,
-            name: menuItem.name,
-            price: menuItem.price,
-            quantity: item.quantity || 1,
-            itemNote: item.itemNote || "",
-            addOns: processedAddOns,
-            addOnsTotal: addOnsTotal * (item.quantity || 1),
-            subtotal:
-              menuItem.price * (item.quantity || 1) +
-              addOnsTotal * (item.quantity || 1),
-            itemStatus: "pending",
-          };
-
-          newOrderItems.push(newItem);
-        }
-      }
-
-      // Handle removed items - restore inventory
-      for (const existingItem of order.orderItems) {
-        if (existingItem.voidInfo?.isVoided) continue;
-
-        const stillExists = orderItems.some(
-          (item) =>
-            item._id && item._id.toString() === existingItem._id.toString()
-        );
-
-        if (!stillExists) {
-          // Item was removed - restore add-on inventory
-          if (existingItem.addOns) {
-            for (const addOnGroup of existingItem.addOns) {
-              for (const selectedItem of addOnGroup.selectedItems) {
-                if (selectedItem.inventoryItem) {
-                  const inventoryItem = await InventoryItem.findById(
-                    selectedItem.inventoryItem
-                  );
-                  if (inventoryItem) {
-                    const restoreAmount =
-                      (selectedItem.quantityUsed || 1) * existingItem.quantity;
-                    inventoryItem.currentStock += restoreAmount;
-                    await inventoryItem.save();
-                    inventoryAdjustments.push({
-                      inventoryItemId: inventoryItem._id,
-                      name: inventoryItem.name,
-                      quantityChange: restoreAmount,
-                    });
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      // Keep voided items
-      const voidedItems = order.orderItems.filter(
-        (item) => item.voidInfo?.isVoided
-      );
-      order.orderItems = [...newOrderItems, ...voidedItems];
-    }
-
-    // Update order note
-    if (orderNote !== undefined) {
-      order.orderNote = orderNote;
-      order.note = orderNote; // Legacy field
-    }
-
-    // Recalculate totals
-    const totals = await recalculateOrderTotals(order, settings);
-
-    order.taxBreakdown = {
-      items: totals.itemTaxes,
-      totalTax: totals.totalTax,
-      serviceCharge: totals.serviceCharge,
-      subtotal: totals.subtotal,
-    };
-    order.addOnsTotal = totals.addOnsTotal;
-    order.totalAmount = totals.total;
-
-    // Update payment status
-    if (order.amountPaid >= order.totalAmount) {
-      order.paymentStatus = "paid";
-      order.balance = 0;
-    } else if (order.amountPaid > 0) {
-      order.paymentStatus = "partial";
-      order.balance = order.totalAmount - order.amountPaid;
-    } else {
-      order.paymentStatus = "pending";
-      order.balance = order.totalAmount;
-    }
-
-    // Update modification tracking
-    order.hasModifications = true;
-    order.modificationCount = (order.modificationCount || 0) + 1;
-    order.lastModifiedAt = new Date();
-    order.lastModifiedBy = req.user.id;
-    order.version += 1;
-
-    order.lastAction = {
-      action: "modify",
-      performedBy: req.user.id,
-      createdAt: new Date(),
-      reason: reason || "Order modified",
-    };
-
-    await order.save();
-
-    // Create modification log
-    await OrderModificationLog.create({
-      orderId: order._id,
-      orderNumber: order.orderNumber,
-      modificationType: "item_modified",
-      previousState: oldOrder,
-      newState: order.toObject(),
-      reason: reason || "Order modified",
-      modifiedBy: req.user.id,
-      inventoryAdjustments,
-    });
-
-    // Log the action
-    await logAction(
-      req.user.id,
-      "Order",
-      order._id,
-      "modify",
-      oldOrder,
-      order,
-      `Modified order #${order.orderNumber}: ${reason || "Items updated"}`
-    );
-
-    // Notify KDS
-    notifyKDS("order:updated", order);
-
-    // Populate for response
-    await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
-    await order.populate("lastModifiedBy", "fullname");
-
-    res.status(200).json({
-      success: true,
-      message: "Order modified successfully",
-      data: order,
-    });
-  } catch (error) {
-    console.error("Error modifying order:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to modify order",
-      error: error.message,
-    });
-  }
-};
+// [Legacy modifyOrder method removed to enforce transaction safety and store scoping]
 
 // Add items// Modify an existing order (Optimistic Locking + Transaction)
 exports.modifyOrder = async (req, res) => {
@@ -428,7 +106,10 @@ exports.modifyOrder = async (req, res) => {
     const { orderId } = req.params;
     const { items, reason, version } = req.body;
 
-    const order = await Order.findById(orderId).session(session);
+    const order = await Order.findOne({
+      _id: orderId,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -490,7 +171,10 @@ exports.modifyOrder = async (req, res) => {
           // And restore for decrements
 
           // We need the menu item to find linked inventory
-          const menuItem = await MenuItem.findById(existingItem.menuItemId)
+          const menuItem = await MenuItem.findOne({
+            _id: existingItem.menuItemId,
+            storeId: req.storeId,
+          })
             .populate("addOnGroups")
             .session(session);
 
@@ -499,6 +183,7 @@ exports.modifyOrder = async (req, res) => {
             const linkedInventory = await InventoryItem.find({
               "linkedMenuItems.menuItemId": menuItem._id,
               isActive: true,
+              storeId: req.storeId,
             }).session(session);
 
             for (const invItem of linkedInventory) {
@@ -537,9 +222,10 @@ exports.modifyOrder = async (req, res) => {
               for (const group of existingItem.addOns) {
                 for (const addOn of group.selectedItems) {
                   if (addOn.inventoryItem) {
-                    const invItem = await InventoryItem.findById(
-                      addOn.inventoryItem
-                    ).session(session);
+                    const invItem = await InventoryItem.findOne({
+                      _id: addOn.inventoryItem,
+                      storeId: req.storeId,
+                    }).session(session);
                     if (invItem) {
                       const inventoryChange = -(
                         quantityDifference * (addOn.quantityUsed || 1)
@@ -657,6 +343,7 @@ exports.modifyOrder = async (req, res) => {
       changes: modificationDetails,
       inventoryUpdates,
       costDifference: modificationCost,
+      storeId: req.storeId,
     });
     await modLog.save({ session });
 
@@ -710,7 +397,10 @@ exports.addItemsToOrder = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(orderId).session(session);
+    const order = await Order.findOne({
+      _id: orderId,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -728,13 +418,17 @@ exports.addItemsToOrder = async (req, res) => {
       });
     }
 
-    const settings = await GeneralSettings.findOne().session(session);
+    const store = await Store.findById(req.storeId).session(session);
+    const settings = store?.settings;
     const oldOrder = { ...order.toObject() };
     const inventoryAdjustments = [];
     const addedItems = [];
 
     for (const item of items) {
-      const menuItem = await MenuItem.findById(item.menuItemId)
+      const menuItem = await MenuItem.findOne({
+        _id: item.menuItemId,
+        storeId: req.storeId,
+      })
         .populate("addOnGroups")
         .session(session);
 
@@ -760,9 +454,10 @@ exports.addItemsToOrder = async (req, res) => {
 
       if (item.addOns && item.addOns.length > 0) {
         for (const addOn of item.addOns) {
-          const addOnGroup = await AddOnGroup.findById(addOn.groupId).session(
-            session
-          );
+          const addOnGroup = await AddOnGroup.findOne({
+            _id: addOn.groupId,
+            storeId: req.storeId,
+          }).session(session);
           if (!addOnGroup || !addOnGroup.isActive) continue;
 
           // Validate required groups
@@ -816,10 +511,11 @@ exports.addItemsToOrder = async (req, res) => {
               addOnsTotal += addOnItem.price;
 
               // Deduct inventory
-              if (addOnItem.inventoryItem) {
-                const inventoryItem = await InventoryItem.findById(
-                  addOnItem.inventoryItem
-                ).session(session);
+              if (selectedItem.inventoryItem) {
+                const inventoryItem = await InventoryItem.findOne({
+                  _id: selectedItem.inventoryItem,
+                  storeId: req.storeId,
+                }).session(session);
                 if (inventoryItem) {
                   const deduction =
                     (addOnItem.quantityUsed || 1) * (item.quantity || 1);
@@ -926,7 +622,7 @@ exports.addItemsToOrder = async (req, res) => {
     }).session(session);
 
     // Notify KDS
-    notifyKDS("order:updated", order);
+    notifyKDS("order:updated", order, null, req.storeId);
 
     await session.commitTransaction();
 
@@ -966,7 +662,10 @@ exports.removeItemsFromOrder = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({
+      _id: orderId,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       return res.status(404).json({
@@ -982,7 +681,8 @@ exports.removeItemsFromOrder = async (req, res) => {
       });
     }
 
-    const settings = await GeneralSettings.findOne();
+    const store = await Store.findById(req.storeId).session(session);
+    const settings = store?.settings;
     const oldOrder = { ...order.toObject() };
     const inventoryAdjustments = [];
     const removedItems = [];
@@ -1002,9 +702,10 @@ exports.removeItemsFromOrder = async (req, res) => {
         for (const addOnGroup of removedItem.addOns) {
           for (const selectedItem of addOnGroup.selectedItems) {
             if (selectedItem.inventoryItem) {
-              const inventoryItem = await InventoryItem.findById(
-                selectedItem.inventoryItem
-              );
+              const inventoryItem = await InventoryItem.findOne({
+                _id: selectedItem.inventoryItem,
+                storeId: req.storeId,
+              }).session(session);
               if (inventoryItem) {
                 const restoreAmount =
                   (selectedItem.quantityUsed || 1) * removedItem.quantity;
@@ -1086,7 +787,7 @@ exports.removeItemsFromOrder = async (req, res) => {
     await order.save();
 
     // Create modification log
-    await OrderModificationLog.create({
+    const modLog = new OrderModificationLog({
       orderId: order._id,
       orderNumber: order.orderNumber,
       modificationType: "item_removed",
@@ -1095,13 +796,17 @@ exports.removeItemsFromOrder = async (req, res) => {
       reason: reason || `Removed ${removedItems.length} item(s)`,
       modifiedBy: req.user.id,
       inventoryAdjustments,
+      storeId: req.storeId,
     });
+    await modLog.save({ session });
 
     // Notify KDS
     notifyKDS("order:updated", order);
 
     await order.populate("servedBy", "fullname");
     await order.populate("orderItems.menuItemId", "name category");
+
+    await session.commitTransaction();
 
     res.status(200).json({
       success: true,
@@ -1111,12 +816,15 @@ exports.removeItemsFromOrder = async (req, res) => {
       inventoryRestored: inventoryAdjustments,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error removing items from order:", error);
     res.status(500).json({
       success: false,
       message: "Failed to remove items from order",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -1133,7 +841,7 @@ exports.updateItemQuantity = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, storeId: req.storeId });
 
     if (!order) {
       return res.status(404).json({
@@ -1158,7 +866,8 @@ exports.updateItemQuantity = async (req, res) => {
       });
     }
 
-    const settings = await GeneralSettings.findOne();
+    const store = await Store.findById(req.storeId);
+    const settings = store?.settings;
     const oldOrder = { ...order.toObject() };
     const inventoryAdjustments = [];
 
@@ -1170,9 +879,10 @@ exports.updateItemQuantity = async (req, res) => {
       for (const addOnGroup of orderItem.addOns) {
         for (const selectedItem of addOnGroup.selectedItems) {
           if (selectedItem.inventoryItem) {
-            const inventoryItem = await InventoryItem.findById(
-              selectedItem.inventoryItem
-            );
+            const inventoryItem = await InventoryItem.findOne({
+              _id: selectedItem.inventoryItem,
+              storeId: req.storeId,
+            });
             if (inventoryItem) {
               const inventoryChange =
                 -quantityDiff * (selectedItem.quantityUsed || 1);
@@ -1259,6 +969,7 @@ exports.updateItemQuantity = async (req, res) => {
         `Changed ${orderItem.name} quantity from ${oldQuantity} to ${quantity}`,
       modifiedBy: req.user.id,
       inventoryAdjustments,
+      storeId: req.storeId,
     });
 
     notifyKDS("order:updated", order);
@@ -1287,7 +998,7 @@ exports.updateItemNote = async (req, res) => {
     const { orderId, itemId } = req.params;
     const { itemNote } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, storeId: req.storeId });
 
     if (!order) {
       return res.status(404).json({
@@ -1331,7 +1042,9 @@ exports.updateItemNote = async (req, res) => {
       newState: { itemId, newNote: itemNote },
       reason: `Updated note for ${orderItem.name}`,
       modifiedBy: req.user.id,
+      modifiedBy: req.user.id,
       inventoryAdjustments: [],
+      storeId: req.storeId,
     });
 
     notifyKDS("order:updated", order);
@@ -1359,7 +1072,7 @@ exports.updateOrderNote = async (req, res) => {
     const { orderId } = req.params;
     const { orderNote } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, storeId: req.storeId });
 
     if (!order) {
       return res.status(404).json({
@@ -1395,7 +1108,9 @@ exports.updateOrderNote = async (req, res) => {
       newState: { orderNote },
       reason: "Updated order note",
       modifiedBy: req.user.id,
+      modifiedBy: req.user.id,
       inventoryAdjustments: [],
+      storeId: req.storeId,
     });
 
     notifyKDS("order:updated", order);
@@ -1422,7 +1137,10 @@ exports.getOrderModificationHistory = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const logs = await OrderModificationLog.find({ orderId })
+    const logs = await OrderModificationLog.find({
+      orderId,
+      storeId: req.storeId,
+    })
       .populate("modifiedBy", "fullname email")
       .sort({ createdAt: -1 });
 

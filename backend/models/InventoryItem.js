@@ -9,8 +9,13 @@ const inventoryItemSchema = new mongoose.Schema(
     },
     sku: {
       type: String,
-      unique: true,
-      sparse: true,
+      sparse: true, // Unique index moved to compound index
+    },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
     },
     category: {
       type: String,
@@ -91,6 +96,9 @@ const inventoryItemSchema = new mongoose.Schema(
 // Index for efficient queries
 inventoryItemSchema.index({ name: 1, category: 1 });
 inventoryItemSchema.index({ currentStock: 1 });
-inventoryItemSchema.index({ sku: 1 }, { unique: true, sparse: true });
+inventoryItemSchema.index(
+  { storeId: 1, sku: 1 },
+  { unique: true, sparse: true }
+);
 
 module.exports = mongoose.model("InventoryItem", inventoryItemSchema);

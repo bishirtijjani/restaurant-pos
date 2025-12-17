@@ -26,6 +26,7 @@ const createExpense = async (req, res) => {
       paymentMethod,
       invoice,
       createdBy,
+      storeId: req.storeId,
     });
     const savedExpense = await expense.save();
 
@@ -55,7 +56,9 @@ const createExpense = async (req, res) => {
 // Get all expenses
 const getAllExpenses = async (req, res) => {
   try {
-    const expenses = await Expense.find().sort({ createdAt: -1 });
+    const expenses = await Expense.find({ storeId: req.storeId }).sort({
+      createdAt: -1,
+    });
     res.status(200).json(expenses);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch expenses" });
@@ -66,7 +69,7 @@ const getAllExpenses = async (req, res) => {
 const getExpenseById = async (req, res) => {
   try {
     const { id } = req.params;
-    const expense = await Expense.findById(id);
+    const expense = await Expense.findOne({ _id: id, storeId: req.storeId });
 
     if (!expense) return res.status(404).json({ message: "Expense not found" });
 
@@ -83,14 +86,16 @@ const updateExpense = async (req, res) => {
     const updatedData = req.body;
 
     // Get the old expense data for logging
-    const oldExpense = await Expense.findById(id);
+    const oldExpense = await Expense.findOne({ _id: id, storeId: req.storeId });
     if (!oldExpense) {
       return res.status(404).json({ message: "Expense not found" });
     }
 
-    const updatedExpense = await Expense.findByIdAndUpdate(id, updatedData, {
-      new: true,
-    });
+    const updatedExpense = await Expense.findOneAndUpdate(
+      { _id: id, storeId: req.storeId },
+      updatedData,
+      { new: true }
+    );
 
     // Log the expense update
     await logAction(
@@ -114,13 +119,16 @@ const updateExpense = async (req, res) => {
 const deleteExpense = async (req, res) => {
   try {
     const { id } = req.params;
-    const expenseToDelete = await Expense.findById(id);
+    const expenseToDelete = await Expense.findOne({
+      _id: id,
+      storeId: req.storeId,
+    });
 
     if (!expenseToDelete) {
       return res.status(404).json({ message: "Expense not found" });
     }
 
-    await Expense.findByIdAndDelete(id);
+    await Expense.findOneAndDelete({ _id: id, storeId: req.storeId });
 
     // Log the expense deletion
     await logAction(

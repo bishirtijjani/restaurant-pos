@@ -8,7 +8,7 @@ exports.getAllInventoryItems = async (req, res) => {
   try {
     const { category, lowStock } = req.query;
 
-    let filter = { isActive: true };
+    let filter = { isActive: true, storeId: req.storeId };
 
     if (category) filter.category = category;
     if (lowStock === "true") {
@@ -39,7 +39,10 @@ exports.getAllInventoryItems = async (req, res) => {
 // Get single inventory item
 exports.getInventoryItemById = async (req, res) => {
   try {
-    const item = await InventoryItem.findById(req.params.id)
+    const item = await InventoryItem.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    })
       .populate("supplier", "name phone email")
       .populate("linkedMenuItems.menuItemId", "name price")
       .populate("lastAction.performedBy", "fullname");
@@ -89,13 +92,16 @@ exports.createInventoryItem = async (req, res) => {
       });
     }
 
-    // Check for duplicate SKU if provided
+    // Check for duplicate SKU if provided (scoped to store)
     if (sku) {
-      const existingItem = await InventoryItem.findOne({ sku });
+      const existingItem = await InventoryItem.findOne({
+        sku,
+        storeId: req.storeId,
+      });
       if (existingItem) {
         return res.status(400).json({
           success: false,
-          message: "An item with this SKU already exists",
+          message: "An item with this SKU already exists in this store",
         });
       }
     }
@@ -112,6 +118,7 @@ exports.createInventoryItem = async (req, res) => {
       supplier,
       notes,
       lastRestockDate: currentStock > 0 ? new Date() : null,
+      storeId: req.storeId,
     });
 
     // Log the action
@@ -147,7 +154,10 @@ exports.createInventoryItem = async (req, res) => {
 // Update inventory item
 exports.updateInventoryItem = async (req, res) => {
   try {
-    const oldItem = await InventoryItem.findById(req.params.id);
+    const oldItem = await InventoryItem.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!oldItem) {
       return res.status(404).json({
@@ -156,10 +166,11 @@ exports.updateInventoryItem = async (req, res) => {
       });
     }
 
-    // Check for SKU conflicts if updating SKU
+    // Check for SKU conflicts if updating SKU (scoped to store)
     if (req.body.sku && req.body.sku !== oldItem.sku) {
       const existingItem = await InventoryItem.findOne({
         sku: req.body.sku,
+        storeId: req.storeId,
         _id: { $ne: req.params.id },
       });
 
@@ -171,8 +182,8 @@ exports.updateInventoryItem = async (req, res) => {
       }
     }
 
-    const updatedItem = await InventoryItem.findByIdAndUpdate(
-      req.params.id,
+    const updatedItem = await InventoryItem.findOneAndUpdate(
+      { _id: req.params.id, storeId: req.storeId },
       req.body,
       {
         new: true,
@@ -211,7 +222,10 @@ exports.updateInventoryItem = async (req, res) => {
 // Delete inventory item (soft delete)
 exports.deleteInventoryItem = async (req, res) => {
   try {
-    const item = await InventoryItem.findById(req.params.id);
+    const item = await InventoryItem.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!item) {
       return res.status(404).json({
@@ -254,6 +268,7 @@ exports.getLowStockItems = async (req, res) => {
   try {
     const items = await InventoryItem.find({
       isActive: true,
+      storeId: req.storeId,
       $expr: { $lte: ["$currentStock", "$minStockLevel"] },
     })
       .populate("supplier", "name phone email")
@@ -290,9 +305,10 @@ exports.linkToMenuItem = async (req, res) => {
       });
     }
 
-    const inventoryItem = await InventoryItem.findById(inventoryItemId).session(
-      session
-    );
+    const inventoryItem = await InventoryItem.findOne({
+      _id: inventoryItemId,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!inventoryItem) {
       await session.abortTransaction();
@@ -363,9 +379,10 @@ exports.unlinkMenuItem = async (req, res) => {
   try {
     const { inventoryItemId, menuItemId } = req.params;
 
-    const inventoryItem = await InventoryItem.findById(inventoryItemId).session(
-      session
-    );
+    const inventoryItem = await InventoryItem.findOne({
+      _id: inventoryItemId,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!inventoryItem) {
       await session.abortTransaction();

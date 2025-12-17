@@ -4,7 +4,7 @@ const Order = require("../models/Order");
 const MenuItem = require("../models/MenuItem");
 const AddOnGroup = require("../models/AddOnGroup");
 const InventoryItem = require("../models/InventoryItem");
-const GeneralSettings = require("../models/GeneralSettings");
+const Store = require("../models/Store"); // Replaces GeneralSettings
 const logAction = require("../utils/logAction");
 const { notifyKDS } = require("../utils/webSocket");
 const {
@@ -14,13 +14,17 @@ const {
 } = require("../utils/discountCalculator");
 
 // Function to generate unique order numbers
-const generateOrderNumber = async (session) => {
+const generateOrderNumber = async (session, storeId) => {
   let orderNumber;
   let exists;
 
   do {
     orderNumber = Math.floor(100000 + Math.random() * 900000).toString();
-    exists = await Order.exists({ orderNumber }).session(session);
+    // Scope uniqueness check to the store (optional, but safer to be global or store-unique)
+    // For now, let's keep it global or store-scoped?
+    // Usually order numbers are per store for customers "Order #55".
+    // But this is a 6-digit ID. Let's make it store-scoped to avoid collisions in a massive SaaS.
+    exists = await Order.exists({ orderNumber, storeId }).session(session);
   } while (exists);
 
   return orderNumber;
@@ -117,6 +121,9 @@ const createOrder = async (req, res) => {
       change, // Change amount
     } = req.body.order;
 
+    // Store Context
+    const storeId = req.storeId;
+
     // VALIDATION: Dine-in requires a table
     if (orderType === "dine-in" && (!table || table === "Takeaway")) {
       await session.abortTransaction();
@@ -134,20 +141,25 @@ const createOrder = async (req, res) => {
       });
     }
 
-    const settings = await GeneralSettings.findOne().session(session);
-    if (!settings) {
+    // Fetch Store Settings instead of GeneralSettings
+    const store = await Store.findById(storeId).session(session);
+    if (!store || !store.settings) {
       await session.abortTransaction();
       return res.status(500).json({
         success: false,
-        message: "Restaurant settings not configured",
+        message: "Store settings not configured",
       });
     }
+    const settings = store.settings;
 
     const processedItems = [];
     const inventoryDeductions = [];
 
     for (const item of orderItems) {
-      const menuItem = await MenuItem.findById(item.menuItemId)
+      const menuItem = await MenuItem.findOne({
+        _id: item.menuItemId,
+        storeId,
+      })
         .populate({
           path: "addOnGroups",
           match: { isActive: true },
@@ -179,9 +191,10 @@ const createOrder = async (req, res) => {
 
       if (item.addOns && item.addOns.length > 0) {
         for (const addOn of item.addOns) {
-          const addOnGroup = await AddOnGroup.findById(addOn.groupId).session(
-            session
-          );
+          const addOnGroup = await AddOnGroup.findOne({
+            _id: addOn.groupId,
+            storeId,
+          }).session(session);
 
           if (!addOnGroup || !addOnGroup.isActive) continue;
 
@@ -278,6 +291,7 @@ const createOrder = async (req, res) => {
       const linkedInventory = await InventoryItem.find({
         "linkedMenuItems.menuItemId": menuItem._id,
         isActive: true,
+        storeId,
       }).session(session);
 
       for (const invItem of linkedInventory) {
@@ -312,9 +326,10 @@ const createOrder = async (req, res) => {
 
     // Verify and deduct inventory for add-ons and menu item ingredients
     for (const deduction of inventoryDeductions) {
-      const inventoryItem = await InventoryItem.findById(
-        deduction.inventoryItemId
-      ).session(session);
+      const inventoryItem = await InventoryItem.findOne({
+        _id: deduction.inventoryItemId,
+        storeId,
+      }).session(session);
 
       if (inventoryItem) {
         if (inventoryItem.currentStock < deduction.quantityToDeduct) {
@@ -346,6 +361,7 @@ const createOrder = async (req, res) => {
     // Check for promo code
     if (req.body.order.promoCode) {
       const promoValidation = await validatePromoCode(
+        req.storeId,
         req.body.order.promoCode,
         rawSubtotal,
         orderType || "dine-in",
@@ -378,6 +394,7 @@ const createOrder = async (req, res) => {
 
     // Calculate discounts
     const discountResult = await calculateOrderDiscounts({
+      storeId: req.storeId,
       orderItems: processedItems,
       globalDiscount: settings.globalDiscount,
       orderDiscount,
@@ -507,7 +524,9 @@ const createOrder = async (req, res) => {
     }
 
     const newOrder = new Order({
-      orderNumber: await generateOrderNumber(session),
+      orderNumber: await generateOrderNumber(session, storeId),
+      // NEW: Scoped to Store
+      storeId: storeId,
       table: table || "Takeaway",
       customerDetails: customerDetails || { name: "Walk-in" },
       orderType: orderType || "dine-in",
@@ -567,6 +586,7 @@ const createOrder = async (req, res) => {
     if (promoCodeData) {
       await incrementPromoCodeUsage(
         promoCodeData.code,
+        storeId,
         customerDetails?.customerId,
         session
       );
@@ -574,6 +594,7 @@ const createOrder = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Order",
       newOrder._id,
       "create",
@@ -590,7 +611,8 @@ const createOrder = async (req, res) => {
       .populate("orderItems.menuItemId", "name category");
 
     // Notify KDS via WebSocket
-    notifyKDS("order:created", populatedOrder);
+    // Notify KDS via WebSocket
+    notifyKDS("order:created", populatedOrder, null, req.storeId);
 
     return res.status(201).json({
       success: true,
@@ -615,7 +637,8 @@ const getAllOrders = async (req, res) => {
   try {
     const { status, orderType, startDate, endDate, paymentStatus } = req.query;
 
-    let filter = {};
+    // Store Scoped Filter
+    let filter = { storeId: req.storeId };
 
     if (status) filter.orderStatus = status;
     if (orderType) filter.orderType = orderType;
@@ -650,7 +673,11 @@ const getAllOrders = async (req, res) => {
 // Get single order by ID
 const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id)
+    // Enforce store scoping
+    const order = await Order.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    })
       .populate("orderItems.menuItemId", "name category price preparationTime")
       .populate("servedBy", "fullname")
       .populate("lastAction.performedBy", "fullname");
@@ -697,7 +724,10 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(req.params.id).session(session);
+    const order = await Order.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -753,6 +783,7 @@ const updateOrderStatus = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Order",
       order._id,
       "edit",
@@ -768,7 +799,8 @@ const updateOrderStatus = async (req, res) => {
     await order.populate("orderItems.menuItemId", "name category");
 
     // Notify KDS via WebSocket
-    notifyKDS("order:updated", order);
+    // Notify KDS via WebSocket
+    notifyKDS("order:updated", order, null, req.storeId);
 
     return res.status(200).json({
       success: true,
@@ -808,7 +840,10 @@ const updatePayment = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(req.params.id).session(session);
+    const order = await Order.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -897,7 +932,10 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!order) {
       return res.status(404).json({
@@ -986,7 +1024,10 @@ const refundOrder = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!order) {
       return res.status(404).json({

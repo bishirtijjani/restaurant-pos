@@ -6,6 +6,35 @@ const userSchema = new mongoose.Schema(
     fullname: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    // --- Multi-Store Access ---
+    stores: [
+      {
+        storeId: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
+        role: {
+          type: String,
+          enum: [
+            "admin",
+            "manager",
+            "cashier",
+            "waiter",
+            "kitchen",
+            "accountant",
+            "staff",
+          ],
+          default: "staff",
+        },
+        permissions: [String], // Granular permissions
+        isDefault: { type: Boolean, default: false },
+        status: {
+          type: String,
+          enum: ["active", "suspended"],
+          default: "active",
+        },
+      },
+    ],
+    lastActiveStore: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
+
+    // --- Legacy / Global Role (Deprecated but kept for safety) ---
     role: {
       type: String,
       enum: [
@@ -17,7 +46,7 @@ const userSchema = new mongoose.Schema(
         "accountant",
         "staff",
       ],
-      required: true,
+      // required: true, // No longer strictly required as 'stores' is the source of truth
       default: "staff",
     },
     securityQuestions: [

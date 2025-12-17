@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const auditLogSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Who performed the action
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Store",
+    required: true,
+    index: true,
+  },
   entityType: { type: String, required: true }, // e.g., "Product", "Expense", "User", "Sale"
   entityId: { type: mongoose.Schema.Types.ObjectId }, // Optional: Affected entity (if applicable)
   action: {

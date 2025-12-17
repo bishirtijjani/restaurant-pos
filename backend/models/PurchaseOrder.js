@@ -5,7 +5,12 @@ const purchaseOrderSchema = new mongoose.Schema(
     orderNumber: {
       type: String,
       required: true,
-      unique: true,
+    },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
     },
     supplier: {
       type: mongoose.Schema.Types.ObjectId,
@@ -108,6 +113,7 @@ purchaseOrderSchema.pre("save", async function (next) {
   if (this.isNew && !this.orderNumber) {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const count = await this.constructor.countDocuments({
+      storeId: this.storeId,
       createdAt: {
         $gte: new Date(new Date().setHours(0, 0, 0, 0)),
         $lt: new Date(new Date().setHours(23, 59, 59, 999)),
@@ -117,5 +123,8 @@ purchaseOrderSchema.pre("save", async function (next) {
   }
   next();
 });
+
+// Compound index for unique PO numbers within a store
+purchaseOrderSchema.index({ storeId: 1, orderNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model("PurchaseOrder", purchaseOrderSchema);

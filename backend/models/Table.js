@@ -8,6 +8,12 @@ const tableSchema = new mongoose.Schema(
       ref: "Floor",
       required: true,
     },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
+    },
     tableNumber: {
       type: String,
       required: true,

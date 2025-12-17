@@ -1,4 +1,5 @@
 const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const User = require("../models/User");
 const MenuItem = require("../models/MenuItem");
@@ -18,9 +19,9 @@ const getOverviewData = asyncHandler(async (req, res) => {
   todayEnd.setHours(23, 59, 59, 999);
 
   const matchStage = {
+    storeId: new mongoose.Types.ObjectId(req.storeId),
     createdAt: { $gte: todayStart, $lte: todayEnd },
-    status: { $ne: "cancelled" },
-    ...(branchId && { branch: branchId }),
+    orderStatus: { $ne: "cancelled" },
   };
 
   // 1. KPIs: Revenue & Orders
@@ -36,7 +37,11 @@ const getOverviewData = asyncHandler(async (req, res) => {
     },
   ]);
 
-  const stats = kpiStats[0] || { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 };
+  const stats = kpiStats[0] || {
+    totalRevenue: 0,
+    totalOrders: 0,
+    avgOrderValue: 0,
+  };
 
   // 2. Hourly Trend
   const hourlyTrend = await Order.aggregate([
@@ -95,9 +100,9 @@ const getSalesData = asyncHandler(async (req, res) => {
   const end = new Date(endDate);
 
   const matchStage = {
+    storeId: new mongoose.Types.ObjectId(req.storeId),
     createdAt: { $gte: start, $lte: end },
-    status: { $ne: "cancelled" },
-    ...(branchId && { branch: branchId }),
+    orderStatus: { $ne: "cancelled" },
   };
 
   // 1. Overview KPIs
@@ -115,7 +120,12 @@ const getSalesData = asyncHandler(async (req, res) => {
     },
   ]);
 
-  const stats = kpiStats[0] || { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, totalDiscount: 0 };
+  const stats = kpiStats[0] || {
+    totalRevenue: 0,
+    totalOrders: 0,
+    avgOrderValue: 0,
+    totalDiscount: 0,
+  };
   const netProfit = stats.totalRevenue * 0.7 - stats.totalDiscount; // Assuming 30% COGS
 
   // 2. Sales Trends (Daily)
@@ -192,9 +202,9 @@ const getMenuData = asyncHandler(async (req, res) => {
   const end = new Date(endDate);
 
   const matchStage = {
+    storeId: new mongoose.Types.ObjectId(req.storeId),
     createdAt: { $gte: start, $lte: end },
-    status: { $ne: "cancelled" },
-    ...(branchId && { branch: branchId }),
+    orderStatus: { $ne: "cancelled" },
   };
 
   // 1. Item Performance (Matrix Data)
@@ -239,7 +249,10 @@ const getMenuData = asyncHandler(async (req, res) => {
   // Calculate Averages for Matrix Quadrants
   const totalSold = itemPerformance.reduce((acc, item) => acc + item.sold, 0);
   const avgSold = totalSold / (itemPerformance.length || 1);
-  const totalProfit = itemPerformance.reduce((acc, item) => acc + item.profit, 0);
+  const totalProfit = itemPerformance.reduce(
+    (acc, item) => acc + item.profit,
+    0
+  );
   const avgProfit = totalProfit / (itemPerformance.length || 1);
 
   const matrix = itemPerformance.map((item) => ({
@@ -263,7 +276,12 @@ const getMenuData = asyncHandler(async (req, res) => {
   itemPerformance.forEach((item) => {
     const catId = item.category ? item.category.toString() : "Uncategorized";
     if (!categoryMap[catId]) {
-      categoryMap[catId] = { category: catId, revenue: 0, profit: 0, itemsSold: 0 };
+      categoryMap[catId] = {
+        category: catId,
+        revenue: 0,
+        profit: 0,
+        itemsSold: 0,
+      };
     }
     categoryMap[catId].revenue += item.revenue;
     categoryMap[catId].profit += item.profit;
@@ -273,7 +291,9 @@ const getMenuData = asyncHandler(async (req, res) => {
   const categoryPerformance = Object.values(categoryMap);
 
   // 3. Top & Under Performers
-  const sortedByProfit = [...itemPerformance].sort((a, b) => b.profit - a.profit);
+  const sortedByProfit = [...itemPerformance].sort(
+    (a, b) => b.profit - a.profit
+  );
   const topPerformers = sortedByProfit.slice(0, 5);
   const underPerformers = sortedByProfit.slice(-5).reverse();
 
@@ -294,9 +314,9 @@ const getStaffData = asyncHandler(async (req, res) => {
   const end = new Date(endDate);
 
   const matchStage = {
+    storeId: new mongoose.Types.ObjectId(req.storeId),
     createdAt: { $gte: start, $lte: end },
-    status: { $ne: "cancelled" },
-    ...(branchId && { branch: branchId }),
+    orderStatus: { $ne: "cancelled" },
   };
 
   // 1. Staff Performance
@@ -311,12 +331,19 @@ const getStaffData = asyncHandler(async (req, res) => {
         avgTime: {
           $avg: {
             $cond: [
-              { $and: [{ $ne: ["$completedAt", null] }, { $ne: ["$createdAt", null] }] },
-              { $divide: [{ $subtract: ["$completedAt", "$createdAt"] }, 60000] }, // mins
-              null
-            ]
-          }
-        }
+              {
+                $and: [
+                  { $ne: ["$completedAt", null] },
+                  { $ne: ["$createdAt", null] },
+                ],
+              },
+              {
+                $divide: [{ $subtract: ["$completedAt", "$createdAt"] }, 60000],
+              }, // mins
+              null,
+            ],
+          },
+        },
       },
     },
     {
@@ -341,7 +368,7 @@ const getStaffData = asyncHandler(async (req, res) => {
 
   // 2. Labor Cost - Not tracking wages yet, so return empty or specific error state
   // Frontend has been updated to use "Revenue per Staff" derived from performance stats
-  const laborCost = []; 
+  const laborCost = [];
 
   res.status(200).json({
     performance: staffStats,
@@ -362,9 +389,10 @@ const getCustomerData = asyncHandler(async (req, res) => {
   const topCustomers = await Order.aggregate([
     {
       $match: {
+        storeId: new mongoose.Types.ObjectId(req.storeId),
         createdAt: { $gte: start, $lte: end },
-        status: { $ne: "cancelled" },
-        "customerDetails.customerId": { $ne: null } // Only registered customers
+        orderStatus: { $ne: "cancelled" },
+        "customerDetails.customerId": { $ne: null }, // Only registered customers
       },
     },
     {
@@ -398,52 +426,56 @@ const getCustomerData = asyncHandler(async (req, res) => {
 
   const totalCustomersInRange = topCustomers.length;
   const totalRevenue = topCustomers.reduce((acc, c) => acc + c.totalSpent, 0);
-  const avgLTV = totalCustomersInRange > 0 ? totalRevenue / totalCustomersInRange : 0;
+  const avgLTV =
+    totalCustomersInRange > 0 ? totalRevenue / totalCustomersInRange : 0;
 
   // 2. New vs Returning Logic (Real)
-  // New = Created in this range AND first order is in this range? 
+  // New = Created in this range AND first order is in this range?
   // Simplified: If Customer.createdAt is in range => New. Else => Returning (if they ordered).
   let newCount = 0;
   let returningCount = 0;
 
   // We need to fetch the customer docs to check creation date
-  // Optimization: In a huge DB, do this via aggregation. For now, we iterate the top list (limited result) 
+  // Optimization: In a huge DB, do this via aggregation. For now, we iterate the top list (limited result)
   // BUT we need accurate counts for KPIs, so let's do a separate count query.
-  
+
   // Count unique customers who ordered in range
   const uniqueCustomerIds = await Order.distinct("customerDetails.customerId", {
+    storeId: req.storeId,
     createdAt: { $gte: start, $lte: end },
-    status: { $ne: "cancelled" },
-    "customerDetails.customerId": { $ne: null }
+    orderStatus: { $ne: "cancelled" },
+    "customerDetails.customerId": { $ne: null },
   });
 
   // Check how many were created in this range
   newCount = await Customer.countDocuments({
     _id: { $in: uniqueCustomerIds },
-    createdAt: { $gte: start, $lte: end }
+    storeId: req.storeId,
+    createdAt: { $gte: start, $lte: end },
   });
 
   returningCount = uniqueCustomerIds.length - newCount;
-  const repeatRate = uniqueCustomerIds.length > 0 
-    ? ((returningCount / uniqueCustomerIds.length) * 100).toFixed(1) + "%" 
-    : "0%";
+  const repeatRate =
+    uniqueCustomerIds.length > 0
+      ? ((returningCount / uniqueCustomerIds.length) * 100).toFixed(1) + "%"
+      : "0%";
 
   // 3. Simple Segmentation (Real)
   // VIP = > $500 spend (example threshold) or Top 10%
   // Regular = > 3 visits
-  const vipCount = topCustomers.filter(c => c.totalSpent > 200).length; // Threshold example
-  const regularCount = topCustomers.filter(c => c.visits > 3).length;
+  const vipCount = topCustomers.filter((c) => c.totalSpent > 200).length; // Threshold example
+  const regularCount = topCustomers.filter((c) => c.visits > 3).length;
 
   const segmentation = [
     { name: "New", value: newCount },
     { name: "Returning", value: returningCount },
     { name: "VIP (> $200)", value: vipCount },
-    { name: "Regular (> 3 visits)", value: regularCount }
+    { name: "Regular (> 3 visits)", value: regularCount },
   ];
 
   // 4. Retention (Mock for graph - hard to do real cohort in one go without heavy query)
   // Providing a flat line for now or empty
-  const retention = []; 
+  const retention = [];
 
   res.status(200).json({
     overview: {
@@ -463,13 +495,16 @@ const getCustomerData = asyncHandler(async (req, res) => {
 // @access  Private
 const getInventoryData = asyncHandler(async (req, res) => {
   const { branchId, startDate, endDate } = req.query;
-  
-  const start = startDate ? new Date(startDate) : new Date(new Date().setMonth(new Date().getMonth() - 1));
+
+  const start = startDate
+    ? new Date(startDate)
+    : new Date(new Date().setMonth(new Date().getMonth() - 1));
   const end = endDate ? new Date(endDate) : new Date();
 
   // 1. Inventory Value & Low Stock from InventoryItem model
   const inventoryItems = await InventoryItem.find({
     isActive: true,
+    storeId: req.storeId,
   }).select("name currentStock costPrice minStockLevel unit category");
 
   let totalValue = 0;
@@ -495,6 +530,7 @@ const getInventoryData = asyncHandler(async (req, res) => {
   const wasteAdjustments = await StockAdjustment.aggregate([
     {
       $match: {
+        storeId: new mongoose.Types.ObjectId(req.storeId),
         createdAt: { $gte: start, $lte: end },
         adjustmentType: { $in: ["waste", "damage", "expired", "loss"] },
       },
@@ -520,6 +556,7 @@ const getInventoryData = asyncHandler(async (req, res) => {
   const wasteTopItems = await StockAdjustment.aggregate([
     {
       $match: {
+        storeId: new mongoose.Types.ObjectId(req.storeId),
         createdAt: { $gte: start, $lte: end },
         adjustmentType: { $in: ["waste", "damage", "expired", "loss"] },
       },
@@ -558,6 +595,7 @@ const getInventoryData = asyncHandler(async (req, res) => {
   const trends = await StockAdjustment.aggregate([
     {
       $match: {
+        storeId: new mongoose.Types.ObjectId(req.storeId),
         createdAt: { $gte: start, $lte: end },
       },
     },
@@ -571,7 +609,11 @@ const getInventoryData = asyncHandler(async (req, res) => {
         },
         totalOut: {
           $sum: {
-            $cond: [{ $lt: ["$quantityChange", 0] }, { $abs: "$quantityChange" }, 0],
+            $cond: [
+              { $lt: ["$quantityChange", 0] },
+              { $abs: "$quantityChange" },
+              0,
+            ],
           },
         },
       },
@@ -583,6 +625,7 @@ const getInventoryData = asyncHandler(async (req, res) => {
   const orderStats = await Order.aggregate([
     {
       $match: {
+        storeId: new mongoose.Types.ObjectId(req.storeId),
         createdAt: { $gte: start, $lte: end },
         orderStatus: { $nin: ["cancelled"] },
       },
@@ -596,13 +639,17 @@ const getInventoryData = asyncHandler(async (req, res) => {
   ]);
 
   const totalRevenue = orderStats[0]?.totalRevenue || 0;
-  const foodCostPercentage = totalRevenue > 0 ? ((totalWaste / totalRevenue) * 100).toFixed(1) : 0;
+  const foodCostPercentage =
+    totalRevenue > 0 ? ((totalWaste / totalRevenue) * 100).toFixed(1) : 0;
 
   res.status(200).json({
     overview: {
       totalValue,
       foodCostPercentage: parseFloat(foodCostPercentage),
-      turnoverRate: inventoryItems.length > 0 ? (totalRevenue / totalValue).toFixed(1) + "x" : "0x",
+      turnoverRate:
+        inventoryItems.length > 0
+          ? (totalRevenue / totalValue).toFixed(1) + "x"
+          : "0x",
       totalWaste,
       lowStockCount: lowStock.length,
     },
@@ -611,7 +658,10 @@ const getInventoryData = asyncHandler(async (req, res) => {
       stockIn: t.totalIn,
       stockOut: t.totalOut,
     })),
-    wasteByReason: wasteByReason.length > 0 ? wasteByReason : [{ name: "No waste data", value: 0 }],
+    wasteByReason:
+      wasteByReason.length > 0
+        ? wasteByReason
+        : [{ name: "No waste data", value: 0 }],
     wasteTopItems: wasteTopItems.length > 0 ? wasteTopItems : [],
     lowStock,
   });
@@ -626,8 +676,9 @@ const getPaymentData = asyncHandler(async (req, res) => {
   const end = new Date(endDate);
 
   const matchStage = {
+    storeId: new mongoose.Types.ObjectId(req.storeId),
     createdAt: { $gte: start, $lte: end },
-    status: { $ne: "cancelled" },
+    orderStatus: { $ne: "cancelled" },
   };
 
   // 1. Payment Methods
@@ -652,6 +703,7 @@ const getPaymentData = asyncHandler(async (req, res) => {
   const refundData = await Order.aggregate([
     {
       $match: {
+        storeId: new mongoose.Types.ObjectId(req.storeId),
         createdAt: { $gte: start, $lte: end },
         "refunds.0": { $exists: true }, // Only orders with refunds
       },
@@ -659,7 +711,9 @@ const getPaymentData = asyncHandler(async (req, res) => {
     { $unwind: "$refunds" },
     {
       $project: {
-        date: { $dateToString: { format: "%Y-%m-%d", date: "$refunds.refundedAt" } },
+        date: {
+          $dateToString: { format: "%Y-%m-%d", date: "$refunds.refundedAt" },
+        },
         amount: "$refunds.amount",
         reason: "$refunds.reason",
         orderNumber: 1,
@@ -678,8 +732,12 @@ const getPaymentData = asyncHandler(async (req, res) => {
 
   const totalCollected = formattedMethods.reduce((acc, m) => acc + m.value, 0);
   const totalRefunded = refunds.reduce((acc, r) => acc + r.amount, 0);
-  const totalTransactions = formattedMethods.reduce((acc, m) => acc + m.count, 0);
-  const avgTransaction = totalTransactions > 0 ? totalCollected / totalTransactions : 0;
+  const totalTransactions = formattedMethods.reduce(
+    (acc, m) => acc + m.count,
+    0
+  );
+  const avgTransaction =
+    totalTransactions > 0 ? totalCollected / totalTransactions : 0;
 
   res.status(200).json({
     overview: {
@@ -702,8 +760,9 @@ const getAdvancedData = asyncHandler(async (req, res) => {
   const end = new Date(endDate);
 
   const matchStage = {
+    storeId: new mongoose.Types.ObjectId(req.storeId),
     createdAt: { $gte: start, $lte: end },
-    status: { $ne: "cancelled" },
+    orderStatus: { $ne: "cancelled" },
   };
 
   // 1. Sales Heatmap (Day of Week x Hour)
@@ -745,68 +804,84 @@ const getAdvancedData = asyncHandler(async (req, res) => {
     const pastStats = await Order.aggregate([
       {
         $match: {
-          createdAt: { 
+          storeId: new mongoose.Types.ObjectId(req.storeId),
+          createdAt: {
             $gte: new Date(new Date().setDate(today.getDate() - 90)), // Last 90 days
-            $lte: today 
+            $lte: today,
           },
-          status: { $ne: "cancelled" },
-          $expr: { $eq: [{ $dayOfWeek: "$createdAt" }, dayOfWeek] } // Same day of week
-        }
+          orderStatus: { $ne: "cancelled" },
+          $expr: { $eq: [{ $dayOfWeek: "$createdAt" }, dayOfWeek] }, // Same day of week
+        },
       },
       {
         $group: {
           _id: null,
-          avgTotal: { $avg: "$totalAmount" }
-        }
-      }
+          avgTotal: { $avg: "$totalAmount" },
+        },
+      },
     ]);
 
     const predicted = pastStats[0]?.avgTotal || 0;
     forecasting.push({
       date: futureDate.toISOString().split("T")[0],
       predicted: Math.round(predicted),
-      actual: null // It's future
+      actual: null, // It's future
     });
   }
 
   // 3. Rule-Based Insights Generation
   const totalRev = formattedHeatmap.reduce((acc, h) => acc + h.value, 0);
-  
+
   // Insight: Busiest Day
   if (formattedHeatmap.length > 0) {
     // Group by day
     const dayTotals = {};
-    formattedHeatmap.forEach(h => {
-        if (!dayTotals[h.day]) dayTotals[h.day] = 0;
-        dayTotals[h.day] += h.value;
+    formattedHeatmap.forEach((h) => {
+      if (!dayTotals[h.day]) dayTotals[h.day] = 0;
+      dayTotals[h.day] += h.value;
     });
-    const busiestDayIndex = Object.keys(dayTotals).reduce((a, b) => dayTotals[a] > dayTotals[b] ? a : b);
-    const days = ["Unknown", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const busiestDayIndex = Object.keys(dayTotals).reduce((a, b) =>
+      dayTotals[a] > dayTotals[b] ? a : b
+    );
+    const days = [
+      "Unknown",
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     insights.push(`Your busiest day is usually ${days[busiestDayIndex]}.`);
   }
 
   // Insight: Busiest Hour
   if (formattedHeatmap.length > 0) {
-     const hourTotals = {};
-     formattedHeatmap.forEach(h => {
-          if (!hourTotals[h.hour]) hourTotals[h.hour] = 0;
-          hourTotals[h.hour] += h.value;
-     });
-     const busiestHour = Object.keys(hourTotals).reduce((a, b) => hourTotals[a] > hourTotals[b] ? a : b);
-     insights.push(`Peak hours are around ${busiestHour}:00.`);
+    const hourTotals = {};
+    formattedHeatmap.forEach((h) => {
+      if (!hourTotals[h.hour]) hourTotals[h.hour] = 0;
+      hourTotals[h.hour] += h.value;
+    });
+    const busiestHour = Object.keys(hourTotals).reduce((a, b) =>
+      hourTotals[a] > hourTotals[b] ? a : b
+    );
+    insights.push(`Peak hours are around ${busiestHour}:00.`);
   }
 
   // Insight: Forecast Trend
   const nextDayForecast = forecasting[0];
   if (nextDayForecast && nextDayForecast.predicted > 0) {
-     insights.push(`Forecast for tomorrow: ~$${nextDayForecast.predicted.toLocaleString()} in sales.`);
+    insights.push(
+      `Forecast for tomorrow: ~$${nextDayForecast.predicted.toLocaleString()} in sales.`
+    );
   }
 
   res.status(200).json({
     heatmap: formattedHeatmap,
     forecasting,
     anomalyDetection: [], // Cleared mocks
-    insights // New field
+    insights, // New field
   });
 });
 

@@ -1,89 +1,159 @@
 const User = require("../models/User");
 const logAction = require("../utils/logAction"); // Import log function
 
-// Fetch all users
+// Fetch all users for the current store
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: users });
+    // Find users who have access to this store
+    const users = await User.find({
+      "stores.storeId": req.storeId,
+    }).sort({ createdAt: -1 });
+    
+    // Transform to show role for this specific store
+    const storeUsers = users.map(user => {
+      const storeData = user.stores.find(s => s.storeId.toString() === req.storeId.toString());
+      const userObj = user.toObject();
+      userObj.role = storeData ? storeData.role : user.role; // Fallback or override
+      return userObj;
+    });
+
+    res.status(200).json({ success: true, data: storeUsers });
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ success: false, message: "Failed to fetch users" });
   }
 };
 
-// Fetch a single user by ID
+// Fetch a single user by ID (scoped to store)
 const getUserById = async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await User.findById(id);
+    const user = await User.findOne({
+      _id: id,
+      "stores.storeId": req.storeId
+    });
+
     if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "User not found or not in this store" });
     }
-    res.status(200).json({ success: true, data: user });
+    
+    const storeData = user.stores.find(s => s.storeId.toString() === req.storeId.toString());
+    const userObj = user.toObject();
+    if (storeData) userObj.role = storeData.role;
+
+    res.status(200).json({ success: true, data: userObj });
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ success: false, message: "Failed to fetch user" });
   }
 };
 
-// Create a new user
+// Create a new user (or add existing user to store)
 const createUser = async (req, res) => {
   const { fullname, email, role, password } = req.body;
   try {
-    const newUser = new User({ fullname, email, password, role });
-    await newUser.save();
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // User exists - check if already in store
+      const inStore = user.stores.some(s => s.storeId.toString() === req.storeId.toString());
+      if (inStore) {
+        return res.status(400).json({ success: false, message: "User already exists in this store" });
+      }
+
+      // Add to store
+      user.stores.push({
+        storeId: req.storeId,
+        role: role,
+        permissions: [],
+        status: "active"
+      });
+      await user.save();
+    } else {
+      // New user
+      user = new User({
+        fullname,
+        email,
+        password,
+        // Set root role (optional, maybe 'user')
+        role: "user", 
+        stores: [{
+          storeId: req.storeId,
+          role: role, // Store specific role
+          permissions: [],
+          isDefault: true,
+          status: "active"
+        }]
+      });
+      await user.save();
+    }
 
     // Log action
     await logAction(
       req.user.id,
       "User",
-      newUser._id,
+      user._id,
       "create",
       null,
-      newUser,
-      "New user created"
+      user,
+      "User added to store",
+      null, // session
+      req.storeId
     );
 
-    res.status(201).json({ success: true, data: newUser });
+    res.status(201).json({ success: true, data: user });
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ success: false, message: "Failed to create user" });
   }
 };
 
-// Update user details
+// Update user details (store specific role)
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const { fullname, email, role, password } = req.body;
   try {
-    const oldUser = await User.findById(id);
-    if (!oldUser) {
+    const user = await User.findOne({
+      _id: id,
+      "stores.storeId": req.storeId
+    });
+
+    if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
 
-    // Update fields
-    if (fullname) oldUser.fullname = fullname;
-    if (email) oldUser.email = email;
-    if (role) oldUser.role = role;
-    if (password) oldUser.password = password;
+    const oldData = user.toObject();
 
-    const updatedUser = await oldUser.save();
+    // Update global fields if provided
+    if (fullname) user.fullname = fullname;
+    if (email) user.email = email;
+    if (password) user.password = password;
+
+    // Update store role
+    if (role) {
+      const storeIndex = user.stores.findIndex(s => s.storeId.toString() === req.storeId.toString());
+      if (storeIndex !== -1) {
+        user.stores[storeIndex].role = role;
+      }
+    }
+
+    const updatedUser = await user.save();
 
     await logAction(
       req.user.id,
       "User",
       id,
       "edit",
-      oldUser.toObject(),
+      oldData,
       updatedUser.toObject(),
-      "User details updated"
+      "User details updated",
+      null,
+      req.storeId
     );
-    console.log(updatedUser);
 
     res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
@@ -91,15 +161,31 @@ const updateUser = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to update user" });
   }
 };
-// Delete a user
+
+// Delete a user (Remove from store)
 const deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
-    const deletedUser = await User.findByIdAndDelete(id);
-    if (!deletedUser) {
+    const user = await User.findOne({
+      _id: id,
+      "stores.storeId": req.storeId
+    });
+
+    if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
+    }
+
+    // Remove store from user's stores array
+    user.stores = user.stores.filter(s => s.storeId.toString() !== req.storeId.toString());
+
+    if (user.stores.length === 0) {
+      // If no stores left, delete user entirely?
+      // Or keep as orphan? Let's delete to keep clean.
+      await User.findByIdAndDelete(id);
+    } else {
+      await user.save();
     }
 
     // Log action
@@ -108,14 +194,16 @@ const deleteUser = async (req, res) => {
       "User",
       id,
       "delete",
-      deletedUser,
+      user,
       null,
-      "User deleted"
+      "User removed from store",
+      null,
+      req.storeId
     );
 
     res
       .status(200)
-      .json({ success: true, message: "User deleted successfully" });
+      .json({ success: true, message: "User removed successfully" });
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ success: false, message: "Failed to delete user" });

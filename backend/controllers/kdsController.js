@@ -12,7 +12,10 @@ exports.getKDSOrders = async (req, res) => {
     let categoryFilter = {};
 
     if (stationId !== "all") {
-      station = await KDSStation.findById(stationId);
+      station = await KDSStation.findOne({
+        _id: stationId,
+        storeId: req.storeId,
+      });
       if (!station) {
         return res.status(404).json({
           success: false,
@@ -34,6 +37,7 @@ exports.getKDSOrders = async (req, res) => {
 
     const query = {
       orderStatus: { $in: orderStatuses },
+      storeId: req.storeId,
       ...categoryFilter,
     };
 
@@ -79,7 +83,7 @@ exports.updateKDSOrderStatus = async (req, res) => {
     const { orderId } = req.params;
     const { action } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, storeId: req.storeId });
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -118,7 +122,7 @@ exports.updateKDSOrderStatus = async (req, res) => {
     await order.populate("servedBy", "fullname");
 
     // Notify KDS via WebSocket
-    notifyKDS("order:statusChanged", order);
+    notifyKDS("order:statusChanged", order, null, req.storeId);
 
     res.json({
       success: true,
@@ -141,7 +145,7 @@ exports.recallOrder = async (req, res) => {
     const { orderId } = req.params;
     const { reason } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, storeId: req.storeId });
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -179,7 +183,7 @@ exports.recallOrder = async (req, res) => {
     await order.populate("servedBy", "fullname");
 
     // Notify KDS via WebSocket
-    notifyKDS("order:recalled", order);
+    notifyKDS("order:recalled", order, null, req.storeId);
 
     res.json({
       success: true,

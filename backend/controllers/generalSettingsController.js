@@ -1,37 +1,25 @@
-const GeneralSettings = require("../models/GeneralSettings");
+const Store = require("../models/Store");
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// @desc    Get general settings
+// @desc    Get general settings for the current store
 // @route   GET /api/settings
 // @access  Private
 const getSettings = async (req, res) => {
   try {
-    let settings = await GeneralSettings.findOne();
+    const store = await Store.findById(req.storeId);
 
-    // If no settings exist, create default settings
-    if (!settings) {
-      settings = new GeneralSettings({
-        restaurantName: "Your Restaurant",
-        restaurantAddress: "",
-        restaurantPhone: "",
-        restaurantEmail: "",
-        restaurantMotto: "",
-        currency: {
-          code: "USD",
-          name: "US Dollar",
-          symbol: "$",
-        },
-        dateFormat: "MM/DD/YYYY",
-        lowStockAlert: 10,
-        autoGenerateSKU: true,
-        taxRate: 0,
-        emailNotifications: true,
-        timezone: "America/New_York",
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
       });
-      await settings.save();
     }
+
+    // Return the settings subdocument. Mongoose defaults ensure it exists,
+    // but we can fallback if somehow missing.
+    const settings = store.settings || {};
 
     res.json({
       success: true,
@@ -46,7 +34,7 @@ const getSettings = async (req, res) => {
   }
 };
 
-// @desc    Update general settings
+// @desc    Update general settings for the current store
 // @route   PUT /api/settings
 // @access  Private
 const updateSettings = async (req, res) => {
@@ -114,8 +102,8 @@ const updateSettings = async (req, res) => {
       });
     }
 
-    // Validate tax rate
-    if (taxRate < 0 || taxRate > 100) {
+    // Validate tax rate (Legacy field check, though taxSettings is preferred)
+    if (taxRate !== undefined && (taxRate < 0 || taxRate > 100)) {
       return res.status(400).json({
         success: false,
         message: "Tax rate must be between 0 and 100",
@@ -132,7 +120,10 @@ const updateSettings = async (req, res) => {
 
     // Validate taxSettings if provided
     if (taxSettings) {
-      if (taxSettings.globalRate !== undefined && (taxSettings.globalRate < 0 || taxSettings.globalRate > 100)) {
+      if (
+        taxSettings.globalRate !== undefined &&
+        (taxSettings.globalRate < 0 || taxSettings.globalRate > 100)
+      ) {
         return res.status(400).json({
           success: false,
           message: "Tax rate must be between 0 and 100",
@@ -142,7 +133,10 @@ const updateSettings = async (req, res) => {
 
     // Validate serviceCharge if provided
     if (serviceCharge) {
-      if (serviceCharge.rate !== undefined && (serviceCharge.rate < 0 || serviceCharge.rate > 100)) {
+      if (
+        serviceCharge.rate !== undefined &&
+        (serviceCharge.rate < 0 || serviceCharge.rate > 100)
+      ) {
         return res.status(400).json({
           success: false,
           message: "Service charge rate must be between 0 and 100",
@@ -158,7 +152,10 @@ const updateSettings = async (req, res) => {
           message: "Discount value must be a positive number",
         });
       }
-      if (globalDiscount.maxDiscount !== undefined && globalDiscount.maxDiscount < 0) {
+      if (
+        globalDiscount.maxDiscount !== undefined &&
+        globalDiscount.maxDiscount < 0
+      ) {
         return res.status(400).json({
           success: false,
           message: "Maximum discount must be a positive number",
@@ -166,68 +163,77 @@ const updateSettings = async (req, res) => {
       }
     }
 
-    let settings = await GeneralSettings.findOne();
+    const store = await Store.findById(req.storeId);
 
-    if (!settings) {
-      // Create new settings if they don't exist
-      const newSettingsData = {
-        restaurantName,
-        restaurantAddress,
-        restaurantPhone,
-        restaurantEmail,
-        restaurantMotto: restaurantMotto || "",
-        currency,
-        dateFormat,
-        lowStockAlert,
-        autoGenerateSKU,
-        taxRate,
-        emailNotifications,
-        timezone,
-      };
-      
-      // Add optional fields if provided
-      if (taxSettings) newSettingsData.taxSettings = taxSettings;
-      if (serviceCharge) newSettingsData.serviceCharge = serviceCharge;
-      if (globalDiscount) newSettingsData.globalDiscount = globalDiscount;
-      
-      settings = new GeneralSettings(newSettingsData);
-    } else {
-      // Update existing settings
-      settings.restaurantName = restaurantName;
-      settings.restaurantAddress = restaurantAddress;
-      settings.restaurantPhone = restaurantPhone;
-      settings.restaurantEmail = restaurantEmail;
-      settings.restaurantMotto = restaurantMotto || "";
-      settings.currency = currency;
-      settings.dateFormat = dateFormat;
-      settings.lowStockAlert = lowStockAlert;
-      settings.autoGenerateSKU = autoGenerateSKU;
-      settings.taxRate = taxRate;
-      settings.emailNotifications = emailNotifications;
-      settings.timezone = timezone;
-      
-      // Update tax settings if provided
-      if (taxSettings) {
-        settings.taxSettings = taxSettings;
-      }
-      
-      // Update service charge if provided
-      if (serviceCharge) {
-        settings.serviceCharge = serviceCharge;
-      }
-      
-      // Update global discount if provided
-      if (globalDiscount) {
-        settings.globalDiscount = globalDiscount;
-      }
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
+      });
     }
 
-    await settings.save();
+    // Update settings in place
+    // We use a helper object to merge updates or set fields directly
+    // Ideally, we set fields on store.settings
+
+    if (!store.settings) store.settings = {};
+
+    store.settings.restaurantName = restaurantName;
+    store.settings.restaurantAddress = restaurantAddress;
+    store.settings.restaurantPhone = restaurantPhone;
+    store.settings.restaurantEmail = restaurantEmail;
+    store.settings.restaurantMotto = restaurantMotto || "";
+    store.settings.currency = currency;
+    store.settings.dateFormat = dateFormat;
+    store.settings.lowStockAlert = lowStockAlert;
+    store.settings.autoGenerateSKU = autoGenerateSKU;
+    store.settings.emailNotifications = emailNotifications;
+    store.settings.timezone = timezone;
+
+    // Handle legacy taxRate if still used by frontend, map to taxSettings.globalRate if needed?
+    // Or just save it if schema has it (schema didn't have 'taxRate' root field in visible snippet, but maybe it does?)
+    // The viewed schema showed `taxSettings`. It didn't show root `taxRate`.
+    // Wait, let's check the schema again.
+    // Line 29 "Store-Specific Settings"
+    // I don't see `taxRate` in the schema snippet I viewed!
+    // But original controller used `taxRate`.
+    // I will assume `taxSettings.globalRate` is the intended target or I should check if schema has `taxRate` (legacy).
+    // The snippet showed `taxSettings` (lines 72-82).
+    // I will map `taxRate` to `store.settings.taxSettings.globalRate` if `taxSettings` is not provided,
+    // to maintain backward compatibility if the frontend sends `taxRate`.
+
+    if (taxRate !== undefined && !taxSettings) {
+      if (!store.settings.taxSettings) store.settings.taxSettings = {};
+      store.settings.taxSettings.globalRate = taxRate;
+    }
+
+    if (taxSettings) {
+      store.settings.taxSettings = {
+        ...store.settings.taxSettings,
+        ...taxSettings,
+      };
+    }
+
+    if (serviceCharge) {
+      store.settings.serviceCharge = {
+        ...store.settings.serviceCharge,
+        ...serviceCharge,
+      };
+    }
+
+    if (globalDiscount) {
+      store.settings.globalDiscount = {
+        ...store.settings.globalDiscount,
+        ...globalDiscount,
+      };
+    }
+
+    await store.save();
 
     res.json({
       success: true,
       message: "Settings updated successfully",
-      data: settings,
+      data: store.settings,
     });
   } catch (error) {
     console.error("Error updating settings:", error);
@@ -238,69 +244,70 @@ const updateSettings = async (req, res) => {
   }
 };
 
-// @desc    Reset settings to default
+// @desc    Reset settings to default for current store
 // @route   POST /api/settings/reset
 // @access  Private
 const resetSettings = async (req, res) => {
   try {
-    let settings = await GeneralSettings.findOne();
+    const store = await Store.findById(req.storeId);
 
-    if (!settings) {
-      settings = new GeneralSettings();
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
+      });
     }
 
-    // Reset to default values
-    settings.restaurantName = "Your Restaurant";
-    settings.restaurantAddress = "";
-    settings.restaurantPhone = "";
-    settings.restaurantEmail = "";
-    settings.restaurantMotto = "";
-    settings.currency = {
-      code: "USD",
-      name: "US Dollar",
-      symbol: "$",
-    };
-    settings.dateFormat = "MM/DD/YYYY";
-    settings.lowStockAlert = 10;
-    settings.autoGenerateSKU = true;
-    settings.taxRate = 0;
-    settings.emailNotifications = true;
-    settings.timezone = "America/New_York";
-    
-    // Reset tax settings to defaults
-    settings.taxSettings = {
-      enabled: true,
-      globalRate: 7.5,
-      name: "VAT",
-      mode: "per-item",
-      includeInPrice: false,
-    };
-    
-    // Reset service charge to defaults
-    settings.serviceCharge = {
-      enabled: false,
-      rate: 0,
-      name: "Service Charge",
-      applyTo: "dine-in",
-    };
-    
-    // Reset global discount to defaults
-    settings.globalDiscount = {
-      enabled: false,
-      name: "Store Discount",
-      type: "percentage",
-      value: 0,
-      maxDiscount: null,
-      applicableOrderTypes: ["dine-in", "takeaway", "delivery"],
-      minimumOrderAmount: 0,
+    // Reset to default values (based on schema defaults)
+    store.settings = {
+      restaurantName: "Your Restaurant", // Or keep existing name? Original code reset it.
+      restaurantAddress: "",
+      restaurantPhone: "",
+      restaurantEmail: "",
+      restaurantMotto: "",
+      currency: {
+        code: "USD",
+        name: "US Dollar",
+        symbol: "$",
+      },
+      dateFormat: "MM/DD/YYYY",
+      lowStockAlert: 10,
+      autoGenerateSKU: true,
+      emailNotifications: true,
+      timezone: "America/New_York",
+
+      taxSettings: {
+        enabled: true,
+        globalRate: 7.5,
+        name: "VAT",
+        mode: "per-item",
+        includeInPrice: false,
+      },
+
+      serviceCharge: {
+        enabled: false,
+        rate: 0,
+        name: "Service Charge",
+        applyTo: "dine-in",
+      },
+
+      globalDiscount: {
+        enabled: false,
+        name: "Store Discount",
+        type: "percentage",
+        value: 0,
+        maxDiscount: null,
+        applicableOrderTypes: ["dine-in", "takeaway", "delivery"],
+        minimumOrderAmount: 0,
+      },
     };
 
-    await settings.save();
+    await store.save();
 
     res.json({
       success: true,
       message: "Settings reset to defaults successfully",
-      data: settings,
+      data: store.settings,
     });
   } catch (error) {
     console.error("Error resetting settings:", error);

@@ -1,16 +1,16 @@
 const Reservation = require("../models/Reservation");
 const Table = require("../models/Table");
 const Order = require("../models/Order");
-const GeneralSettings = require("../models/GeneralSettings");
+const Store = require("../models/Store"); // Replaces GeneralSettings
 const logAction = require("../utils/logAction");
 
-// Helper function to generate unique order number
-const generateOrderNumber = async () => {
+// Helper function to generate unique order number (scoped to store)
+const generateOrderNumber = async (storeId) => {
   let orderNumber;
   let exists;
   do {
     orderNumber = Math.floor(100000 + Math.random() * 900000).toString();
-    exists = await Order.exists({ orderNumber });
+    exists = await Order.exists({ orderNumber, storeId });
   } while (exists);
   return orderNumber;
 };
@@ -18,7 +18,7 @@ const generateOrderNumber = async () => {
 exports.getAllReservations = async (req, res) => {
   try {
     const { status, tableId, date } = req.query;
-    const filter = {};
+    const filter = { storeId: req.storeId };
 
     if (status) filter.status = status;
     if (tableId) filter.tableId = tableId;
@@ -52,7 +52,10 @@ exports.getAllReservations = async (req, res) => {
 
 exports.getReservationById = async (req, res) => {
   try {
-    const reservation = await Reservation.findById(req.params.id)
+    const reservation = await Reservation.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    })
       .populate("tableId", "tableNumber floorId status capacity")
       .populate("createdBy", "fullname email");
 
@@ -107,27 +110,27 @@ exports.createReservation = async (req, res) => {
 
     let table = null;
     if (tableId) {
-        table = await Table.findById(tableId);
-        if (!table) {
-          return res.status(404).json({
-            success: false,
-            message: "Table not found",
-          });
-        }
+      table = await Table.findOne({ _id: tableId, storeId: req.storeId });
+      if (!table) {
+        return res.status(404).json({
+          success: false,
+          message: "Table not found",
+        });
+      }
 
-        if (!table.isActive) {
-          return res.status(400).json({
-            success: false,
-            message: "Table is not active",
-          });
-        }
+      if (!table.isActive) {
+        return res.status(400).json({
+          success: false,
+          message: "Table is not active",
+        });
+      }
 
-        if (partySize > table.capacity) {
-          return res.status(400).json({
-            success: false,
-            message: `Party size exceeds table capacity (${table.capacity})`,
-          });
-        }
+      if (partySize > table.capacity) {
+        return res.status(400).json({
+          success: false,
+          message: `Party size exceeds table capacity (${table.capacity})`,
+        });
+      }
     }
 
     // Check for conflicts with proper time overlap detection
@@ -147,59 +150,69 @@ exports.createReservation = async (req, res) => {
     const BUFFER_MINUTES = 15;
     const newResDuration = duration || 120; // Default 2 hours if not specified
     const newResStartMinutes = timeToMinutes(reservationTime);
-    const newResEndMinutes = newResStartMinutes + newResDuration + BUFFER_MINUTES;
+    const newResEndMinutes =
+      newResStartMinutes + newResDuration + BUFFER_MINUTES;
 
     if (tableId) {
-        const existingReservations = await Reservation.find({
-          tableId,
-          reservationDate: { $gte: startOfDay, $lte: endOfDay },
-          status: { $in: ["pending", "confirmed", "seated"] },
-        });
+      const existingReservations = await Reservation.find({
+        tableId,
+        storeId: req.storeId,
+        reservationDate: { $gte: startOfDay, $lte: endOfDay },
+        status: { $in: ["pending", "confirmed", "seated"] },
+      });
 
-        for (const existing of existingReservations) {
-          const existingStartMinutes = timeToMinutes(existing.reservationTime);
-          const existingDuration = existing.duration || 120;
-          const existingEndMinutes = existingStartMinutes + existingDuration + BUFFER_MINUTES;
+      for (const existing of existingReservations) {
+        const existingStartMinutes = timeToMinutes(existing.reservationTime);
+        const existingDuration = existing.duration || 120;
+        const existingEndMinutes =
+          existingStartMinutes + existingDuration + BUFFER_MINUTES;
 
-          // Check for overlap: new reservation starts before existing ends AND new ends after existing starts
-          const hasOverlap = 
-            newResStartMinutes < existingEndMinutes && 
-            newResEndMinutes > existingStartMinutes;
+        // Check for overlap: new reservation starts before existing ends AND new ends after existing starts
+        const hasOverlap =
+          newResStartMinutes < existingEndMinutes &&
+          newResEndMinutes > existingStartMinutes;
 
-          if (hasOverlap) {
-            const formatTime = (mins) => {
-              const h = Math.floor(mins / 60);
-              const m = mins % 60;
-              return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-            };
+        if (hasOverlap) {
+          const formatTime = (mins) => {
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return `${h.toString().padStart(2, "0")}:${m
+              .toString()
+              .padStart(2, "0")}`;
+          };
+          return res.status(400).json({
+            success: false,
+            message: `Time conflict: Table is reserved from ${
+              existing.reservationTime
+            } to ${formatTime(existingEndMinutes - BUFFER_MINUTES)} for "${
+              existing.customerName
+            }"`,
+            conflictDetails: {
+              existingReservation: existing.customerName,
+              existingTime: existing.reservationTime,
+              existingDuration: existingDuration,
+            },
+          });
+        }
+      }
+
+      // Also check if the table is currently occupied
+      if (table.status === "occupied") {
+        // If reservation is for today, check if table will be free in time
+        const now = new Date();
+        const isToday = resDate.toDateString() === now.toDateString();
+        if (isToday) {
+          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+          // If trying to reserve for a time that's less than buffer time from now
+          if (newResStartMinutes < currentMinutes + BUFFER_MINUTES) {
             return res.status(400).json({
               success: false,
-              message: `Time conflict: Table is reserved from ${existing.reservationTime} to ${formatTime(existingEndMinutes - BUFFER_MINUTES)} for "${existing.customerName}"`,
-              conflictDetails: {
-                existingReservation: existing.customerName,
-                existingTime: existing.reservationTime,
-                existingDuration: existingDuration,
-              },
+              message:
+                "Table is currently occupied. Please select a later time or different table.",
             });
           }
         }
-
-        // Also check if the table is currently occupied
-        if (table.status === "occupied") {
-          // If reservation is for today, check if table will be free in time
-          const now = new Date();
-          const isToday = resDate.toDateString() === now.toDateString();
-          if (isToday) {
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
-            // If trying to reserve for a time that's less than buffer time from now
-            if (newResStartMinutes < currentMinutes + BUFFER_MINUTES) {
-              return res.status(400).json({
-                success: false,
-                message: "Table is currently occupied. Please select a later time or different table.",
-              });
-            }
-          }
-        }
+      }
     }
 
     const reservation = await Reservation.create({
@@ -214,6 +227,7 @@ exports.createReservation = async (req, res) => {
       notes: notes || "",
       createdBy: req.user.id,
       status: "pending",
+      storeId: req.storeId,
     });
 
     await logAction(
@@ -223,7 +237,9 @@ exports.createReservation = async (req, res) => {
       "create",
       null,
       reservation,
-      `Created reservation for ${customerName}${table ? ` at table ${table.tableNumber}` : ''}`
+      `Created reservation for ${customerName}${
+        table ? ` at table ${table.tableNumber}` : ""
+      }`
     );
 
     const populatedReservation = await Reservation.findById(reservation._id)
@@ -247,7 +263,10 @@ exports.createReservation = async (req, res) => {
 
 exports.updateReservation = async (req, res) => {
   try {
-    const oldReservation = await Reservation.findById(req.params.id);
+    const oldReservation = await Reservation.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!oldReservation) {
       return res.status(404).json({
@@ -281,8 +300,8 @@ exports.updateReservation = async (req, res) => {
     if (duration !== undefined) updateData.duration = duration;
     if (notes !== undefined) updateData.notes = notes;
 
-    const updatedReservation = await Reservation.findByIdAndUpdate(
-      req.params.id,
+    const updatedReservation = await Reservation.findOneAndUpdate(
+      { _id: req.params.id, storeId: req.storeId },
       updateData,
       { new: true, runValidators: true }
     )
@@ -326,7 +345,10 @@ exports.updateReservationStatus = async (req, res) => {
       });
     }
 
-    const reservation = await Reservation.findById(req.params.id);
+    const reservation = await Reservation.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!reservation) {
       return res.status(404).json({
@@ -339,7 +361,10 @@ exports.updateReservationStatus = async (req, res) => {
     reservation.status = status;
 
     if (status === "seated") {
-      const table = await Table.findById(reservation.tableId);
+      const table = await Table.findOne({
+        _id: reservation.tableId,
+        storeId: req.storeId,
+      });
       if (table) {
         table.status = "occupied";
         await table.save();
@@ -379,7 +404,10 @@ exports.updateReservationStatus = async (req, res) => {
 
 exports.deleteReservation = async (req, res) => {
   try {
-    const reservation = await Reservation.findById(req.params.id);
+    const reservation = await Reservation.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!reservation) {
       return res.status(404).json({
@@ -388,7 +416,10 @@ exports.deleteReservation = async (req, res) => {
       });
     }
 
-    await Reservation.findByIdAndDelete(req.params.id);
+    await Reservation.findOneAndDelete({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     await logAction(
       req.user.id,
@@ -417,7 +448,10 @@ exports.deleteReservation = async (req, res) => {
 // NEW: Check-in reservation (creates order and updates table)
 exports.checkInReservation = async (req, res) => {
   try {
-    const reservation = await Reservation.findById(req.params.id)
+    const reservation = await Reservation.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    })
       .populate("tableId")
       .populate("customerId");
 
@@ -435,7 +469,10 @@ exports.checkInReservation = async (req, res) => {
       });
     }
 
-    const table = await Table.findById(reservation.tableId);
+    const table = await Table.findOne({
+      _id: reservation.tableId,
+      storeId: req.storeId,
+    });
     if (!table) {
       return res.status(404).json({
         success: false,
@@ -444,20 +481,22 @@ exports.checkInReservation = async (req, res) => {
     }
 
     // Get restaurant settings for order creation
-    const settings = await GeneralSettings.findOne();
-    if (!settings) {
+    const store = await Store.findById(req.storeId);
+    if (!store || !store.settings) {
       return res.status(500).json({
         success: false,
-        message: "Restaurant settings not configured",
+        message: "Store settings not configured",
       });
     }
+    const settings = store.settings;
 
     // Generate order number
-    const orderNumber = await generateOrderNumber();
+    const orderNumber = await generateOrderNumber(req.storeId);
 
     // Create dine-in order linked to reservation
     const newOrder = await Order.create({
       orderNumber,
+      storeId: req.storeId,
       orderType: "dine-in",
       table: table.tableNumber,
       tableId: table._id,

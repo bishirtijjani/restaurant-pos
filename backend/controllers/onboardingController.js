@@ -3,11 +3,15 @@ const OnboardingProgress = require("../models/OnboardingProgress");
 // Get user's onboarding progress
 exports.getProgress = async (req, res) => {
   try {
-    let progress = await OnboardingProgress.findOne({ userId: req.user.id });
+    let progress = await OnboardingProgress.findOne({
+      userId: req.user.id,
+      storeId: req.storeId,
+    });
 
     if (!progress) {
       progress = await OnboardingProgress.create({
         userId: req.user.id,
+        storeId: req.storeId,
         completedSteps: [],
         completedTours: [],
         skippedTours: [],
@@ -26,10 +30,16 @@ exports.updateStepProgress = async (req, res) => {
   try {
     const { tourId, stepId } = req.body;
 
-    let progress = await OnboardingProgress.findOne({ userId: req.user.id });
+    let progress = await OnboardingProgress.findOne({
+      userId: req.user.id,
+      storeId: req.storeId,
+    });
 
     if (!progress) {
-      progress = await OnboardingProgress.create({ userId: req.user.id });
+      progress = await OnboardingProgress.create({
+        userId: req.user.id,
+        storeId: req.storeId,
+      });
     }
 
     // Check if step already completed
@@ -53,10 +63,16 @@ exports.completeTour = async (req, res) => {
   try {
     const { tourId } = req.body;
 
-    let progress = await OnboardingProgress.findOne({ userId: req.user.id });
+    let progress = await OnboardingProgress.findOne({
+      userId: req.user.id,
+      storeId: req.storeId,
+    });
 
     if (!progress) {
-      progress = await OnboardingProgress.create({ userId: req.user.id });
+      progress = await OnboardingProgress.create({
+        userId: req.user.id,
+        storeId: req.storeId,
+      });
     }
 
     // Check if tour already completed
@@ -84,10 +100,16 @@ exports.skipTour = async (req, res) => {
   try {
     const { tourId } = req.body;
 
-    let progress = await OnboardingProgress.findOne({ userId: req.user.id });
+    let progress = await OnboardingProgress.findOne({
+      userId: req.user.id,
+      storeId: req.storeId,
+    });
 
     if (!progress) {
-      progress = await OnboardingProgress.create({ userId: req.user.id });
+      progress = await OnboardingProgress.create({
+        userId: req.user.id,
+        storeId: req.storeId,
+      });
     }
 
     const skipped = progress.skippedTours.find((t) => t.tourId === tourId);
@@ -108,7 +130,7 @@ exports.resetProgress = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    await OnboardingProgress.findOneAndDelete({ userId });
+    await OnboardingProgress.findOneAndDelete({ userId, storeId: req.storeId });
 
     res.json({ success: true, message: "Progress reset successfully" });
   } catch (error) {

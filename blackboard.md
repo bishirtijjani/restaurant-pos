@@ -1,1 +1,0 @@
-i've noticed that some things in the order section are using alerts instead of my confirmation modal body, fix that, look for its implementation example in places like delete category/user etc to understand it

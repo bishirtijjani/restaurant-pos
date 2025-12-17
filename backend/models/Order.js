@@ -94,7 +94,13 @@ const OrderSchema = new mongoose.Schema(
     orderNumber: {
       type: String,
       required: true,
-      unique: true,
+    },
+    // Store Context
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
     },
     table: {
       type: String,
@@ -359,6 +365,7 @@ OrderSchema.pre("save", async function (next) {
   if (this.isNew) {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const count = await this.constructor.countDocuments({
+      storeId: this.storeId,
       createdAt: {
         $gte: new Date(new Date().setHours(0, 0, 0, 0)),
         $lt: new Date(new Date().setHours(23, 59, 59, 999)),
@@ -382,5 +389,9 @@ OrderSchema.pre("save", async function (next) {
   }
   next();
 });
+
+// Compound index for unique order numbers within a store
+OrderSchema.index({ storeId: 1, orderNumber: 1 }, { unique: true });
+OrderSchema.index({ storeId: 1, createdAt: -1 }); // Optimize list queries
 
 module.exports = mongoose.model("Order", OrderSchema);

@@ -29,7 +29,10 @@ exports.voidOrderItems = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(orderId).session(session);
+    const order = await Order.findOne({
+      _id: orderId,
+      storeId: req.storeId,
+    }).session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -101,9 +104,10 @@ exports.voidOrderItems = async (req, res) => {
               const quantityToRestore =
                 (selectedItem.quantityUsed || 1) * orderItem.quantity;
 
-              const inventoryItem = await InventoryItem.findById(
-                selectedItem.inventoryItem
-              ).session(session);
+              const inventoryItem = await InventoryItem.findOne({
+                _id: selectedItem.inventoryItem,
+                storeId: req.storeId,
+              }).session(session);
 
               if (inventoryItem) {
                 inventoryItem.currentStock += quantityToRestore;
@@ -186,7 +190,6 @@ exports.voidOrderItems = async (req, res) => {
     await order.save({ session });
 
     // Create void log entry
-    // Use create with array for session support, or new VoidLog + save
     const voidLog = new VoidLog({
       orderId: order._id,
       orderNumber: order.orderNumber,
@@ -196,6 +199,7 @@ exports.voidOrderItems = async (req, res) => {
       voidedBy: req.user.id,
       inventoryRestored: restoredInventoryItems.length > 0,
       restoredItems: restoredInventoryItems,
+      storeId: req.storeId,
     });
     await voidLog.save({ session });
 
@@ -245,7 +249,7 @@ exports.getVoidLogsForOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const voidLogs = await VoidLog.find({ orderId })
+    const voidLogs = await VoidLog.find({ orderId, storeId: req.storeId })
       .populate("voidedBy", "fullname email")
       .sort({ createdAt: -1 });
 
@@ -269,7 +273,7 @@ exports.getAllVoidLogs = async (req, res) => {
   try {
     const { startDate, endDate, userId } = req.query;
 
-    let filter = {};
+    let filter = { storeId: req.storeId };
 
     if (userId) filter.voidedBy = userId;
 

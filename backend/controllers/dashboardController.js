@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const MenuItem = require("../models/MenuItem");
 const Order = require("../models/Order");
 const Category = require("../models/Category");
@@ -14,7 +15,7 @@ const getDashboardStats = async (req, res) => {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     // Calculate total inventory value and menuItems near expiry
-    const menuItems = await MenuItem.find();
+    const menuItems = await MenuItem.find({ storeId: req.storeId });
     let totalInventoryValue = 0;
     let itemsNearExpiry = 0;
 
@@ -35,12 +36,14 @@ const getDashboardStats = async (req, res) => {
     // Get active orders
     const activeOrders = await Order.countDocuments({
       paymentStatus: "pending",
+      storeId: req.storeId,
     });
 
     // Get today's sales data
     const todaysSales = await Order.aggregate([
       {
         $match: {
+          storeId: new mongoose.Types.ObjectId(req.storeId),
           createdAt: {
             $gte: today,
             $lt: tomorrow,
@@ -83,6 +86,7 @@ const getDashboardStats = async (req, res) => {
     const monthlyOrders = await Order.aggregate([
       {
         $match: {
+          storeId: new mongoose.Types.ObjectId(req.storeId),
           createdAt: { $gte: sixMonthsAgo },
         },
       },
@@ -102,6 +106,9 @@ const getDashboardStats = async (req, res) => {
     // Get menuItems with low stock
     const lowStockThreshold = 30;
     const lowStockMenuItems = await MenuItem.aggregate([
+      {
+        $match: { storeId: new mongoose.Types.ObjectId(req.storeId) },
+      },
       {
         $unwind: "$batches",
       },
@@ -152,6 +159,9 @@ const getDashboardStats = async (req, res) => {
 
     const expiringMenuItems = await MenuItem.aggregate([
       {
+        $match: { storeId: new mongoose.Types.ObjectId(req.storeId) },
+      },
+      {
         $project: {
           name: 1,
           category: 1,
@@ -188,14 +198,18 @@ const getDashboardStats = async (req, res) => {
     ]);
 
     // Get recent activity
-    const recentActivity = await Order.find()
+    const recentActivity = await Order.find({ storeId: req.storeId })
       .sort({ createdAt: -1 })
       .limit(4)
       .populate("items.menuItemId");
 
     // Get category stats
-    const categoryCount = await Category.countDocuments();
-    const menuItemCount = await MenuItem.countDocuments();
+    const categoryCount = await Category.countDocuments({
+      storeId: req.storeId,
+    });
+    const menuItemCount = await MenuItem.countDocuments({
+      storeId: req.storeId,
+    });
 
     return res.json({
       success: true,

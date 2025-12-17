@@ -4,7 +4,7 @@ const KDSStation = require("../models/KDSStation");
 // Get all KDS stations
 exports.getAllStations = async (req, res) => {
   try {
-    const stations = await KDSStation.find()
+    const stations = await KDSStation.find({ storeId: req.storeId })
       .populate("assignedUsers", "fullname email")
       .sort({ createdAt: -1 });
 
@@ -24,7 +24,10 @@ exports.getAllStations = async (req, res) => {
 // Create KDS station
 exports.createStation = async (req, res) => {
   try {
-    const station = await KDSStation.create(req.body);
+    const station = await KDSStation.create({
+      ...req.body,
+      storeId: req.storeId,
+    });
 
     res.status(201).json({
       success: true,
@@ -45,10 +48,11 @@ exports.updateStation = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const station = await KDSStation.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const station = await KDSStation.findOneAndUpdate(
+      { _id: id, storeId: req.storeId },
+      req.body,
+      { new: true, runValidators: true }
+    );
 
     if (!station) {
       return res.status(404).json({
@@ -76,7 +80,10 @@ exports.deleteStation = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const station = await KDSStation.findByIdAndDelete(id);
+    const station = await KDSStation.findOneAndDelete({
+      _id: id,
+      storeId: req.storeId,
+    });
 
     if (!station) {
       return res.status(404).json({

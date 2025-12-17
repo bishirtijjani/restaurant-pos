@@ -29,11 +29,13 @@ exports.getKeyboardSettings = async (req, res) => {
   try {
     let settings = await UltraFastPOSSettings.findOne({
       userId: req.user.id,
+      storeId: req.storeId,
     });
 
     if (!settings) {
       settings = await UltraFastPOSSettings.create({
         userId: req.user.id,
+        storeId: req.storeId,
         keyboardShortcuts: DEFAULT_SHORTCUTS,
       });
     }
@@ -76,11 +78,13 @@ exports.updateKeyboardSettings = async (req, res) => {
 
     let userSettings = await UltraFastPOSSettings.findOne({
       userId: req.user.id,
+      storeId: req.storeId,
     });
 
     if (!userSettings) {
       userSettings = await UltraFastPOSSettings.create({
         userId: req.user.id,
+        storeId: req.storeId,
         keyboardShortcuts: settings,
       });
     } else {
@@ -107,11 +111,13 @@ exports.resetKeyboardSettings = async (req, res) => {
   try {
     let userSettings = await UltraFastPOSSettings.findOne({
       userId: req.user.id,
+      storeId: req.storeId,
     });
 
     if (!userSettings) {
       userSettings = await UltraFastPOSSettings.create({
         userId: req.user.id,
+        storeId: req.storeId,
         keyboardShortcuts: DEFAULT_SHORTCUTS,
       });
     } else {

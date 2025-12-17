@@ -6,7 +6,11 @@ const onboardingProgressSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
+    },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
     },
     completedSteps: [
       {
@@ -42,5 +46,8 @@ const onboardingProgressSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Compound index to ensure one progress document per user per store
+onboardingProgressSchema.index({ userId: 1, storeId: 1 }, { unique: true });
 
 module.exports = mongoose.model("OnboardingProgress", onboardingProgressSchema);

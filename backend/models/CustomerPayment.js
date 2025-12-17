@@ -7,6 +7,12 @@ const customerPaymentSchema = new mongoose.Schema(
       ref: "Customer",
       required: true,
     },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+      index: true,
+    },
     amount: {
       type: Number,
       required: true,
