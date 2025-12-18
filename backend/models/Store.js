@@ -117,6 +117,17 @@ const storeSchema = new mongoose.Schema(
         deviceName: { type: String, default: null },
       },
     },
+    // Last Action for Audit
+    lastAction: {
+      action: { type: String, default: null },
+      performedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      createdAt: { type: Date, default: null },
+      reason: { type: String, default: null },
+    },
   },
   {
     timestamps: true,

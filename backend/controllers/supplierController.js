@@ -33,6 +33,7 @@ exports.createSupplier = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "Supplier",
       newSupplier._id,
       "create",
@@ -119,6 +120,7 @@ exports.updateSupplier = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "Supplier",
       id,
       "update",
@@ -156,6 +158,7 @@ exports.deleteSupplier = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "Supplier",
       id,
       "delete",

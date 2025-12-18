@@ -97,6 +97,7 @@ exports.createFloor = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Floor",
       floor._id,
       "create",
@@ -166,6 +167,7 @@ exports.updateFloor = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Floor",
       req.params.id,
       "update",
@@ -237,8 +239,8 @@ exports.updateTablePositions = async (req, res) => {
     }
 
     const updatePromises = tables.map((table) =>
-      Table.findByIdAndUpdate(
-        table.id,
+      Table.findOneAndUpdate(
+        { _id: table.id, storeId: req.storeId },
         { position: table.position },
         { new: true }
       )
@@ -289,6 +291,7 @@ exports.deleteFloor = async (req, res) => {
 
       await logAction(
         req.user.id,
+        req.storeId,
         "Floor",
         req.params.id,
         "update",
@@ -308,6 +311,7 @@ exports.deleteFloor = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Floor",
       req.params.id,
       "delete",

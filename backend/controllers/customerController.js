@@ -195,6 +195,7 @@ const recordCustomerPayment = async (req, res) => {
     // Log action
     await logAction(
       req.user.id,
+      req.storeId,
       "Customer",
       id,
       "update",
@@ -247,6 +248,7 @@ const createCustomer = async (req, res) => {
     // Log action
     await logAction(
       req.user.id,
+      req.storeId,
       "Customer",
       newCustomer._id,
       "create",
@@ -288,6 +290,7 @@ const updateCustomer = async (req, res) => {
     // Log action
     await logAction(
       req.user.id,
+      req.storeId,
       "Customer",
       id,
       "edit",
@@ -322,6 +325,7 @@ const deleteCustomer = async (req, res) => {
     // Log action
     await logAction(
       req.user.id,
+      req.storeId,
       "Customer",
       id,
       "delete",

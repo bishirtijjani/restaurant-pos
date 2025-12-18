@@ -51,6 +51,7 @@ exports.createCategory = async (req, res) => {
     // Log the category creation
     await logAction(
       req.user.id,
+      req.storeId,
       "Category",
       savedCategory._id,
       "create",
@@ -88,6 +89,7 @@ exports.updateCategory = async (req, res) => {
     // Log the category update
     await logAction(
       req.user.id,
+      req.storeId,
       "Category",
       req.params.id,
       "edit",
@@ -133,6 +135,7 @@ exports.deleteCategory = async (req, res) => {
     // Log the category deletion with additional context about affected menuItems
     await logAction(
       req.user.id,
+      req.storeId,
       "Category",
       categoryId,
       "delete",

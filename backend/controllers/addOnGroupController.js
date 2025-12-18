@@ -137,6 +137,7 @@ exports.createAddOnGroup = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "AddOnGroup",
       addOnGroup._id,
       "create",
@@ -228,6 +229,7 @@ exports.updateAddOnGroup = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "AddOnGroup",
       req.params.id,
       "update",
@@ -280,6 +282,7 @@ exports.deleteAddOnGroup = async (req, res) => {
       // Log the action
       await logAction(
         req.user.id,
+        req.storeId,
         "AddOnGroup",
         req.params.id,
         "update",
@@ -304,6 +307,7 @@ exports.deleteAddOnGroup = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "AddOnGroup",
       req.params.id,
       "delete",

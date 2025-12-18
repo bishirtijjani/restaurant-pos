@@ -349,6 +349,7 @@ exports.modifyOrder = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Order",
       order._id,
       "modify",

@@ -100,6 +100,7 @@ const addNewMenuItem = async (req, res) => {
     // Log the creation action
     await logAction(
       req.user.id,
+      req.storeId,
       "MenuItem",
       savedMenuItem._id,
       "create",
@@ -210,6 +211,7 @@ const updateMenuItem = async (req, res) => {
     // Log the update action
     await logAction(
       req.user.id,
+      req.storeId,
       "MenuItem",
       id,
       "edit",
@@ -249,6 +251,7 @@ const deleteMenuItem = async (req, res) => {
     // Log the deletion action
     await logAction(
       req.user.id,
+      req.storeId,
       "MenuItem",
       id,
       "delete",
@@ -288,6 +291,7 @@ const toggleAvailability = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "MenuItem",
       id,
       "edit",

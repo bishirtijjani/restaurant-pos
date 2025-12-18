@@ -8,10 +8,12 @@ const getAllUsers = async (req, res) => {
     const users = await User.find({
       "stores.storeId": req.storeId,
     }).sort({ createdAt: -1 });
-    
+
     // Transform to show role for this specific store
-    const storeUsers = users.map(user => {
-      const storeData = user.stores.find(s => s.storeId.toString() === req.storeId.toString());
+    const storeUsers = users.map((user) => {
+      const storeData = user.stores.find(
+        (s) => s.storeId.toString() === req.storeId.toString()
+      );
       const userObj = user.toObject();
       userObj.role = storeData ? storeData.role : user.role; // Fallback or override
       return userObj;
@@ -30,16 +32,21 @@ const getUserById = async (req, res) => {
   try {
     const user = await User.findOne({
       _id: id,
-      "stores.storeId": req.storeId
+      "stores.storeId": req.storeId,
     });
 
     if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found or not in this store" });
+        .json({
+          success: false,
+          message: "User not found or not in this store",
+        });
     }
-    
-    const storeData = user.stores.find(s => s.storeId.toString() === req.storeId.toString());
+
+    const storeData = user.stores.find(
+      (s) => s.storeId.toString() === req.storeId.toString()
+    );
     const userObj = user.toObject();
     if (storeData) userObj.role = storeData.role;
 
@@ -58,9 +65,16 @@ const createUser = async (req, res) => {
 
     if (user) {
       // User exists - check if already in store
-      const inStore = user.stores.some(s => s.storeId.toString() === req.storeId.toString());
+      const inStore = user.stores.some(
+        (s) => s.storeId.toString() === req.storeId.toString()
+      );
       if (inStore) {
-        return res.status(400).json({ success: false, message: "User already exists in this store" });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "User already exists in this store",
+          });
       }
 
       // Add to store
@@ -68,7 +82,7 @@ const createUser = async (req, res) => {
         storeId: req.storeId,
         role: role,
         permissions: [],
-        status: "active"
+        status: "active",
       });
       await user.save();
     } else {
@@ -78,14 +92,16 @@ const createUser = async (req, res) => {
         email,
         password,
         // Set root role (optional, maybe 'user')
-        role: "user", 
-        stores: [{
-          storeId: req.storeId,
-          role: role, // Store specific role
-          permissions: [],
-          isDefault: true,
-          status: "active"
-        }]
+        role: "user",
+        stores: [
+          {
+            storeId: req.storeId,
+            role: role, // Store specific role
+            permissions: [],
+            isDefault: true,
+            status: "active",
+          },
+        ],
       });
       await user.save();
     }
@@ -93,14 +109,14 @@ const createUser = async (req, res) => {
     // Log action
     await logAction(
       req.user.id,
+      req.storeId,
       "User",
       user._id,
       "create",
       null,
       user,
       "User added to store",
-      null, // session
-      req.storeId
+      null // session
     );
 
     res.status(201).json({ success: true, data: user });
@@ -117,7 +133,7 @@ const updateUser = async (req, res) => {
   try {
     const user = await User.findOne({
       _id: id,
-      "stores.storeId": req.storeId
+      "stores.storeId": req.storeId,
     });
 
     if (!user) {
@@ -135,7 +151,9 @@ const updateUser = async (req, res) => {
 
     // Update store role
     if (role) {
-      const storeIndex = user.stores.findIndex(s => s.storeId.toString() === req.storeId.toString());
+      const storeIndex = user.stores.findIndex(
+        (s) => s.storeId.toString() === req.storeId.toString()
+      );
       if (storeIndex !== -1) {
         user.stores[storeIndex].role = role;
       }
@@ -145,14 +163,14 @@ const updateUser = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "User",
       id,
       "edit",
       oldData,
       updatedUser.toObject(),
       "User details updated",
-      null,
-      req.storeId
+      null
     );
 
     res.status(200).json({ success: true, data: updatedUser });
@@ -168,7 +186,7 @@ const deleteUser = async (req, res) => {
   try {
     const user = await User.findOne({
       _id: id,
-      "stores.storeId": req.storeId
+      "stores.storeId": req.storeId,
     });
 
     if (!user) {
@@ -178,7 +196,9 @@ const deleteUser = async (req, res) => {
     }
 
     // Remove store from user's stores array
-    user.stores = user.stores.filter(s => s.storeId.toString() !== req.storeId.toString());
+    user.stores = user.stores.filter(
+      (s) => s.storeId.toString() !== req.storeId.toString()
+    );
 
     if (user.stores.length === 0) {
       // If no stores left, delete user entirely?
@@ -191,14 +211,14 @@ const deleteUser = async (req, res) => {
     // Log action
     await logAction(
       req.user.id,
+      req.storeId,
       "User",
       id,
       "delete",
       user,
       null,
       "User removed from store",
-      null,
-      req.storeId
+      null
     );
 
     res

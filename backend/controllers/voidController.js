@@ -206,6 +206,7 @@ exports.voidOrderItems = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "Order",
       order._id,
       "void_item",

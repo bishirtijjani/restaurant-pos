@@ -233,6 +233,7 @@ exports.createReservation = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Reservation",
       reservation._id,
       "create",
@@ -311,6 +312,7 @@ exports.updateReservation = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Reservation",
       req.params.id,
       "update",
@@ -376,6 +378,7 @@ exports.updateReservationStatus = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Reservation",
       req.params.id,
       "update",
@@ -424,6 +427,7 @@ exports.deleteReservation = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Reservation",
       req.params.id,
       "delete",
@@ -549,14 +553,14 @@ exports.checkInReservation = async (req, res) => {
 
       await logAction(
         req.user.id,
+        req.storeId,
         "Reservation",
         req.params.id,
         "update",
         { status: "confirmed" },
         { status: "seated", orderId: newOrder._id },
         `Checked in reservation for ${reservation.customerName}, created order #${orderNumber}`,
-        session, // Pass session
-        req.storeId
+        session
       );
 
       await session.commitTransaction();

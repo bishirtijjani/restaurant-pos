@@ -45,6 +45,7 @@ const createStore = asyncHandler(async (req, res) => {
   // Log action
   await logAction(
     req.user.id,
+    newStore._id,
     "Store",
     newStore._id,
     "create",
@@ -164,6 +165,7 @@ const updateStore = asyncHandler(async (req, res) => {
 
   await logAction(
     req.user.id,
+    store._id,
     "Store",
     store._id,
     "update",

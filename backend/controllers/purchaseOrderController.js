@@ -178,6 +178,7 @@ exports.createPurchaseOrder = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "PurchaseOrder",
       purchaseOrder._id,
       "create",
@@ -306,6 +307,7 @@ exports.updatePurchaseOrder = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "PurchaseOrder",
       req.params.id,
       "update",
@@ -373,6 +375,7 @@ exports.approvePurchaseOrder = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "PurchaseOrder",
       req.params.id,
       "approve",
@@ -492,6 +495,7 @@ exports.receivePurchaseOrder = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "PurchaseOrder",
       req.params.id,
       "receive",
@@ -570,6 +574,7 @@ exports.cancelPurchaseOrder = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "PurchaseOrder",
       req.params.id,
       "cancel",
@@ -654,6 +659,7 @@ exports.updatePaymentStatus = async (req, res) => {
     // Log the action
     await logAction(
       req.user.id,
+      req.storeId,
       "PurchaseOrder",
       req.params.id,
       "update",

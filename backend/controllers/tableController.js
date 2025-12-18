@@ -129,6 +129,7 @@ exports.updateTable = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Table",
       req.params.id,
       "update",
@@ -347,6 +348,7 @@ exports.createTable = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Table",
       table._id,
       "create",
@@ -413,6 +415,7 @@ exports.updateTableStatus = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Table",
       req.params.id,
       "state_change",
@@ -491,6 +494,7 @@ exports.linkTableToOrder = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Table",
       req.params.id,
       "update",
@@ -523,7 +527,10 @@ exports.linkTableToOrder = async (req, res) => {
 
 exports.unlinkTableFromOrder = async (req, res) => {
   try {
-    const table = await Table.findById(req.params.id);
+    const table = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!table) {
       return res.status(404).json({
@@ -539,6 +546,7 @@ exports.unlinkTableFromOrder = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Table",
       req.params.id,
       "update",
@@ -620,6 +628,7 @@ exports.mergeTables = async (req, res) => {
 
       await logAction(
         req.user.id,
+        req.storeId,
         "Table",
         table._id,
         "merge",
@@ -652,7 +661,10 @@ exports.mergeTables = async (req, res) => {
 exports.splitTables = async (req, res) => {
   try {
     const { reason } = req.body;
-    const table = await Table.findById(req.params.id);
+    const table = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!table) {
       return res.status(404).json({
@@ -686,6 +698,7 @@ exports.splitTables = async (req, res) => {
     for (const tableId of allMergedIds) {
       await logAction(
         req.user.id,
+        req.storeId,
         "Table",
         tableId,
         "split",
@@ -725,7 +738,10 @@ exports.updateTablePosition = async (req, res) => {
       });
     }
 
-    const table = await Table.findById(req.params.id);
+    const table = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!table) {
       return res.status(404).json({
@@ -754,7 +770,10 @@ exports.updateTablePosition = async (req, res) => {
 
 exports.deleteTable = async (req, res) => {
   try {
-    const table = await Table.findById(req.params.id);
+    const table = await Table.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    });
 
     if (!table) {
       return res.status(404).json({
@@ -782,6 +801,7 @@ exports.deleteTable = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Table",
       req.params.id,
       "delete",

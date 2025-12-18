@@ -33,6 +33,7 @@ const createDiscount = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Discount",
       discount._id,
       "create",
@@ -166,6 +167,7 @@ const updateDiscount = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Discount",
       discount._id,
       "edit",
@@ -206,6 +208,7 @@ const deleteDiscount = async (req, res) => {
 
     await logAction(
       req.user.id,
+      req.storeId,
       "Discount",
       id,
       "delete",
