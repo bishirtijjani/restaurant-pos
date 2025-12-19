@@ -9,6 +9,9 @@ import {
 } from "../features/orders/ordersSlice";
 import { clearCurrentItem } from "../features/inventory/inventorySlice";
 
+// NOTE: Offline storage is automatically scoped per store via storage.js factory pattern
+// Each store has isolated IndexedDB databases, no manual cleanup needed
+
 // Routes that don't require an active store selected
 const PUBLIC_STORE_ROUTES = [
   "/app/stores",

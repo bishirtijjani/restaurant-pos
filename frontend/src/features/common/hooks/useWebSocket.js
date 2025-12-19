@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from "react";
+import { useSelector } from "react-redux";
 
 const WS_URL =
   process.env.NODE_ENV === "production"
@@ -6,6 +7,8 @@ const WS_URL =
     : "ws://localhost:5000/ws";
 
 const useWebSocket = (onMessage, options = {}) => {
+  // Get active storeId from Redux
+  const { activeStoreId } = useSelector((state) => state.commonStore);
   const {
     reconnectInterval = 3000,
     maxReconnectAttempts = 10,
@@ -29,15 +32,22 @@ const useWebSocket = (onMessage, options = {}) => {
         setIsConnected(true);
         reconnectAttemptsRef.current = 0;
 
-        // Subscribe to station if specified
-        if (stationId) {
-          ws.send(
-            JSON.stringify({
-              type: "subscribe",
-              stationId,
-            })
-          );
+        // Subscribe with storeId and stationId for proper scoping
+        const subscriptionMessage = {
+          type: "subscribe",
+        };
+
+        // Always include storeId for multi-store filtering
+        if (activeStoreId) {
+          subscriptionMessage.storeId = activeStoreId;
         }
+
+        // Include stationId if specified (for KDS)
+        if (stationId) {
+          subscriptionMessage.stationId = stationId;
+        }
+
+        ws.send(JSON.stringify(subscriptionMessage));
       };
 
       ws.onmessage = (event) => {
@@ -77,7 +87,14 @@ const useWebSocket = (onMessage, options = {}) => {
     } catch (error) {
       console.error("Error creating WebSocket:", error);
     }
-  }, [onMessage, reconnectInterval, maxReconnectAttempts, stationId, enabled]);
+  }, [
+    onMessage,
+    reconnectInterval,
+    maxReconnectAttempts,
+    stationId,
+    enabled,
+    activeStoreId,
+  ]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

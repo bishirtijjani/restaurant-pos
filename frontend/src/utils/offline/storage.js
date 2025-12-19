@@ -1,82 +1,117 @@
 // frontend/src/utils/offline/storage.js
 import localforage from "localforage";
 
-// Configure separate stores for different data types
-const stores = {
-  // Main data stores
-  menuItems: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "menuItems",
-  }),
+/**
+ * Create store-scoped offline storage instances
+ * Each store gets its own isolated IndexedDB databases
+ * @param {string} storeId - The active store ID
+ * @returns {object} Store instances scoped to the storeId
+ */
+export const createOfflineStorage = (storeId) => {
+  if (!storeId) {
+    console.warn("createOfflineStorage called without storeId");
+    return null;
+  }
 
-  categories: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "categories",
-  }),
+  return {
+    // Main data stores
+    menuItems: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `menuItems_${storeId}`,
+    }),
 
-  orders: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "orders",
-  }),
+    categories: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `categories_${storeId}`,
+    }),
 
-  customers: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "customers",
-  }),
+    orders: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `orders_${storeId}`,
+    }),
 
-  suppliers: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "suppliers",
-  }),
+    customers: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `customers_${storeId}`,
+    }),
 
-  expenses: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "expenses",
-  }),
+    suppliers: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `suppliers_${storeId}`,
+    }),
 
-  inventory: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "inventory",
-  }),
+    expenses: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `expenses_${storeId}`,
+    }),
 
-  purchaseOrders: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "purchaseOrders",
-  }),
+    inventory: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `inventory_${storeId}`,
+    }),
 
-  users: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "users",
-  }),
+    purchaseOrders: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `purchaseOrders_${storeId}`,
+    }),
 
-  // Queue stores
-  syncQueue: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "syncQueue",
-  }),
+    users: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `users_${storeId}`,
+    }),
 
-  failedQueue: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "failedQueue",
-  }),
+    // Queue stores (also scoped per store)
+    syncQueue: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `syncQueue_${storeId}`,
+    }),
 
-  // Metadata store
-  metadata: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "metadata",
-  }),
+    failedQueue: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `failedQueue_${storeId}`,
+    }),
 
-  // Settings cache
-  settings: localforage.createInstance({
-    name: "restaurant-app",
-    storeName: "settings",
-  }),
+    // Metadata store (scoped per store)
+    metadata: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `metadata_${storeId}`,
+    }),
+
+    // Settings cache (scoped per store)
+    settings: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `settings_${storeId}`,
+    }),
+  };
+};
+
+// Helper to get current storeId from localStorage
+const getActiveStoreId = () => {
+  try {
+    return localStorage.getItem("activeStoreId");
+  } catch (e) {
+    console.error("Failed to get activeStoreId:", e);
+    return null;
+  }
 };
 
 // Storage helper functions
 export const offlineStorage = {
+  // Get store-scoped storage instance
+  _getStores() {
+    const storeId = getActiveStoreId();
+    if (!storeId) {
+      console.warn("No active storeId - offline operations skipped");
+      return null;
+    }
+    return createOfflineStorage(storeId);
+  },
+
   // Generic CRUD operations
   async set(storeName, key, value) {
+    const stores = this._getStores();
+    if (!stores) return null;
+
     const store = stores[storeName];
     if (!store) throw new Error(`Store ${storeName} not found`);
 
@@ -88,6 +123,9 @@ export const offlineStorage = {
   },
 
   async get(storeName, key) {
+    const stores = this._getStores();
+    if (!stores) return null;
+
     const store = stores[storeName];
     if (!store) throw new Error(`Store ${storeName} not found`);
 
@@ -96,6 +134,9 @@ export const offlineStorage = {
   },
 
   async getAll(storeName) {
+    const stores = this._getStores();
+    if (!stores) return [];
+
     const store = stores[storeName];
     if (!store) throw new Error(`Store ${storeName} not found`);
 
@@ -107,6 +148,9 @@ export const offlineStorage = {
   },
 
   async remove(storeName, key) {
+    const stores = this._getStores();
+    if (!stores) return null;
+
     const store = stores[storeName];
     if (!store) throw new Error(`Store ${storeName} not found`);
 
@@ -114,6 +158,9 @@ export const offlineStorage = {
   },
 
   async clear(storeName) {
+    const stores = this._getStores();
+    if (!stores) return null;
+
     const store = stores[storeName];
     if (!store) throw new Error(`Store ${storeName} not found`);
 
@@ -121,6 +168,9 @@ export const offlineStorage = {
   },
 
   async keys(storeName) {
+    const stores = this._getStores();
+    if (!stores) return [];
+
     const store = stores[storeName];
     if (!store) throw new Error(`Store ${storeName} not found`);
 
@@ -129,6 +179,9 @@ export const offlineStorage = {
 
   // Bulk operations
   async bulkSet(storeName, items) {
+    const stores = this._getStores();
+    if (!stores) return [];
+
     const store = stores[storeName];
     if (!store) throw new Error(`Store ${storeName} not found`);
 
@@ -139,6 +192,9 @@ export const offlineStorage = {
   },
 
   async bulkRemove(storeName, keys) {
+    const stores = this._getStores();
+    if (!stores) return [];
+
     const store = stores[storeName];
     if (!store) throw new Error(`Store ${storeName} not found`);
 
@@ -148,15 +204,24 @@ export const offlineStorage = {
 
   // Metadata operations
   async setLastSync(storeName, timestamp = Date.now()) {
+    const stores = this._getStores();
+    if (!stores) return null;
+
     return await stores.metadata.setItem(`${storeName}_lastSync`, timestamp);
   },
 
   async getLastSync(storeName) {
+    const stores = this._getStores();
+    if (!stores) return null;
+
     return await stores.metadata.getItem(`${storeName}_lastSync`);
   },
 
   // Mark item as synced
   async markSynced(storeName, key) {
+    const stores = this._getStores();
+    if (!stores) return;
+
     const store = stores[storeName];
     const item = await store.getItem(key);
     if (item) {
@@ -168,6 +233,9 @@ export const offlineStorage = {
 
   // Get unsynced items
   async getUnsynced(storeName) {
+    const stores = this._getStores();
+    if (!stores) return [];
+
     const store = stores[storeName];
     if (!store) throw new Error(`Store ${storeName} not found`);
 
@@ -178,6 +246,17 @@ export const offlineStorage = {
       }
     });
     return unsynced;
+  },
+
+  // Clear all data for a specific store
+  async clearStoreData(storeId) {
+    const stores = createOfflineStorage(storeId);
+    if (!stores) return;
+
+    const storeNames = Object.keys(stores);
+    const clearPromises = storeNames.map((name) => stores[name].clear());
+    await Promise.all(clearPromises);
+    console.log(`Cleared all offline data for store: ${storeId}`);
   },
 };
 
