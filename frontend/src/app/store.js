@@ -35,6 +35,8 @@ import advancedAnalyticsReducer from "../features/analytics/slices/advancedAnaly
 import paymentAnalyticsReducer from "../features/analytics/slices/paymentAnalyticsSlice";
 import customReportsReducer from "../features/analytics/slices/customReportsSlice";
 import inventoryAnalyticsReducer from "../features/analytics/slices/inventoryAnalyticsSlice";
+import storeReducer from "../features/common/storeSlice";
+import storesReducer from "../features/stores/storeSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -72,6 +74,8 @@ const combinedReducer = {
   paymentAnalytics: paymentAnalyticsReducer,
   customReports: customReportsReducer,
   inventoryAnalytics: inventoryAnalyticsReducer,
+  commonStore: storeReducer, // New Store Slice
+  stores: storesReducer, // CRUD Store List
 };
 
 export default configureStore({

@@ -22,7 +22,9 @@ import {
   Crown,
   UserCheck,
   Settings,
+  Settings,
   Eye,
+  Key,
 } from "lucide-react";
 import SuspenseContent from "../../containers/SuspenseContent";
 
@@ -102,6 +104,16 @@ const UserCard = ({ user, onView, onEdit, onDelete }) => {
                   <Eye className="w-4 h-4" /> View
                 </button>
               </li>
+              <Can do="manageUsers">
+                <li>
+                  <button
+                    onClick={() => onEdit(user, "access")}
+                    className="text-secondary"
+                  >
+                    <Key className="w-4 h-4" /> Access
+                  </button>
+                </li>
+              </Can>
               <Can do="manageUsers">
                 <li>
                   <button onClick={() => onEdit(user)} className="text-primary">
@@ -217,6 +229,13 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
                       onClick={() => onEdit(user)}
                     >
                       <Edit3 className="w-3 h-3" />
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-xs gap-1 text-secondary"
+                      onClick={() => onEdit(user, "access")}
+                      title="Manage Store Access"
+                    >
+                      <Key className="w-3 h-3" />
                     </button>
                     {currentUser?._id !== user._id && (
                       <button
@@ -417,15 +436,26 @@ const Users = () => {
     );
   };
 
-  const handleEdit = (user) => {
-    dispatch(
-      openModal({
-        title: "Edit User",
-        bodyType: MODAL_BODY_TYPES.EDIT_USER,
-        extraObject: user,
-        size: "md",
-      })
-    );
+  const handleEdit = (user, mode = "edit") => {
+    if (mode === "access") {
+      dispatch(
+        openModal({
+          title: "Manage Store Access",
+          bodyType: MODAL_BODY_TYPES.MANAGE_STORE_ACCESS,
+          extraObject: user,
+          size: "lg",
+        })
+      );
+    } else {
+      dispatch(
+        openModal({
+          title: "Edit User",
+          bodyType: MODAL_BODY_TYPES.EDIT_USER,
+          extraObject: user,
+          size: "md",
+        })
+      );
+    }
   };
 
   const handleDelete = (user) => {

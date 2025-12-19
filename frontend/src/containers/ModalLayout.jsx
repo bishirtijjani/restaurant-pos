@@ -43,7 +43,7 @@ import AddOnSelectorModalBody from "../features/orders/components/AddOnSelectorM
 import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
 import KDSSettingsModalBody from "../features/kds/components/KDSSettingsModalBody";
 import SessionExpiredModalBody from "../features/common/components/SessionExpiredModalBody";
-import POS from "../features/orders/POS"
+import POS from "../features/orders/POS";
 
 // Add-on group modals
 import AddAddOnGroupModalBody from "../features/addOnGroups/components/AddAddOnGroupModalBody";
@@ -85,6 +85,10 @@ import ConfirmationModalBody from "../features/common/components/ConfirmationMod
 import InputModalBody from "../features/common/components/InputModalBody";
 import EditItemNoteModalBody from "../features/common/components/EditItemNoteModalBody";
 import Receipt from "../features/common/components/Receipt";
+
+// Store modals
+import AddStoreModalBody from "../features/stores/components/AddStoreModalBody";
+import StoreAccessMatrix from "../features/users/components/StoreAccessMatrix";
 
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
@@ -216,10 +220,7 @@ function ModalLayout() {
                 ),
 
                 [MODAL_BODY_TYPES.ADD_ORDER]: (
-                  <POS
-                    closeModal={close}
-                    extraObject={extraObject}
-                  />
+                  <POS closeModal={close} extraObject={extraObject} />
                 ),
                 [MODAL_BODY_TYPES.ORDER_DETAILS]: (
                   <OrderDetailsModalBody
@@ -431,6 +432,15 @@ function ModalLayout() {
                     closeModal={close}
                     extraObject={extraObject}
                   />
+                ),
+                [MODAL_BODY_TYPES.ADD_NEW_STORE]: (
+                  <AddStoreModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.MANAGE_STORE_ACCESS]: (
+                  <StoreAccessMatrix closeModal={close} user={extraObject} />
                 ),
                 [MODAL_BODY_TYPES.DEFAULT]: <div></div>,
               }[bodyType]

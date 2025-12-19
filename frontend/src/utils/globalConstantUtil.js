@@ -66,12 +66,14 @@ export const MODAL_BODY_TYPES = Object.freeze({
 
   CONFIRMATION: "CONFIRMATION",
   EDIT_ITEM_NOTE: "EDIT_ITEM_NOTE",
-  
+
   ADD_RESERVATION: "ADD_RESERVATION",
   EDIT_RESERVATION: "EDIT_RESERVATION",
 
   INPUT: "INPUT", // General purpose input modal
 
+  ADD_NEW_STORE: "ADD_NEW_STORE",
+  MANAGE_STORE_ACCESS: "MANAGE_STORE_ACCESS",
   DEFAULT: "",
 });
 
@@ -116,7 +118,16 @@ export const INVENTORY_CATEGORIES = [
   "Other",
 ];
 
-export const INVENTORY_UNITS = ["kg", "g", "L", "ml", "pcs", "pack", "box", "bag"];
+export const INVENTORY_UNITS = [
+  "kg",
+  "g",
+  "L",
+  "ml",
+  "pcs",
+  "pack",
+  "box",
+  "bag",
+];
 
 export const PO_STATUS_ENUM = Object.freeze({
   DRAFT: "draft",

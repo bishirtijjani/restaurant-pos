@@ -14,7 +14,9 @@ const POS = lazy(() => import("../pages/protected/POS"));
 const Expenses = lazy(() => import("../pages/protected/Expenses"));
 const Users = lazy(() => import("../pages/protected/Users"));
 const Customers = lazy(() => import("../pages/protected/Customers"));
-const CustomerProfile = lazy(() => import("../features/customers/CustomerProfile"));
+const CustomerProfile = lazy(() =>
+  import("../features/customers/CustomerProfile")
+);
 const GeneralSettings = lazy(() =>
   import("../pages/protected/GeneralSettings")
 );
@@ -40,15 +42,34 @@ const Discounts = lazy(() => import("../pages/protected/Discounts"));
 const Tables = lazy(() => import("../pages/protected/Tables"));
 const Floors = lazy(() => import("../pages/protected/Floors"));
 const Reservations = lazy(() => import("../pages/protected/Reservations"));
-const AnalyticsOverview = lazy(() => import("../features/analytics/dashboards/Overview"));
-const SalesOverview = lazy(() => import("../features/analytics/dashboards/Sales"));
-const MenuIntelligence = lazy(() => import("../features/analytics/dashboards/Menu"));
-const StaffAnalytics = lazy(() => import("../features/analytics/dashboards/Staff"));
-const CustomerInsights = lazy(() => import("../features/analytics/dashboards/Customer"));
-const AdvancedInsights = lazy(() => import("../features/analytics/dashboards/Advanced"));
-const PaymentAnalytics = lazy(() => import("../features/analytics/dashboards/Payment"));
-const CustomReports = lazy(() => import("../features/analytics/dashboards/Reports"));
-const InventoryAnalytics = lazy(() => import("../features/analytics/dashboards/Inventory"));
+const AnalyticsOverview = lazy(() =>
+  import("../features/analytics/dashboards/Overview")
+);
+const SalesOverview = lazy(() =>
+  import("../features/analytics/dashboards/Sales")
+);
+const MenuIntelligence = lazy(() =>
+  import("../features/analytics/dashboards/Menu")
+);
+const StaffAnalytics = lazy(() =>
+  import("../features/analytics/dashboards/Staff")
+);
+const CustomerInsights = lazy(() =>
+  import("../features/analytics/dashboards/Customer")
+);
+const AdvancedInsights = lazy(() =>
+  import("../features/analytics/dashboards/Advanced")
+);
+const PaymentAnalytics = lazy(() =>
+  import("../features/analytics/dashboards/Payment")
+);
+const CustomReports = lazy(() =>
+  import("../features/analytics/dashboards/Reports")
+);
+const InventoryAnalytics = lazy(() =>
+  import("../features/analytics/dashboards/Inventory")
+);
+const StoreManagement = lazy(() => import("../pages/StoreManagement"));
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
@@ -89,6 +110,7 @@ const routes = [
   { path: "/analytics/advanced", component: AdvancedInsights },
   { path: "/analytics/payments", component: PaymentAnalytics },
   { path: "/analytics/reports", component: CustomReports },
+  { path: "/stores", component: StoreManagement },
 ];
 
 export default routes;

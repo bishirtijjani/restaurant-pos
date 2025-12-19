@@ -25,6 +25,8 @@ function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { noOfNotifications, pageTitle } = useSelector((state) => state.header);
+  const { activeStore } = useSelector((state) => state.commonStore);
+  const { user } = useSelector((state) => state.auth);
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("theme")
   );
@@ -64,6 +66,9 @@ function Header() {
     navigate("/login");
   }
 
+  // Show store badge only for multi-store users
+  const showStoreBadge = user?.stores?.length > 1 && activeStore?.name;
+
   return (
     <>
       <div className="navbar sticky top-0 bg-base-100  z-50 shadow-md flex justify-between">
@@ -77,6 +82,11 @@ function Header() {
           </label>
           <h1 className="text-2xl font-semibold ml-2 hidden lg:block">
             {pageTitle}
+            {showStoreBadge && (
+              <span className="badge badge-primary badge-sm ml-3">
+                {activeStore.name}
+              </span>
+            )}
           </h1>
         </div>
 
@@ -114,7 +124,10 @@ function Header() {
           </button>
           {/* Tour Button */}
           {getTourId(location.pathname) && (
-            <TourTriggerButton tourId={getTourId(location.pathname)} className="mr-2" />
+            <TourTriggerButton
+              tourId={getTourId(location.pathname)}
+              className="mr-2"
+            />
           )}
           {/* Theme selection dropdown */}
           <div className="dropdown dropdown-end">

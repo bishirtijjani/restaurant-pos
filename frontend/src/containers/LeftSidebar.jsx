@@ -5,6 +5,7 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowLeftStartOnRectangleIcon from "@heroicons/react/24/outline/ArrowLeftStartOnRectangleIcon";
 import { jwtDecode } from "jwt-decode";
 import SessionExpired from "../features/common/components/SessionExpiredModalBody";
+import StoreSwitcher from "../features/common/components/StoreSwitcher";
 
 // Helpers
 const token = localStorage.getItem("token");
@@ -93,7 +94,11 @@ function LeftSidebar() {
         </li>
 
         {/* Sidebar Items */}
-        <div className="mt-4 space-y-2 px-2">{SidebarContent}</div>
+        {/* Store Switcher */}
+        <div className="mt-4 px-2">
+          <StoreSwitcher />
+        </div>
+        <div className="mt-2 space-y-2 px-2">{SidebarContent}</div>
 
         {/* Logout Button */}
         <li className="mt-auto px-2 py-6">

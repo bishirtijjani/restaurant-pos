@@ -15,7 +15,9 @@ import { initializeOfflineSupport } from "./app/initOffline";
 import { fetchSettings } from "./features/settings/generalSettings/generalSettingsSlice";
 import { getCurrentUser, setUserFromToken } from "./app/authSlice";
 import OfflineIndicator from "./components/OfflineIndicator";
+import OfflineIndicator from "./components/OfflineIndicator";
 import SuspenseContent from "./containers/SuspenseContent";
+import StoreGuard from "./containers/StoreGuard";
 
 const Layout = lazy(() => import("./containers/Layout"));
 const Login = lazy(() => import("./pages/Login"));
@@ -30,7 +32,11 @@ setupAxiosInterceptors();
 
 function App() {
   const dispatch = useDispatch();
-  const { user, token: authToken, loading } = useSelector((state) => state.auth);
+  const {
+    user,
+    token: authToken,
+    loading,
+  } = useSelector((state) => state.auth);
 
   // Use ref to track if we've already fetched user
   const hasFetchedUser = useRef(false);
@@ -48,9 +54,17 @@ function App() {
     if (hasFetchedUser.current) return;
 
     // Don't fetch user if we're on a public page
-    const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/home'];
-    const isPublicPage = publicPaths.some(path => window.location.pathname.includes(path));
-    
+    const publicPaths = [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+      "/home",
+    ];
+    const isPublicPage = publicPaths.some((path) =>
+      window.location.pathname.includes(path)
+    );
+
     if (isPublicPage) {
       hasFetchedUser.current = true;
       return;
@@ -64,19 +78,63 @@ function App() {
   }, [dispatch, authToken]);
 
   if (loading && !authToken) {
-      return <SuspenseContent />
+    return <SuspenseContent />;
   }
 
   return (
     <>
       <Router>
         <Routes>
-          <Route path="/login" element={authToken ? <Navigate to="/app/dashboard" replace /> : <Login />} />
-          <Route path="/forgot-password" element={authToken ? <Navigate to="/app/dashboard" replace /> : <ForgotPassword />} />
-          <Route path="/reset-password" element={authToken ? <Navigate to="/app/dashboard" replace /> : <ResetPassword />} />
-          <Route path="/register" element={authToken ? <Navigate to="/app/dashboard" replace /> : <Register />} />
-          <Route path="/home" element={authToken ? <Navigate to="/app/dashboard" replace /> : <Home />} />
-          <Route path="/app/*" element={<Layout />} />
+          <Route
+            path="/login"
+            element={
+              authToken ? <Navigate to="/app/dashboard" replace /> : <Login />
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              authToken ? (
+                <Navigate to="/app/dashboard" replace />
+              ) : (
+                <ForgotPassword />
+              )
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              authToken ? (
+                <Navigate to="/app/dashboard" replace />
+              ) : (
+                <ResetPassword />
+              )
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              authToken ? (
+                <Navigate to="/app/dashboard" replace />
+              ) : (
+                <Register />
+              )
+            }
+          />
+          <Route
+            path="/home"
+            element={
+              authToken ? <Navigate to="/app/dashboard" replace /> : <Home />
+            }
+          />
+          <Route
+            path="/app/*"
+            element={
+              <StoreGuard>
+                <Layout />
+              </StoreGuard>
+            }
+          />
           <Route
             path="/*"
             element={
