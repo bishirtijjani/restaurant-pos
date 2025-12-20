@@ -36,12 +36,10 @@ const getUserById = async (req, res) => {
     });
 
     if (!user) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "User not found or not in this store",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "User not found or not in this store",
+      });
     }
 
     const storeData = user.stores.find(
@@ -69,12 +67,10 @@ const createUser = async (req, res) => {
         (s) => s.storeId.toString() === req.storeId.toString()
       );
       if (inStore) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "User already exists in this store",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "User already exists in this store",
+        });
       }
 
       // Add to store
@@ -92,7 +88,7 @@ const createUser = async (req, res) => {
         email,
         password,
         // Set root role (optional, maybe 'user')
-        role: "user",
+        role: "staff",
         stores: [
           {
             storeId: req.storeId,
