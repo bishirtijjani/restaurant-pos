@@ -195,10 +195,7 @@ function Header() {
           {/* Profile icon, opening menu on click */}
           <div className="dropdown dropdown-end ml-4 " style={{ zIndex: 5000 }}>
             <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 rounded-full">
-                {/* <img src="#" alt="profile" /> */}
-                <UserCircle2 />
-              </div>
+              <UserCircle2 className="size-full" />
             </label>
             <ul
               tabIndex={0}
