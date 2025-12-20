@@ -1,0 +1,173 @@
+- [x] Menu Management
+  - [x] Add, edit, remove menu items
+  - [x] Categories & subcategories
+  - [x] Variants/options (size, toppings, etc.)
+  - [x] Pricing & promotions
+  - [x] Menu availability by time/day
+- [x] Order Management
+  - [x] Dine-in, Takeaway, Delivery support
+  - [x] Order status updates (pending, preparing, served)
+  - [x] Table assignments and reservations
+  - [x] Kitchen/Bar view for order queue
+- [ ] Payment Management
+  - [x] Manual payment tracking
+  - [ ] Online payment gateway integration
+  - [x] Partial payments / split bills
+  - [ ] Refunds and cancellations
+  - [x] Tax calculations
+- [x] Inventory Management
+  - [x] Stock tracking by ingredients
+  - [x] Alerts for low stock
+  - [x] Multi-branch inventory handling
+  - [x] Waste & spoilage tracking
+- [x] Staff Management
+  - [x] Role-based access control
+  - [x] Attendance & shift scheduling
+  - [x] Performance tracking (optional)
+- [x] Customer Management
+  - [x] Customer profiles & history
+  - [x] Loyalty points & rewards
+  - [x] Feedback & reviews
+- [x] Reporting & Analytics
+  - [x] Sales reports (daily, weekly, monthly)
+  - [x] Inventory usage reports
+  - [x] Staff performance reports
+  - [x] Customer analytics
+- [ ] Notifications
+  - [ ] Email & SMS notifications
+  - [x] Order updates for customers
+  - [x] Low stock alerts for staff
+- [x] Multi-location & multi-user support
+  - [x] Support for multiple branches
+  - [x] Admin dashboard for global view
+  - [x] Permissions per branch
+- [ ] 2. Development & Code Readiness
+  - [ ] Code Quality
+    - [ ] Linting enforced (ESLint/Prettier)
+    - [x] Consistent folder structure
+    - [x] Modular & reusable components
+  - [x] State Management
+    - [x] Redux/Context setup complete
+    - [x] Centralized API handling
+  - [ ] API & Backend
+    - [x] CRUD endpoints tested
+    - [x] Authentication & authorization
+    - [x] Error handling & validation
+    - [x] Rate limiting & throttling
+  - [x] Frontend
+    - [x] Fully responsive (desktop & mobile)
+    - [x] UI/UX consistent & polished
+    - [x] All user flows tested
+  - [x] Offline Mode (if applicable)
+    - [x] Sync with backend when online
+    - [x] Conflict resolution handled
+  - [ ] Feature Flags / Configs
+    - [ ] Toggle features for testing or rollout
+- [ ] 3. Testing & QA
+  - [ ] Unit Testing
+    - [ ] Backend functions & API endpoints
+    - [ ] Frontend components
+  - [ ] Integration Testing
+    - [ ] API ↔ UI flows
+    - [ ] Payment & order workflows
+  - [ ] End-to-End Testing
+    - [ ] Complete order lifecycle
+    - [ ] Multi-location, multi-user flows
+  - [ ] Performance Testing
+    - [ ] Backend API response times
+    - [ ] Frontend load times
+    - [ ] Stress testing for multiple concurrent users
+  - [ ] Security Testing
+    - [x] Authentication & authorization
+    - [ ] SQL/NoSQL injection protection
+    - [x] XSS & CSRF protection
+    - [ ] Data encryption at rest & in transit
+  - [ ] Accessibility Testing
+    - [ ] Keyboard navigation
+    - [ ] Screen reader support
+  - [ ] Browser & Device Compatibility
+    - [ ] Latest Chrome, Firefox, Edge, Safari
+    - [ ] Mobile (iOS & Android web)
+  - [ ] Bug Tracking
+    - [ ] All critical/major bugs fixed
+    - [ ] Minor bugs logged for future releases
+- [ ] 4. Infrastructure & Deployment
+  - [ ] Hosting & Servers
+    - [ ] VPS / Cloud setup
+    - [ ] Nginx/Apache configuration
+    - [ ] SSL/TLS certificates
+    - [ ] Load balancing & scaling plan
+  - [ ] Database
+    - [ ] Proper indexing & optimization
+    - [ ] Backup & restore tested
+    - [ ] Migrations scripted & verified
+  - [ ] Environment Setup
+    - [ ] Production, staging, development environments
+    - [ ] Environment variables configured
+    - [ ] Secrets management
+  - [ ] CI/CD Pipeline
+    - [ ] Automated builds
+    - [ ] Automated tests
+    - [ ] Auto-deploy to staging
+  - [ ] Logging & Monitoring
+    - [ ] Server logs & error tracking
+    - [ ] Application performance monitoring
+    - [ ] Alerts for downtime or errors
+- [ ] 5. Security & Compliance
+  - [ ] User Data
+    - [ ] GDPR / local data protection compliance
+    - [x] Secure password storage (bcrypt)
+    - [x] Data encryption (AES/HTTPS)
+  - [ ] Payment Security
+    - [ ] PCI-DSS compliance (if handling payments)
+    - [ ] Payment gateway keys secured
+  - [x] Access Control
+    - [x] Role-based permissions enforced
+    - [x] Admin-only actions verified
+  - [ ] Backup & Recovery
+    - [ ] Daily backups automated
+    - [ ] Recovery tested
+- [ ] 6. Documentation & Support
+  - [ ] Technical Documentation
+    - [ ] API documentation (Swagger/Postman)
+    - [ ] Deployment instructions
+    - [ ] Database schema & ERD
+  - [ ] User Documentation
+    - [ ] User guide for restaurant staff
+    - [ ] Admin guide for restaurant owners
+    - [ ] FAQs & troubleshooting
+  - [ ] Onboarding
+    - [ ] Initial setup wizard
+    - [ ] Demo data available
+    - [ ] Video walkthroughs or tutorials
+- [ ] 7. Marketing & Legal Readiness
+  - [ ] Website / Landing Page
+    - [ ] Product explanation
+    - [ ] Pricing plans
+    - [ ] Signup / demo request flow
+  - [ ] Terms & Policies
+    - [ ] Terms of service
+    - [ ] Privacy policy
+    - [ ] Cookie / data usage disclaimer
+  - [ ] Payment Plans
+    - [ ] Billing cycles (monthly/annual)
+    - [ ] Invoicing & receipts
+- [ ] 8. Pre-Launch Checklist
+  - [ ] QA sign-off for all features
+  - [ ] Production environment fully configured
+  - [ ] DNS / domain configured
+  - [ ] SSL certificates active
+  - [ ] Backup & monitoring tested
+  - [ ] Email/SMS services tested
+  - [ ] Payment gateway tested in production
+  - [ ] Load testing passed
+  - [ ] Team onboarding completed
+  - [ ] Marketing ready for launch (announcements, email, social media)
+- [ ] 9. Post-Launch Operations
+  - [ ] 24/7 error monitoring
+  - [ ] Customer support ready
+  - [ ] Bug tracking & triage process
+  - [ ] Regular backups & maintenance schedule
+  - [ ] Feature roadmap for future releases
+  - [ ] Feedback collection mechanism
+  - [ ] Continuous performance monitoring

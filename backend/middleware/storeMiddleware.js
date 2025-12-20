@@ -14,6 +14,19 @@ const storeMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
+    // Bypass store context requirement for creating or listing stores
+    const currentPath = req.originalUrl.split("?")[0];
+    if (
+      (req.method === "POST" &&
+        (currentPath.endsWith("/api/stores") ||
+          currentPath.endsWith("/api/stores/"))) ||
+      (req.method === "GET" &&
+        (currentPath.endsWith("/api/stores") ||
+          currentPath.endsWith("/api/stores/")))
+    ) {
+      return next();
+    }
+
     // 2. Get Store ID from Header
     const storeIdHeader = req.headers["x-store-id"];
 

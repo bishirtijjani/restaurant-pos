@@ -7,7 +7,7 @@ export const getStores = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get("/api/stores");
-      return response.data;
+      return response.data.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch stores"
@@ -21,7 +21,7 @@ export const createStore = createAsyncThunk(
   async (storeData, { rejectWithValue }) => {
     try {
       const response = await axios.post("/api/stores", storeData);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to create store"
@@ -35,7 +35,7 @@ export const updateStore = createAsyncThunk(
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const response = await axios.put(`/api/stores/${id}`, data);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to update store"

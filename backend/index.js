@@ -9,6 +9,8 @@ const connectToDB = require("./config/dbConnection");
 const { initializeWebSocket } = require("./utils/webSocket");
 const logger = require("./utils/logger");
 const setupSecurity = require("./config/security");
+// Centralized Routes Import
+const routes = require("./routes");
 
 // Load environment variables first
 dotenv.config();
@@ -17,7 +19,10 @@ const app = express();
 
 // Error handling for uncaught exceptions
 process.on("uncaughtException", (error) => {
-  logger.error("Uncaught Exception", { error: error.message, stack: error.stack });
+  logger.error("Uncaught Exception", {
+    error: error.message,
+    stack: error.stack,
+  });
   process.exit(1);
 });
 
@@ -51,8 +56,8 @@ app.use("/api", generalLimiter);
 // Database connection
 connectToDB();
 
-// API routes
-app.use("/api", require("./routes/index"));
+// Use Centralized Routes
+app.use("/api", routes);
 
 // Serve static files from React build (only if the build exists)
 const frontendPath = path.join(__dirname, "../frontend/dist");
@@ -67,15 +72,21 @@ if (fs.existsSync(frontendPath) && fs.existsSync(indexHtml)) {
     res.sendFile(indexHtml);
   });
 } else {
-  logger.warn("Frontend build not found, skipping static file serving", { path: frontendPath });
+  logger.warn("Frontend build not found, skipping static file serving", {
+    path: frontendPath,
+  });
 }
 
 // Global error handler
 app.use((err, req, res, next) => {
-  logger.error("Express error", { error: err.message, stack: err.stack, url: req.originalUrl });
-  res.status(500).json({ 
-    success: false, 
-    message: "Internal server error" 
+  logger.error("Express error", {
+    error: err.message,
+    stack: err.stack,
+    url: req.originalUrl,
+  });
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
   });
 });
 
@@ -88,5 +99,8 @@ const server = http.createServer(app);
 initializeWebSocket(server);
 
 server.listen(PORT, "0.0.0.0", () => {
-  logger.info("Server started", { port: PORT, env: process.env.NODE_ENV || "development" });
+  logger.info("Server started", {
+    port: PORT,
+    env: process.env.NODE_ENV || "development",
+  });
 });

@@ -15,7 +15,6 @@ import { initializeOfflineSupport } from "./app/initOffline";
 import { fetchSettings } from "./features/settings/generalSettings/generalSettingsSlice";
 import { getCurrentUser, setUserFromToken } from "./app/authSlice";
 import OfflineIndicator from "./components/OfflineIndicator";
-import OfflineIndicator from "./components/OfflineIndicator";
 import SuspenseContent from "./containers/SuspenseContent";
 import StoreGuard from "./containers/StoreGuard";
 

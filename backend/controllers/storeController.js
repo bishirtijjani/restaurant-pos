@@ -130,9 +130,27 @@ const getStoreById = asyncHandler(async (req, res) => {
 // @route   PUT /api/stores/:id
 // @access  Private (Admin only)
 const updateStore = asyncHandler(async (req, res) => {
+  let storeId = req.params.id;
+
+  // Handle 'my-store' alias using context from middleware
+  if (storeId === "my-store") {
+    if (!req.storeId) {
+      res.status(400);
+      throw new Error("Store context required for 'my-store' alias");
+    }
+    storeId = req.storeId;
+  }
+
+  // Fetch complete user to check permissions (req.user from JWT is partial)
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    res.status(401);
+    throw new Error("User not found");
+  }
+
   // Check authorization
-  const userStoreLink = req.user.stores.find(
-    (s) => s.storeId.toString() === req.params.id
+  const userStoreLink = user.stores.find(
+    (s) => s.storeId.toString() === storeId.toString()
   );
 
   if (!userStoreLink || userStoreLink.role !== "admin") {
@@ -140,7 +158,7 @@ const updateStore = asyncHandler(async (req, res) => {
     throw new Error("Only admins can update store details");
   }
 
-  const store = await Store.findById(req.params.id);
+  const store = await Store.findById(storeId);
 
   if (!store) {
     res.status(404);

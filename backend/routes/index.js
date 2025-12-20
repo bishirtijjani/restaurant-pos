@@ -38,5 +38,6 @@ router.use("/reservations", require("./reservationRoutes"));
 router.use("/analytics", require("./analyticsRoutes"));
 router.use("/reports", require("./reportRoutes"));
 router.use("/stores", require("./storeRoutes"));
+router.use("/payments", require("./paymentRoutes"));
 
 module.exports = router;

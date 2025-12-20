@@ -1,5 +1,5 @@
 // frontend/src/features/orders/components/PaymentConfirmationModalBody.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
@@ -10,8 +10,80 @@ import { showNotification } from "../../common/headerSlice";
 import { createOrder, fetchOrders } from "../ordersSlice";
 import { clearCart } from "../posSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
-import { Plus, Trash2, DollarSign } from "lucide-react";
+import { Plus, Trash2, DollarSign, CreditCard } from "lucide-react";
 import { printerService } from "../../../services/PrinterService";
+import axios from "axios";
+
+// Stripe Imports
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+
+// Initialize Stripe outside component to avoid recreation
+let stripePromise = null;
+
+const CheckoutForm = ({
+  amount,
+  currency,
+  onPaymentSuccess,
+  onPaymentError,
+  clientSecret,
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [processing, setProcessing] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setProcessing(true);
+    setErrorMessage(null);
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: "if_required", // Important to not redirect away from SPA
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      onPaymentError(error.message);
+      setProcessing(false);
+    } else if (paymentIntent && paymentIntent.status === "succeeded") {
+      onPaymentSuccess(paymentIntent);
+      // Processing state remains true until parent handles completion
+    } else {
+      setErrorMessage("Unexpected payment status: " + paymentIntent.status);
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="w-full">
+      <PaymentElement />
+      {errorMessage && <ErrorText className="mt-2">{errorMessage}</ErrorText>}
+      <button
+        type="submit"
+        disabled={!stripe || processing}
+        className="btn btn-primary w-full mt-4"
+      >
+        {processing ? (
+          <span className="loading loading-spinner loading-sm"></span>
+        ) : (
+          `Pay ${currency}${amount.toFixed(2)}`
+        )}
+      </button>
+    </form>
+  );
+};
 
 function PaymentConfirmationModalBody(props) {
   const extraObject = props.extraObject || props;
@@ -24,17 +96,63 @@ function PaymentConfirmationModalBody(props) {
     (state) => state.generalSettings.generalSettings
   );
   const currency = settings?.currency?.symbol || "$";
+  const currencyCode = settings?.currency?.code || "USD";
 
   const [paymentMode, setPaymentMode] = useState("single"); // 'single' or 'split'
   const [tipMode, setTipMode] = useState("none"); // 'none', 'percentage', 'custom'
   const [tipPercentage, setTipPercentage] = useState(0);
   const [customTip, setCustomTip] = useState("");
 
-  const paymentMethodOptions = [
+  const [providers, setProviders] = useState([]);
+  const [stripeConfig, setStripeConfig] = useState(null);
+  const [clientSecret, setClientSecret] = useState("");
+
+  // Fetch Payment Config
+  useEffect(() => {
+    const fetchPaymentConfig = async () => {
+      try {
+        const response = await axios.get("/api/payments/config");
+        if (response.data.success) {
+          setProviders(response.data.providers);
+          const stripeProvider = response.data.providers.find(
+            (p) => p.id === "stripe"
+          );
+          if (stripeProvider && stripeProvider.publishableKey) {
+            setStripeConfig(stripeProvider);
+            if (!stripePromise) {
+              stripePromise = loadStripe(stripeProvider.publishableKey);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load payment config", error);
+      }
+    };
+    fetchPaymentConfig();
+  }, []);
+
+  const [paymentMethodOptions, setPaymentMethodOptions] = useState([
     { value: "cash", name: "Cash" },
     { value: "Transfer", name: "Bank Transfer" },
-    { value: "card", name: "Card" },
-  ];
+    { value: "card", name: "Card (Manual)" }, // Legacy
+  ]);
+
+  // Update options when providers load
+  useEffect(() => {
+    const defaultOptions = [
+      { value: "cash", name: "Cash" },
+      { value: "Transfer", name: "Bank Transfer" },
+      { value: "card", name: "Card (Manual)" },
+    ];
+
+    // If Stripe is enabled, add it as an option or replace generic card
+    // For now, let's keep generic card for external terminals, and add Stripe
+    const newOptions = [...defaultOptions];
+    if (stripeConfig) {
+      newOptions.push({ value: "stripe", name: "Pay with Card (Stripe)" });
+    }
+    setPaymentMethodOptions(newOptions);
+  }, [stripeConfig]);
 
   // Single payment state
   const [singlePayment, setSinglePayment] = useState({
@@ -63,6 +181,8 @@ function PaymentConfirmationModalBody(props) {
   // Calculate total paid
   const calculateTotalPaid = () => {
     if (paymentMode === "single") {
+      // If Stripe, amount paid is exactly success amount (total with tip)
+      if (singlePayment.paymentMethod === "stripe") return totalWithTip;
       return parseFloat(singlePayment.amountReceived) || 0;
     } else {
       return splitPayments.reduce(
@@ -76,11 +196,44 @@ function PaymentConfirmationModalBody(props) {
   const change = totalPaid > totalWithTip ? totalPaid - totalWithTip : 0;
   const balance = totalPaid < totalWithTip ? totalWithTip - totalPaid : 0;
 
+  // Initialize Stripe Intent when Stripe is selected in Single Payment
+  useEffect(() => {
+    if (singlePayment.paymentMethod === "stripe" && totalWithTip > 0) {
+      createStripeIntent();
+    }
+  }, [singlePayment.paymentMethod, totalWithTip]);
+
+  const createStripeIntent = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post("/api/payments/create-intent", {
+        provider: "stripe",
+        amount: totalWithTip,
+        currency: currencyCode,
+        metadata: {
+          orderId: extraObject._id || "new_order",
+        },
+      });
+      if (response.data.success) {
+        setClientSecret(response.data.clientSecret);
+      }
+    } catch (error) {
+      console.error("Failed to init Stripe", error);
+      setErrorMessage("Failed to initialize Stripe payment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle single payment change
   const handleSinglePaymentChange = (e) => {
     const { name, value } = e.target;
     setSinglePayment({ ...singlePayment, [name]: value });
     setErrorMessage("");
+    // If switching away from Stripe, clear secret?
+    if (name === "paymentMethod" && value !== "stripe") {
+      setClientSecret("");
+    }
   };
 
   // Handle split payment change
@@ -119,6 +272,9 @@ function PaymentConfirmationModalBody(props) {
 
   // Validation
   const validatePayment = () => {
+    if (paymentMode === "single" && singlePayment.paymentMethod === "stripe")
+      return true; // Handled by Stripe Form
+
     if (totalPaid === 0) {
       setErrorMessage("Please enter payment amount");
       return false;
@@ -126,7 +282,9 @@ function PaymentConfirmationModalBody(props) {
 
     if (totalPaid < totalWithTip) {
       setErrorMessage(
-        `Insufficient payment. Total: ${currency}${totalWithTip.toFixed(2)}, Paid: ${currency}${totalPaid.toFixed(2)}`
+        `Insufficient payment. Total: ${currency}${totalWithTip.toFixed(
+          2
+        )}, Paid: ${currency}${totalPaid.toFixed(2)}`
       );
       return false;
     }
@@ -145,11 +303,7 @@ function PaymentConfirmationModalBody(props) {
     return true;
   };
 
-  const handleSubmit = () => {
-    if (!validatePayment()) {
-      return;
-    }
-
+  const finalizeOrder = (stripePaymentIntent = null) => {
     setLoading(true);
 
     // Prepare payment data
@@ -171,16 +325,31 @@ function PaymentConfirmationModalBody(props) {
         method: p.method,
         amount: parseFloat(p.amount),
       }));
-      // Set primary payment method as first one
       orderPayload.paymentMethod = splitPayments[0].method;
     } else {
-      orderPayload.paymentMethod = singlePayment.paymentMethod;
+      // If Stripe, ensure we mark it
+      const method =
+        singlePayment.paymentMethod === "stripe"
+          ? "card"
+          : singlePayment.paymentMethod;
+      orderPayload.paymentMethod = method;
       orderPayload.payments = [
         {
-          method: singlePayment.paymentMethod,
+          method: method,
           amount: totalPaid,
+          // Store transaction ID if available
+          transactionId: stripePaymentIntent?.id,
         },
       ];
+
+      // If it was Stripe, we might want to store provider specific info
+      if (stripePaymentIntent) {
+        orderPayload.paymentDetails = {
+          provider: "stripe",
+          transactionId: stripePaymentIntent.id,
+          metadata: stripePaymentIntent,
+        };
+      }
     }
 
     orderPayload.paymentStatus = balance > 0 ? "partial" : "paid";
@@ -201,40 +370,47 @@ function PaymentConfirmationModalBody(props) {
         dispatch(clearCart()); // Clear POS cart after successful payment
         dispatch(closeModal());
         dispatch(closeRightDrawer());
-        dispatch(closeRightDrawer());
+        // Close second time just in case
+        // dispatch(closeRightDrawer());
 
         // Check Printer Mode
-        if (settings?.printerSettings?.mode === 'webusb') {
-             printerService.printReceipt(createdOrder, {
-                currencySymbol: settings?.currency?.symbol || "₦",
-                restaurantName: settings?.restaurantName,
-                restaurantAddress: settings?.restaurantAddress,
-                restaurantPhone: settings?.restaurantPhone,
-                paperWidth: settings?.printerSettings?.paperWidth || '80mm'
-            }).then(() => {
-                dispatch(showNotification({ message: "Receipt printed successfully", status: 1 }));
-            }).catch(err => {
-                 console.error("USB Print Failed", err);
-                 // Fallback to modal if USB fails
-                 dispatch(
-                  openModal({
-                    title: "Order Receipt",
-                    bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
-                    extraObject: createdOrder,
-                    size: "lg",
-                  })
-                );
+        if (settings?.printerSettings?.mode === "webusb") {
+          printerService
+            .printReceipt(createdOrder, {
+              currencySymbol: settings?.currency?.symbol || "₦",
+              restaurantName: settings?.restaurantName,
+              restaurantAddress: settings?.restaurantAddress,
+              restaurantPhone: settings?.restaurantPhone,
+              paperWidth: settings?.printerSettings?.paperWidth || "80mm",
+            })
+            .then(() => {
+              dispatch(
+                showNotification({
+                  message: "Receipt printed successfully",
+                  status: 1,
+                })
+              );
+            })
+            .catch((err) => {
+              console.error("USB Print Failed", err);
+              dispatch(
+                openModal({
+                  title: "Order Receipt",
+                  bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
+                  extraObject: createdOrder,
+                  size: "lg",
+                })
+              );
             });
         } else {
-            // Default Browser Print (Popup Modal)
-            dispatch(
-              openModal({
-                title: "Order Receipt",
-                bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
-                extraObject: createdOrder,
-                size: "lg",
-              })
-            );
+          dispatch(
+            openModal({
+              title: "Order Receipt",
+              bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
+              extraObject: createdOrder,
+              size: "lg",
+            })
+          );
         }
       })
       .catch((error) => {
@@ -242,6 +418,19 @@ function PaymentConfirmationModalBody(props) {
         setErrorMessage(error.message);
       })
       .finally(() => setLoading(false));
+  };
+
+  const handleManualSubmit = () => {
+    if (!validatePayment()) {
+      return;
+    }
+    finalizeOrder();
+  };
+
+  const handleStripeSuccess = (paymentIntent) => {
+    // Payment confirmed by Stripe, now create order
+    // Ensure local state matches
+    finalizeOrder(paymentIntent);
   };
 
   return (
@@ -261,7 +450,10 @@ function PaymentConfirmationModalBody(props) {
         </label>
         <div className="flex gap-2">
           <button
-            onClick={() => setPaymentMode("single")}
+            onClick={() => {
+              setPaymentMode("single");
+              setClientSecret("");
+            }}
             className={`btn btn-sm flex-1 ${
               paymentMode === "single" ? "btn-primary" : "btn-outline"
             }`}
@@ -269,7 +461,10 @@ function PaymentConfirmationModalBody(props) {
             Single Payment
           </button>
           <button
-            onClick={() => setPaymentMode("split")}
+            onClick={() => {
+              setPaymentMode("split");
+              setClientSecret("");
+            }}
             className={`btn btn-sm flex-1 ${
               paymentMode === "split" ? "btn-primary" : "btn-outline"
             }`}
@@ -371,18 +566,38 @@ function PaymentConfirmationModalBody(props) {
             />
           </div>
 
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Amount Received ({currency})</span>
-            </label>
-            <FormattedNumberInput
-              name="amountReceived"
-              value={singlePayment.amountReceived}
-              onChange={handleSinglePaymentChange}
-              className="input input-bordered"
-              placeholder="Enter amount"
-            />
-          </div>
+          {singlePayment.paymentMethod === "stripe" ? (
+            <div className="p-4 border rounded-lg bg-base-100">
+              {clientSecret && stripeConfig ? (
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <CheckoutForm
+                    amount={totalWithTip}
+                    currency={currency}
+                    onPaymentSuccess={handleStripeSuccess}
+                    onPaymentError={(msg) => setErrorMessage(msg)}
+                  />
+                </Elements>
+              ) : (
+                <div className="flex justify-center p-4">
+                  <span className="loading loading-spinner"></span> Initializing
+                  Secure Payment...
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Amount Received ({currency})</span>
+              </label>
+              <FormattedNumberInput
+                name="amountReceived"
+                value={singlePayment.amountReceived}
+                onChange={handleSinglePaymentChange}
+                className="input input-bordered"
+                placeholder="Enter amount"
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -407,7 +622,9 @@ function PaymentConfirmationModalBody(props) {
                   <span className="label-text text-xs">Method</span>
                 </label>
                 <SearchableSelect
-                  options={paymentMethodOptions}
+                  options={paymentMethodOptions.filter(
+                    (o) => o.value !== "stripe"
+                  )} // No split stripe for now
                   value={payment.method}
                   onChange={(e) =>
                     handleSplitPaymentChange(index, "method", e.target.value)
@@ -423,7 +640,9 @@ function PaymentConfirmationModalBody(props) {
 
               <div className="form-control flex-1">
                 <label className="label">
-                  <span className="label-text text-xs">Amount ({currency})</span>
+                  <span className="label-text text-xs">
+                    Amount ({currency})
+                  </span>
                 </label>
                 <FormattedNumberInput
                   value={payment.amount}
@@ -444,6 +663,11 @@ function PaymentConfirmationModalBody(props) {
               </button>
             </div>
           ))}
+          {/* Warning about stripe not being available in split yet */}
+          <p className="text-xs text-warning">
+            * Online payments (Stripe) are currently only available for Single
+            Payment mode.
+          </p>
         </div>
       )}
 
@@ -507,29 +731,34 @@ function PaymentConfirmationModalBody(props) {
 
       {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
 
-      <div className="modal-action">
-        <button
-          onClick={() => dispatch(closeRightDrawer())}
-          className="btn btn-outline"
-          disabled={loading}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          className="btn btn-primary"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <span className="loading loading-spinner loading-sm"></span>{" "}
-              Processing...
-            </>
-          ) : (
-            "Complete Order"
-          )}
-        </button>
-      </div>
+      {/* Hide default buttons if Stripe is active (since Stripe has its own Pay button) */}
+      {!(
+        paymentMode === "single" && singlePayment.paymentMethod === "stripe"
+      ) && (
+        <div className="modal-action">
+          <button
+            onClick={() => dispatch(closeRightDrawer())}
+            className="btn btn-outline"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleManualSubmit}
+            className="btn btn-primary"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="loading loading-spinner loading-sm"></span>{" "}
+                Processing...
+              </>
+            ) : (
+              "Complete Order"
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

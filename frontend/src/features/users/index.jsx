@@ -22,11 +22,11 @@ import {
   Crown,
   UserCheck,
   Settings,
-  Settings,
   Eye,
   Key,
 } from "lucide-react";
 import SuspenseContent from "../../containers/SuspenseContent";
+import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 
 const TopSideButtons = ({ onRefresh, onAddNew }) => {
   return (
@@ -206,7 +206,7 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
               </td>
               <td>
                 <div className="flex items-center gap-1 text-sm">
-                  <Mail className="w-3 h-3 text-base-content/70" />
+                  <Mail className="w-5 h-5 text-base-content/70" />
                   {user.email}
                 </div>
               </td>
@@ -218,31 +218,31 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
               <td>
                 <div className="flex gap-2">
                   <button
-                    className="btn btn-ghost btn-xs gap-1"
+                    className="btn btn-ghost gap-1"
                     onClick={() => onView(user)}
                   >
-                    <Eye className="w-3 h-3" />
+                    <Eye className="w-5 h-5" />
                   </button>
                   <Can do="manageUsers">
                     <button
-                      className="btn btn-ghost btn-xs gap-1 text-primary"
+                      className="btn btn-ghost gap-1 text-primary"
                       onClick={() => onEdit(user)}
                     >
-                      <Edit3 className="w-3 h-3" />
+                      <Edit3 className="w-5 h-5" />
                     </button>
                     <button
-                      className="btn btn-ghost btn-xs gap-1 text-secondary"
+                      className="btn btn-ghost gap-1 text-secondary"
                       onClick={() => onEdit(user, "access")}
                       title="Manage Store Access"
                     >
-                      <Key className="w-3 h-3" />
+                      <Key className="w-5 h-5" />
                     </button>
                     {currentUser?._id !== user._id && (
                       <button
-                        className="btn btn-ghost btn-xs gap-1 text-error"
+                        className="btn btn-ghost gap-1 text-error"
                         onClick={() => onDelete(user)}
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     )}
                   </Can>
@@ -416,7 +416,7 @@ const Users = () => {
       openModal({
         title: "Add New User",
         bodyType: MODAL_BODY_TYPES.ADD_NEW_USER,
-        size: "md",
+        size: "xl",
       })
     );
   };
@@ -431,7 +431,7 @@ const Users = () => {
         title: "View User Details",
         bodyType: MODAL_BODY_TYPES.VIEW_USER,
         extraObject: user,
-        size: "md",
+        size: "xl",
       })
     );
   };
@@ -452,7 +452,7 @@ const Users = () => {
           title: "Edit User",
           bodyType: MODAL_BODY_TYPES.EDIT_USER,
           extraObject: user,
-          size: "md",
+          size: "xl",
         })
       );
     }

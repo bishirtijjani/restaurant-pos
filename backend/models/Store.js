@@ -116,6 +116,17 @@ const storeSchema = new mongoose.Schema(
         productId: { type: Number, default: null },
         deviceName: { type: String, default: null },
       },
+
+      // Payment Gateways
+      paymentGateways: {
+        stripe: {
+          enabled: { type: Boolean, default: false },
+          publishableKey: { type: String, default: "" },
+          secretKey: { type: String, select: false, default: "" }, // Hidden by default for security
+          accountId: { type: String, default: "" },
+        },
+        // Future providers can be added here
+      },
     },
     // Last Action for Audit
     lastAction: {

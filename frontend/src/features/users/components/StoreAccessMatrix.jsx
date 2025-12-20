@@ -4,6 +4,7 @@ import { getStores } from "../../stores/storeSlice";
 import { updateUser } from "../../users/usersSlice";
 import { showNotification } from "../../common/headerSlice";
 import TitleCard from "../../../components/Cards/TitleCard";
+import { closeModal } from "../../common/modalSlice";
 
 function StoreAccessMatrix({ user, onClose }) {
   const dispatch = useDispatch();
@@ -53,7 +54,7 @@ function StoreAccessMatrix({ user, onClose }) {
             status: 1,
           })
         );
-        if (onClose) onClose();
+        dispatch(closeModal());
       })
       .catch((err) => {
         dispatch(
@@ -114,7 +115,10 @@ function StoreAccessMatrix({ user, onClose }) {
         </table>
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <button className="btn btn-ghost" onClick={onClose}>
+        <button
+          className="btn btn-ghost"
+          onClick={() => dispatch(closeModal())}
+        >
           Cancel
         </button>
         <button className="btn btn-primary" onClick={handleSave}>

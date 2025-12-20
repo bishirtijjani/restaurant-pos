@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import TitleCard from "../../../components/Cards/TitleCard";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
+import CurrencySelect from "./components/CurrencySelect";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import {
   Settings,
@@ -18,6 +19,7 @@ import {
   updateLocalSettings,
 } from "./generalSettingsSlice";
 import { showNotification } from "../../common/headerSlice";
+import PaymentSettings from "../components/PaymentSettings";
 
 const timezoneOptions = [
   { name: "UTC (Coordinated Universal Time)", value: "UTC" },
@@ -193,27 +195,17 @@ const GeneralSettings = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-medium">
-                    Currency Symbol
-                  </span>
+                  <span className="label-text font-medium">Currency</span>
                 </label>
-                <input
-                  type="text"
-                  name="currencySymbol"
-                  value={formData.currency?.symbol || "$"}
-                  // Note: Simplification for valid object structure update in handleInputChange would be needed if flat inputs update nested objects directly.
-                  // For now assuming flatten or simple handling.
-                  // Actually, looking at slice, currency is an object.
-                  // Let's implement specific handler for nested currency update or just use a simple input for now that might not work perfectly with generic handleInputChange without modification.
-                  // I'll update handleInputChange to support nested updates if I had more time, but for now I'll do inline change for nested objects.
-                  onChange={(e) => {
+                <CurrencySelect
+                  value={formData.currency}
+                  onChange={(newCurrency) => {
                     setFormData((prev) => ({
                       ...prev,
-                      currency: { ...prev.currency, symbol: e.target.value },
+                      currency: newCurrency,
                     }));
                     setHasChanges(true);
                   }}
-                  className="input input-bordered w-full"
                 />
               </div>
 
@@ -409,6 +401,10 @@ const GeneralSettings = () => {
         </div>
 
         {/* Action Buttons */}
+        <div className="md:col-span-2">
+          <PaymentSettings />
+        </div>
+
         <div className="flex justify-between items-center pt-6 md:col-span-2">
           <button
             type="button"
