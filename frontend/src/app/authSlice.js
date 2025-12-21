@@ -178,7 +178,7 @@ export const updateUserProfile = createAsyncThunk(
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token available");
 
-      const response = await axios.put("/api/auth/update", formData);
+      const response = await axios.put("/api/auth/me", formData);
 
       return response.data.user;
     } catch (error) {
