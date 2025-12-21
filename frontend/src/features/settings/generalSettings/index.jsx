@@ -48,7 +48,17 @@ const GeneralSettings = () => {
   // Sync state with Redux store
   useEffect(() => {
     if (settings) {
-      setFormData(settings);
+      setFormData({
+        ...settings,
+        paymentGateways: settings.paymentGateways || {
+          stripe: {
+            enabled: false,
+            publishableKey: "",
+            secretKey: "",
+            accountId: "",
+          },
+        },
+      });
     }
   }, [settings]);
 
@@ -84,6 +94,15 @@ const GeneralSettings = () => {
         })
       );
     }
+  };
+
+  // Handle payment settings change
+  const handlePaymentChange = (newPaymentConfig) => {
+    setFormData((prev) => ({
+      ...prev,
+      paymentGateways: newPaymentConfig,
+    }));
+    setHasChanges(true);
   };
 
   // Handle Reset
@@ -400,9 +419,12 @@ const GeneralSettings = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Payment Settings */}
         <div className="md:col-span-2">
-          <PaymentSettings />
+          <PaymentSettings
+            config={formData.paymentGateways}
+            onChange={handlePaymentChange}
+          />
         </div>
 
         <div className="flex justify-between items-center pt-6 md:col-span-2">

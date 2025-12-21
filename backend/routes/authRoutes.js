@@ -2,6 +2,7 @@ const express = require("express");
 const {
   register,
   login,
+  pinLogin,
   refreshToken,
   logout,
   getSecurityQuestions,
@@ -17,6 +18,12 @@ const router = express.Router();
 // Apply rate limiting and validation to sensitive auth endpoints
 router.post("/register", authLimiter, validateBody(schemas.register), register);
 router.post("/login", authLimiter, validateBody(schemas.login), login);
+router.post(
+  "/pin-login",
+  authLimiter,
+  validateBody(schemas.pinLogin),
+  pinLogin
+);
 router.post("/refresh", refreshToken);
 router.post("/logout", logout);
 router.post("/get-security-questions", authLimiter, getSecurityQuestions);

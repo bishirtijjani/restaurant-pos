@@ -11,7 +11,7 @@ import {
   FileText,
   User,
   Tag,
-  Building,  
+  Building,
   PlusCircle,
   Monitor,
   Package,
@@ -39,7 +39,7 @@ export const adminRoutes = [
   },
   {
     path: "/app/analytics",
-    icon: <ChartBarIcon  className={`${iconClasses} inline`}  />,
+    icon: <ChartBarIcon className={`${iconClasses} inline`} />,
     name: "Analytics",
     submenu: [
       {
@@ -215,6 +215,11 @@ export const adminRoutes = [
         icon: <KeyRound className={submenuIconClasses} />,
         name: "General Settings",
       },
+      {
+        path: "/app/stores",
+        icon: <Building className={submenuIconClasses} />,
+        name: "Stores",
+      },
     ],
   },
 ];
@@ -227,7 +232,7 @@ export const managerRoutes = [
   },
   {
     path: "/app/analytics",
-    icon: <ChartBarIcon  className={`${iconClasses} inline`}  />,
+    icon: <ChartBarIcon className={`${iconClasses} inline`} />,
     name: "Analytics",
     submenu: [
       {

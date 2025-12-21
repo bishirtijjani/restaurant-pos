@@ -43,13 +43,15 @@ function AddUserModalBody({ closeModal }) {
     if (!user.email.trim()) return setErrorMessage("Email is required!");
     if (!user.password.trim()) return setErrorMessage("Password is required!");
     if (!user.role) return setErrorMessage("Role is required!");
-    
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(user.email)) return setErrorMessage("Please enter a valid email address!");
+    if (!emailRegex.test(user.email))
+      return setErrorMessage("Please enter a valid email address!");
 
     // Password validation
-    if (user.password.length < 6) return setErrorMessage("Password must be at least 6 characters long!");
+    if (user.password.length < 6)
+      return setErrorMessage("Password must be at least 6 characters long!");
 
     setLoading(true);
     dispatch(addUser(user))
@@ -136,6 +138,23 @@ function AddUserModalBody({ closeModal }) {
               )}
             </button>
           </div>
+        </div>
+
+        {/* PIN Code */}
+        <div className="mt-4">
+          <label htmlFor="pinCode" className="block text-sm font-medium">
+            PIN Code (Optional)
+          </label>
+          <input
+            type="text"
+            id="pinCode"
+            name="pinCode"
+            maxLength={6}
+            value={user.pinCode || ""}
+            onChange={handleInputChange}
+            className="input input-bordered w-full mt-2"
+            placeholder="Enter 4-6 digit PIN"
+          />
         </div>
 
         {/* Role */}

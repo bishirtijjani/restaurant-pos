@@ -45,6 +45,27 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// Async thunk for logging in with PIN
+export const loginUserWithPin = createAsyncThunk(
+  "auth/loginUserWithPin",
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await axios.post("/api/auth/pin-login", credentials);
+      const { token, user } = response.data;
+      localStorage.setItem("token", token);
+      if (token) {
+        axios.defaults.headers.common["authorization"] = `Bearer ${token}`;
+      }
+      return { user, token };
+    } catch (error) {
+      console.log(error);
+      return rejectWithValue(
+        error.response?.data?.message || "PIN Login failed, Try again later"
+      );
+    }
+  }
+);
+
 // Async thunk for registering a new user
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
@@ -83,7 +104,7 @@ export const refreshSession = createAsyncThunk(
       const { token } = response.data;
       localStorage.setItem("token", token);
       axios.defaults.headers.common["authorization"] = `Bearer ${token}`;
-      
+
       // Decode user from token
       const user = jwtDecode(token);
       return { token, user };
@@ -100,24 +121,24 @@ export const getCurrentUser = createAsyncThunk(
   async (_, { rejectWithValue, dispatch }) => {
     try {
       const token = localStorage.getItem("token");
-      
+
       // If no token or expired, try to refresh first
       if (!token || isTokenExpired(token)) {
-         try {
-            const result = await dispatch(refreshSession()).unwrap();
-            // If refresh successful, we have a valid token now
-            // We can proceed to fetch user details if needed, 
-            // but refreshSession already returns the user from token.
-            // However, to get full user details (like role permissions not in token), 
-            // we might still want to call /me.
-            // For now, let's assume /me is what we want.
-         } catch (refreshError) {
-             // If refresh fails, we are truly logged out
-             if (!window.location.pathname.includes("/login")) {
-                 window.location.href = "/login";
-             }
-             return rejectWithValue("Session expired");
-         }
+        try {
+          const result = await dispatch(refreshSession()).unwrap();
+          // If refresh successful, we have a valid token now
+          // We can proceed to fetch user details if needed,
+          // but refreshSession already returns the user from token.
+          // However, to get full user details (like role permissions not in token),
+          // we might still want to call /me.
+          // For now, let's assume /me is what we want.
+        } catch (refreshError) {
+          // If refresh fails, we are truly logged out
+          if (!window.location.pathname.includes("/login")) {
+            window.location.href = "/login";
+          }
+          return rejectWithValue("Session expired");
+        }
       }
 
       // First try to get from token (works offline)
@@ -212,11 +233,26 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      // Handle PIN login
+      .addCase(loginUserWithPin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginUserWithPin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.token = action.payload.token;
+        state.user = action.payload.user;
+        state.error = null;
+      })
+      .addCase(loginUserWithPin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       // Handle refreshSession
       .addCase(refreshSession.fulfilled, (state, action) => {
         state.token = action.payload.token;
         // We might want to merge with existing user data or just update basic info
-        state.user = { ...state.user, ...action.payload.user }; 
+        state.user = { ...state.user, ...action.payload.user };
       })
       .addCase(refreshSession.rejected, (state) => {
         state.token = null;

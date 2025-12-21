@@ -72,6 +72,7 @@ const register = async (req, res) => {
       fullname,
       email,
       password,
+      pinCode: req.body.pinCode || null,
       securityQuestions,
       // Global role is deprecated but set to admin for the signup user
       role: "admin",
@@ -188,6 +189,73 @@ const login = async (req, res) => {
       email: user.email,
       role: user.role, // Legacy global role
       stores: user.stores, // The crucial list for the switcher
+      lastActiveStore:
+        user.lastActiveStore ||
+        (user.stores[0] ? user.stores[0].storeId : null),
+    };
+
+    res.json({ token: accessToken, user: userResponse });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message || "Internal Server Error" });
+  }
+};
+
+const pinLogin = async (req, res) => {
+  try {
+    const { email, pinCode } = req.body;
+
+    if (!email || !pinCode) {
+      return res.status(400).json({ message: "Email and PIN are required" });
+    }
+
+    // Populate stores to return to frontend
+    const user = await User.findOne({ email, deletedAt: null }).populate(
+      "stores.storeId",
+      "name settings.restaurantName settings.restaurantLogo"
+    );
+
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user.pinCode)
+      return res
+        .status(400)
+        .json({ message: "PIN login not set up for this user" });
+
+    const isMatch = await bcrypt.compare(pinCode, user.pinCode);
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    // Remove old refresh tokens
+    user.refreshTokens = user.refreshTokens.filter(
+      (rt) => rt.expiresAt > Date.now()
+    );
+
+    // Save new refresh token
+    user.refreshTokens.push({
+      token: await bcrypt.hash(refreshToken, 10),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+    });
+    await user.save();
+
+    // Send refresh token in HttpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const userResponse = {
+      _id: user._id,
+      fullname: user.fullname,
+      email: user.email,
+      role: user.role,
+      stores: user.stores,
       lastActiveStore:
         user.lastActiveStore ||
         (user.stores[0] ? user.stores[0].storeId : null),
@@ -461,6 +529,7 @@ const updateCurrentUser = async (req, res) => {
     }
 
     if (fullname) user.fullname = fullname;
+    if (pinCode) user.pinCode = pinCode;
 
     if (password) {
       user.password = password; // Will be hashed by pre-save hook
@@ -516,6 +585,7 @@ const updateCurrentUser = async (req, res) => {
 module.exports = {
   register,
   login,
+  pinLogin,
   refreshToken,
   logout,
   getSecurityQuestions,

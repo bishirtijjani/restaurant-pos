@@ -57,7 +57,7 @@ const getUserById = async (req, res) => {
 
 // Create a new user (or add existing user to store)
 const createUser = async (req, res) => {
-  const { fullname, email, role, password } = req.body;
+  const { fullname, email, role, password, pinCode } = req.body;
   try {
     let user = await User.findOne({ email });
 
@@ -87,6 +87,7 @@ const createUser = async (req, res) => {
         fullname,
         email,
         password,
+        pinCode,
         // Set root role (optional, maybe 'user')
         role: "staff",
         stores: [
@@ -125,7 +126,7 @@ const createUser = async (req, res) => {
 // Update user details (store specific role)
 const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { fullname, email, role, password } = req.body;
+  const { fullname, email, role, password, pinCode } = req.body;
   try {
     const user = await User.findOne({
       _id: id,
@@ -144,6 +145,7 @@ const updateUser = async (req, res) => {
     if (fullname) user.fullname = fullname;
     if (email) user.email = email;
     if (password) user.password = password;
+    if (pinCode) user.pinCode = pinCode;
 
     // Update store role
     if (role) {

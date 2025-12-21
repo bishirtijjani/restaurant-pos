@@ -54,10 +54,12 @@ function EditUserModalBody({ closeModal, extraObject }) {
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(user.email)) return setErrorMessage("Please enter a valid email address!");
+    if (!emailRegex.test(user.email))
+      return setErrorMessage("Please enter a valid email address!");
 
     // Password validation (only if entered)
-    if (user.password.trim() && user.password.length < 6) return setErrorMessage("Password must be at least 6 characters long!");
+    if (user.password.trim() && user.password.length < 6)
+      return setErrorMessage("Password must be at least 6 characters long!");
 
     // Create payload (only include password if it was changed)
     const payload = {
@@ -67,6 +69,9 @@ function EditUserModalBody({ closeModal, extraObject }) {
     };
     if (user.password.trim()) {
       payload.password = user.password;
+    }
+    if (user.pinCode) {
+      payload.pinCode = user.pinCode;
     }
 
     setLoading(true);
@@ -155,6 +160,23 @@ function EditUserModalBody({ closeModal, extraObject }) {
               )}
             </button>
           </div>
+        </div>
+
+        {/* PIN Code */}
+        <div className="mt-4">
+          <label htmlFor="pinCode" className="block text-sm font-medium">
+            PIN Code (Optional)
+          </label>
+          <input
+            type="text"
+            id="pinCode"
+            name="pinCode"
+            maxLength={6}
+            value={user.pinCode || ""}
+            onChange={handleInputChange}
+            className="input input-bordered w-full mt-2"
+            placeholder="Enter 4-6 digit PIN or leave blank"
+          />
         </div>
 
         {/* Role */}

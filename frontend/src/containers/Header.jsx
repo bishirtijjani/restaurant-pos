@@ -1,6 +1,8 @@
 import { themeChange } from "theme-change";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { logoutUser } from "../app/authSlice";
+
 import Bars3Icon from "@heroicons/react/24/outline/Bars3Icon";
 import { openRightDrawer } from "../features/common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
@@ -27,6 +29,7 @@ function Header() {
   const { noOfNotifications, pageTitle } = useSelector((state) => state.header);
   const { activeStore } = useSelector((state) => state.commonStore);
   const { user } = useSelector((state) => state.auth);
+
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("theme")
   );
@@ -61,8 +64,8 @@ function Header() {
     );
   };
 
-  function logoutUser() {
-    localStorage.clear();
+  function logoutUserHandler() {
+    dispatch(logoutUser());
     navigate("/login");
   }
 
@@ -212,7 +215,7 @@ function Header() {
               </li>
               <div className="divider mt-0 mb-0"></div>
               <li>
-                <a onClick={logoutUser}>Logout</a>
+                <a onClick={logoutUserHandler}>Logout</a>
               </li>
             </ul>
           </div>

@@ -49,6 +49,7 @@ const userSchema = new mongoose.Schema(
       // required: true, // No longer strictly required as 'stores' is the source of truth
       default: "staff",
     },
+    pinCode: { type: String, default: null }, // Hashed PIN code
     securityQuestions: [
       {
         question: { type: String, required: true },
@@ -88,6 +89,11 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
+  }
+
+  // Hash pinCode before saving
+  if (this.isModified("pinCode") && this.pinCode) {
+    this.pinCode = await bcrypt.hash(this.pinCode, 10);
   }
 
   // Hash security answers before saving

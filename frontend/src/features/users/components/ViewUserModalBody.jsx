@@ -77,7 +77,9 @@ const ViewUserModalBody = ({ closeModal, extraObject }) => {
           <h2 className="text-2xl font-bold">{user.fullname}</h2>
           <div className="flex items-center gap-2 mt-1">
             <div
-              className={`badge ${getRoleBadgeClass(user.role)} gap-1 font-medium`}
+              className={`badge ${getRoleBadgeClass(
+                user.role
+              )} gap-1 font-medium`}
             >
               {getRoleIcon(user.role)}
               {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
@@ -185,6 +187,13 @@ const ViewUserModalBody = ({ closeModal, extraObject }) => {
               {user.securityQuestions?.length > 0
                 ? "Security Questions Configured"
                 : "No Security Questions"}
+            </div>
+            <div
+              className={`badge ${
+                user.pinCode ? "badge-success" : "badge-ghost"
+              } gap-1`}
+            >
+              {user.pinCode ? "PIN Configured" : "No PIN Set"}
             </div>
             {user.refreshTokens?.length > 0 && (
               <div className="badge badge-info gap-1">

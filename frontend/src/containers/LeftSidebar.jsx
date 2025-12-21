@@ -6,6 +6,9 @@ import ArrowLeftStartOnRectangleIcon from "@heroicons/react/24/outline/ArrowLeft
 import { jwtDecode } from "jwt-decode";
 import SessionExpired from "../features/common/components/SessionExpiredModalBody";
 import StoreSwitcher from "../features/common/components/StoreSwitcher";
+import { useDispatch } from "react-redux";
+
+import { logoutUser } from "../app/authSlice";
 
 // Helpers
 const token = localStorage.getItem("token");
@@ -57,14 +60,15 @@ const SidebarContent = (() => {
 
 function LeftSidebar() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const closeSidebar = () => {
     const sidebarToggle = document.getElementById("left-sidebar-drawer");
     if (sidebarToggle) sidebarToggle.click();
   };
 
-  function logoutUser() {
-    localStorage.clear();
+  function logoutUserHandler() {
+    dispatch(logoutUser());
     navigate("/login");
   }
 
@@ -104,7 +108,7 @@ function LeftSidebar() {
         <li className="mt-auto px-2 py-6">
           <a
             className="w-full btn bg-error text-white hover:bg-error/90 shadow-md flex items-center justify-center gap-2"
-            onClick={logoutUser}
+            onClick={logoutUserHandler}
           >
             <ArrowLeftStartOnRectangleIcon className="h-5 w-5" />
             Logout

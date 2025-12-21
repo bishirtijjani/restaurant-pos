@@ -55,47 +55,63 @@ const updateSettings = async (req, res) => {
       taxSettings,
       serviceCharge,
       globalDiscount,
+      paymentGateways,
     } = req.body;
 
-    // Validate required fields
-    if (!restaurantName || restaurantName.trim() === "") {
+    // Validate required fields only if they are being updated
+    if (
+      restaurantName !== undefined &&
+      (!restaurantName || restaurantName.trim() === "")
+    ) {
       return res.status(400).json({
         success: false,
         message: "Restaurant name is required",
       });
     }
 
-    if (!restaurantAddress || restaurantAddress.trim() === "") {
+    if (
+      restaurantAddress !== undefined &&
+      (!restaurantAddress || restaurantAddress.trim() === "")
+    ) {
       return res.status(400).json({
         success: false,
         message: "Restaurant address is required",
       });
     }
 
-    if (!restaurantPhone || restaurantPhone.trim() === "") {
+    if (
+      restaurantPhone !== undefined &&
+      (!restaurantPhone || restaurantPhone.trim() === "")
+    ) {
       return res.status(400).json({
         success: false,
         message: "Restaurant phone number is required",
       });
     }
 
-    if (!restaurantEmail || restaurantEmail.trim() === "") {
+    if (
+      restaurantEmail !== undefined &&
+      (!restaurantEmail || restaurantEmail.trim() === "")
+    ) {
       return res.status(400).json({
         success: false,
         message: "Restaurant email is required",
       });
     }
 
-    // Validate email format
-    if (!emailRegex.test(restaurantEmail)) {
+    // Validate email format only if email is being updated
+    if (restaurantEmail !== undefined && !emailRegex.test(restaurantEmail)) {
       return res.status(400).json({
         success: false,
         message: "Please enter a valid email address",
       });
     }
 
-    // Validate currency object
-    if (!currency || !currency.code || !currency.name || !currency.symbol) {
+    // Validate currency object only if currency is being updated
+    if (
+      currency !== undefined &&
+      (!currency || !currency.code || !currency.name || !currency.symbol)
+    ) {
       return res.status(400).json({
         success: false,
         message: "Currency information is incomplete",
@@ -178,17 +194,26 @@ const updateSettings = async (req, res) => {
 
     if (!store.settings) store.settings = {};
 
-    store.settings.restaurantName = restaurantName;
-    store.settings.restaurantAddress = restaurantAddress;
-    store.settings.restaurantPhone = restaurantPhone;
-    store.settings.restaurantEmail = restaurantEmail;
-    store.settings.restaurantMotto = restaurantMotto || "";
-    store.settings.currency = currency;
-    store.settings.dateFormat = dateFormat;
-    store.settings.lowStockAlert = lowStockAlert;
-    store.settings.autoGenerateSKU = autoGenerateSKU;
-    store.settings.emailNotifications = emailNotifications;
-    store.settings.timezone = timezone;
+    // Only update fields that are provided
+    if (restaurantName !== undefined)
+      store.settings.restaurantName = restaurantName;
+    if (restaurantAddress !== undefined)
+      store.settings.restaurantAddress = restaurantAddress;
+    if (restaurantPhone !== undefined)
+      store.settings.restaurantPhone = restaurantPhone;
+    if (restaurantEmail !== undefined)
+      store.settings.restaurantEmail = restaurantEmail;
+    if (restaurantMotto !== undefined)
+      store.settings.restaurantMotto = restaurantMotto;
+    if (currency !== undefined) store.settings.currency = currency;
+    if (dateFormat !== undefined) store.settings.dateFormat = dateFormat;
+    if (lowStockAlert !== undefined)
+      store.settings.lowStockAlert = lowStockAlert;
+    if (autoGenerateSKU !== undefined)
+      store.settings.autoGenerateSKU = autoGenerateSKU;
+    if (emailNotifications !== undefined)
+      store.settings.emailNotifications = emailNotifications;
+    if (timezone !== undefined) store.settings.timezone = timezone;
 
     // Handle legacy taxRate if still used by frontend, map to taxSettings.globalRate if needed?
     // Or just save it if schema has it (schema didn't have 'taxRate' root field in visible snippet, but maybe it does?)
@@ -226,6 +251,30 @@ const updateSettings = async (req, res) => {
         ...store.settings.globalDiscount,
         ...globalDiscount,
       };
+    }
+
+    // Handle payment gateway settings
+    if (paymentGateways) {
+      if (!store.settings.paymentGateways) store.settings.paymentGateways = {};
+
+      // Update Stripe settings if provided
+      if (paymentGateways.stripe) {
+        store.settings.paymentGateways.stripe = {
+          ...store.settings.paymentGateways.stripe,
+          enabled: paymentGateways.stripe.enabled,
+          publishableKey: paymentGateways.stripe.publishableKey,
+          accountId: paymentGateways.stripe.accountId,
+        };
+
+        // Only update secretKey if it's provided and not empty
+        if (
+          paymentGateways.stripe.secretKey &&
+          paymentGateways.stripe.secretKey.trim() !== ""
+        ) {
+          store.settings.paymentGateways.stripe.secretKey =
+            paymentGateways.stripe.secretKey;
+        }
+      }
     }
 
     await store.save();

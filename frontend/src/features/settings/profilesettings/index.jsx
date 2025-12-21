@@ -13,6 +13,7 @@ function ProfileSettings() {
     email: "",
     password: "",
     confirmPassword: "",
+    pinCode: "",
   });
 
   const [securityQuestions, setSecurityQuestions] = useState([
@@ -31,6 +32,7 @@ function ProfileSettings() {
         ...f,
         fullname: user.fullname || "",
         email: user.email || "",
+        pinCode: user.pinCode ? "****" : "",
       }));
 
       // Load existing security questions (without answers)
@@ -85,6 +87,8 @@ function ProfileSettings() {
         email: formData.email,
       };
       if (formData.password) payload.password = formData.password;
+      if (formData.pinCode && formData.pinCode !== "****")
+        payload.pinCode = formData.pinCode;
       if (updateSecurityQuestions)
         payload.securityQuestions = securityQuestions;
 
@@ -160,6 +164,23 @@ function ProfileSettings() {
             onChange={handleInputChange}
             className="input input-bordered w-full"
             autoComplete="new-password"
+          />
+        </div>
+
+        <div>
+          <label className="label">PIN Code (4-6 digits)</label>
+          <input
+            name="pinCode"
+            type="text"
+            maxLength={6}
+            value={formData.pinCode}
+            onChange={handleInputChange}
+            className="input input-bordered w-full"
+            placeholder={
+              user?.pinCode
+                ? "Leave as **** to keep current PIN"
+                : "Enter new PIN"
+            }
           />
         </div>
 

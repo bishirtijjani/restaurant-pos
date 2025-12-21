@@ -14,7 +14,10 @@ const validateBody = (schema) => {
       const value = req.body[field];
 
       // Check required
-      if (rules.required && (value === undefined || value === null || value === "")) {
+      if (
+        rules.required &&
+        (value === undefined || value === null || value === "")
+      ) {
         errors.push(`${field} is required`);
         continue;
       }
@@ -35,7 +38,9 @@ const validateBody = (schema) => {
       // Min length (for strings and arrays)
       if (rules.minLength !== undefined) {
         if (typeof value === "string" && value.length < rules.minLength) {
-          errors.push(`${field} must be at least ${rules.minLength} characters`);
+          errors.push(
+            `${field} must be at least ${rules.minLength} characters`
+          );
         }
         if (Array.isArray(value) && value.length < rules.minLength) {
           errors.push(`${field} must have at least ${rules.minLength} items`);
@@ -173,10 +178,14 @@ const validateQuery = (schema) => {
 // Common validation schemas for reuse
 const schemas = {
   mongoId: { required: true, mongoId: true },
-  
+
   // Order schemas
   createOrder: {
-    orderType: { required: true, type: "string", enum: ["dine-in", "takeaway", "delivery", "walk-in"] },
+    orderType: {
+      required: true,
+      type: "string",
+      enum: ["dine-in", "takeaway", "delivery", "walk-in"],
+    },
     orderItems: { required: true, type: "array", minLength: 1 },
   },
 
@@ -194,12 +203,19 @@ const schemas = {
     email: { required: true, email: true },
     password: { required: true, type: "string", minLength: 5 },
   },
+  pinLogin: {
+    email: { required: true, email: true },
+    pinCode: { required: true, type: "string", minLength: 4, maxLength: 6 },
+  },
 
   register: {
     fullname: { required: true, type: "string", minLength: 2 },
     email: { required: true, email: true },
     password: { required: true, type: "string", minLength: 5 },
-    role: { required: true, enum: ["admin", "manager", "cashier", "waiter", "kitchen"] },
+    role: {
+      required: true,
+      enum: ["admin", "manager", "cashier", "waiter", "kitchen"],
+    },
   },
 };
 
