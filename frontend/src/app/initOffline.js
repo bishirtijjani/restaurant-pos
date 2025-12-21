@@ -2,6 +2,7 @@
 import { syncManager } from "../utils/offline/syncManager";
 import { connectionMonitor } from "../utils/offline/connectionMonitor";
 import store from "./store";
+import { isTokenExpired } from "../utils/Helpers";
 
 export const initializeOfflineSupport = () => {
   console.log("Initializing offline support...");
@@ -45,7 +46,7 @@ export const initializeOfflineSupport = () => {
   let currentToken = store.getState().auth.token;
 
   // Initial check
-  if (currentToken) {
+  if (currentToken && !isTokenExpired(currentToken)) {
     syncManager.startAutoSync(30000);
   }
 

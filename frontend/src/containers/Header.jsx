@@ -64,8 +64,13 @@ function Header() {
     );
   };
 
-  function logoutUserHandler() {
-    dispatch(logoutUser());
+  async function logoutUserHandler() {
+    await dispatch(logoutUser());
+
+    // Clear other session-related storage
+    localStorage.removeItem("activeStoreId");
+    dispatch({ type: "store/clearActiveStore" });
+
     navigate("/login");
   }
 

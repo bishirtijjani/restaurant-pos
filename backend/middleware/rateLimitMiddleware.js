@@ -25,13 +25,14 @@ const createRateLimiter = (options = {}) => {
     windowMs = 60000, // 1 minute
     max = 100,
     message = "Too many requests, please try again later.",
+    name = "general", // Added name to isolate different limiters
   } = options;
 
   return (req, res, next) => {
-    // Create unique key based on IP and user ID (if authenticated)
+    // Create unique key based on Name, IP and user ID (if authenticated)
     const userId = req.user?.id || "anonymous";
     const ip = req.ip || req.connection.remoteAddress;
-    const key = `${ip}-${userId}`;
+    const key = `${name}-${ip}-${userId}`; // Included name in the key
 
     const now = Date.now();
     const windowStart = now - windowMs;
@@ -54,7 +55,9 @@ const createRateLimiter = (options = {}) => {
     res.set({
       "X-RateLimit-Limit": max,
       "X-RateLimit-Remaining": Math.max(0, max - record.count),
-      "X-RateLimit-Reset": new Date(record.windowStart + windowMs).toISOString(),
+      "X-RateLimit-Reset": new Date(
+        record.windowStart + windowMs
+      ).toISOString(),
     });
 
     if (record.count > max) {
@@ -72,23 +75,27 @@ const createRateLimiter = (options = {}) => {
 // Pre-configured rate limiters for different use cases
 module.exports = {
   createRateLimiter,
-  
+
   // General API rate limiter (100 requests per minute)
   generalLimiter: createRateLimiter({
+    name: "api",
     windowMs: 60000,
     max: 100,
     message: "Too many requests, please try again later.",
   }),
 
-  // Auth rate limiter (stricter for login/register - 5 per minute)
+  // Auth rate limiter (stricter for login/register - 20 per minute)
   authLimiter: createRateLimiter({
+    name: "auth",
     windowMs: 60000,
     max: 20,
-    message: "Too many authentication attempts. Please wait a minute before trying again.",
+    message:
+      "Too many authentication attempts. Please wait a minute before trying again.",
   }),
 
   // Sensitive operations rate limiter (10 per minute)
   sensitiveLimiter: createRateLimiter({
+    name: "sensitive",
     windowMs: 60000,
     max: 10,
     message: "Rate limit exceeded for sensitive operations. Please slow down.",

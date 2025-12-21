@@ -45,6 +45,20 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Don't fetch settings if we're on a public page to save quota
+    const publicPaths = [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+      "/home",
+    ];
+    const isPublicPage = publicPaths.some((path) =>
+      window.location.pathname.includes(path)
+    );
+
+    if (isPublicPage) return;
+
     dispatch(fetchSettings());
   }, [dispatch]);
 
