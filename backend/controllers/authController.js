@@ -32,7 +32,7 @@ const generateTokens = (user) => {
 
 const register = async (req, res) => {
   try {
-    const { fullname, email, password, securityQuestions } = req.body;
+    const { fullname, email, password, securityQuestions, pinCode } = req.body;
 
     if (!fullname || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -72,7 +72,7 @@ const register = async (req, res) => {
       fullname,
       email,
       password,
-      pinCode: req.body.pinCode || null,
+      pinCode: pinCode || null,
       securityQuestions,
       // Global role is deprecated but set to admin for the signup user
       role: "admin",
@@ -511,7 +511,7 @@ const getCurrentUser = async (req, res) => {
 const updateCurrentUser = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { fullname, email, password, securityQuestions } = req.body;
+    const { fullname, email, password, securityQuestions, pinCode } = req.body;
 
     const user = await User.findById(userId);
     if (!user)
