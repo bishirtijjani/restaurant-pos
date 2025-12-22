@@ -11,7 +11,7 @@
   - [x] Kitchen/Bar view for order queue
 - [ ] Payment Management
   - [x] Manual payment tracking
-  - [ ] Online payment gateway integration
+  - [x] Online payment gateway integration
   - [x] Partial payments / split bills
   - [ ] Refunds and cancellations
   - [x] Tax calculations
