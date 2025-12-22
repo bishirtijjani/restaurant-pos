@@ -20,6 +20,7 @@ import {
 } from "./generalSettingsSlice";
 import { showNotification } from "../../common/headerSlice";
 import PaymentSettings from "../components/PaymentSettings";
+import CommunicationSettings from "./components/CommunicationSettings";
 
 const timezoneOptions = [
   { name: "UTC (Coordinated Universal Time)", value: "UTC" },
@@ -57,6 +58,11 @@ const GeneralSettings = () => {
             secretKey: "",
             accountId: "",
           },
+        },
+        communication: settings.communication || {
+          email: { provider: "log", enabled: true, config: {} },
+          sms: { provider: "log", enabled: false, config: {} },
+          whatsapp: { provider: "log", enabled: false, config: {} },
         },
       });
     }
@@ -101,6 +107,15 @@ const GeneralSettings = () => {
     setFormData((prev) => ({
       ...prev,
       paymentGateways: newPaymentConfig,
+    }));
+    setHasChanges(true);
+  };
+
+  // Handle communication settings change
+  const handleCommChange = (newCommConfig) => {
+    setFormData((prev) => ({
+      ...prev,
+      communication: newCommConfig,
     }));
     setHasChanges(true);
   };
@@ -424,6 +439,14 @@ const GeneralSettings = () => {
           <PaymentSettings
             config={formData.paymentGateways}
             onChange={handlePaymentChange}
+          />
+        </div>
+
+        {/* Communication Settings */}
+        <div className="md:col-span-2">
+          <CommunicationSettings
+            config={formData.communication}
+            onChange={handleCommChange}
           />
         </div>
 

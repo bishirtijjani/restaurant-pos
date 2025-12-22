@@ -12,6 +12,7 @@ const {
   incrementPromoCodeUsage,
   validatePromoCode,
 } = require("../utils/discountCalculator");
+const CommManager = require("../utils/communicationManager");
 
 // Function to generate unique order numbers
 const generateOrderNumber = async (session, storeId) => {
@@ -345,6 +346,19 @@ const createOrder = async (req, res) => {
 
         inventoryItem.currentStock -= deduction.quantityToDeduct;
         await inventoryItem.save({ session });
+
+        // Trigger low stock alert if needed
+        if (inventoryItem.currentStock <= inventoryItem.minStockLevel) {
+          CommManager.sendWhatsApp(storeId, {
+            action: "low_stock",
+            data: {
+              itemName: inventoryItem.name,
+              currentStock: inventoryItem.currentStock,
+              unit: inventoryItem.unit,
+            },
+            to: settings.restaurantPhone || "", // Configurable recipient
+          });
+        }
       }
     }
 
@@ -611,8 +625,34 @@ const createOrder = async (req, res) => {
       .populate("orderItems.menuItemId", "name category");
 
     // Notify KDS via WebSocket
-    // Notify KDS via WebSocket
     notifyKDS("order:created", populatedOrder, null, req.storeId);
+
+    // Dynamic Notifications (Email/SMS/WhatsApp Confirmations)
+    if (customerDetails?.email || customerDetails?.phone) {
+      const recipient = customerDetails.email || customerDetails.phone;
+      const tplData = {
+        customerName: customerDetails.name || "Customer",
+        orderNumber: newOrder.orderNumber,
+        totalAmount: finalTotal.toFixed(2),
+      };
+
+      if (customerDetails.email) {
+        CommManager.sendEmail(req.storeId, {
+          to: customerDetails.email,
+          action: "order_confirmation",
+          data: tplData,
+        });
+      }
+
+      if (customerDetails.phone) {
+        // Decide between SMS or WhatsApp based on store preference or always send both if enabled
+        CommManager.sendSMS(req.storeId, {
+          to: customerDetails.phone,
+          action: "order_confirmation",
+          data: tplData,
+        });
+      }
+    }
 
     return res.status(201).json({
       success: true,
@@ -799,8 +839,28 @@ const updateOrderStatus = async (req, res) => {
     await order.populate("orderItems.menuItemId", "name category");
 
     // Notify KDS via WebSocket
-    // Notify KDS via WebSocket
     notifyKDS("order:updated", order, null, req.storeId);
+
+    // Dynamic Notifications for Customer (Status Updates)
+    if (
+      ["ready", "served", "cancelled"].includes(orderStatus) &&
+      (order.customerDetails?.phone || order.customerDetails?.email)
+    ) {
+      const tplData = {
+        customerName: order.customerDetails?.name || "Customer",
+        orderNumber: order.orderNumber,
+        orderStatus: orderStatus,
+      };
+
+      if (order.customerDetails.phone) {
+        CommManager.sendSMS(req.storeId, {
+          to: order.customerDetails.phone,
+          action: "order_status_update",
+          data: tplData,
+          body: `Hi ${tplData.customerName}, your order #${tplData.orderNumber} is now ${tplData.orderStatus}!`,
+        });
+      }
+    }
 
     return res.status(200).json({
       success: true,

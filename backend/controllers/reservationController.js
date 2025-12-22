@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Store = require("../models/Store"); // Replaces GeneralSettings
 const logAction = require("../utils/logAction");
+const CommManager = require("../utils/communicationManager");
 
 // Helper function to generate unique order number (scoped to store)
 const generateOrderNumber = async (storeId) => {
@@ -247,6 +248,33 @@ exports.createReservation = async (req, res) => {
     const populatedReservation = await Reservation.findById(reservation._id)
       .populate("tableId", "tableNumber floorId")
       .populate("createdBy", "fullname");
+
+    // Send Reservation Confirmation
+    if (customerEmail || customerPhone) {
+      const tplData = {
+        customerName,
+        reservationDate: resDate.toLocaleDateString(),
+        reservationTime,
+        partySize,
+        restaurantName: populatedReservation.storeId?.name || "Our Restaurant",
+      };
+
+      if (customerEmail) {
+        CommManager.sendEmail(req.storeId, {
+          to: customerEmail,
+          action: "reservation_confirmation",
+          data: tplData,
+        });
+      }
+
+      if (customerPhone) {
+        CommManager.sendSMS(req.storeId, {
+          to: customerPhone,
+          action: "reservation_confirmation",
+          data: tplData,
+        });
+      }
+    }
 
     res.status(201).json({
       success: true,

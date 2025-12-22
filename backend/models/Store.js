@@ -65,8 +65,36 @@ const storeSchema = new mongoose.Schema(
       lowStockAlert: { type: Number, default: 10 },
       autoGenerateSKU: { type: Boolean, default: true },
 
-      // Notifications
-      emailNotifications: { type: Boolean, default: true },
+      // Communication Settings (Modular & Multi-Provider)
+      communication: {
+        email: {
+          provider: {
+            type: String,
+            enum: ["log", "sendgrid", "ses"],
+            default: "log",
+          },
+          enabled: { type: Boolean, default: true },
+          config: { type: Map, of: String, default: {}, select: false },
+        },
+        sms: {
+          provider: {
+            type: String,
+            enum: ["log", "twilio", "vonage"],
+            default: "log",
+          },
+          enabled: { type: Boolean, default: false },
+          config: { type: Map, of: String, default: {}, select: false },
+        },
+        whatsapp: {
+          provider: {
+            type: String,
+            enum: ["log", "twilio", "official"],
+            default: "log",
+          },
+          enabled: { type: Boolean, default: false },
+          config: { type: Map, of: String, default: {}, select: false },
+        },
+      },
 
       // Financials
       taxSettings: {

@@ -56,6 +56,8 @@ const updateSettings = async (req, res) => {
       serviceCharge,
       globalDiscount,
       paymentGateways,
+      communication,
+      printerSettings,
     } = req.body;
 
     // Validate required fields only if they are being updated
@@ -275,6 +277,60 @@ const updateSettings = async (req, res) => {
             paymentGateways.stripe.secretKey;
         }
       }
+    }
+
+    // Handle Communication Settings (Modular)
+    if (communication) {
+      if (!store.settings.communication) store.settings.communication = {};
+
+      ["email", "sms", "whatsapp"].forEach((channel) => {
+        if (communication[channel]) {
+          const chanUpdate = communication[channel];
+          const existingChan = store.settings.communication[channel] || {};
+
+          store.settings.communication[channel] = {
+            provider: chanUpdate.provider || existingChan.provider || "log",
+            enabled:
+              chanUpdate.enabled !== undefined
+                ? chanUpdate.enabled
+                : existingChan.enabled,
+          };
+
+          // Handle Config Map - Merge only non-empty values
+          if (chanUpdate.config) {
+            // Mongoose Map support: we need to use .set()
+            // Ensure config exists
+            if (!store.settings.communication[channel].config) {
+              store.settings.communication[channel].config = {};
+            }
+
+            Object.entries(chanUpdate.config).forEach(([key, val]) => {
+              if (val && val.trim() !== "") {
+                // If it's a POJO Map, use bracket notation.
+                // In Mongoose schema it's type: Map, which behaves like a regular object for assignment but can use .set
+                if (
+                  typeof store.settings.communication[channel].set ===
+                  "function"
+                ) {
+                  store.settings.communication[channel].config.set(key, val);
+                } else {
+                  store.settings.communication[channel].config[key] = val;
+                }
+              }
+            });
+          }
+        }
+      });
+      // Mark as modified if using Maps
+      store.markModified("settings.communication");
+    }
+
+    // Handle Printer Settings
+    if (printerSettings) {
+      store.settings.printerSettings = {
+        ...store.settings.printerSettings,
+        ...printerSettings,
+      };
     }
 
     await store.save();

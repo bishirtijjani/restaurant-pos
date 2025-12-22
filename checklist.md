@@ -33,10 +33,11 @@
   - [x] Inventory usage reports
   - [x] Staff performance reports
   - [x] Customer analytics
-- [ ] Notifications
-  - [ ] Email & SMS notifications
-  - [x] Order updates for customers
-  - [x] Low stock alerts for staff
+- [x] Notifications
+  - [x] Email, SMS, & WhatsApp infrastructure (Modular/Multi-Tenant)
+  - [x] Order updates for customers (Integrated)
+  - [x] Low stock alerts for staff (Integrated)
+  - [x] Reservation confirmations (Integrated)
 - [x] Multi-location & multi-user support
   - [x] Support for multiple branches
   - [x] Admin dashboard for global view

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const InventoryItem = require("../models/InventoryItem");
 const MenuItem = require("../models/MenuItem");
 const logAction = require("../utils/logAction");
+const CommManager = require("../utils/communicationManager");
 
 // Get all inventory items
 exports.getAllInventoryItems = async (req, res) => {
@@ -205,6 +206,19 @@ exports.updateInventoryItem = async (req, res) => {
       updatedItem,
       req.body.reason || `Updated inventory item: ${updatedItem.name}`
     );
+
+    // Check for low stock alert
+    if (updatedItem.currentStock <= updatedItem.minStockLevel) {
+      CommManager.sendWhatsApp(req.storeId, {
+        to: req.user.phone || updatedItem.supplier?.phone || "", // Fallback to supplier or generic alert number?
+        action: "low_stock",
+        data: {
+          itemName: updatedItem.name,
+          currentStock: updatedItem.currentStock,
+          unit: updatedItem.unit,
+        },
+      });
+    }
 
     res.status(200).json({
       success: true,
