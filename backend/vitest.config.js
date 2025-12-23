@@ -8,4 +8,8 @@ export default defineConfig({
     setupFiles: ["./test/setup.js"],
     testTimeout: 30000,
   },
+  define: {
+    "process.env.JWT_SECRET": JSON.stringify("testsecret123"),
+    "process.env.NODE_ENV": JSON.stringify("test"),
+  },
 });

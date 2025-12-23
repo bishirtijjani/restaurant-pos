@@ -56,6 +56,15 @@ const setupAxiosInterceptors = () => {
           localStorage.removeItem("activeStoreId");
           store.dispatch({ type: "store/clearActiveStore" });
 
+          // Show notification
+          store.dispatch({
+            type: "header/showNotification",
+            payload: {
+              message: errorMessage || "Please select a store to continue",
+              status: 0,
+            },
+          });
+
           // Redirect to store selection
           if (!window.location.pathname.includes("/stores")) {
             window.location.href = "/app/stores";
@@ -95,6 +104,47 @@ const setupAxiosInterceptors = () => {
           }
           return Promise.reject(refreshError);
         }
+      }
+
+      // Handle 429 Too Many Requests
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.data?.retryAfter;
+        const message =
+          error.response?.data?.message ||
+          "Too many requests. Please wait a moment before trying again.";
+        const fullMessage = retryAfter
+          ? `${message} (Wait ${retryAfter} seconds)`
+          : message;
+
+        store.dispatch({
+          type: "header/showNotification",
+          payload: {
+            message: fullMessage,
+            status: 0,
+          },
+        });
+      }
+
+      // Handle server errors (5xx)
+      if (error.response?.status >= 500) {
+        store.dispatch({
+          type: "header/showNotification",
+          payload: {
+            message: "Server error. Please try again later.",
+            status: 0,
+          },
+        });
+      }
+
+      // Handle Network Errors (no response)
+      if (!error.response) {
+        store.dispatch({
+          type: "header/showNotification",
+          payload: {
+            message: "Network error. Please check your internet connection.",
+            status: 0,
+          },
+        });
       }
 
       return Promise.reject(error);

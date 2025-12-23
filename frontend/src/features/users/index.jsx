@@ -289,7 +289,7 @@ const SearchAndFilters = ({
             <label className="input input-bordered flex items-center gap-2 w-full">
               <Search className="w-5 h-5 text-info" />
               <input
-                type="text"
+                type="search"
                 className="grow"
                 placeholder="Search users by name or email..."
                 value={searchTerm}

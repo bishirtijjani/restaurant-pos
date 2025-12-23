@@ -5,13 +5,16 @@ import "./index.css";
 import store from "./app/store.js";
 import { Provider } from "react-redux";
 import SuspenseContent from "./containers/SuspenseContent";
+import ErrorBoundary from "./components/Common/ErrorBoundary";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Provider store={store}>
-      <Suspense fallback={<SuspenseContent />}>
-        <App />
-      </Suspense>
-    </Provider>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <Suspense fallback={<SuspenseContent />}>
+          <App />
+        </Suspense>
+      </Provider>
+    </ErrorBoundary>
   </StrictMode>
 );

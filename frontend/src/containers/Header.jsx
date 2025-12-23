@@ -14,6 +14,7 @@ import {
   Database,
   WifiOff,
   UserCircle2,
+  ChevronDownIcon,
 } from "lucide-react";
 import { getTourId } from "../utils/Helpers";
 import TourTriggerButton from "../features/onboarding/components/TourTriggerButton";
@@ -99,11 +100,11 @@ function Header() {
         </div>
 
         <button
-          className="btn btn-sm rounded-box btn-outline mx-2 md:btn-md"
+          className="btn btn-sm rounded-box mx-2 md:btn-md"
           onClick={() => window.location.reload()}
         >
           <RefreshCw className="h-5 w-5" />
-          Refresh
+          <span className="hidden md:inline">Refresh</span>
         </button>
 
         <div className="flex-none ">
@@ -142,10 +143,11 @@ function Header() {
             <div
               tabIndex={0}
               role="button"
-              className="theme-div btn btn-sm rounded-box btn-outline mx-2 md:btn-md"
+              className="theme-div btn btn-sm rounded-box shadow-sm mx-2 md:btn-md"
             >
               <PaletteIcon className="h-5 w-5" />
-              <span className="text-sm">Theme</span>
+              <span className="hidden md:inline">Theme</span>
+              <ChevronDownIcon className="h-5 w-5" />
             </div>
             <ul
               tabIndex={0}

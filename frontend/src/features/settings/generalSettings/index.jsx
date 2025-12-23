@@ -161,6 +161,7 @@ const GeneralSettings = () => {
               value={formData.restaurantName || ""}
               onChange={handleInputChange}
               className="input input-bordered w-full"
+              autoComplete="off"
             />
           </div>
 
@@ -174,6 +175,7 @@ const GeneralSettings = () => {
               value={formData.restaurantPhone || ""}
               onChange={handleInputChange}
               className="input input-bordered w-full"
+              autoComplete="off"
             />
           </div>
 
@@ -186,6 +188,7 @@ const GeneralSettings = () => {
               value={formData.restaurantAddress || ""}
               onChange={handleInputChange}
               className="textarea textarea-bordered h-24"
+              autoComplete="off"
             ></textarea>
           </div>
 
@@ -199,6 +202,7 @@ const GeneralSettings = () => {
               value={formData.restaurantEmail || ""}
               onChange={handleInputChange}
               className="input input-bordered w-full"
+              autoComplete="off"
             />
           </div>
 
@@ -212,6 +216,7 @@ const GeneralSettings = () => {
               value={formData.restaurantMotto || ""}
               onChange={handleInputChange}
               className="input input-bordered w-full"
+              autoComplete="off"
             />
           </div>
         </div>

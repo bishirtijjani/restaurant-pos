@@ -675,7 +675,7 @@ export default function POS() {
 
     dispatch(
       openRightDrawer({
-        title: "Payment Confirmation",
+        header: "Payment Confirmation",
         bodyType: RIGHT_DRAWER_TYPES.CONFIRM_PAYMENT,
         extraObject: orderPayload,
       })

@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, loginUserWithPin } from "../../app/authSlice"; // Import the loginUser thunk
+import {
+  loginUser,
+  loginUserWithPin,
+  clearAuthError,
+} from "../../app/authSlice"; // Import the loginUser thunk
 import { Link, useNavigate } from "react-router-dom";
 import LoginHeroSection from "./LoginHeroSection";
 import ErrorText from "../../components/Typography/ErrorText";
@@ -19,7 +23,7 @@ function Login() {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loginMode, setLoginMode] = useState("password"); // 'password' or 'pin'
+  const [loginMode, setLoginMode] = useState("pin"); // 'password' or 'pin' - PIN is default for quick POS access
 
   const submitForm = async (e) => {
     e.preventDefault();
@@ -36,9 +40,23 @@ function Login() {
       if (loginUser.fulfilled.match(result)) {
         localStorage.setItem("lastEmail", email);
         navigate("/app/dashboard");
+      } else if (loginUser.rejected.match(result)) {
+        // Error is already set in Redux state and will be displayed
+        // Also show a notification for better UX
+        dispatch(
+          showNotification({
+            message: result.payload || "Invalid email or password",
+            status: 0,
+          })
+        );
       }
     } catch (error) {
-      showNotification({ message: "An unexpected error occurred!", status: 0 });
+      dispatch(
+        showNotification({
+          message: "An unexpected error occurred!",
+          status: 0,
+        })
+      );
     }
   };
 
@@ -60,14 +78,38 @@ function Login() {
       if (loginUserWithPin.fulfilled.match(result)) {
         localStorage.setItem("lastEmail", email);
         navigate("/app/dashboard");
+      } else if (loginUserWithPin.rejected.match(result)) {
+        // Error is already set in Redux state and will be displayed
+        // Also show a notification for better UX
+        dispatch(
+          showNotification({
+            message: result.payload || "Invalid PIN",
+            status: 0,
+          })
+        );
       }
     } catch (error) {
-      showNotification({ message: "An unexpected error occurred!", status: 0 });
+      dispatch(
+        showNotification({
+          message: "An unexpected error occurred!",
+          status: 0,
+        })
+      );
     }
   };
 
   const updateFormValue = ({ updateType, value }) => {
     setLoginObj({ ...loginObj, [updateType]: value });
+  };
+
+  const switchToPasswordMode = () => {
+    dispatch(clearAuthError());
+    setLoginMode("password");
+  };
+
+  const switchToPinMode = () => {
+    dispatch(clearAuthError());
+    setLoginMode("pin");
   };
 
   return (
@@ -126,7 +168,7 @@ function Login() {
                     <button
                       type="button"
                       className="btn btn-ghost btn-sm text-primary gap-2"
-                      onClick={() => setLoginMode("pin")}
+                      onClick={switchToPinMode}
                     >
                       <KeyIcon className="w-4 h-4" />
                       Use PIN
@@ -150,7 +192,7 @@ function Login() {
               <PinLogin
                 email={loginObj.email}
                 onLogin={submitPinLogin}
-                onCancel={() => setLoginMode("password")}
+                onCancel={switchToPasswordMode}
                 loading={loading}
               />
             )}

@@ -101,4 +101,6 @@ inventoryItemSchema.index(
   { unique: true, sparse: true }
 );
 
-module.exports = mongoose.model("InventoryItem", inventoryItemSchema);
+module.exports =
+  mongoose.models.InventoryItem ||
+  mongoose.model("InventoryItem", inventoryItemSchema);

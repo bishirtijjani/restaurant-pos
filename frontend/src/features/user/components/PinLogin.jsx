@@ -1,8 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { Delete, X } from "lucide-react";
+import ErrorText from "../../../components/Typography/ErrorText";
 
 const PinLogin = ({ onLogin, onCancel, loading, email }) => {
   const [pin, setPin] = useState("");
+  const { error } = useSelector((state) => state.auth);
+
+  // Clear PIN when error occurs
+  useEffect(() => {
+    if (error) {
+      setPin("");
+    }
+  }, [error]);
 
   const handleNumberClick = (num) => {
     if (pin.length < 6) {
@@ -69,7 +79,9 @@ const PinLogin = ({ onLogin, onCancel, loading, email }) => {
         </button>
       </div>
 
-      <div className="flex flex-col w-full gap-2">
+      {error && <ErrorText styleClass="mt-4">{error}</ErrorText>}
+
+      <div className="flex flex-col w-full gap-2 mt-4">
         <button
           onClick={handleSubmit}
           className={`btn btn-primary w-full ${loading ? "loading" : ""}`}

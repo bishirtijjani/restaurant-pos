@@ -128,6 +128,7 @@ function ProfileSettings() {
             onChange={handleInputChange}
             className="input input-bordered w-full"
             disabled={loading}
+            autoComplete="off"
           />
         </div>
 
@@ -140,6 +141,7 @@ function ProfileSettings() {
             onChange={handleInputChange}
             className="input input-bordered w-full"
             disabled={loading}
+            autoComplete="off"
           />
         </div>
 
@@ -181,6 +183,7 @@ function ProfileSettings() {
                 ? "Leave as **** to keep current PIN"
                 : "Enter new PIN"
             }
+            autoComplete="off"
           />
         </div>
 

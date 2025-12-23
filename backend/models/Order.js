@@ -394,4 +394,4 @@ OrderSchema.pre("save", async function (next) {
 OrderSchema.index({ storeId: 1, orderNumber: 1 }, { unique: true });
 OrderSchema.index({ storeId: 1, createdAt: -1 }); // Optimize list queries
 
-module.exports = mongoose.model("Order", OrderSchema);
+module.exports = mongoose.models.Order || mongoose.model("Order", OrderSchema);

@@ -92,4 +92,5 @@ const addOnGroupSchema = new mongoose.Schema(
 addOnGroupSchema.index({ name: 1 });
 addOnGroupSchema.index({ isActive: 1 });
 
-module.exports = mongoose.model("AddOnGroup", addOnGroupSchema);
+module.exports =
+  mongoose.models.AddOnGroup || mongoose.model("AddOnGroup", addOnGroupSchema);

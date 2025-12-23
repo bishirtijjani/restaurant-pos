@@ -1,0 +1,183 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - heading "POS" [level=1] [ref=e7]
+        - button "Refresh" [ref=e8] [cursor=pointer]:
+          - img [ref=e9]
+          - text: Refresh
+        - generic [ref=e14]:
+          - button "Synced" [ref=e15] [cursor=pointer]:
+            - img [ref=e16]
+            - generic [ref=e20]: Synced
+          - button "Theme" [ref=e22] [cursor=pointer]:
+            - img [ref=e23]
+            - generic [ref=e29]: Theme
+          - img [ref=e32] [cursor=pointer]
+      - main [ref=e36]:
+        - generic [ref=e37]:
+          - generic [ref=e38]:
+            - generic [ref=e39]:
+              - img [ref=e40]
+              - textbox "Search items..." [ref=e43]
+            - button "All" [ref=e45] [cursor=pointer]
+            - generic [ref=e47]: No items found
+          - generic [ref=e48]:
+            - heading "Current Order" [level=2] [ref=e49]
+            - generic [ref=e50]:
+              - button "Dine-in" [ref=e51] [cursor=pointer]:
+                - img [ref=e52]
+                - text: Dine-in
+              - button "Takeaway" [ref=e57] [cursor=pointer]:
+                - img [ref=e58]
+                - text: Takeaway
+              - button "Delivery" [ref=e61] [cursor=pointer]:
+                - img [ref=e62]
+                - text: Delivery
+              - button "Walk-In" [ref=e67] [cursor=pointer]:
+                - img [ref=e68]
+                - text: Walk-In
+            - generic [ref=e71]:
+              - generic [ref=e73]: Table Selection
+              - button "Select Table" [ref=e74] [cursor=pointer]
+            - generic [ref=e76]:
+              - img [ref=e77]
+              - paragraph [ref=e80]: Your order is empty
+            - textbox "Order note (allergies, special requests...)" [ref=e82]
+            - button "Discounts & Promos" [ref=e86] [cursor=pointer]:
+              - generic [ref=e87]:
+                - img [ref=e88]
+                - generic [ref=e91]: Discounts & Promos
+              - img [ref=e92]
+            - generic [ref=e94]:
+              - generic [ref=e95]:
+                - generic [ref=e96]: "Subtotal:"
+                - generic [ref=e97]: $0.00
+              - generic [ref=e99]:
+                - generic [ref=e100]: "Total:"
+                - generic [ref=e101]: $0.00
+            - generic [ref=e102]:
+              - button "Send to Kitchen (Pay Later)" [disabled]
+              - generic [ref=e103]:
+                - button "Clear" [disabled]
+                - button "Pay $0.00" [disabled]
+    - list [ref=e106]:
+      - listitem [ref=e107]:
+        - link "Codeket Restaurant Logo Restaurant" [ref=e108] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Codeket Restaurant Logo" [ref=e109]
+          - generic [ref=e110]: Restaurant
+      - generic [ref=e111]:
+        - listitem [ref=e112]:
+          - link "Dashboard" [ref=e113] [cursor=pointer]:
+            - /url: /app/dashboard
+            - img [ref=e115]
+            - text: Dashboard
+        - listitem [ref=e120]:
+          - generic [ref=e122]:
+            - img [ref=e124]
+            - text: Analytics
+            - img [ref=e126]
+        - listitem [ref=e128]:
+          - link "Floors & Tables" [ref=e129] [cursor=pointer]:
+            - /url: /app/floors
+            - img [ref=e131]
+            - text: Floors & Tables
+        - listitem [ref=e135]:
+          - link "Reservations" [ref=e136] [cursor=pointer]:
+            - /url: /app/reservations
+            - img [ref=e138]
+            - text: Reservations
+        - listitem [ref=e141]:
+          - link "Kitchen Display" [ref=e142] [cursor=pointer]:
+            - /url: /app/kds
+            - img [ref=e144]
+            - text: Kitchen Display
+        - listitem [ref=e146]:
+          - link "Discounts & Promos" [ref=e147] [cursor=pointer]:
+            - /url: /app/discounts
+            - img [ref=e149]
+            - text: Discounts & Promos
+        - listitem [ref=e152]:
+          - link "Station Management" [ref=e153] [cursor=pointer]:
+            - /url: /app/stations
+            - img [ref=e155]
+            - text: Station Management
+        - listitem [ref=e157]:
+          - link "Product Categories" [ref=e158] [cursor=pointer]:
+            - /url: /app/categories
+            - img [ref=e160]
+            - text: Product Categories
+        - listitem [ref=e164]:
+          - generic [ref=e166]:
+            - img [ref=e168]
+            - text: Menu
+            - img [ref=e171]
+        - listitem [ref=e173]:
+          - link "Suppliers" [ref=e174] [cursor=pointer]:
+            - /url: /app/suppliers
+            - img [ref=e176]
+            - text: Suppliers
+        - listitem [ref=e181]:
+          - generic [ref=e183]:
+            - img [ref=e185]
+            - text: Inventory
+            - img [ref=e189]
+        - listitem [ref=e191]:
+          - link "Expenses" [ref=e192] [cursor=pointer]:
+            - /url: /app/expenses
+            - img [ref=e194]
+            - text: Expenses
+        - listitem [ref=e197]:
+          - generic [ref=e198]:
+            - generic [ref=e199]:
+              - img [ref=e201]
+              - text: Orders
+              - img [ref=e205]
+            - list [ref=e208]:
+              - listitem [ref=e209]:
+                - link "View All Orders" [ref=e210] [cursor=pointer]:
+                  - /url: /app/orders
+                  - img [ref=e212]
+                  - text: View All Orders
+              - listitem [ref=e216]:
+                - link "Ultra-Fast POS" [ref=e217] [cursor=pointer]:
+                  - /url: /app/ultra-fast-pos
+                  - img [ref=e219]
+                  - text: Ultra-Fast POS
+              - listitem [ref=e221]:
+                - link "POS" [ref=e222] [cursor=pointer]:
+                  - /url: /app/pos
+                  - img [ref=e224]
+                  - text: POS
+        - listitem [ref=e227]:
+          - link "Users" [ref=e228] [cursor=pointer]:
+            - /url: /app/users
+            - img [ref=e230]
+            - text: Users
+        - listitem [ref=e235]:
+          - link "Customers" [ref=e236] [cursor=pointer]:
+            - /url: /app/customers
+            - img [ref=e238]
+            - text: Customers
+        - listitem [ref=e243]:
+          - generic [ref=e245]:
+            - img [ref=e247]
+            - text: Settings
+            - img [ref=e250]
+      - listitem [ref=e252]:
+        - generic [ref=e253] [cursor=pointer]:
+          - img [ref=e254]
+          - text: Logout
+  - button [ref=e260] [cursor=pointer]:
+    - img [ref=e261]
+  - generic:
+    - generic:
+      - generic:
+        - heading [level=3]
+        - button:
+          - img
+```

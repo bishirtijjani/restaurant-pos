@@ -8,6 +8,7 @@ import {
   clearFilters,
 } from "../features/orders/ordersSlice";
 import { clearCurrentItem } from "../features/inventory/inventorySlice";
+import { showNotification } from "../features/common/headerSlice";
 
 // NOTE: Offline storage is automatically scoped per store via storage.js factory pattern
 // Each store has isolated IndexedDB databases, no manual cleanup needed
@@ -59,8 +60,14 @@ function StoreGuard({ children }) {
   );
 
   if (!activeStoreId && isStoreRoute) {
-    // Allow /app/settings/profile even without store? Maybe.
-    // For now, strict enforcement except for the allowed list.
+    // Show notification before redirecting
+    dispatch(
+      showNotification({
+        message: "Please select a store to continue",
+        status: 0,
+      })
+    );
+
     return <Navigate to="/app/stores" replace />;
   }
 
