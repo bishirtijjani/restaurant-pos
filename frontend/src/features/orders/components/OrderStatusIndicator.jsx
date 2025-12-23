@@ -1,23 +1,23 @@
 import {
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  TruckIcon,
-  BeakerIcon,
-  ShoppingBagIcon,
-} from "@heroicons/react/24/outline";
+  Clock,
+  CheckCircle,
+  XCircle,
+  Truck,
+  FlaskConical,
+  ShoppingBag,
+} from "lucide-react";
 
 const statusConfig = {
-  new: { color: "bg-blue-500", icon: ClockIcon, text: "New" },
-  preparing: { color: "bg-yellow-500", icon: BeakerIcon, text: "Preparing" },
-  ready: { color: "bg-orange-500", icon: ShoppingBagIcon, text: "Ready" },
-  served: { color: "bg-purple-500", icon: TruckIcon, text: "Served" },
+  new: { color: "bg-blue-500", icon: Clock, text: "New" },
+  preparing: { color: "bg-yellow-500", icon: FlaskConical, text: "Preparing" },
+  ready: { color: "bg-orange-500", icon: ShoppingBag, text: "Ready" },
+  served: { color: "bg-purple-500", icon: Truck, text: "Served" },
   completed: {
     color: "bg-green-500",
-    icon: CheckCircleIcon,
+    icon: CheckCircle,
     text: "Completed",
   },
-  cancelled: { color: "bg-red-500", icon: XCircleIcon, text: "Cancelled" },
+  cancelled: { color: "bg-red-500", icon: XCircle, text: "Cancelled" },
 };
 
 export default function OrderStatusIndicator({ status }) {

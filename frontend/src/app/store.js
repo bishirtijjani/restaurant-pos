@@ -37,6 +37,7 @@ import customReportsReducer from "../features/analytics/slices/customReportsSlic
 import inventoryAnalyticsReducer from "../features/analytics/slices/inventoryAnalyticsSlice";
 import storeReducer from "../features/common/storeSlice";
 import storesReducer from "../features/stores/storeSlice";
+import mobilePOSReducer from "../features/orders/mobilePOSSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -76,6 +77,7 @@ const combinedReducer = {
   inventoryAnalytics: inventoryAnalyticsReducer,
   commonStore: storeReducer, // New Store Slice
   stores: storesReducer, // CRUD Store List
+  mobilePOS: mobilePOSReducer, // Mobile POS State
 };
 
 export default configureStore({

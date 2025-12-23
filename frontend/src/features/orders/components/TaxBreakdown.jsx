@@ -1,8 +1,4 @@
-import React from "react";
-import {
-  ReceiptPercentIcon,
-  CurrencyDollarIcon,
-} from "@heroicons/react/24/outline";
+import { Receipt, DollarSign } from "lucide-react";
 
 const TaxBreakdown = ({ taxBreakdown, settings }) => {
   if (!taxBreakdown) return null;
@@ -31,7 +27,7 @@ const TaxBreakdown = ({ taxBreakdown, settings }) => {
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <ReceiptPercentIcon className="w-4 h-4" />
+              <Receipt className="w-4 h-4" />
               <span>{settings?.taxSettings?.name || "Tax"}</span>
             </div>
             <span className="font-medium">{formatCurrency(totalTax)}</span>
@@ -62,7 +58,7 @@ const TaxBreakdown = ({ taxBreakdown, settings }) => {
       {serviceCharge > 0 && (
         <div className="flex justify-between text-base-content/80">
           <div className="flex items-center gap-2">
-            <CurrencyDollarIcon className="w-4 h-4" />
+            <DollarSign className="w-4 h-4" />
             <span>{settings?.serviceCharge?.name || "Service Charge"}</span>
           </div>
           <span className="font-medium">{formatCurrency(serviceCharge)}</span>

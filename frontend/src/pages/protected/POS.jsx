@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setPageTitle } from "../../features/common/headerSlice";
-import POS from "../../features/orders/POS";
+import MobilePOS from "../../features/orders/MobilePOS";
+
 function InternalPage() {
   const dispatch = useDispatch();
 
@@ -9,7 +10,7 @@ function InternalPage() {
     dispatch(setPageTitle({ title: "POS" }));
   }, []);
 
-  return <POS />;
+  return <MobilePOS />;
 }
 
 export default InternalPage;

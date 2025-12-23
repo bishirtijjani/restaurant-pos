@@ -5,14 +5,17 @@ import { openModal } from "../../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import TaxBreakdown from "./TaxBreakdown";
 import {
-  UserCircleIcon,
-  PhoneIcon,
-  MapPinIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  ChatBubbleLeftIcon,
-} from "@heroicons/react/24/outline";
-import { Edit3, Trash2, AlertCircle, StickyNote } from "lucide-react";
+  Edit3,
+  Trash2,
+  AlertCircle,
+  StickyNote,
+  User,
+  Phone,
+  MapPin,
+  Clock,
+  DollarSign,
+  MessageCircle,
+} from "lucide-react";
 import Can from "../../../components/Auth/Can";
 
 const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
@@ -91,23 +94,23 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
         <div className="card bg-base-200">
           <div className="card-body p-4">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <UserCircleIcon className="w-5 h-5" />
+              <User className="w-5 h-5" />
               Customer Information
             </h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <UserCircleIcon className="w-4 h-4 opacity-70" />
+                <User className="w-4 h-4 opacity-70" />
                 <span>{order.customerDetails?.name || "Walk-in Customer"}</span>
               </div>
               {order.customerDetails?.phone && (
                 <div className="flex items-center gap-2">
-                  <PhoneIcon className="w-4 h-4 opacity-70" />
+                  <Phone className="w-4 h-4 opacity-70" />
                   <span>{order.customerDetails.phone}</span>
                 </div>
               )}
               {order.customerDetails?.address && (
                 <div className="flex items-center gap-2">
-                  <MapPinIcon className="w-4 h-4 opacity-70" />
+                  <MapPin className="w-4 h-4 opacity-70" />
                   <span>{order.customerDetails.address}</span>
                 </div>
               )}
@@ -154,7 +157,7 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
               </div>
               <div className="flex justify-between">
                 <span className="opacity-70 flex items-center gap-1">
-                  <ClockIcon className="w-4 h-4" /> Created:
+                  <Clock className="w-4 h-4" /> Created:
                 </span>
                 <span>{formatDate(order.createdAt)}</span>
               </div>
@@ -226,7 +229,7 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
                       {/* Item Note */}
                       {item.itemNote && (
                         <div className="mt-1 flex items-start gap-1 text-xs text-warning">
-                          <ChatBubbleLeftIcon className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                          <MessageCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
                           <span className="italic">{item.itemNote}</span>
                         </div>
                       )}
@@ -266,7 +269,7 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
           <div className="card bg-base-200">
             <div className="card-body p-4">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <CurrencyDollarIcon className="w-5 h-5" />
+                <DollarSign className="w-5 h-5" />
                 Payment Breakdown
               </h3>
               <TaxBreakdown
@@ -424,7 +427,9 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
               <span>Amount Paid</span>
               <span
                 className={
-                  order.paymentStatus === "paid" ? "text-success" : "text-warning"
+                  order.paymentStatus === "paid"
+                    ? "text-success"
+                    : "text-warning"
                 }
               >
                 {currency}
@@ -446,15 +451,16 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
           </div>
         </div>
         {/* Payment History */}
-        {((order.paymentHistory && order.paymentHistory.length > 0) || (order.payments && order.payments.length > 0)) && (
+        {((order.paymentHistory && order.paymentHistory.length > 0) ||
+          (order.payments && order.payments.length > 0)) && (
           <div className="card bg-base-200">
             <div className="card-body p-4">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <CurrencyDollarIcon className="w-5 h-5" />
+                <DollarSign className="w-5 h-5" />
                 Payment History
               </h3>
               <div className="space-y-2">
-                {(order.paymentHistory && order.paymentHistory.length > 0)
+                {order.paymentHistory && order.paymentHistory.length > 0
                   ? order.paymentHistory.map((entry, idx) => (
                       <div
                         key={idx}
@@ -497,7 +503,9 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
                           {new Date(entry.timestamp).toLocaleString()}
                         </div>
                         {entry.note && (
-                          <div className="text-xs mt-1 italic">{entry.note}</div>
+                          <div className="text-xs mt-1 italic">
+                            {entry.note}
+                          </div>
                         )}
                       </div>
                     ))
@@ -547,29 +555,31 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
             </button>
           </Can>
         )}
-        {(order.paymentStatus === "paid" || order.paymentStatus === "partial") && order.amountPaid > 0 && (
-          <Can do="editOrders">
-            <button
-              onClick={() => {
-                closeModal();
-                setTimeout(() => {
-                  dispatch(
-                    openModal({
-                      title: `Refund Order #${order.orderNumber}`,
-                      bodyType: MODAL_BODY_TYPES.REFUND_ORDER,
-                      extraObject: order,
-                      size: "lg",
-                    })
-                  );
-                }, 100);
-              }}
-              className="btn btn-outline btn-warning btn-sm gap-2"
-            >
-              <CurrencyDollarIcon className="w-4 h-4" />
-              Process Refund
-            </button>
-          </Can>
-        )}
+        {(order.paymentStatus === "paid" ||
+          order.paymentStatus === "partial") &&
+          order.amountPaid > 0 && (
+            <Can do="editOrders">
+              <button
+                onClick={() => {
+                  closeModal();
+                  setTimeout(() => {
+                    dispatch(
+                      openModal({
+                        title: `Refund Order #${order.orderNumber}`,
+                        bodyType: MODAL_BODY_TYPES.REFUND_ORDER,
+                        extraObject: order,
+                        size: "lg",
+                      })
+                    );
+                  }, 100);
+                }}
+                className="btn btn-outline btn-warning btn-sm gap-2"
+              >
+                <DollarSign className="w-4 h-4" />
+                Process Refund
+              </button>
+            </Can>
+          )}
         <button onClick={closeModal} className="btn btn-primary btn-sm">
           Close
         </button>

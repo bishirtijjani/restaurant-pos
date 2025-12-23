@@ -25,10 +25,10 @@ export const posSlice = createSlice({
     addToCart: (state, action) => {
       const { item, addOnData } = action.payload;
       const newItem = { ...item };
-      
+
       // Calculate add-ons total
       const addOnsTotal = addOnData.total - item.price;
-      
+
       const cartItem = {
         ...newItem,
         quantity: 1,
@@ -70,16 +70,29 @@ export const posSlice = createSlice({
       state.cart = state.cart.filter((_, index) => index !== action.payload);
     },
     updateCartItemQuantity: (state, action) => {
-        const { index, quantity } = action.payload;
-        if (quantity <= 0) {
-            state.cart = state.cart.filter((_, i) => i !== index);
-        } else {
-            state.cart[index].quantity = quantity;
-        }
+      const { index, quantity } = action.payload;
+      if (quantity <= 0) {
+        state.cart = state.cart.filter((_, i) => i !== index);
+      } else {
+        state.cart[index].quantity = quantity;
+      }
     },
     updateCartItemNote: (state, action) => {
-        const { index, note } = action.payload;
-        state.cart[index].itemNote = note;
+      const { index, note } = action.payload;
+      state.cart[index].itemNote = note;
+    },
+    updateCartItem: (state, action) => {
+      const { index, item, addOnData } = action.payload;
+      const oldItem = state.cart[index];
+      const addOnsTotal = addOnData.total - item.price;
+
+      state.cart[index] = {
+        ...oldItem,
+        addOns: addOnData.addOns,
+        itemNote: addOnData.itemNote,
+        addOnsTotal: addOnsTotal,
+        price: item.price, // ensure price is consistent
+      };
     },
     clearCart: (state) => {
       state.cart = [];
@@ -87,7 +100,7 @@ export const posSlice = createSlice({
       state.orderDiscount = null;
       state.packagingFee = "0";
       state.deliveryFee = "0";
-      // We might want to keep table/orderType/customer depending on workflow, 
+      // We might want to keep table/orderType/customer depending on workflow,
       // but usually clearCart implies a fresh start.
       // Keeping selectedTable if it's dine-in could be useful, but let's reset for safety.
       state.selectedTable = null;
@@ -109,7 +122,7 @@ export const posSlice = createSlice({
       state.customerDetails = action.payload;
     },
     updateCustomerDetails: (state, action) => {
-        state.customerDetails = { ...state.customerDetails, ...action.payload };
+      state.customerDetails = { ...state.customerDetails, ...action.payload };
     },
     setOrderNote: (state, action) => {
       state.orderNote = action.payload;
@@ -137,6 +150,7 @@ export const {
   removeFromCart,
   updateCartItemQuantity,
   updateCartItemNote,
+  updateCartItem,
   clearCart,
   setOrderType,
   setSelectedTable,

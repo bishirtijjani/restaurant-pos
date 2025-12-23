@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarIcon } from "@heroicons/react/24/outline";
+import { Calendar } from "lucide-react";
 
 export default function DateRangePicker({ startDate, endDate, onDateChange }) {
   const [showPicker, setShowPicker] = useState(false);
@@ -38,7 +38,7 @@ export default function DateRangePicker({ startDate, endDate, onDateChange }) {
         onClick={() => setShowPicker(!showPicker)}
         className="btn btn-sm btn-outline"
       >
-        <CalendarIcon className="w-4 h-4 mr-1" />
+        <Calendar className="w-4 h-4 mr-1" />
         {startDate || endDate
           ? `${formatDisplayDate(startDate)} - ${formatDisplayDate(endDate)}`
           : "Select Dates"}

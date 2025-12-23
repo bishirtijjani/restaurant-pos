@@ -21,16 +21,19 @@ import SearchableSelect from "../../components/Input/SearchableSelect";
 import { showNotification } from "../common/headerSlice";
 import Datepicker from "react-tailwindcss-datepicker";
 import {
-  ArrowPathIcon,
-  EyeIcon,
-  XCircleIcon,
-  DocumentTextIcon,
-  CurrencyDollarIcon,
-  ClockIcon,
-  UserCircleIcon,
-  AdjustmentsHorizontalIcon,
-} from "@heroicons/react/24/outline";
-import { Plus, RefreshCw, Edit3, Trash2, AlertCircle } from "lucide-react";
+  Plus,
+  RefreshCw,
+  Edit3,
+  Trash2,
+  AlertCircle,
+  Eye,
+  XCircle,
+  FileText,
+  DollarSign,
+  Clock,
+  User,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
@@ -81,7 +84,7 @@ const OrderFilters = ({ currentFilters, applyFilters, clearFiltersAction }) => {
     <div className="bg-base-200 p-4 rounded-lg mb-6">
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <h3 className="font-medium text-base-content/80 flex items-center">
-          <AdjustmentsHorizontalIcon className="w-5 h-5 mr-2" />
+          <SlidersHorizontal className="w-5 h-5 mr-2" />
           Filters
         </h3>
         <button onClick={clearFiltersAction} className="btn btn-xs btn-ghost">
@@ -187,7 +190,7 @@ const OrderCard = ({
               )}
             </div>
             <p className="text-xs flex items-center gap-1 text-base-content/70 mt-1">
-              <UserCircleIcon className="w-3 h-3" />
+              <User className="w-3 h-3" />
               {order.customerDetails?.name || "Walk-in"}
             </p>
           </div>
@@ -206,7 +209,7 @@ const OrderCard = ({
           </div>
           <div className="flex justify-between text-xs text-base-content/50">
             <span className="flex items-center gap-1">
-              <ClockIcon className="w-3 h-3" />
+              <Clock className="w-3 h-3" />
               {formatDate(order.createdAt)}
             </span>
             <span className="capitalize">{order.orderType}</span>
@@ -218,7 +221,7 @@ const OrderCard = ({
             className="btn btn-xs btn-outline"
             onClick={() => onViewDetails(order)}
           >
-            <EyeIcon className="w-3 h-3" />
+            <Eye className="w-3 h-3" />
           </button>
           {canModify && (
             <>
@@ -242,7 +245,7 @@ const OrderCard = ({
                   onClick={() => onUpdatePayment(order)}
                   title="Update Payment"
                 >
-                  <CurrencyDollarIcon className="w-3 h-3" />
+                  <DollarSign className="w-3 h-3" />
                 </button>
               </Can>
               <Can do="cancelOrders">
@@ -251,7 +254,7 @@ const OrderCard = ({
                   onClick={() => onCancel(order)}
                   title="Cancel"
                 >
-                  <XCircleIcon className="w-3 h-3" />
+                  <XCircle className="w-3 h-3" />
                 </button>
               </Can>
             </>
@@ -412,7 +415,7 @@ const Orders = () => {
           className="btn btn-sm btn-circle"
           title="Refresh"
         >
-          <ArrowPathIcon className="w-4 h-4" />
+          <RefreshCw className="w-4 h-4" />
         </button>
       </div>
 
@@ -424,12 +427,12 @@ const Orders = () => {
 
       {error ? (
         <div className="alert alert-error">
-          <XCircleIcon className="w-6 h-6" />
+          <XCircle className="w-6 h-6" />
           <span>{error}</span>
         </div>
       ) : filteredOrders.length === 0 ? (
         <div className="text-center py-16 bg-base-200 rounded-lg">
-          <DocumentTextIcon className="w-16 h-16 mx-auto text-base-content/30 mb-4" />
+          <FileText className="w-16 h-16 mx-auto text-base-content/30 mb-4" />
           <h3 className="text-xl font-semibold">No orders found</h3>
           <p className="text-base-content/70 mt-2">
             Try adjusting your filters

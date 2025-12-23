@@ -1,6 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Mobile POS Styles */
+@import "./styles/mobile.css";
+
 /* Fullscreen styles */
 
 .min-h-screen:fullscreen {

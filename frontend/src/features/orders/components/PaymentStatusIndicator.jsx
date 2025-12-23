@@ -1,14 +1,9 @@
-import {
-  CurrencyDollarIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ClockIcon,
-} from "@heroicons/react/24/outline";
+import { DollarSign, CheckCircle, XCircle, Clock } from "lucide-react";
 
 const paymentConfig = {
-  paid: { color: "bg-green-500", icon: CheckCircleIcon, text: "Paid" },
-  partial: { color: "bg-yellow-500", icon: ClockIcon, text: "Partial" },
-  pending: { color: "bg-red-500", icon: XCircleIcon, text: "Pending" },
+  paid: { color: "bg-green-500", icon: CheckCircle, text: "Paid" },
+  partial: { color: "bg-yellow-500", icon: Clock, text: "Partial" },
+  pending: { color: "bg-red-500", icon: XCircle, text: "Pending" },
 };
 
 export default function PaymentStatusIndicator({ status }) {
