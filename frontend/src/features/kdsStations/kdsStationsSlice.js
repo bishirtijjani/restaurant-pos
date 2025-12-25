@@ -59,7 +59,7 @@ const kdsStationsSlice = createSlice({
   name: "kdsStations",
   initialState: {
     stations: [],
-    currentStation: null,
+    currentStation: { name: "All Stations", type: "all" },
     loading: false,
     error: null,
   },

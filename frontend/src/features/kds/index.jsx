@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  PlayCircle,
   RefreshCw,
   Maximize,
   Minimize,
@@ -65,22 +66,7 @@ const KDS = () => {
     }
   }, [dispatch, permissionChecked, canViewKDS]);
 
-  // Set initial station
-  useEffect(() => {
-    if (stations.length > 0 && !currentStation && canViewKDS) {
-      // Default to "all" stations as requested by user
-      const stationId = "all";
-
-      const station =
-        stationId === "all"
-          ? { name: "All Stations", type: "all" }
-          : stations.find((s) => s._id === stationId);
-
-      if (station) {
-        dispatch(setCurrentStation(station));
-      }
-    }
-  }, [stations, currentStation, dispatch, canViewKDS]);
+  // No longer needed: station defaults to "all" in kdsStationsSlice.js
 
   // WebSocket message handler
   const handleWebSocketMessage = useCallback(

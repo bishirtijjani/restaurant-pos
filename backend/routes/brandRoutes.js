@@ -8,12 +8,12 @@ const {
   getSyncStatus,
   deleteMasterItem,
 } = require("../controllers/brandMenuController");
-const { protect } = require("../middleware/authMiddleware");
-const { requirePermission } = require("../middleware/permissionMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
+const requirePermission = require("../middleware/permissionMiddleware");
 const { PERMISSIONS } = require("../config/permissions");
 
 // All routes require authentication
-router.use(protect);
+router.use(authMiddleware);
 const organizationMiddleware = require("../middleware/organizationMiddleware");
 router.use(organizationMiddleware);
 
