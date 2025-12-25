@@ -487,6 +487,7 @@ const createOrder = async (req, res) => {
         timestamp: new Date(),
         performedBy: req.user.id,
         note: "Initial payment",
+        transactionId: p.transactionId || null, // Store gateway transaction ID
       }));
 
       // Set primary payment method as the first one
@@ -532,9 +533,25 @@ const createOrder = async (req, res) => {
             timestamp: new Date(),
             performedBy: req.user.id,
             note: "Initial payment",
+            transactionId: req.body.transactionId || null, // Store gateway transaction ID
           },
         ];
       }
+    }
+
+    // Extract payment transaction IDs (for Stripe, etc.)
+    let stripePaymentIntentId = null;
+    if (payments && Array.isArray(payments)) {
+      // Check for card payment with transaction ID
+      const cardPayment = payments.find(
+        (p) => p.method === "card" && p.transactionId
+      );
+      if (cardPayment) {
+        stripePaymentIntentId = cardPayment.transactionId;
+      }
+    } else if (paymentMethod === "card" && req.body.transactionId) {
+      // Single payment scenario
+      stripePaymentIntentId = req.body.transactionId;
     }
 
     const newOrder = new Order({
@@ -588,6 +605,7 @@ const createOrder = async (req, res) => {
       paymentHistory: paymentHistoryArray,
       paymentMethod: primaryPaymentMethod,
       paymentStatus,
+      stripePaymentIntentId, // Store for refund processing
       lastAction: {
         action: "create",
         performedBy: req.user.id,
@@ -987,10 +1005,14 @@ const updatePayment = async (req, res) => {
 
 // Cancel an order
 const cancelOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { reason } = req.body;
 
     if (!reason) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Cancellation reason is required",
@@ -1000,9 +1022,10 @@ const cancelOrder = async (req, res) => {
     const order = await Order.findOne({
       _id: req.params.id,
       storeId: req.storeId,
-    });
+    }).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Order not found",
@@ -1010,6 +1033,7 @@ const cancelOrder = async (req, res) => {
     }
 
     if (order.orderStatus === "completed") {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Cannot cancel a completed order",
@@ -1017,6 +1041,22 @@ const cancelOrder = async (req, res) => {
     }
 
     const oldOrder = { ...order.toObject() };
+
+    // Restore inventory before cancelling
+    const InventoryManager = require("../utils/inventoryManager");
+    const inventoryRestoration = await InventoryManager.restoreOrderInventory(
+      order,
+      session
+    );
+
+    if (!inventoryRestoration.success) {
+      console.warn(
+        "Inventory restoration had errors:",
+        inventoryRestoration.errors
+      );
+      // Continue with cancellation even if inventory restoration fails
+      // Log the errors for manual review
+    }
 
     order.orderStatus = "cancelled";
 
@@ -1031,10 +1071,7 @@ const cancelOrder = async (req, res) => {
       reason,
     };
 
-    await order.save();
-
-    await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
+    await order.save({ session });
 
     await logAction(
       req.user.id,
@@ -1045,8 +1082,14 @@ const cancelOrder = async (req, res) => {
       "delete",
       oldOrder,
       order,
-      `Cancelled order #${order.orderNumber}: ${reason}`
+      `Cancelled order #${order.orderNumber}: ${reason}. Inventory restored: ${inventoryRestoration.totalItemsRestored} items`,
+      session
     );
+
+    await session.commitTransaction();
+
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
 
     // Notify KDS via WebSocket
     notifyKDS("order:cancelled", order, null, req.storeId);
@@ -1055,8 +1098,10 @@ const cancelOrder = async (req, res) => {
       success: true,
       message: "Order cancelled successfully",
       data: order,
+      inventoryRestored: inventoryRestoration.totalItemsRestored,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error cancelling order:", error);
     if (error.kind === "ObjectId") {
       return res.status(400).json({
@@ -1069,15 +1114,22 @@ const cancelOrder = async (req, res) => {
       message: "Failed to cancel order. Please try again.",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
 // Refund an order (full or partial)
 const refundOrder = async (req, res) => {
-  try {
-    const { amount, reason, isPartial } = req.body;
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
+  try {
+    const { amount, reason, category = "other", isPartial } = req.body;
+
+    // Validation
     if (!amount || amount <= 0) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Refund amount is required and must be greater than 0",
@@ -1085,6 +1137,7 @@ const refundOrder = async (req, res) => {
     }
 
     if (!reason) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Refund reason is required",
@@ -1094,17 +1147,19 @@ const refundOrder = async (req, res) => {
     const order = await Order.findOne({
       _id: req.params.id,
       storeId: req.storeId,
-    });
+    }).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Order not found",
       });
     }
 
-    // Validate: can only refund paid orders
+    // Validate payment status
     if (order.paymentStatus !== "paid" && order.paymentStatus !== "partial") {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Can only refund paid or partially paid orders",
@@ -1113,49 +1168,179 @@ const refundOrder = async (req, res) => {
 
     const refundAmount = parseFloat(amount);
 
-    // Validate: refund amount cannot exceed amount paid
-    if (refundAmount > order.amountPaid) {
+    // Calculate total already refunded
+    const totalRefunded = order.refunds
+      .filter((r) => r.gatewayStatus === "succeeded")
+      .reduce((sum, r) => sum + r.amount, 0);
+
+    // Validate: refund amount cannot exceed remaining paid amount
+    const remainingRefundable = order.amountPaid - totalRefunded;
+    if (refundAmount > remainingRefundable) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: `Refund amount (${refundAmount.toFixed(
           2
-        )}) cannot exceed amount paid (${order.amountPaid.toFixed(2)})`,
+        )}) exceeds remaining refundable amount (${remainingRefundable.toFixed(
+          2
+        )})`,
+      });
+    }
+
+    // Duplicate refund detection (within last 60 seconds)
+    const recentRefund = order.refunds.find(
+      (r) =>
+        r.amount === refundAmount &&
+        r.reason === reason &&
+        Date.now() - new Date(r.refundedAt).getTime() < 60000
+    );
+
+    if (recentRefund) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message:
+          "Duplicate refund detected. A refund with the same amount and reason was processed within the last minute.",
       });
     }
 
     const oldOrder = { ...order.toObject() };
 
+    // Process gateway refund
+    let gatewayRefundResult = null;
+    const settings = await getEffectiveSettings(req.storeId);
+
+    // Find the original payment transaction
+    const originalPayment = order.paymentHistory.find(
+      (p) => p.type === "payment" && p.method !== "cash"
+    );
+
+    if (originalPayment && originalPayment.method === "card") {
+      // Process through payment gateway
+      const gateways = settings.paymentGateways;
+
+      if (gateways?.stripe?.enabled) {
+        try {
+          const {
+            PaymentProviderFactory,
+          } = require("../utils/paymentProvider");
+          const provider = PaymentProviderFactory.getProvider(
+            "stripe",
+            gateways.stripe
+          );
+
+          // Get payment intent ID from order
+          const paymentIntentId =
+            order.stripePaymentIntentId || originalPayment.transactionId;
+
+          if (!paymentIntentId) {
+            throw new Error("Payment intent ID not found for card refund");
+          }
+
+          gatewayRefundResult = await provider.refundPayment(
+            paymentIntentId,
+            refundAmount,
+            reason,
+            {
+              orderId: order._id.toString(),
+              orderNumber: order.orderNumber,
+              refundedBy: req.user.id.toString(),
+              category,
+            }
+          );
+
+          if (!gatewayRefundResult.success) {
+            await session.abortTransaction();
+            return res.status(500).json({
+              success: false,
+              message: `Gateway refund failed: ${gatewayRefundResult.error}`,
+              error: gatewayRefundResult.error,
+            });
+          }
+        } catch (error) {
+          await session.abortTransaction();
+          console.error("Gateway refund error:", error);
+          return res.status(500).json({
+            success: false,
+            message: "Failed to process refund through payment gateway",
+            error: error.message,
+          });
+        }
+      }
+    }
+
     // Add refund entry
-    order.refunds.push({
+    const refundEntry = {
       amount: refundAmount,
       reason,
+      category,
       refundedBy: req.user.id,
       refundedAt: new Date(),
-      isPartial: isPartial !== false, // Default to true if not specified
-    });
+      isPartial: isPartial !== false,
+      originalPaymentMethod: originalPayment?.method || "cash",
+      originalPaymentId: originalPayment?.transactionId,
+    };
+
+    // Add gateway information if available
+    if (gatewayRefundResult) {
+      refundEntry.gatewayRefundId = gatewayRefundResult.refundId;
+      refundEntry.gatewayStatus = gatewayRefundResult.status;
+      refundEntry.gatewayResponse = gatewayRefundResult;
+    } else {
+      // Cash refund - mark as succeeded immediately
+      refundEntry.gatewayStatus = "succeeded";
+    }
+
+    order.refunds.push(refundEntry);
 
     // Add to payment history
     order.paymentHistory.push({
       type: "refund",
+      method: refundEntry.originalPaymentMethod,
       amount: refundAmount,
       timestamp: new Date(),
       performedBy: req.user.id,
       note: reason,
+      transactionId: gatewayRefundResult?.refundId,
     });
 
-    // Update payment status
-    const newAmountPaid = order.amountPaid - refundAmount;
-    order.amountPaid = newAmountPaid;
+    // Update payment status only if gateway refund succeeded or was cash
+    if (refundEntry.gatewayStatus === "succeeded") {
+      const newAmountPaid = order.amountPaid - refundAmount;
+      order.amountPaid = newAmountPaid;
 
-    if (newAmountPaid === 0) {
-      order.paymentStatus = "pending";
-      order.balance = order.totalAmount;
-    } else if (newAmountPaid < order.totalAmount) {
-      order.paymentStatus = "partial";
-      order.balance = order.totalAmount - newAmountPaid;
-    } else {
-      order.paymentStatus = "paid";
-      order.balance = 0;
+      if (newAmountPaid === 0) {
+        order.paymentStatus = "pending";
+        order.balance = order.totalAmount;
+      } else if (newAmountPaid < order.totalAmount) {
+        order.paymentStatus = "partial";
+        order.balance = order.totalAmount - newAmountPaid;
+      } else {
+        order.paymentStatus = "paid";
+        order.balance = 0;
+      }
+
+      // Restore inventory for refunded order (if not already prepared/served)
+      const InventoryManager = require("../utils/inventoryManager");
+      const inventoryRestoration = await InventoryManager.restoreOrderInventory(
+        order,
+        session
+      );
+
+      if (!inventoryRestoration.success) {
+        console.warn(
+          "Inventory restoration had errors during refund:",
+          inventoryRestoration.errors
+        );
+        // Continue with refund even if inventory restoration fails
+      }
+
+      // Log inventory restoration in order metadata (optional)
+      if (inventoryRestoration.totalItemsRestored > 0) {
+        console.log(
+          `Restored ${inventoryRestoration.totalItemsRestored} inventory items for refunded order #${order.orderNumber}`
+        );
+      }
     }
 
     order.lastAction = {
@@ -1165,12 +1350,7 @@ const refundOrder = async (req, res) => {
       reason: `Refunded ${refundAmount.toFixed(2)}: ${reason}`,
     };
 
-    await order.save();
-
-    await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
-    await order.populate("refunds.refundedBy", "fullname");
-    await order.populate("paymentHistory.performedBy", "fullname");
+    await order.save({ session });
 
     await logAction(
       req.user.id,
@@ -1183,15 +1363,25 @@ const refundOrder = async (req, res) => {
       order,
       `Refunded ${refundAmount.toFixed(2)} for order #${
         order.orderNumber
-      }: ${reason}`
+      }: ${reason}`,
+      session
     );
+
+    await session.commitTransaction();
+
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
+    await order.populate("refunds.refundedBy", "fullname");
+    await order.populate("paymentHistory.performedBy", "fullname");
 
     return res.status(200).json({
       success: true,
       message: "Refund processed successfully",
       data: order,
+      refundStatus: refundEntry.gatewayStatus,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error processing refund:", error);
     if (error.kind === "ObjectId") {
       return res.status(400).json({
@@ -1204,6 +1394,8 @@ const refundOrder = async (req, res) => {
       message: "Failed to process refund. Please try again.",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 

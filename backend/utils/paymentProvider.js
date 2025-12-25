@@ -16,6 +16,14 @@ class PaymentProvider {
   async verifyPayment(paymentId) {
     throw new Error("Method 'verifyPayment' must be implemented");
   }
+
+  async refundPayment(paymentId, amount, reason, metadata = {}) {
+    throw new Error("Method 'refundPayment' must be implemented");
+  }
+
+  async getRefundStatus(refundId) {
+    throw new Error("Method 'getRefundStatus' must be implemented");
+  }
 }
 
 /**
@@ -88,6 +96,71 @@ class StripeProvider extends PaymentProvider {
       };
     } catch (error) {
       console.error("Stripe verifyPayment Error:", error);
+      throw error;
+    }
+  }
+
+  async refundPayment(paymentIntentId, amount, reason, metadata = {}) {
+    try {
+      // Validate payment intent exists and is refundable
+      const paymentIntent = await this.stripe.paymentIntents.retrieve(
+        paymentIntentId
+      );
+
+      if (paymentIntent.status !== "succeeded") {
+        throw new Error("Payment must be succeeded to refund");
+      }
+
+      // Create refund
+      const refundParams = {
+        payment_intent: paymentIntentId,
+        metadata: {
+          reason,
+          ...metadata,
+        },
+      };
+
+      // Add amount if partial refund (otherwise full refund)
+      if (amount) {
+        refundParams.amount = Math.round(amount * 100); // Convert to cents
+      }
+
+      const refund = await this.stripe.refunds.create(refundParams);
+
+      return {
+        success: true,
+        refundId: refund.id,
+        status: refund.status, // 'pending', 'succeeded', 'failed', 'canceled'
+        amount: refund.amount / 100,
+        currency: refund.currency,
+        created: refund.created,
+        reason: refund.reason,
+        paymentIntentId: refund.payment_intent,
+      };
+    } catch (error) {
+      console.error("Stripe refund error:", error);
+      return {
+        success: false,
+        error: error.message,
+        code: error.code,
+        type: error.type,
+      };
+    }
+  }
+
+  async getRefundStatus(refundId) {
+    try {
+      const refund = await this.stripe.refunds.retrieve(refundId);
+      return {
+        success: true,
+        status: refund.status,
+        amount: refund.amount / 100,
+        currency: refund.currency,
+        failureReason: refund.failure_reason,
+        created: refund.created,
+      };
+    } catch (error) {
+      console.error("Stripe refund status error:", error);
       throw error;
     }
   }

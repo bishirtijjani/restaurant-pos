@@ -246,6 +246,7 @@ const OrderSchema = new mongoose.Schema(
           ref: "User",
         },
         note: { type: String },
+        transactionId: { type: String }, // Gateway transaction/refund ID
       },
     ],
     // NEW: Refund tracking
@@ -253,14 +254,41 @@ const OrderSchema = new mongoose.Schema(
       {
         amount: { type: Number, required: true },
         reason: { type: String },
+        category: {
+          type: String,
+          enum: [
+            "quality_issue",
+            "wrong_order",
+            "customer_changed_mind",
+            "delivery_delay",
+            "item_unavailable",
+            "staff_error",
+            "other",
+          ],
+          default: "other",
+        },
         refundedBy: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
         },
         refundedAt: { type: Date, default: Date.now },
         isPartial: { type: Boolean, default: false },
+        // Gateway integration fields
+        gatewayRefundId: { type: String }, // Stripe refund ID
+        gatewayStatus: {
+          type: String,
+          enum: ["pending", "succeeded", "failed", "canceled"],
+          default: "pending",
+        },
+        gatewayResponse: { type: mongoose.Schema.Types.Mixed }, // Full gateway response
+        failureReason: { type: String },
+        // Track original payment method and ID
+        originalPaymentMethod: { type: String },
+        originalPaymentId: { type: String }, // Payment intent ID
       },
     ],
+    // Store Stripe payment intent ID for refund processing
+    stripePaymentIntentId: { type: String, default: null },
     // Legacy field - kept for backward compatibility (stores primary payment method)
     paymentMethod: {
       type: String,

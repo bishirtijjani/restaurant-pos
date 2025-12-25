@@ -4,6 +4,9 @@ const router = express.Router();
 // Public Routes
 router.use("/auth", require("./authRoutes"));
 
+// Webhook routes (must be before JSON parser middleware)
+router.use("/webhooks", require("./webhookRoutes"));
+
 // Global Middleware for Protected Routes
 const authMiddleware = require("../middleware/authMiddleware");
 const storeMiddleware = require("../middleware/storeMiddleware");

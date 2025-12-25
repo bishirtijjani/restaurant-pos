@@ -23,6 +23,7 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
     refundType: "full", // 'full' or 'partial'
     amount: "",
     reason: "",
+    category: "other", // NEW: refund category
   });
 
   const maxRefundAmount = order.amountPaid || 0;
@@ -85,8 +86,9 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
     }
 
     // Safety check for large refunds (over 50% of total or > 100)
-    const isLargeRefund = refundAmount > order.totalAmount * 0.5 || refundAmount > 100;
-    
+    const isLargeRefund =
+      refundAmount > order.totalAmount * 0.5 || refundAmount > 100;
+
     if (isLargeRefund && !confirmRefund) {
       setConfirmRefund(true);
       return;
@@ -100,19 +102,22 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
           orderId: order._id,
           amount: refundAmount,
           reason: refundData.reason,
+          category: refundData.category,
           isPartial: refundData.refundType === "partial",
         })
       ).unwrap();
 
       dispatch(
         showNotification({
-          message: `Refund of ${currency}${refundAmount.toFixed(2)} processed successfully`,
+          message: `Refund of ${currency}${refundAmount.toFixed(
+            2
+          )} processed successfully`,
           status: 1,
         })
       );
 
       dispatch(fetchOrders());
-      
+
       if (closeModalFn) {
         closeModalFn();
       } else {
@@ -172,7 +177,9 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
           <button
             onClick={() => handleRefundTypeChange("partial")}
             className={`btn btn-sm flex-1 ${
-              refundData.refundType === "partial" ? "btn-warning" : "btn-outline"
+              refundData.refundType === "partial"
+                ? "btn-warning"
+                : "btn-outline"
             }`}
           >
             Partial Refund
@@ -184,9 +191,7 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
       {refundData.refundType === "partial" && (
         <div className="form-control">
           <label className="label">
-            <span className="label-text">
-              Refund Amount ({currency})
-            </span>
+            <span className="label-text">Refund Amount ({currency})</span>
             <span className="label-text-alt">
               Max: {currency}
               {maxRefundAmount.toFixed(2)}
@@ -201,6 +206,27 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
           />
         </div>
       )}
+
+      {/* Category Selection */}
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Refund Category *</span>
+        </label>
+        <select
+          name="category"
+          value={refundData.category}
+          onChange={handleInputChange}
+          className="select select-bordered"
+        >
+          <option value="other">Other</option>
+          <option value="quality_issue">Quality Issue</option>
+          <option value="wrong_order">Wrong Order</option>
+          <option value="customer_changed_mind">Customer Changed Mind</option>
+          <option value="delivery_delay">Delivery Delay</option>
+          <option value="item_unavailable">Item Unavailable</option>
+          <option value="staff_error">Staff Error</option>
+        </select>
+      </div>
 
       {/* Reason Input */}
       <div className="form-control">
@@ -252,7 +278,9 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
       {confirmRefund && (
         <div className="alert alert-warning animate-pulse">
           <AlertTriangle className="w-5 h-5" />
-          <span>This is a large refund amount. Click confirm again to proceed.</span>
+          <span>
+            This is a large refund amount. Click confirm again to proceed.
+          </span>
         </div>
       )}
 

@@ -139,6 +139,7 @@ const storeSchema = new mongoose.Schema(
           enabled: { type: Boolean },
           publishableKey: { type: String },
           secretKey: { type: String, select: false }, // Hidden by default for security
+          webhookSecret: { type: String, select: false }, // OPTIONAL - for async refund updates
           accountId: { type: String },
         },
       },

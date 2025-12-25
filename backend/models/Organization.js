@@ -134,6 +134,7 @@ const organizationSchema = new mongoose.Schema(
           enabled: { type: Boolean, default: false },
           publishableKey: { type: String, default: "" },
           secretKey: { type: String, select: false, default: "" },
+          webhookSecret: { type: String, select: false, default: "" }, // OPTIONAL - for async refund updates
         },
       },
 
