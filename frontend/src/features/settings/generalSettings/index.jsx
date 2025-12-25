@@ -155,7 +155,7 @@ const GeneralSettings = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6">
+    <div className="flex flex-col gap-6 animate-fadeIn pb-32">
       {settings.brandName && (
         <div className="alert bg-base-100 shadow-sm border-base-200">
           <div className="flex justify-between items-center w-full">
@@ -511,30 +511,41 @@ const GeneralSettings = () => {
             onChange={handleCommChange}
           />
         </div>
+      </div>
 
-        <div className="flex justify-between items-center pt-6 md:col-span-2">
-          <button
-            type="button"
-            onClick={handleReset}
-            className="btn btn-outline btn-error"
-            disabled={loading}
-          >
-            <RotateCcw className="w-4 h-4" />
-            Reset to Defaults
-          </button>
+      {/* Persistent Floating Save Bar */}
+      <div className="fixed bottom-6 left-6 right-6 lg:left-80 z-40">
+        <div
+          className={`flex items-center justify-between bg-base-100/80 backdrop-blur-xl border border-base-300 p-4 rounded-2xl shadow-2xl transition-all duration-300 transform ${
+            hasChanges
+              ? "translate-y-0 opacity-100"
+              : "translate-y-10 opacity-0 pointer-events-none"
+          }`}
+        >
+          <div className="flex items-center gap-2 text-sm ml-2">
+            <div className="w-2 h-2 rounded-full bg-warning animate-pulse"></div>
+            <span className="font-medium">You have unsaved changes</span>
+          </div>
 
-          <button
-            onClick={handleSubmit}
-            className={`btn btn-primary ${!hasChanges ? "btn-disabled" : ""}`}
-            disabled={loading || !hasChanges}
-          >
-            {loading ? (
-              <span className="loading loading-spinner loading-sm"></span>
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            {loading ? "Saving..." : "Save All Settings"}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleReset}
+              className="btn btn-ghost btn-sm px-6 text-error hover:bg-error/10"
+              disabled={loading}
+            >
+              Reset to Defaults
+            </button>
+            <button
+              onClick={handleSubmit}
+              className={`btn btn-primary btn-sm px-8 shadow-lg shadow-primary/20 ${
+                loading ? "loading" : ""
+              }`}
+              disabled={loading}
+            >
+              {!loading && <Save className="w-4 h-4 mr-2" />}
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

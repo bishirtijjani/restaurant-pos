@@ -76,108 +76,137 @@ function BrandMenuForm({ extraObject }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-control">
-        <label className="label">
-          <span className="label-text">Name *</span>
-        </label>
-        <input
-          type="text"
-          name="name"
-          className="input input-bordered"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-semibold">Item Name *</span>
+          </label>
+          <input
+            type="text"
+            name="name"
+            placeholder="e.g. Signature Burger"
+            className="input input-bordered focus:input-primary transition-all"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-semibold">Category *</span>
+          </label>
+          <input
+            type="text"
+            name="category"
+            placeholder="e.g. Main Course"
+            className="input input-bordered focus:input-primary transition-all"
+            value={formData.category}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-semibold">Master Price *</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-4 top-3 opacity-40">$</span>
+            <input
+              type="number"
+              name="price"
+              step="0.01"
+              min="0"
+              className="input input-bordered w-full pl-8 focus:input-primary transition-all"
+              value={formData.price}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-semibold">Prep Time (mins)</span>
+          </label>
+          <input
+            type="number"
+            name="preparationTime"
+            min="1"
+            className="input input-bordered focus:input-primary transition-all"
+            value={formData.preparationTime}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="form-control md:col-span-2">
+          <label className="label">
+            <span className="label-text font-semibold">Description</span>
+          </label>
+          <textarea
+            name="description"
+            placeholder="Describe this item for your customers..."
+            className="textarea textarea-bordered h-24 focus:textarea-primary transition-all"
+            value={formData.description}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="form-control md:col-span-2">
+          <label className="label border-t border-base-200 mt-2 pt-4">
+            <span className="label-text font-semibold">Media & Visuals</span>
+          </label>
+          <div className="flex flex-col md:flex-row gap-4 items-start">
+            <div className="flex-1 w-full">
+              <label className="label">
+                <span className="label-text text-xs opacity-60 uppercase">
+                  Image URL
+                </span>
+              </label>
+              <input
+                type="text"
+                name="image"
+                className="input input-bordered w-full focus:input-primary transition-all"
+                value={formData.image}
+                onChange={handleChange}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+            {formData.image && (
+              <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/20 bg-base-200">
+                <img
+                  src={formData.image}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="form-control mt-4">
-        <label className="label">
-          <span className="label-text">Category *</span>
-        </label>
-        <input
-          type="text"
-          name="category"
-          className="input input-bordered"
-          value={formData.category}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="form-control mt-4">
-        <label className="label">
-          <span className="label-text">Price *</span>
-        </label>
-        <input
-          type="number"
-          name="price"
-          step="0.01"
-          min="0"
-          className="input input-bordered"
-          value={formData.price}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="form-control mt-4">
-        <label className="label">
-          <span className="label-text">Description</span>
-        </label>
-        <textarea
-          name="description"
-          className="textarea textarea-bordered"
-          rows="3"
-          value={formData.description}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-control mt-4">
-        <label className="label">
-          <span className="label-text">Image URL</span>
-        </label>
-        <input
-          type="text"
-          name="image"
-          className="input input-bordered"
-          value={formData.image}
-          onChange={handleChange}
-          placeholder="https://example.com/image.jpg"
-        />
-      </div>
-
-      <div className="form-control mt-4">
-        <label className="label">
-          <span className="label-text">Preparation Time (minutes)</span>
-        </label>
-        <input
-          type="number"
-          name="preparationTime"
-          min="1"
-          className="input input-bordered"
-          value={formData.preparationTime}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="modal-action">
+      <div className="modal-action bg-base-200/50 -mx-6 -mb-6 p-6 rounded-b-2xl">
         <button
           type="button"
-          className="btn"
+          className="btn btn-ghost"
           onClick={() => dispatch(closeModal())}
           disabled={loading}
         >
-          Cancel
+          Discard
         </button>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
+        <button
+          type="submit"
+          className="btn btn-primary px-8 shadow-lg shadow-primary/20"
+          disabled={loading}
+        >
           {loading ? (
-            <span className="loading loading-spinner loading-sm"></span>
+            <span className="loading loading-spinner"></span>
           ) : extraObject ? (
-            "Update Draft"
+            "Save Changes"
           ) : (
-            "Create Draft"
+            "Create Master Item"
           )}
         </button>
       </div>
