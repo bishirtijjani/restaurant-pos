@@ -173,11 +173,25 @@ export const can = (action, userRole) => {
 
 // Hook for easy access
 export const useAuth = () => {
-  const userRole = useSelector((state) => state.auth.user?.role);
+  const user = useSelector((state) => state.auth.user);
+  const userRole = user?.role;
+  const userPermissions = user?.permissions || [];
+
+  const checkPermission = (action) => {
+    // 1. Root override
+    if (userPermissions.includes("all")) return true;
+
+    // 2. Check granular permission if action looks like 'resource:action'
+    if (action.includes(":") && userPermissions.includes(action)) return true;
+
+    // 3. Fallback to role-based legacy mapping
+    return can(action, userRole);
+  };
 
   return {
     role: userRole,
-    can: (action) => can(action, userRole),
+    permissions: userPermissions,
+    can: checkPermission,
     isAdmin: userRole === ROLES.ADMIN,
     isManager: userRole === ROLES.MANAGER,
     isCashier: userRole === ROLES.CASHIER,

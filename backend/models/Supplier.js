@@ -11,6 +11,12 @@ const supplierSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
     address: { type: String, required: true },
     lastAction: {
       action: {

@@ -102,6 +102,12 @@ const OrderSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
     table: {
       type: String,
       default: "Takeaway",
@@ -360,18 +366,54 @@ const OrderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Generate a unique order number before saving
+// Generate a unique order number before saving - RETRY LOGIC for Race Conditions
 OrderSchema.pre("save", async function (next) {
   if (this.isNew) {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const count = await this.constructor.countDocuments({
-      storeId: this.storeId,
-      createdAt: {
-        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        $lt: new Date(new Date().setHours(23, 59, 59, 999)),
-      },
-    });
-    this.orderNumber = `${dateStr}${(count + 1).toString().padStart(3, "0")}`;
+    let attempts = 0;
+    let orderNumber;
+    let isUnique = false;
+
+    while (!isUnique && attempts < 3) {
+      attempts++;
+      // Count existing orders for today
+      // Optimization: Using atomic counter is better, but this retry logic mitigates basic race conditions
+      const count = await this.constructor.countDocuments({
+        storeId: this.storeId,
+        createdAt: {
+          $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          $lt: new Date(new Date().setHours(23, 59, 59, 999)),
+        },
+      });
+
+      // Add attempts to count to virtually offset conflicts in current race
+      // or use random padding if strict sequentiality isn't critical (here we prefer sequential)
+      // For strict sequential + atomic, we'd need a Counter collection.
+      // Here we trust the unique index + retry.
+      const candidateNum = `${dateStr}${(count + attempts)
+        .toString()
+        .padStart(3, "0")}`;
+
+      // Check collision
+      const exists = await this.constructor.exists({
+        storeId: this.storeId,
+        orderNumber: candidateNum,
+      });
+
+      if (!exists) {
+        orderNumber = candidateNum;
+        isUnique = true;
+      }
+    }
+
+    // Fallback if still collision (highly unlikely with low traffic, but safe for high load)
+    if (!isUnique) {
+      // Append random 4 digits as last resort to prevent failure
+      const random = Math.floor(1000 + Math.random() * 9000);
+      orderNumber = `${dateStr}${random}`;
+    }
+
+    this.orderNumber = orderNumber;
   }
   next();
 });

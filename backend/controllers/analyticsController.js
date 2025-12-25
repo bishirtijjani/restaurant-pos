@@ -885,6 +885,171 @@ const getAdvancedData = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Get Multi-Store Overview (For Owners/Managers)
+ * @route   GET /api/analytics/multi-store-overview
+ * @access  Private (Admin/Manager only)
+ */
+const getMultiStoreOverview = asyncHandler(async (req, res) => {
+  // 1. Get Authorized Stores
+  const user = await User.findById(req.user.id).populate("stores.storeId");
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  // Filter for stores where user has management role
+  const managedStores = user.stores.filter(
+    (s) => ["admin", "manager"].includes(s.role) && s.storeId
+  );
+
+  if (managedStores.length === 0) {
+    return res.status(200).json({
+      success: true,
+      data: {
+        summary: { totalRevenue: 0, activeOrders: 0, lowStockTotal: 0 },
+        stores: [],
+        alerts: [],
+      },
+    });
+  }
+
+  const storeIds = managedStores.map((s) => s.storeId._id);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  // 2. Parallel Metrics Fetching
+  const [revenueStats, activeOrders, lowStockItems, hourlySalesTrend] =
+    await Promise.all([
+      // Group Revenue & Order Count
+      Order.aggregate([
+        {
+          $match: {
+            storeId: { $in: storeIds },
+            createdAt: { $gte: todayStart, $lte: todayEnd },
+            orderStatus: { $ne: "cancelled" },
+          },
+        },
+        {
+          $group: {
+            _id: "$storeId",
+            revenue: { $sum: "$totalAmount" },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      // Active Orders per store
+      Order.aggregate([
+        {
+          $match: {
+            storeId: { $in: storeIds },
+            orderStatus: { $in: ["pending", "preparing", "ready"] },
+          },
+        },
+        { $group: { _id: "$storeId", count: { $sum: 1 } } },
+      ]),
+      // Low Stock Items per store
+      InventoryItem.aggregate([
+        {
+          $match: {
+            storeId: { $in: storeIds },
+            isActive: true,
+            $expr: { $lte: ["$currentStock", "$minStockLevel"] },
+          },
+        },
+        { $group: { _id: "$storeId", count: { $sum: 1 } } },
+      ]),
+      // Hourly trend per store (for sparklines)
+      Order.aggregate([
+        {
+          $match: {
+            storeId: { $in: storeIds },
+            createdAt: { $gte: todayStart, $lte: todayEnd },
+            orderStatus: { $ne: "cancelled" },
+          },
+        },
+        {
+          $group: {
+            _id: { storeId: "$storeId", hour: { $hour: "$createdAt" } },
+            amount: { $sum: "$totalAmount" },
+          },
+        },
+        { $sort: { "_id.hour": 1 } },
+      ]),
+    ]);
+
+  // 3. Format Data per Store
+  const storeSnapshots = managedStores.map((s) => {
+    const sId = s.storeId._id.toString();
+    const rev = revenueStats.find((r) => r._id.toString() === sId);
+    const act = activeOrders.find((a) => a._id.toString() === sId);
+    const low = lowStockItems.find((l) => l._id.toString() === sId);
+
+    // Format hourly sales for this store (filled with 0s)
+    const storeHourly = hourlySalesTrend.filter(
+      (h) => h._id.storeId.toString() === sId
+    );
+    const hourlyData = Array.from({ length: 24 }, (_, i) => {
+      const found = storeHourly.find((h) => h._id.hour === i);
+      return { hour: i, revenue: found ? found.amount : 0 };
+    });
+
+    return {
+      storeId: sId,
+      name: s.storeId.name,
+      location: s.storeId.location,
+      role: s.role,
+      todayRevenue: rev ? rev.revenue : 0,
+      todayOrderCount: rev ? rev.count : 0,
+      activeOrders: act ? act.count : 0,
+      lowStockCount: low ? low.count : 0,
+      hourlyTrend: hourlyData,
+    };
+  });
+
+  // 4. Global Summary
+  const globalSummary = {
+    totalRevenue: revenueStats.reduce((acc, curr) => acc + curr.revenue, 0),
+    totalOrders: revenueStats.reduce((acc, curr) => acc + curr.count, 0),
+    activeOrders: activeOrders.reduce((acc, curr) => acc + curr.count, 0),
+    lowStockTotal: lowStockItems.reduce((acc, curr) => acc + curr.count, 0),
+  };
+
+  // 5. Synthesize Alerts
+  const alerts = [];
+  storeSnapshots.forEach((s) => {
+    if (s.lowStockCount > 0) {
+      alerts.push({
+        storeName: s.name,
+        type: "inventory",
+        message: `${s.lowStockCount} items low in stock`,
+        severity: "medium",
+      });
+    }
+    if (s.activeOrders > 10) {
+      // Example threshold
+      alerts.push({
+        storeName: s.name,
+        type: "load",
+        message: `High kitchen load: ${s.activeOrders} active orders`,
+        severity: "high",
+      });
+    }
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      summary: globalSummary,
+      stores: storeSnapshots,
+      alerts: alerts.sort((a, b) => (b.severity === "high" ? 1 : -1)),
+    },
+  });
+});
+
 module.exports = {
   getOverviewData,
   getSalesData,
@@ -894,4 +1059,5 @@ module.exports = {
   getInventoryData,
   getPaymentData,
   getAdvancedData,
+  getMultiStoreOverview,
 };

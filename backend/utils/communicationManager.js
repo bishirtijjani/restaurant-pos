@@ -28,12 +28,14 @@ class CommunicationManager {
    */
   async _send(storeId, channel, options) {
     try {
-      const store = await Store.findById(storeId).select(
-        "+settings.communication.email.config +settings.communication.sms.config +settings.communication.whatsapp.config"
-      );
-      if (!store) throw new Error(`Store not found: ${storeId}`);
+      // Get Effective settings including secrets (Provider Configs)
+      const settings = await getEffectiveSettings(storeId, {
+        includeSecrets: true,
+      });
+      if (!settings)
+        throw new Error(`Settings not found for store: ${storeId}`);
 
-      const config = store.settings.communication?.[channel] || {
+      const config = settings.communication?.[channel] || {
         provider: "log",
         enabled: true,
       };

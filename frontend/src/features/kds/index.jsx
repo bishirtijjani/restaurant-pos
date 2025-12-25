@@ -65,8 +65,8 @@ const KDS = () => {
   // Set initial station
   useEffect(() => {
     if (stations.length > 0 && !currentStation && canViewKDS) {
-      const savedStationId = localStorage.getItem("kdsCurrentStation");
-      const stationId = savedStationId || "all";
+      // Default to "all" stations as requested by user
+      const stationId = "all";
 
       const station =
         stationId === "all"

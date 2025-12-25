@@ -15,7 +15,8 @@ const getAllUsers = async (req, res) => {
         (s) => s.storeId.toString() === req.storeId.toString()
       );
       const userObj = user.toObject();
-      userObj.role = storeData ? storeData.role : user.role; // Fallback or override
+      userObj.role = storeData ? storeData.role : user.role;
+      userObj.permissions = storeData ? storeData.permissions : [];
       return userObj;
     });
 
@@ -46,7 +47,10 @@ const getUserById = async (req, res) => {
       (s) => s.storeId.toString() === req.storeId.toString()
     );
     const userObj = user.toObject();
-    if (storeData) userObj.role = storeData.role;
+    if (storeData) {
+      userObj.role = storeData.role;
+      userObj.permissions = storeData.permissions;
+    }
 
     res.status(200).json({ success: true, data: userObj });
   } catch (error) {
@@ -55,11 +59,14 @@ const getUserById = async (req, res) => {
   }
 };
 
+const { DEFAULT_ROLE_PERMISSIONS } = require("../config/permissions");
+
 // Create a new user (or add existing user to store)
 const createUser = async (req, res) => {
-  const { fullname, email, role, password, pinCode } = req.body;
+  const { fullname, email, role, password, pinCode, permissions } = req.body;
   try {
     let user = await User.findOne({ email });
+    const userPermissions = permissions || DEFAULT_ROLE_PERMISSIONS[role] || [];
 
     if (user) {
       // User exists - check if already in store
@@ -76,8 +83,9 @@ const createUser = async (req, res) => {
       // Add to store
       user.stores.push({
         storeId: req.storeId,
+        organizationId: req.organizationId,
         role: role,
-        permissions: [],
+        permissions: userPermissions,
         status: "active",
       });
       await user.save();
@@ -90,11 +98,13 @@ const createUser = async (req, res) => {
         pinCode,
         // Set root role (optional, maybe 'user')
         role: "staff",
+        currentOrganizationId: req.organizationId,
         stores: [
           {
             storeId: req.storeId,
+            organizationId: req.organizationId,
             role: role, // Store specific role
-            permissions: [],
+            permissions: userPermissions,
             isDefault: true,
             status: "active",
           },
@@ -107,6 +117,7 @@ const createUser = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "User",
       user._id,
       "create",
@@ -126,7 +137,7 @@ const createUser = async (req, res) => {
 // Update user details (store specific role)
 const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { fullname, email, role, password, pinCode } = req.body;
+  const { fullname, email, role, password, pinCode, permissions } = req.body;
   try {
     const user = await User.findOne({
       _id: id,
@@ -146,14 +157,26 @@ const updateUser = async (req, res) => {
     if (email) user.email = email;
     if (password) user.password = password;
     if (pinCode) user.pinCode = pinCode;
+    if (req.organizationId) user.currentOrganizationId = req.organizationId;
 
-    // Update store role
-    if (role) {
-      const storeIndex = user.stores.findIndex(
-        (s) => s.storeId.toString() === req.storeId.toString()
-      );
-      if (storeIndex !== -1) {
+    // Update store role and permissions
+    const storeIndex = user.stores.findIndex(
+      (s) => s.storeId.toString() === req.storeId.toString()
+    );
+
+    if (storeIndex !== -1) {
+      if (role) {
         user.stores[storeIndex].role = role;
+        // If role changes but no permissions provided, optionally update to new defaults
+        if (!permissions) {
+          user.stores[storeIndex].permissions =
+            DEFAULT_ROLE_PERMISSIONS[role] ||
+            user.stores[storeIndex].permissions;
+        }
+      }
+
+      if (permissions) {
+        user.stores[storeIndex].permissions = permissions;
       }
     }
 
@@ -162,6 +185,7 @@ const updateUser = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "User",
       id,
       "edit",
@@ -210,6 +234,7 @@ const deleteUser = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "User",
       id,
       "delete",

@@ -1,4 +1,6 @@
 const Store = require("../models/Store");
+const Organization = require("../models/Organization");
+const { getEffectiveSettings } = require("../utils/settingsManager");
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -8,22 +10,20 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // @access  Private
 const getSettings = async (req, res) => {
   try {
-    const store = await Store.findById(req.storeId);
+    const store = await Store.findById(req.storeId).lean();
+    const effectiveSettings = await getEffectiveSettings(req.storeId);
 
-    if (!store) {
+    if (!effectiveSettings) {
       return res.status(404).json({
         success: false,
         message: "Store not found",
       });
     }
 
-    // Return the settings subdocument. Mongoose defaults ensure it exists,
-    // but we can fallback if somehow missing.
-    const settings = store.settings || {};
-
     res.json({
       success: true,
-      data: settings,
+      data: effectiveSettings,
+      overrides: store.settings || {}, // Provide raw overrides for UI indicators
     });
   } catch (error) {
     console.error("Error fetching settings:", error);
@@ -363,55 +363,17 @@ const resetSettings = async (req, res) => {
       });
     }
 
-    // Reset to default values (based on schema defaults)
+    // Reset logic: Simply clear the settings object to enable full brand inheritance
+    // We only preserve the restaurantName which is usually store-specific
     store.settings = {
-      restaurantName: "Your Restaurant", // Or keep existing name? Original code reset it.
-      restaurantAddress: "",
-      restaurantPhone: "",
-      restaurantEmail: "",
-      restaurantMotto: "",
-      currency: {
-        code: "USD",
-        name: "US Dollar",
-        symbol: "$",
-      },
-      dateFormat: "MM/DD/YYYY",
-      lowStockAlert: 10,
-      autoGenerateSKU: true,
-      emailNotifications: true,
-      timezone: "America/New_York",
-
-      taxSettings: {
-        enabled: true,
-        globalRate: 7.5,
-        name: "VAT",
-        mode: "per-item",
-        includeInPrice: false,
-      },
-
-      serviceCharge: {
-        enabled: false,
-        rate: 0,
-        name: "Service Charge",
-        applyTo: "dine-in",
-      },
-
-      globalDiscount: {
-        enabled: false,
-        name: "Store Discount",
-        type: "percentage",
-        value: 0,
-        maxDiscount: null,
-        applicableOrderTypes: ["dine-in", "takeaway", "delivery"],
-        minimumOrderAmount: 0,
-      },
+      restaurantName: store.name,
     };
 
     await store.save();
 
     res.json({
       success: true,
-      message: "Settings reset to defaults successfully",
+      message: "Settings reset to brand/system defaults successfully",
       data: store.settings,
     });
   } catch (error) {

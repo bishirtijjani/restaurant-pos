@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Store = require("../models/Store");
 const User = require("../models/User");
 const logAction = require("../utils/logAction");
+const Organization = require("../models/Organization");
 
 // @desc    Create a new store (branch)
 // @route   POST /api/stores
@@ -14,31 +15,66 @@ const createStore = asyncHandler(async (req, res) => {
     throw new Error("Store name is required");
   }
 
-  // 1. Create the new Store
+  // 1. Manage Organization (Shadow Onboarding)
+  let orgId = req.user.currentOrganizationId;
+  const user = await User.findById(req.user.id);
+
+  if (!orgId) {
+    // Check if they already have an org they own (security fallback)
+    const existingOrg = await Organization.findOne({ ownerId: req.user.id });
+    if (existingOrg) {
+      orgId = existingOrg._id;
+    } else {
+      // Create new "Shadow Organization"
+      const newOrg = await Organization.create({
+        name: settings?.brandName || name,
+        ownerId: req.user.id,
+        brandSettings: {
+          branding: {
+            restaurantName: settings?.brandName || name,
+            restaurantPhone: contactPhone || "",
+            restaurantAddress: location || "",
+          },
+          currency: {
+            code: settings?.currency || "NGN",
+            symbol: settings?.currencySymbol || "₦",
+            name: settings?.currencyName || "Nigerian Naira",
+          },
+          taxSettings: {
+            enabled: true,
+            globalRate: 7.5,
+            name: "VAT",
+          },
+        },
+      });
+      orgId = newOrg._id;
+      user.currentOrganizationId = orgId;
+    }
+  }
+
+  // 2. Create the new Store
   const newStore = await Store.create({
     name,
+    organizationId: orgId,
     location,
     contactPhone,
     ownerId: req.user.id,
     settings: {
-      ...settings,
-      restaurantName: settings?.restaurantName || name, // Default to store name if not provided
+      // For the first store, we can keep settings minimal to use inheritance
+      restaurantName: name,
     },
     status: "active",
   });
 
-  // 2. Add Store to User's access list as 'admin'
-  const user = await User.findById(req.user.id);
+  // 3. Add Store to User's access list as 'admin'
   user.stores.push({
     storeId: newStore._id,
-    role: "admin", // Creator is admin
+    organizationId: orgId,
+    role: "admin",
     permissions: ["all"],
     status: "active",
-    isDefault: user.stores.length === 0, // Default if it's the only one
+    isDefault: user.stores.length === 0,
   });
-
-  // Automatically switch user's lastActiveStore to this new one? Optional.
-  // user.lastActiveStore = newStore._id;
 
   await user.save();
 
@@ -46,6 +82,7 @@ const createStore = asyncHandler(async (req, res) => {
   await logAction(
     req.user.id,
     newStore._id,
+    orgId,
     "Store",
     newStore._id,
     "create",
@@ -184,6 +221,7 @@ const updateStore = asyncHandler(async (req, res) => {
   await logAction(
     req.user.id,
     store._id,
+    store.organizationId,
     "Store",
     store._id,
     "update",

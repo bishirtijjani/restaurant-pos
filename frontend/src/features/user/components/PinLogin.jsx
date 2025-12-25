@@ -14,6 +14,28 @@ const PinLogin = ({ onLogin, onCancel, loading, email }) => {
     }
   }, [error]);
 
+  // Handle keyboard input
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (loading) return;
+
+      if (e.key >= "0" && e.key <= "9") {
+        handleNumberClick(e.key);
+      } else if (e.key === "Backspace") {
+        handleDelete();
+      } else if (e.key === "Enter") {
+        handleSubmit();
+      } else if (e.key === "Escape") {
+        onCancel();
+      } else if (e.key === "Delete") {
+        handleClear();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [pin, loading]); // Added pin and loading as dependencies to ensure updated state in handlers
+
   const handleNumberClick = (num) => {
     if (pin.length < 6) {
       setPin((prev) => prev + num);

@@ -15,12 +15,19 @@ import {
   updateSettings,
   resetSettings,
   selectSettings,
+  selectSettingsOverrides,
   selectSettingsLoading,
   updateLocalSettings,
 } from "./generalSettingsSlice";
 import { showNotification } from "../../common/headerSlice";
 import PaymentSettings from "../components/PaymentSettings";
 import CommunicationSettings from "./components/CommunicationSettings";
+
+const InheritedBadge = () => (
+  <span className="badge badge-ghost badge-sm text-[10px] opacity-60 ml-2">
+    Inherited
+  </span>
+);
 
 const timezoneOptions = [
   { name: "UTC (Coordinated Universal Time)", value: "UTC" },
@@ -37,6 +44,7 @@ const timezoneOptions = [
 const GeneralSettings = () => {
   const dispatch = useDispatch();
   const settings = useSelector(selectSettings);
+  const overrides = useSelector(selectSettingsOverrides) || {};
   const loading = useSelector(selectSettingsLoading);
   const [formData, setFormData] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
@@ -148,12 +156,45 @@ const GeneralSettings = () => {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <TitleCard title="General Settings" topMargin="mt-2">
+      {settings.brandName && (
+        <div className="alert bg-base-100 shadow-sm border-base-200">
+          <div className="flex justify-between items-center w-full">
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                Brand Context
+              </span>
+              <h2 className="text-xl font-black text-primary">
+                {settings.brandName}
+              </h2>
+            </div>
+            {settings.organizationId && (
+              <button
+                className="btn btn-ghost btn-sm gap-2"
+                onClick={() =>
+                  dispatch(
+                    showNotification({
+                      message: "Organization Management coming soon!",
+                      status: 1,
+                    })
+                  )
+                }
+              >
+                <Settings className="w-4 h-4" />
+                Brand Settings
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <TitleCard title="Store-Specific Settings" topMargin="mt-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Restaurant Info */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Restaurant Name</span>
+              <span className="label-text font-medium">
+                Restaurant Name{" "}
+                {!overrides.restaurantName && <InheritedBadge />}
+              </span>
             </label>
             <input
               type="text"
@@ -167,7 +208,9 @@ const GeneralSettings = () => {
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Phone Number</span>
+              <span className="label-text font-medium">
+                Phone Number {!overrides.restaurantPhone && <InheritedBadge />}
+              </span>
             </label>
             <input
               type="text"
@@ -181,7 +224,9 @@ const GeneralSettings = () => {
 
           <div className="form-control md:col-span-2">
             <label className="label">
-              <span className="label-text font-medium">Address</span>
+              <span className="label-text font-medium">
+                Address {!overrides.restaurantAddress && <InheritedBadge />}
+              </span>
             </label>
             <textarea
               name="restaurantAddress"
@@ -194,7 +239,9 @@ const GeneralSettings = () => {
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Email</span>
+              <span className="label-text font-medium">
+                Email {!overrides.restaurantEmail && <InheritedBadge />}
+              </span>
             </label>
             <input
               type="email"
@@ -208,7 +255,10 @@ const GeneralSettings = () => {
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Motto / Tagline</span>
+              <span className="label-text font-medium">
+                Motto / Tagline{" "}
+                {!overrides.restaurantMotto && <InheritedBadge />}
+              </span>
             </label>
             <input
               type="text"
@@ -234,7 +284,9 @@ const GeneralSettings = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-medium">Currency</span>
+                  <span className="label-text font-medium">
+                    Currency {!overrides.currency && <InheritedBadge />}
+                  </span>
                 </label>
                 <CurrencySelect
                   value={formData.currency}
@@ -250,7 +302,9 @@ const GeneralSettings = () => {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-medium">Date Format</span>
+                  <span className="label-text font-medium">
+                    Date Format {!overrides.dateFormat && <InheritedBadge />}
+                  </span>
                 </label>
                 <select
                   className="select select-bordered"
@@ -278,7 +332,9 @@ const GeneralSettings = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-medium">Timezone</span>
+                  <span className="label-text font-medium">
+                    Timezone {!overrides.timezone && <InheritedBadge />}
+                  </span>
                 </label>
                 <SearchableSelect
                   options={timezoneOptions}
@@ -306,7 +362,8 @@ const GeneralSettings = () => {
                     className="checkbox checkbox-primary"
                   />
                   <span className="label-text font-medium">
-                    Email Notifications
+                    Email Notifications{" "}
+                    {!overrides.emailNotifications && <InheritedBadge />}
                   </span>
                 </label>
               </div>

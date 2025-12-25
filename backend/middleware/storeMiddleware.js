@@ -91,6 +91,7 @@ const storeMiddleware = async (req, res, next) => {
 
     // 5. Inject Context
     req.storeId = targetStoreId;
+    req.organizationId = storeLink.organizationId;
 
     // CRITICAL: Override the global "role" with the context specific "role"
     // The previous authMiddleware might have set req.user.role from the Token (Global Identity).
@@ -98,6 +99,7 @@ const storeMiddleware = async (req, res, next) => {
     req.user.role = storeLink.role;
     req.user.permissions = storeLink.permissions || [];
     req.user.isDefaultStore = storeLink.isDefault;
+    req.user.currentOrganizationId = storeLink.organizationId;
 
     // Optional: Update lastActiveStore for convenience (async, don't await)
     if (user.lastActiveStore?.toString() !== targetStoreId) {

@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 
 const logAction = async (
   userId,
-  storeId, // NEW: Required store context
+  storeId,
+  organizationId, // NEW: Required organization context
   entityType,
   entityId,
   action,
@@ -17,6 +18,7 @@ const logAction = async (
     const auditLog = new AuditLog({
       userId,
       storeId,
+      organizationId,
       entityType,
       entityId,
       action,

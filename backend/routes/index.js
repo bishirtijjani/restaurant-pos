@@ -9,6 +9,14 @@ const authMiddleware = require("../middleware/authMiddleware");
 const storeMiddleware = require("../middleware/storeMiddleware");
 
 router.use(authMiddleware);
+
+// Global Analytics (Brand-wide) - Bypasses Store Context requirement
+const { getMultiStoreOverview } = require("../controllers/analyticsController");
+router.get("/analytics/multi-store-overview", getMultiStoreOverview);
+
+// Brand-Level Routes (Organization-wide, no store context required)
+router.use("/brand", require("./brandRoutes"));
+
 router.use(storeMiddleware);
 
 router.use("/users", require("./userRoutes"));
@@ -38,6 +46,7 @@ router.use("/reservations", require("./reservationRoutes"));
 router.use("/analytics", require("./analyticsRoutes"));
 router.use("/reports", require("./reportRoutes"));
 router.use("/stores", require("./storeRoutes"));
+router.use("/organizations", require("./organizationRoutes"));
 router.use("/payments", require("./paymentRoutes"));
 
 module.exports = router;

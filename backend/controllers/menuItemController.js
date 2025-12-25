@@ -88,7 +88,8 @@ const addNewMenuItem = async (req, res) => {
       description,
       preparationTime: preparationTime || 15,
       isAvailable: isAvailable !== undefined ? isAvailable : true,
-      storeId: req.storeId, // Store scoping
+      storeId: req.storeId,
+      organizationId: req.organizationId,
       // Only set itemCode if it's not an empty string
       ...(itemCode ? { itemCode } : {}),
       // Only add image if provided
@@ -101,6 +102,7 @@ const addNewMenuItem = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "MenuItem",
       savedMenuItem._id,
       "create",
@@ -137,6 +139,44 @@ const updateMenuItem = async (req, res) => {
     const menuItem = await MenuItem.findOne({ _id: id, storeId: req.storeId });
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found." });
+    }
+
+    // FIELD LOCKING: Prevent editing master-owned fields for synced items
+    if (menuItem.masterId) {
+      const MASTER_OWNED_FIELDS = [
+        "name",
+        "description",
+        "image",
+        "category",
+        "preparationTime",
+      ];
+      const OPERATIONAL_FIELDS = [
+        "price",
+        "isAvailable",
+        "customTax",
+        "itemCode",
+      ];
+
+      const attemptedFields = Object.keys(req.body);
+      const forbiddenFields = attemptedFields.filter((field) =>
+        MASTER_OWNED_FIELDS.includes(field)
+      );
+
+      if (forbiddenFields.length > 0) {
+        return res.status(403).json({
+          success: false,
+          message: `Cannot modify brand-controlled fields: ${forbiddenFields.join(
+            ", "
+          )}. Only ${OPERATIONAL_FIELDS.join(", ")} can be edited.`,
+        });
+      }
+
+      // Track overrides
+      attemptedFields.forEach((field) => {
+        if (OPERATIONAL_FIELDS.includes(field)) {
+          menuItem.syncOverrides.set(field, true);
+        }
+      });
     }
 
     const itemCategory = await Category.findById(category);
@@ -212,6 +252,7 @@ const updateMenuItem = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "MenuItem",
       id,
       "edit",
@@ -252,6 +293,7 @@ const deleteMenuItem = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "MenuItem",
       id,
       "delete",
@@ -292,6 +334,7 @@ const toggleAvailability = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "MenuItem",
       id,
       "edit",

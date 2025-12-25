@@ -6,13 +6,18 @@ import FilterBar from "../../components/common/FilterBar";
 import OverviewKPIs from "./components/OverviewKPIs";
 import HourlyTrendChart from "./components/HourlyTrendChart";
 import RecentActivity from "./components/RecentActivity";
-import { setDateRange, fetchOverviewData, selectOverviewData } from "../../slices/analyticsGlobalSlice";
+import {
+  setDateRange,
+  fetchOverviewData,
+  selectOverviewData,
+} from "../../slices/analyticsGlobalSlice";
 import { startOfDay, endOfDay } from "date-fns";
 
 function AnalyticsOverview() {
   const dispatch = useDispatch();
   const { dateRange } = useSelector((state) => state.analyticsGlobal);
-  const { kpis, hourlyTrend, recentActivity, status } = useSelector(selectOverviewData);
+  const { kpis, hourlyTrend, recentActivity, status } =
+    useSelector(selectOverviewData);
 
   // Lock date range to Today on mount
   useEffect(() => {
@@ -28,11 +33,13 @@ function AnalyticsOverview() {
   // Fetch data when date range changes
   useEffect(() => {
     if (dateRange.startDate && dateRange.endDate) {
-      dispatch(fetchOverviewData({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        // branchId: "..." // Add branch selection logic later
-      }));
+      dispatch(
+        fetchOverviewData({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+          // branchId: "..." // Add branch selection logic later
+        })
+      );
     }
   }, [dispatch, dateRange]);
 
@@ -42,7 +49,7 @@ function AnalyticsOverview() {
         title="Today's Snapshot"
         breadcrumbs={[{ label: "Overview" }]}
       />
-      
+
       <FilterBar showDateRange={false}>
         <div className="badge badge-primary badge-lg">Live View</div>
       </FilterBar>

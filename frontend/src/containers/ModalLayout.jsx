@@ -89,6 +89,10 @@ import Receipt from "../features/common/components/Receipt";
 // Store modals
 import AddStoreModalBody from "../features/stores/components/AddStoreModalBody";
 import StoreAccessMatrix from "../features/users/components/StoreAccessMatrix";
+import PermissionMatrix from "../features/users/components/PermissionMatrix";
+
+// Brand modals
+import BrandMenuForm from "../features/brand/components/BrandMenuForm";
 
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
@@ -441,6 +445,15 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.MANAGE_STORE_ACCESS]: (
                   <StoreAccessMatrix closeModal={close} user={extraObject} />
+                ),
+                [MODAL_BODY_TYPES.MANAGE_USER_PERMISSIONS]: (
+                  <PermissionMatrix
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.BRAND_MENU_FORM]: (
+                  <BrandMenuForm extraObject={extraObject} />
                 ),
                 [MODAL_BODY_TYPES.DEFAULT]: <div></div>,
               }[bodyType]

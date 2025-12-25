@@ -44,6 +44,7 @@ exports.createCategory = async (req, res) => {
       name,
       description,
       storeId: req.storeId,
+      organizationId: req.organizationId,
     });
 
     const savedCategory = await category.save();
@@ -52,6 +53,7 @@ exports.createCategory = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Category",
       savedCategory._id,
       "create",
@@ -90,6 +92,7 @@ exports.updateCategory = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Category",
       req.params.id,
       "edit",
@@ -136,6 +139,7 @@ exports.deleteCategory = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Category",
       categoryId,
       "delete",

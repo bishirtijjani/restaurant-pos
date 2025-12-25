@@ -116,6 +116,16 @@ const UserCard = ({ user, onView, onEdit, onDelete }) => {
               </Can>
               <Can do="manageUsers">
                 <li>
+                  <button
+                    onClick={() => onEdit(user, "permissions")}
+                    className="text-accent"
+                  >
+                    <Shield className="w-4 h-4" /> Permissions
+                  </button>
+                </li>
+              </Can>
+              <Can do="manageUsers">
+                <li>
                   <button onClick={() => onEdit(user)} className="text-primary">
                     <Edit3 className="w-4 h-4" /> Edit
                   </button>
@@ -236,6 +246,13 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
                       title="Manage Store Access"
                     >
                       <Key className="w-5 h-5" />
+                    </button>
+                    <button
+                      className="btn btn-ghost gap-1 text-accent"
+                      onClick={() => onEdit(user, "permissions")}
+                      title="Manage Granular Permissions"
+                    >
+                      <Shield className="w-5 h-5" />
                     </button>
                     {currentUser?._id !== user._id && (
                       <button
@@ -444,6 +461,15 @@ const Users = () => {
           bodyType: MODAL_BODY_TYPES.MANAGE_STORE_ACCESS,
           extraObject: user,
           size: "lg",
+        })
+      );
+    } else if (mode === "permissions") {
+      dispatch(
+        openModal({
+          title: "Manage Security Permissions",
+          bodyType: MODAL_BODY_TYPES.MANAGE_USER_PERMISSIONS,
+          extraObject: user,
+          size: "xl",
         })
       );
     } else {

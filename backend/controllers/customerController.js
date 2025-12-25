@@ -196,6 +196,7 @@ const recordCustomerPayment = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Customer",
       id,
       "update",
@@ -238,9 +239,9 @@ const createCustomer = async (req, res) => {
       fullname,
       phone,
       email,
-      address,
       debtLimit,
       storeId: req.storeId,
+      organizationId: req.organizationId,
     });
 
     await newCustomer.save();
@@ -249,6 +250,7 @@ const createCustomer = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Customer",
       newCustomer._id,
       "create",
@@ -291,6 +293,7 @@ const updateCustomer = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Customer",
       id,
       "edit",
@@ -326,6 +329,7 @@ const deleteCustomer = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Customer",
       id,
       "delete",

@@ -44,11 +44,27 @@ export const updateStore = createAsyncThunk(
   }
 );
 
+export const getGlobalOverview = createAsyncThunk(
+  "stores/getGlobalOverview",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("/api/analytics/multi-store-overview");
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch global overview"
+      );
+    }
+  }
+);
+
 const storesSlice = createSlice({
   name: "stores",
   initialState: {
     items: [],
+    globalOverview: null,
     loading: false,
+    globalLoading: false,
     error: null,
   },
   reducers: {},
@@ -84,6 +100,17 @@ const storesSlice = createSlice({
         if (index !== -1) {
           state.items[index] = action.payload;
         }
+      })
+      .addCase(getGlobalOverview.pending, (state) => {
+        state.globalLoading = true;
+      })
+      .addCase(getGlobalOverview.fulfilled, (state, action) => {
+        state.globalLoading = false;
+        state.globalOverview = action.payload;
+      })
+      .addCase(getGlobalOverview.rejected, (state, action) => {
+        state.globalLoading = false;
+        state.error = action.payload;
       });
   },
 });

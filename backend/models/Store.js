@@ -7,6 +7,11 @@ const storeSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: false, // Will be populated during migration
+    },
     location: {
       type: String,
       trim: true,
@@ -27,43 +32,33 @@ const storeSchema = new mongoose.Schema(
       ref: "User",
     },
 
-    // Store-Specific Settings (Migrated from GeneralSettings)
+    // Store-Specific Settings (Inherits from Brand if not set)
     settings: {
-      restaurantName: { type: String, trim: true, default: "Codeket Ltd." },
-      restaurantLogo: { type: String, trim: true, default: "📦" },
-      restaurantAddress: {
-        type: String,
-        trim: true,
-        default: "No. 123, Main Road, Colombo 01",
-      },
-      restaurantPhone: {
-        type: String,
-        trim: true,
-        default: "+234 906 814 9540",
-      },
+      restaurantName: { type: String, trim: true },
+      restaurantLogo: { type: String, trim: true },
+      restaurantAddress: { type: String, trim: true },
+      restaurantPhone: { type: String, trim: true },
       restaurantEmail: {
         type: String,
         trim: true,
         lowercase: true,
-        default: "contact@codeket.com",
       },
-      restaurantMotto: { type: String, trim: true, default: "" },
+      restaurantMotto: { type: String, trim: true },
 
       currency: {
-        code: { type: String, default: "USD" },
-        name: { type: String, default: "US Dollar" },
-        symbol: { type: String, default: "$" },
+        code: { type: String },
+        name: { type: String },
+        symbol: { type: String },
       },
       dateFormat: {
         type: String,
         enum: ["MM/DD/YYYY", "DD/MM/YYYY"],
-        default: "MM/DD/YYYY",
       },
-      timezone: { type: String, default: "Nigeria/Lagos" },
+      timezone: { type: String },
 
       // Inventory
-      lowStockAlert: { type: Number, default: 10 },
-      autoGenerateSKU: { type: Boolean, default: true },
+      lowStockAlert: { type: Number },
+      autoGenerateSKU: { type: Boolean },
 
       // Communication Settings (Modular & Multi-Provider)
       communication: {
@@ -71,75 +66,68 @@ const storeSchema = new mongoose.Schema(
           provider: {
             type: String,
             enum: ["log", "sendgrid", "ses"],
-            default: "log",
           },
-          enabled: { type: Boolean, default: true },
-          config: { type: Map, of: String, default: {}, select: false },
+          enabled: { type: Boolean },
+          config: { type: Map, of: String, select: false },
         },
         sms: {
           provider: {
             type: String,
             enum: ["log", "twilio", "vonage"],
-            default: "log",
           },
-          enabled: { type: Boolean, default: false },
-          config: { type: Map, of: String, default: {}, select: false },
+          enabled: { type: Boolean },
+          config: { type: Map, of: String, select: false },
         },
         whatsapp: {
           provider: {
             type: String,
             enum: ["log", "twilio", "official"],
-            default: "log",
           },
-          enabled: { type: Boolean, default: false },
-          config: { type: Map, of: String, default: {}, select: false },
+          enabled: { type: Boolean },
+          config: { type: Map, of: String, select: false },
         },
       },
 
       // Financials
       taxSettings: {
-        enabled: { type: Boolean, default: true },
-        globalRate: { type: Number, default: 7.5, min: 0, max: 100 },
-        name: { type: String, default: "VAT" },
+        enabled: { type: Boolean },
+        globalRate: { type: Number, min: 0, max: 100 },
+        name: { type: String },
         mode: {
           type: String,
           enum: ["per-item", "per-order"],
-          default: "per-item",
         },
-        includeInPrice: { type: Boolean, default: false },
+        includeInPrice: { type: Boolean },
       },
       serviceCharge: {
-        enabled: { type: Boolean, default: false },
-        rate: { type: Number, default: 0, min: 0, max: 100 },
-        name: { type: String, default: "Service Charge" },
+        enabled: { type: Boolean },
+        rate: { type: Number, min: 0, max: 100 },
+        name: { type: String },
         applyTo: {
           type: String,
           enum: ["all", "dine-in", "delivery"],
-          default: "dine-in",
         },
       },
       globalDiscount: {
-        enabled: { type: Boolean, default: false },
-        name: { type: String, default: "Store Discount" },
+        enabled: { type: Boolean },
+        name: { type: String },
         type: {
           type: String,
           enum: ["percentage", "fixed"],
-          default: "percentage",
         },
-        value: { type: Number, default: 0, min: 0 },
+        value: { type: Number, min: 0 },
         maxDiscount: { type: Number, default: null },
         applicableOrderTypes: {
           type: [String],
           enum: ["dine-in", "takeaway", "delivery"],
-          default: ["dine-in", "takeaway", "delivery"],
         },
-        minimumOrderAmount: { type: Number, default: 0 },
+        minimumOrderAmount: { type: Number },
       },
 
       // Hardware
       printerSettings: {
-        mode: { type: String, enum: ["browser", "webusb"], default: "browser" },
-        paperWidth: { type: String, enum: ["58mm", "80mm"], default: "80mm" },
+        mode: { type: String, enum: ["browser", "webusb"] },
+        paperWidth: { type: String, enum: ["58mm", "80mm"] },
         vendorId: { type: Number, default: null },
         productId: { type: Number, default: null },
         deviceName: { type: String, default: null },
@@ -148,12 +136,17 @@ const storeSchema = new mongoose.Schema(
       // Payment Gateways
       paymentGateways: {
         stripe: {
-          enabled: { type: Boolean, default: false },
-          publishableKey: { type: String, default: "" },
-          secretKey: { type: String, select: false, default: "" }, // Hidden by default for security
-          accountId: { type: String, default: "" },
+          enabled: { type: Boolean },
+          publishableKey: { type: String },
+          secretKey: { type: String, select: false }, // Hidden by default for security
+          accountId: { type: String },
         },
-        // Future providers can be added here
+      },
+
+      // Master Menu Policies
+      menuSettings: {
+        enforceBrandPricing: { type: Boolean },
+        allowLocalModifiers: { type: Boolean },
       },
     },
     // Last Action for Audit

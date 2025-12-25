@@ -10,6 +10,12 @@ const menuItemSchema = new mongoose.Schema(
     storeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
+      required: false,
+      index: true,
+    },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
       required: true,
       index: true,
     },
@@ -73,6 +79,42 @@ const menuItemSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Master Menu Fields
+    isMaster: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    masterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "MenuItem",
+      default: null,
+      index: true,
+    },
+    syncOverrides: {
+      type: Map,
+      of: Boolean,
+      default: {},
+    },
+    // Version Tracking & Publish Status
+    publishStatus: {
+      type: String,
+      enum: ["draft", "published"],
+      default: "published", // Store items are always published
+    },
+    version: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    lastPublishedAt: {
+      type: Date,
+      default: null,
+    },
+    masterVersion: {
+      type: Number,
+      default: null, // Only for store items linked to master
+    },
     lastAction: {
       action: {
         type: String,
@@ -98,6 +140,37 @@ menuItemSchema.index(
     unique: true,
     sparse: true,
     partialFilterExpression: { itemCode: { $type: "string" } },
+  }
+);
+
+// Uniqueness for master items: (organizationId, name) must be unique
+menuItemSchema.index(
+  { organizationId: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isMaster: true },
+  }
+);
+
+// Uniqueness for store items: (storeId, name) must be unique for local items
+menuItemSchema.index(
+  { storeId: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isMaster: false,
+      masterId: null,
+    },
+  }
+);
+
+// Uniqueness for synced items: (storeId, masterId) must be unique
+menuItemSchema.index(
+  { storeId: 1, masterId: 1 },
+  {
+    unique: true,
+    sparse: true,
+    partialFilterExpression: { masterId: { $ne: null } },
   }
 );
 

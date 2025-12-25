@@ -6,10 +6,52 @@ const categorySchema = new mongoose.Schema(
     storeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
+      required: false,
+      index: true,
+    },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
       required: true,
       index: true,
     },
     description: { type: String, required: false },
+    // Master Menu Fields
+    isMaster: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    masterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+      index: true,
+    },
+    syncOverrides: {
+      type: Map,
+      of: Boolean,
+      default: {},
+    },
+    // Version Tracking & Publish Status
+    publishStatus: {
+      type: String,
+      enum: ["draft", "published"],
+      default: "published",
+    },
+    version: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    lastPublishedAt: {
+      type: Date,
+      default: null,
+    },
+    masterVersion: {
+      type: Number,
+      default: null,
+    },
     lastAction: {
       action: {
         type: String,
@@ -28,7 +70,32 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Scoped uniqueness
-categorySchema.index({ storeId: 1, name: 1 }, { unique: true });
+// Scoped uniqueness for local categories
+categorySchema.index(
+  { storeId: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isMaster: false, masterId: null },
+  }
+);
+
+// Uniqueness for master categories
+categorySchema.index(
+  { organizationId: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isMaster: true },
+  }
+);
+
+// Uniqueness for synced categories
+categorySchema.index(
+  { storeId: 1, masterId: 1 },
+  {
+    unique: true,
+    sparse: true,
+    partialFilterExpression: { masterId: { $ne: null } },
+  }
+);
 
 module.exports = mongoose.model("Category", categorySchema);

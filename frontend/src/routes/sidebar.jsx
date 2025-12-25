@@ -220,6 +220,16 @@ export const adminRoutes = [
         icon: <Building className={submenuIconClasses} />,
         name: "Stores",
       },
+      {
+        path: "/app/brand-catalog",
+        icon: <Shapes className={submenuIconClasses} />,
+        name: "Brand Catalog",
+      },
+      {
+        path: "/app/brand-settings",
+        icon: <Building className={submenuIconClasses} />,
+        name: "Brand Settings",
+      },
     ],
   },
 ];

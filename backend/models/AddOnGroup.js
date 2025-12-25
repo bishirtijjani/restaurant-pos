@@ -28,6 +28,15 @@ const addOnItemSchema = new mongoose.Schema({
     default: 1,
     min: 0,
   },
+  // Master Menu: track original vs local price
+  originalPrice: {
+    type: Number,
+    default: null,
+  },
+  localPrice: {
+    type: Number,
+    default: null,
+  },
 });
 
 const addOnGroupSchema = new mongoose.Schema(
@@ -40,6 +49,12 @@ const addOnGroupSchema = new mongoose.Schema(
     storeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
+      required: false,
+      index: true,
+    },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
       required: true,
       index: true,
     },
@@ -70,6 +85,42 @@ const addOnGroupSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Master Menu Fields
+    isMaster: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    masterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AddOnGroup",
+      default: null,
+      index: true,
+    },
+    syncOverrides: {
+      type: Map,
+      of: Boolean,
+      default: {},
+    },
+    // Version Tracking & Publish Status
+    publishStatus: {
+      type: String,
+      enum: ["draft", "published"],
+      default: "published",
+    },
+    version: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    lastPublishedAt: {
+      type: Date,
+      default: null,
+    },
+    masterVersion: {
+      type: Number,
+      default: null,
+    },
     lastAction: {
       action: {
         type: String,
@@ -91,6 +142,34 @@ const addOnGroupSchema = new mongoose.Schema(
 // Index for efficient queries
 addOnGroupSchema.index({ name: 1 });
 addOnGroupSchema.index({ isActive: 1 });
+
+// Uniqueness for master add-on groups
+addOnGroupSchema.index(
+  { organizationId: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isMaster: true },
+  }
+);
+
+// Uniqueness for local add-on groups
+addOnGroupSchema.index(
+  { storeId: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isMaster: false, masterId: null },
+  }
+);
+
+// Uniqueness for synced add-on groups
+addOnGroupSchema.index(
+  { storeId: 1, masterId: 1 },
+  {
+    unique: true,
+    sparse: true,
+    partialFilterExpression: { masterId: { $ne: null } },
+  }
+);
 
 module.exports =
   mongoose.models.AddOnGroup || mongoose.model("AddOnGroup", addOnGroupSchema);

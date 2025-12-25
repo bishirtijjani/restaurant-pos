@@ -5,6 +5,7 @@ const MenuItem = require("../models/MenuItem");
 const AddOnGroup = require("../models/AddOnGroup");
 const InventoryItem = require("../models/InventoryItem");
 const Store = require("../models/Store"); // Replaces GeneralSettings
+const { getEffectiveSettings } = require("../utils/settingsManager");
 const logAction = require("../utils/logAction");
 const { notifyKDS } = require("../utils/webSocket");
 const {
@@ -142,16 +143,15 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Fetch Store Settings instead of GeneralSettings
-    const store = await Store.findById(storeId).session(session);
-    if (!store || !store.settings) {
+    // Fetch Effective Settings (Merges Store + Brand)
+    const settings = await getEffectiveSettings(storeId);
+    if (!settings) {
       await session.abortTransaction();
       return res.status(500).json({
         success: false,
         message: "Store settings not configured",
       });
     }
-    const settings = store.settings;
 
     const processedItems = [];
     const inventoryDeductions = [];
@@ -541,6 +541,7 @@ const createOrder = async (req, res) => {
       orderNumber: await generateOrderNumber(session, storeId),
       // NEW: Scoped to Store
       storeId: storeId,
+      organizationId: req.organizationId,
       table: table || "Takeaway",
       customerDetails: customerDetails || { name: "Walk-in" },
       orderType: orderType || "dine-in",
@@ -609,6 +610,7 @@ const createOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Order",
       newOrder._id,
       "create",
@@ -824,6 +826,7 @@ const updateOrderStatus = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Order",
       order._id,
       "edit",
@@ -944,6 +947,7 @@ const updatePayment = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Order",
       order._id,
       "edit",
@@ -1035,6 +1039,7 @@ const cancelOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Order",
       order._id,
       "delete",
@@ -1170,6 +1175,7 @@ const refundOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Order",
       order._id,
       "edit",

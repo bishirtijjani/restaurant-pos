@@ -55,7 +55,7 @@ const MenuItemCard = ({
       </button>
 
       {/* Image */}
-      <div className="h-32 w-full bg-base-200 flex items-center justify-center">
+      <div className="h-24 w-full bg-base-200 flex items-center justify-center">
         {item.image ? (
           <img
             src={item.image}
@@ -69,9 +69,9 @@ const MenuItemCard = ({
 
       {/* Content */}
       <div className="p-2">
-        <h3 className="font-medium text-sm line-clamp-2 mb-1">{item.name}</h3>
+        <h3 className="font-semibold text-xs line-clamp-2 mb-1">{item.name}</h3>
         <div className="flex items-center justify-between">
-          <span className="text-primary font-bold">
+          <span className="text-primary font-bold text-xs">
             {currency}
             {item.price.toFixed(2)}
           </span>
@@ -285,7 +285,7 @@ const MenuTab = () => {
                 <div
                   key={item._id}
                   onClick={() => handleAddToCart(item)}
-                  className="flex-shrink-0 w-32 bg-base-200 rounded-lg p-3 cursor-pointer hover:scale-105 transition-transform"
+                  className="flex-shrink-0 w-24 bg-base-200 rounded-lg p-2 cursor-pointer hover:scale-105 transition-transform"
                 >
                   <div className="aspect-square bg-base-300 rounded-lg mb-2 flex items-center justify-center">
                     {item.image ? (
@@ -298,10 +298,10 @@ const MenuTab = () => {
                       <span className="text-3xl">🍽️</span>
                     )}
                   </div>
-                  <div className="text-sm font-medium line-clamp-1">
+                  <div className="text-xs font-medium line-clamp-1">
                     {item.name}
                   </div>
-                  <div className="text-primary font-semibold text-sm">
+                  <div className="text-primary font-bold text-xs">
                     {currency}
                     {item.price.toFixed(2)}
                   </div>
@@ -312,8 +312,8 @@ const MenuTab = () => {
         )}
 
       {/* Menu Items Grid */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="grid grid-cols-3 gap-2">
           {filteredItems.map((item) => (
             <MenuItemCard
               key={item._id}

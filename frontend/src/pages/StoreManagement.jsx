@@ -19,16 +19,24 @@ import {
   clearFilters,
 } from "../features/orders/ordersSlice";
 import { clearCurrentItem } from "../features/inventory/inventorySlice";
+import { getGlobalOverview } from "../features/stores/storeSlice";
+import GlobalStatsHeader from "../features/stores/components/GlobalStatsHeader";
+import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
 function StoreManagement() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items: stores, loading } = useSelector((state) => state.stores);
+  const {
+    items: stores,
+    loading,
+    globalOverview,
+  } = useSelector((state) => state.stores);
   const { activeStoreId } = useSelector((state) => state.commonStore);
 
   useEffect(() => {
     dispatch(setPageTitle({ title: "Store Management" }));
     dispatch(getStores());
+    dispatch(getGlobalOverview());
   }, [dispatch]);
 
   const handleSelectStore = (storeId) => {
@@ -65,6 +73,8 @@ function StoreManagement() {
         </button>
       }
     >
+      <GlobalStatsHeader />
+
       {loading ? (
         <div className="text-center p-10">
           <span className="loading loading-spinner loading-lg"></span>
@@ -77,10 +87,15 @@ function StoreManagement() {
             // Handle structure difference if populate is deep or shallow
             const sData = store.storeId || store;
 
+            // Link with global analytics data if available
+            const liveData = globalOverview?.stores?.find(
+              (s) => s.storeId === sData._id
+            );
+
             return (
               <div
                 key={k}
-                className={`card w-full bg-base-100 shadow-xl border ${
+                className={`card w-full bg-base-100 shadow-xl border transition-all hover:shadow-2xl ${
                   isCurrent ? "border-primary border-2" : "border-base-200"
                 }`}
               >
@@ -88,7 +103,7 @@ function StoreManagement() {
                   <h2 className="card-title flex justify-between">
                     <div className="flex items-center gap-2">
                       <BuildingStorefrontIcon className="w-6 h-6 text-primary" />
-                      {sData.name}
+                      <span className="truncate">{sData.name}</span>
                     </div>
                     {isCurrent && (
                       <div className="badge badge-primary">Active</div>
@@ -98,7 +113,67 @@ function StoreManagement() {
                     <MapPinIcon className="w-4 h-4" />{" "}
                     {sData.location || "No location set"}
                   </p>
-                  <p className="text-xs mt-2 truncate">{sData._id}</p>
+
+                  {/* Performance Sparkline */}
+                  {liveData?.hourlyTrend && (
+                    <div className="h-16 w-full mt-4 -mx-2">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={liveData.hourlyTrend}>
+                          <defs>
+                            <linearGradient
+                              id={`colorRev-${k}`}
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#22c55e"
+                                stopOpacity={0.3}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#22c55e"
+                                stopOpacity={0}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="revenue"
+                            stroke="#22c55e"
+                            strokeWidth={2}
+                            fillOpacity={1}
+                            fill={`url(#colorRev-${k})`}
+                            isAnimationActive={true}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* Live Metrics Overlay (if available) */}
+                  {liveData && (
+                    <div className="grid grid-cols-2 gap-2 mt-4 py-3 bg-base-200/50 rounded-lg px-2">
+                      <div className="text-center border-r border-base-300">
+                        <p className="text-[10px] uppercase text-gray-400 font-bold">
+                          Revenue
+                        </p>
+                        <p className="text-sm font-bold text-success">
+                          ₦{liveData.todayRevenue.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] uppercase text-gray-400 font-bold">
+                          Orders
+                        </p>
+                        <p className="text-sm font-bold text-primary">
+                          {liveData.todayOrderCount}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="card-actions justify-end mt-4">
                     {!isCurrent ? (
@@ -113,7 +188,12 @@ function StoreManagement() {
                         Selected
                       </button>
                     )}
-                    <button className="btn btn-ghost btn-sm">Settings</button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => navigate("/app/settings/general")}
+                    >
+                      Settings
+                    </button>
                   </div>
                 </div>
               </div>

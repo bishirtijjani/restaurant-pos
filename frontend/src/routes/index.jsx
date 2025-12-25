@@ -70,6 +70,8 @@ const InventoryAnalytics = lazy(() =>
   import("../features/analytics/dashboards/Inventory")
 );
 const StoreManagement = lazy(() => import("../pages/StoreManagement"));
+const BrandCatalog = lazy(() => import("../features/brand/BrandCatalog"));
+const BrandSettings = lazy(() => import("../features/brand/BrandSettings"));
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
@@ -111,6 +113,8 @@ const routes = [
   { path: "/analytics/payments", component: PaymentAnalytics },
   { path: "/analytics/reports", component: CustomReports },
   { path: "/stores", component: StoreManagement },
+  { path: "/brand-catalog", component: BrandCatalog },
+  { path: "/brand-settings", component: BrandSettings },
 ];
 
 export default routes;

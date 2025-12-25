@@ -1,18 +1,17 @@
 const Store = require("../models/Store");
+const { getEffectiveSettings } = require("../utils/settingsManager");
 const { PaymentProviderFactory } = require("../utils/paymentProvider");
 
 // Get public payment configuration (e.g., publishable keys)
 exports.getPaymentConfig = async (req, res) => {
   try {
-    const store = await Store.findById(req.storeId).select(
-      "settings.paymentGateways"
-    );
+    const settings = await getEffectiveSettings(req.storeId);
 
-    if (!store || !store.settings || !store.settings.paymentGateways) {
+    if (!settings || !settings.paymentGateways) {
       return res.status(200).json({ success: true, providers: [] });
     }
 
-    const gateways = store.settings.paymentGateways;
+    const gateways = settings.paymentGateways;
     const providers = [];
 
     // Stripe
@@ -51,29 +50,27 @@ exports.createPaymentIntent = async (req, res) => {
       });
     }
 
-    // Get Store config including secrets (using +select to override select: false)
-    const store = await Store.findById(req.storeId).select(
-      "+settings.paymentGateways.stripe.secretKey"
-    );
+    // Get Effective settings including secrets (Stripe Secret Key)
+    const settings = await getEffectiveSettings(req.storeId, {
+      includeSecrets: true,
+    });
 
-    if (!store) {
+    if (!settings) {
       return res
         .status(404)
-        .json({ success: false, message: "Store not found" });
+        .json({ success: false, message: "Store/Settings not found" });
     }
 
-    const gateways = store.settings?.paymentGateways;
+    const gateways = settings.paymentGateways;
 
     let providerConfig = null;
 
     if (provider === "stripe") {
       if (!gateways?.stripe?.enabled) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "Stripe payments are disabled for this store",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "Stripe payments are disabled for this store",
+        });
       }
       providerConfig = gateways.stripe;
     } else {

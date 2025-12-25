@@ -10,6 +10,10 @@ const userSchema = new mongoose.Schema(
     stores: [
       {
         storeId: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
+        organizationId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Organization",
+        },
         role: {
           type: String,
           enum: [
@@ -33,6 +37,10 @@ const userSchema = new mongoose.Schema(
       },
     ],
     lastActiveStore: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
+    currentOrganizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+    },
 
     // --- Legacy / Global Role (Deprecated but kept for safety) ---
     role: {

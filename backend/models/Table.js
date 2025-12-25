@@ -14,6 +14,12 @@ const tableSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
     tableNumber: {
       type: String,
       required: true,

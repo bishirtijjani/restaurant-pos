@@ -1,240 +1,177 @@
 const mongoose = require("mongoose");
-const MenuItem = require("../models/MenuItem");
 const Order = require("../models/Order");
+const MenuItem = require("../models/MenuItem");
 const Category = require("../models/Category");
+const InventoryItem = require("../models/InventoryItem");
+const Table = require("../models/Table");
+const Reservation = require("../models/Reservation");
+const asyncHandler = require("express-async-handler");
 
-const getDashboardStats = async (req, res) => {
-  try {
-    // Get current date and date 6 months ago for trends
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to start of day
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+// @desc    Get Dashboard Command Center Data
+// @route   GET /api/dashboard
+// @access  Private
+const getDashboardStats = asyncHandler(async (req, res) => {
+  const storeId = new mongoose.Types.ObjectId(req.storeId);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
 
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  // 1. KPIs: Revenue, Order Count, Active Orders
+  const kpiStats = await Order.aggregate([
+    {
+      $match: {
+        storeId,
+        createdAt: { $gte: todayStart, $lte: todayEnd },
+        orderStatus: { $ne: "cancelled" },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        todayRevenue: { $sum: "$totalAmount" },
+        todayOrderCount: { $sum: 1 },
+        avgOrderValue: { $avg: "$totalAmount" },
+      },
+    },
+  ]);
 
-    // Calculate total inventory value and menuItems near expiry
-    const menuItems = await MenuItem.find({ storeId: req.storeId });
-    let totalInventoryValue = 0;
-    let itemsNearExpiry = 0;
+  const kpis = kpiStats[0] || {
+    todayRevenue: 0,
+    todayOrderCount: 0,
+    avgOrderValue: 0,
+  };
 
-    // Calculate expiry threshold (date to report menuItems near expiry)
-    const expiryThreshold = new Date();
-    const daysToExpire = parseInt(req.query.days) || 30;
-    expiryThreshold.setDate(expiryThreshold.getDate() + daysToExpire);
+  // Active Orders (In-progress: pending, preparing, ready)
+  const activeOrdersCount = await Order.countDocuments({
+    storeId,
+    orderStatus: { $in: ["pending", "preparing", "ready"] },
+  });
 
-    menuItems.forEach((menuItem) => {
-      menuItem.batches.forEach((batch) => {
-        totalInventoryValue += batch.quantity * batch.packSellingPrice;
-        if (new Date(batch.expiryDate) <= expiryThreshold) {
-          itemsNearExpiry += batch.quantity;
-        }
-      });
-    });
+  // Long-waiting Orders (> 15 mins)
+  const fifteenMinsAgo = new Date(Date.now() - 15 * 60000);
+  const longWaitingOrders = await Order.countDocuments({
+    storeId,
+    orderStatus: { $in: ["pending", "preparing"] },
+    createdAt: { $lt: fifteenMinsAgo },
+  });
 
-    // Get active orders
-    const activeOrders = await Order.countDocuments({
-      paymentStatus: "pending",
-      storeId: req.storeId,
-    });
+  // 2. Operational Stats
+  // Table Occupancy
+  const totalTables = await Table.countDocuments({ storeId, isActive: true });
+  const occupiedTables = await Table.countDocuments({
+    storeId,
+    status: { $in: ["occupied", "ordered"] },
+    isActive: true,
+  });
+  const tableOccupancy =
+    totalTables > 0 ? Math.round((occupiedTables / totalTables) * 100) : 0;
 
-    // Get today's sales data
-    const todaysSales = await Order.aggregate([
-      {
-        $match: {
-          storeId: new mongoose.Types.ObjectId(req.storeId),
-          createdAt: {
-            $gte: today,
-            $lt: tomorrow,
-          },
-        },
-      },
-      {
-        $unwind: "$items",
-      },
-      {
-        $group: {
-          _id: "$items.menuItemId",
-          totalPackQuantity: { $sum: "$items.packQuantity" },
-          totalUnitQuantity: { $sum: "$items.unitQuantity" },
-          totalAmount: { $sum: "$items.subtotal" },
-        },
-      },
-      {
-        $lookup: {
-          from: "menuItems",
-          localField: "_id",
-          foreignField: "_id",
-          as: "menuItem",
-        },
-      },
-      {
-        $unwind: "$menuItem",
-      },
-      {
-        $project: {
-          menuItemName: "$menuItem.name",
-          totalPackQuantity: 1,
-          totalUnitQuantity: 1,
-          totalAmount: 1,
-        },
-      },
-    ]);
+  // Active Staff (Unique staff who took orders today)
+  const activeStaffIds = await Order.distinct("servedBy", {
+    storeId,
+    createdAt: { $gte: todayStart, $lte: todayEnd },
+  });
+  const activeStaffCount = activeStaffIds.length;
 
-    // Calculate monthly sales data
-    const monthlyOrders = await Order.aggregate([
-      {
-        $match: {
-          storeId: new mongoose.Types.ObjectId(req.storeId),
-          createdAt: { $gte: sixMonthsAgo },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
-          },
-          totalSales: { $sum: "$totalAmount" },
-          orderCount: { $sum: 1 },
-        },
-      },
-      { $sort: { "_id.year": 1, "_id.month": 1 } },
-    ]);
+  // Low Stock Items
+  const lowStockCount = await InventoryItem.countDocuments({
+    storeId,
+    isActive: true,
+    $expr: { $lte: ["$currentStock", "$minStockLevel"] },
+  });
 
-    // Get menuItems with low stock
-    const lowStockThreshold = 30;
-    const lowStockMenuItems = await MenuItem.aggregate([
-      {
-        $match: { storeId: new mongoose.Types.ObjectId(req.storeId) },
-      },
-      {
-        $unwind: "$batches",
-      },
-      {
-        $group: {
-          _id: "$_id",
-          name: { $first: "$name" },
-          totalStock: { $sum: "$batches.quantity" },
-        },
-      },
-      {
-        $match: {
-          totalStock: { $lt: lowStockThreshold },
-        },
-      },
-    ]);
+  // Pending Reservations for today
+  const pendingReservations = await Reservation.countDocuments({
+    storeId,
+    reservationDate: { $gte: todayStart, $lte: todayEnd },
+    status: { $in: ["pending", "confirmed"] },
+  });
 
-    // Get expiring menuItems with batch details - FIXED VERSION
-    // const expiringMenuItems = await MenuItem.find({
-    //   "batches.expiryDate": {
-    //     $lte: expiryThreshold,
-    //     $gte: today,
-    //   },
-    // }).then((menuItems) => {
-    //   return menuItems
-    //     .map((menuItem) => {
-    //       // Filter only the batches that are expiring
-    //       const expiringBatches = menuItem.batches.filter(
-    //         (batch) =>
-    //           batch.expiryDate <= expiryThreshold && batch.expiryDate >= today
-    //       );
-
-    //       return {
-    //         _id: menuItem._id,
-    //         name: menuItem.name,
-    //         category: menuItem.category,
-    //         expiringBatches: expiringBatches.map((batch) => ({
-    //           batchNumber: batch.batchNumber,
-    //           quantity: batch.quantity,
-    //           expiryDate: batch.expiryDate,
-    //           packSellingPrice: batch.packSellingPrice,
-    //           unitSellingPrice: batch.unitSellingPrice,
-    //         })),
-    //       };
-    //     })
-    //     .filter((menuItem) => menuItem.expiringBatches.length > 0);
-    // });
-
-    const expiringMenuItems = await MenuItem.aggregate([
-      {
-        $match: { storeId: new mongoose.Types.ObjectId(req.storeId) },
+  // 3. Trends: Hourly Sales
+  const hourlyTrend = await Order.aggregate([
+    {
+      $match: {
+        storeId,
+        createdAt: { $gte: todayStart, $lte: todayEnd },
+        orderStatus: { $ne: "cancelled" },
       },
-      {
-        $project: {
-          name: 1,
-          category: 1,
-          unitsInPack: 1,
-          description: 1,
-          expiringBatches: {
-            $filter: {
-              input: "$batches",
-              as: "batch",
-              cond: {
-                $and: [
-                  { $lt: ["$$batch.expiryDate", expiryThreshold] },
-                  { $gte: ["$$batch.expiryDate", new Date()] },
-                ],
-              },
-            },
-          },
-        },
+    },
+    {
+      $group: {
+        _id: { $hour: "$createdAt" },
+        amount: { $sum: "$totalAmount" },
       },
-      // Remove menuItems with no expiring batches
-      { $match: { "expiringBatches.0": { $exists: true } } },
-      // Add calculated fields
-      {
-        $addFields: {
-          totalExpiringQuantity: {
-            $reduce: {
-              input: "$expiringBatches",
-              initialValue: 0,
-              in: { $add: ["$$value", "$$this.quantity"] },
-            },
-          },
-        },
-      },
-    ]);
+    },
+    { $sort: { _id: 1 } },
+  ]);
 
-    // Get recent activity
-    const recentActivity = await Order.find({ storeId: req.storeId })
-      .sort({ createdAt: -1 })
-      .limit(4)
-      .populate("items.menuItemId");
+  const formattedHourly = Array.from({ length: 24 }, (_, i) => {
+    const found = hourlyTrend.find((h) => h._id === i);
+    return {
+      hour: `${i}:00`,
+      revenue: found ? found.amount : 0,
+    };
+  });
 
-    // Get category stats
-    const categoryCount = await Category.countDocuments({
-      storeId: req.storeId,
-    });
-    const menuItemCount = await MenuItem.countDocuments({
-      storeId: req.storeId,
-    });
+  // 4. Recent Activity (Last 5 orders)
+  const recentActivity = await Order.find({ storeId })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .select(
+      "orderNumber totalAmount orderStatus createdAt customerDetails table"
+    )
+    .populate("servedBy", "fullname");
 
-    return res.json({
-      success: true,
-      data: {
-        totalInventoryValue,
-        activeOrders,
-        itemsNearExpiry,
-        todaysSales,
-        monthlyOrders,
-        lowStockMenuItems,
-        expiringMenuItems,
-        recentActivity,
-        categoryCount,
-        menuItemCount,
-      },
-    });
-  } catch (error) {
-    console.error("Dashboard stats error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error fetching dashboard statistics",
-      error: error.message,
+  // 5. Alerts (Synthesized from data)
+  const alerts = [];
+  if (lowStockCount > 0) {
+    alerts.push({
+      id: "low-stock",
+      type: "critical",
+      message: `${lowStockCount} items are below minimum stock level.`,
+      actionLink: "/app/inventory",
     });
   }
-};
+  if (longWaitingOrders > 0) {
+    alerts.push({
+      id: "slow-orders",
+      type: "critical",
+      message: `${longWaitingOrders} orders have been waiting for more than 15 minutes.`,
+      actionLink: "/app/kds",
+    });
+  }
+  if (pendingReservations > 0) {
+    alerts.push({
+      id: "reservations",
+      type: "info",
+      message: `You have ${pendingReservations} reservations scheduled for today.`,
+      actionLink: "/app/reservations",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      kpis: {
+        ...kpis,
+        activeOrders: activeOrdersCount,
+        activeStaff: activeStaffCount,
+      },
+      opsStats: {
+        tableOccupancy,
+        lowStockCount,
+        pendingReservations,
+        longWaitingOrders,
+      },
+      trends: {
+        hourlySales: formattedHourly,
+      },
+      recentActivity,
+      alerts,
+    },
+  });
+});
 
 module.exports = {
   getDashboardStats,

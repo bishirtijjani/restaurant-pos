@@ -10,7 +10,7 @@ export const fetchSettings = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(API_URL);
-      return response.data.data;
+      return response.data; // Now returns { success, data, overrides }
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch settings"
@@ -90,6 +90,7 @@ const initialState = {
     },
   },
   loading: false,
+  overrides: {},
   error: null,
   successMessage: null,
 };
@@ -117,7 +118,8 @@ const generalSettingsSlice = createSlice({
       })
       .addCase(fetchSettings.fulfilled, (state, action) => {
         state.loading = false;
-        state.generalSettings = action.payload;
+        state.generalSettings = action.payload.data;
+        state.overrides = action.payload.overrides || {};
         state.error = null;
       })
       .addCase(fetchSettings.rejected, (state, action) => {
@@ -133,7 +135,7 @@ const generalSettingsSlice = createSlice({
       })
       .addCase(updateSettings.fulfilled, (state, action) => {
         state.loading = false;
-        state.generalSettings = action.payload;
+        state.generalSettings = action.payload; // backend updateSettings currently returns .data directly
         state.successMessage = "Settings updated successfully";
         state.error = null;
       })
@@ -152,6 +154,7 @@ const generalSettingsSlice = createSlice({
       .addCase(resetSettings.fulfilled, (state, action) => {
         state.loading = false;
         state.generalSettings = action.payload;
+        state.overrides = {}; // Reset clears overrides
         state.successMessage = "Settings reset to defaults successfully";
         state.error = null;
       })
@@ -168,6 +171,8 @@ export const { clearError, clearSuccess, updateLocalSettings } =
 
 // Selectors
 export const selectSettings = (state) => state.generalSettings.generalSettings;
+export const selectSettingsOverrides = (state) =>
+  state.generalSettings.overrides;
 export const selectSettingsLoading = (state) => state.generalSettings.loading;
 export const selectSettingsError = (state) => state.generalSettings.error;
 export const selectSettingsSuccess = (state) =>

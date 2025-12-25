@@ -11,6 +11,12 @@ const customerSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
     address: { type: String },
     debtLimit: {
       type: Number,
