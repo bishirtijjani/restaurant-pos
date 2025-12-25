@@ -16,10 +16,24 @@ import {
   deleteInventoryItem,
   fetchInventoryItems,
 } from "../../inventory/inventorySlice";
-import { deleteTable, mergeTables, splitTables, safeUnmergeTables } from "../../tables/tableSlice";
+import {
+  deleteTable,
+  mergeTables,
+  splitTables,
+  safeUnmergeTables,
+} from "../../tables/tableSlice";
 import { updateTableStatus } from "../../tables/tableSlice";
-import { updateReservation, deleteReservation } from "../../reservations/reservationSlice";
-import { deleteDiscount, deletePromoCode, fetchDiscounts, fetchPromoCodes } from "../../discounts/discountsSlice";
+import {
+  updateReservation,
+  deleteReservation,
+} from "../../reservations/reservationSlice";
+import {
+  deleteDiscount,
+  deletePromoCode,
+  fetchDiscounts,
+  fetchPromoCodes,
+} from "../../discounts/discountsSlice";
+import { recallOrder } from "../../kds/kdsSlice";
 
 function ConfirmationModalBody({ extraObject, closeModal }) {
   const dispatch = useDispatch();
@@ -79,8 +93,15 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
           break;
         case CONFIRMATION_MODAL_CLOSE_TYPES.ASSIGN_RESERVATION:
           const { tableId, reservationId } = extraObject;
-          await dispatch(updateTableStatus({ id: tableId, status: "reserved" })).unwrap();
-          await dispatch(updateReservation({ id: reservationId, data: { tableId, status: "confirmed" } })).unwrap();
+          await dispatch(
+            updateTableStatus({ id: tableId, status: "reserved" })
+          ).unwrap();
+          await dispatch(
+            updateReservation({
+              id: reservationId,
+              data: { tableId, status: "confirmed" },
+            })
+          ).unwrap();
           successMessage = "Reservation assigned successfully";
           break;
         case CONFIRMATION_MODAL_CLOSE_TYPES.CLEAR_CART:
@@ -96,7 +117,9 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
           successMessage = "Tables merged successfully";
           break;
         case CONFIRMATION_MODAL_CLOSE_TYPES.SPLIT_TABLES:
-          await dispatch(safeUnmergeTables({ id, reason: "User requested split" })).unwrap();
+          await dispatch(
+            safeUnmergeTables({ id, reason: "User requested split" })
+          ).unwrap();
           successMessage = "Tables split successfully";
           break;
         case CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_RESERVATION:
@@ -112,6 +135,15 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
           await dispatch(deletePromoCode(id)).unwrap();
           dispatch(fetchPromoCodes());
           successMessage = "Promo Code Deleted Successfully!";
+          break;
+        case CONFIRMATION_MODAL_CLOSE_TYPES.RECALL_KDS_ORDER:
+          await dispatch(
+            recallOrder({
+              orderId: id,
+              reason: "Recalled via confirmation modal",
+            })
+          ).unwrap();
+          successMessage = "Order Recalled Successfully!";
           break;
         default:
           successMessage = "Action completed!";
@@ -131,7 +163,12 @@ function ConfirmationModalBody({ extraObject, closeModal }) {
   };
 
   const isDelete = type.startsWith("DELETE");
-  const buttonText = type === CONFIRMATION_MODAL_CLOSE_TYPES.CANCEL_ORDER ? "Yes, Cancel" : isDelete ? "Yes, Delete" : "Yes, Confirm";
+  const buttonText =
+    type === CONFIRMATION_MODAL_CLOSE_TYPES.CANCEL_ORDER
+      ? "Yes, Cancel"
+      : isDelete
+      ? "Yes, Delete"
+      : "Yes, Confirm";
 
   return (
     <>

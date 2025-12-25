@@ -13,6 +13,11 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { updateKDSOrderStatus, recallOrder } from "../kdsSlice";
+import { openModal } from "../../common/modalSlice";
+import {
+  MODAL_BODY_TYPES,
+  CONFIRMATION_MODAL_CLOSE_TYPES,
+} from "../../../utils/globalConstantUtil";
 import OrderTimer from "./OrderTimer";
 import { getOrderColor, groupItemsByCategory } from "../kdsUtils";
 import { showNotification } from "../../common/headerSlice";
@@ -117,29 +122,18 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
       return;
     }
 
-    if (window.confirm("Recall this order back to preparing?")) {
-      try {
-        await dispatch(
-          recallOrder({
-            orderId: order._id,
-            reason: "Recalled from completed orders",
-          })
-        ).unwrap();
-        dispatch(
-          showNotification({
-            message: `Order #${order.orderNumber} recalled`,
-            status: 1,
-          })
-        );
-      } catch (error) {
-        dispatch(
-          showNotification({
-            message: error.message || "Failed to recall order",
-            status: 0,
-          })
-        );
-      }
-    }
+    dispatch(
+      openModal({
+        title: "Recall Order",
+        bodyType: MODAL_BODY_TYPES.CONFIRMATION,
+        extraObject: {
+          message:
+            "Are you sure you want to recall this order back to preparing?",
+          type: CONFIRMATION_MODAL_CLOSE_TYPES.RECALL_KDS_ORDER,
+          id: order._id, // Pass order ID (in ConfirmationModalBody this maps to 'orderId' usually, but here 'id' matches logic)
+        },
+      })
+    );
   };
 
   const getFontSize = () => {

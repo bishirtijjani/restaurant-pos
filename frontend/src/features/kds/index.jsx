@@ -10,8 +10,10 @@ import {
   Settings,
   Eye,
   EyeOff,
+  Volume2,
 } from "lucide-react";
 import { fetchKDSOrders, playSound } from "./kdsSlice";
+import { playNotificationSound } from "./kdsUtils";
 import {
   fetchStations,
   setCurrentStation,
@@ -45,6 +47,7 @@ const KDS = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [permissionChecked, setPermissionChecked] = useState(false);
   const [canViewKDS, setCanViewKDS] = useState(false);
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
 
   const kdsContainerRef = useRef(null);
 
@@ -263,6 +266,34 @@ const KDS = () => {
   // Show loading during initial data fetch
   if (isInitialLoad && loading) {
     return <SuspenseContent />;
+  }
+
+  // Audio Context Unlock Overlay
+  if (!isAudioUnlocked && canViewKDS) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-base-100 bg-opacity-95 backdrop-blur-sm">
+        <div className="text-center max-w-lg p-8">
+          <div className="mb-6 flex justify-center">
+            <Volume2 size={64} className="text-primary animate-pulse" />
+          </div>
+          <h1 className="text-3xl font-bold mb-4">Start Kitchen Display</h1>
+          <p className="mb-8 opacity-70">
+            Click the button below to enable sound notifications and start the
+            session.
+          </p>
+          <button
+            onClick={() => {
+              playNotificationSound(0); // Play silent sound to unlock audio
+              setIsAudioUnlocked(true);
+            }}
+            className="btn btn-primary btn-lg gap-2"
+          >
+            <PlayCircle size={24} />
+            Start Session
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
