@@ -72,9 +72,11 @@ const InventoryAnalytics = lazy(() =>
 const StoreManagement = lazy(() => import("../pages/StoreManagement"));
 const BrandCatalog = lazy(() => import("../features/brand/BrandCatalog"));
 const BrandSettings = lazy(() => import("../features/brand/BrandSettings"));
+const SettingsHub = lazy(() => import("../features/settings/SettingsHub"));
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
+  { path: "/settings", component: SettingsHub },
   { path: "/settings/profile", component: ProfileSettings },
   { path: "/settings/general", component: GeneralSettings },
   { path: "/categories", component: Categories },

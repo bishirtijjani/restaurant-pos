@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Delete, X } from "lucide-react";
 import ErrorText from "../../../components/Typography/ErrorText";
 
-const PinLogin = ({ onLogin, onCancel, loading, email }) => {
+const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
   const [pin, setPin] = useState("");
   const { error } = useSelector((state) => state.auth);
 
@@ -55,6 +55,52 @@ const PinLogin = ({ onLogin, onCancel, loading, email }) => {
       onLogin(pin);
     }
   };
+
+  // If no email, show email input first
+  if (!email && onEmailChange) {
+    return (
+      <div className="flex flex-col items-center">
+        <h3 className="text-xl font-semibold mb-4">
+          Enter your email for PIN login
+        </h3>
+
+        <div className="w-full mb-6">
+          <input
+            type="email"
+            placeholder="Email address"
+            className="input input-bordered w-full"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.target.value) {
+                onEmailChange(e.target.value);
+              } else if (e.key === "Escape") {
+                onCancel();
+              }
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col w-full gap-2">
+          <button
+            onClick={(e) => {
+              const input = e.target
+                .closest("div")
+                .previousElementSibling.querySelector("input");
+              if (input && input.value) {
+                onEmailChange(input.value);
+              }
+            }}
+            className="btn btn-primary w-full"
+          >
+            Continue
+          </button>
+          <button onClick={onCancel} className="btn btn-ghost w-full">
+            Use Password Instead
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center">

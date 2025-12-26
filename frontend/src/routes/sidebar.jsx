@@ -201,36 +201,9 @@ export const adminRoutes = [
     name: "Customers",
   },
   {
-    path: "",
-    icon: <Settings className={`${iconClasses} inline`} />,
+    path: "/app/settings",
+    icon: <Settings className={iconClasses} />,
     name: "Settings",
-    submenu: [
-      {
-        path: "/app/settings/profile",
-        icon: <User className={submenuIconClasses} />,
-        name: "Profile",
-      },
-      {
-        path: "/app/settings/general",
-        icon: <KeyRound className={submenuIconClasses} />,
-        name: "General Settings",
-      },
-      {
-        path: "/app/stores",
-        icon: <Building className={submenuIconClasses} />,
-        name: "Stores",
-      },
-      {
-        path: "/app/brand-catalog",
-        icon: <Shapes className={submenuIconClasses} />,
-        name: "Brand Catalog",
-      },
-      {
-        path: "/app/brand-settings",
-        icon: <Building className={submenuIconClasses} />,
-        name: "Brand Settings",
-      },
-    ],
   },
 ];
 

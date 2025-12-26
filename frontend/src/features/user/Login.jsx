@@ -65,11 +65,12 @@ function Login() {
     if (!email) {
       dispatch(
         showNotification({
-          message: "Email is required for PIN login",
+          message: "Please enter your email first to use PIN login",
           status: 0,
         })
       );
-      setLoginMode("password");
+      // Don't automatically switch modes - let user stay in PIN mode
+      // They can manually switch using "Use Password Instead" button if needed
       return;
     }
 
@@ -194,6 +195,10 @@ function Login() {
                 onLogin={submitPinLogin}
                 onCancel={switchToPasswordMode}
                 loading={loading}
+                onEmailChange={(newEmail) => {
+                  setLoginObj({ ...loginObj, email: newEmail });
+                  localStorage.setItem("lastEmail", newEmail);
+                }}
               />
             )}
           </div>
