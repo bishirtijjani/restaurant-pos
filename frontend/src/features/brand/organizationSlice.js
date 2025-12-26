@@ -49,7 +49,10 @@ const organizationSlice = createSlice({
       })
       .addCase(fetchOrganization.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload || "Failed to fetch organization";
+        state.error =
+          action.payload?.message ||
+          action.payload ||
+          "Failed to fetch organization";
       })
       // Update Organization
       .addCase(updateOrganization.pending, (state) => {
@@ -61,7 +64,10 @@ const organizationSlice = createSlice({
       })
       .addCase(updateOrganization.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload || "Failed to update organization";
+        state.error =
+          action.payload?.message ||
+          action.payload ||
+          "Failed to update organization";
       });
   },
 });

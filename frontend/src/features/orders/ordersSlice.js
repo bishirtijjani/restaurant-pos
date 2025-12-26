@@ -139,7 +139,10 @@ export const refundOrder = createAsyncThunk(
 // Modify order
 export const modifyOrder = createAsyncThunk(
   "orders/modifyOrder",
-  async ({ orderId, orderItems, orderNote, reason, expectedVersion }, { rejectWithValue }) => {
+  async (
+    { orderId, orderItems, orderNote, reason, expectedVersion },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await axios.put(`/api/order-modifications/${orderId}`, {
         orderItems,
@@ -212,7 +215,8 @@ const ordersSlice = createSlice({
       })
       .addCase(fetchOrders.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch orders";
+        state.error =
+          action.payload?.message || action.payload || "Failed to fetch orders";
       })
 
       // Fetch Order by ID
@@ -227,7 +231,10 @@ const ordersSlice = createSlice({
       })
       .addCase(fetchOrderById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch order details";
+        state.error =
+          action.payload?.message ||
+          action.payload ||
+          "Failed to fetch order details";
       })
 
       // Create Order
@@ -244,7 +251,8 @@ const ordersSlice = createSlice({
       })
       .addCase(createOrder.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to create order";
+        state.error =
+          action.payload?.message || action.payload || "Failed to create order";
         state.success = false;
       })
 
@@ -270,7 +278,10 @@ const ordersSlice = createSlice({
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to update order status";
+        state.error =
+          action.payload?.message ||
+          action.payload ||
+          "Failed to update order status";
         state.success = false;
       })
 
@@ -296,7 +307,10 @@ const ordersSlice = createSlice({
       })
       .addCase(updatePayment.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to update payment";
+        state.error =
+          action.payload?.message ||
+          action.payload ||
+          "Failed to update payment";
         state.success = false;
       })
 
@@ -322,7 +336,8 @@ const ordersSlice = createSlice({
       })
       .addCase(cancelOrder.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to cancel order";
+        state.error =
+          action.payload?.message || action.payload || "Failed to cancel order";
         state.success = false;
       })
 
@@ -336,7 +351,7 @@ const ordersSlice = createSlice({
         state.loading = false;
         state.success = action.payload.success;
         state.message = "Items voided successfully";
-        
+
         // Update order in list
         const index = state.orders.findIndex(
           (order) => order._id === action.payload.data._id
@@ -347,7 +362,8 @@ const ordersSlice = createSlice({
       })
       .addCase(voidOrderItems.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to void items";
+        state.error =
+          action.payload?.message || action.payload || "Failed to void items";
         state.success = false;
       })
 
@@ -361,7 +377,7 @@ const ordersSlice = createSlice({
         state.loading = false;
         state.success = action.payload.success;
         state.message = "Refund processed successfully";
-        
+
         const index = state.orders.findIndex(
           (order) => order._id === action.payload.data._id
         );
@@ -371,7 +387,10 @@ const ordersSlice = createSlice({
       })
       .addCase(refundOrder.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to process refund";
+        state.error =
+          action.payload?.message ||
+          action.payload ||
+          "Failed to process refund";
         state.success = false;
       })
 
@@ -386,7 +405,7 @@ const ordersSlice = createSlice({
         state.success = action.payload.success;
         state.message = "Order modified successfully";
         state.currentOrder = action.payload.data;
-        
+
         const index = state.orders.findIndex(
           (order) => order._id === action.payload.data._id
         );
@@ -396,7 +415,8 @@ const ordersSlice = createSlice({
       })
       .addCase(modifyOrder.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to modify order";
+        state.error =
+          action.payload?.message || action.payload || "Failed to modify order";
         state.success = false;
       });
   },

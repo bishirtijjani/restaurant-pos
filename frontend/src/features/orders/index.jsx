@@ -426,9 +426,13 @@ const Orders = () => {
       />
 
       {error ? (
-        <div className="alert alert-error">
+        <div className="alert alert-error mb-6">
           <XCircle className="w-6 h-6" />
-          <span>{error}</span>
+          <span>
+            {typeof error === "object"
+              ? error.message || "An error occurred"
+              : error}
+          </span>
         </div>
       ) : filteredOrders.length === 0 ? (
         <div className="text-center py-16 bg-base-200 rounded-lg">

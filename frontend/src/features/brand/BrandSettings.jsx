@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import TitleCard from "../../components/Cards/TitleCard";
 import SearchableSelect from "../../components/Input/SearchableSelect";
 import CurrencySelect from "../settings/generalSettings/components/CurrencySelect";
+import FormattedNumberInput from "../../components/Input/FormattedNumberInput";
 import { Settings, Save, Building } from "lucide-react";
 import { fetchOrganization, updateOrganization } from "./organizationSlice";
 import { showNotification } from "../common/headerSlice";
@@ -110,26 +111,21 @@ const BrandSettings = () => {
   return (
     <div className="flex flex-col gap-6 animate-fadeIn pb-32">
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary-focus p-8 text-primary-content shadow-2xl">
-        <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl">
-              <Building className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Master Brand Settings
-              </h1>
-              <p className="text-primary-content/80 text-sm max-w-md">
-                Configure global defaults and brand identity that sync across
-                all your store locations.
-              </p>
-            </div>
+      <div className="relative z-10">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="p-3 bg-accent/20 backdrop-blur-md rounded-2xl">
+            <Building className="w-8 h-8" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Master Brand Settings
+            </h1>
+            <p className="text-primary/80 text-sm max-w-md">
+              Configure global defaults and brand identity that sync across all
+              your store locations.
+            </p>
           </div>
         </div>
-        {/* Decorative Circles */}
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-black/10 rounded-full blur-3xl"></div>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
@@ -150,6 +146,7 @@ const BrandSettings = () => {
                   onChange={handleInputChange}
                   className="input input-bordered focus:input-primary transition-all"
                   placeholder="e.g. Gourmet Kitchen"
+                  autoComplete="off"
                 />
               </div>
               <div className="form-control">
@@ -163,6 +160,7 @@ const BrandSettings = () => {
                   onChange={handleInputChange}
                   className="input input-bordered focus:input-primary transition-all"
                   placeholder="+1 234 567 890"
+                  autoComplete="off"
                 />
               </div>
               <div className="form-control md:col-span-2">
@@ -177,6 +175,7 @@ const BrandSettings = () => {
                   onChange={handleInputChange}
                   className="textarea textarea-bordered h-24 focus:textarea-primary transition-all"
                   placeholder="123 Culinary St, Food City"
+                  autoComplete="off"
                 ></textarea>
               </div>
               <div className="form-control">
@@ -190,6 +189,7 @@ const BrandSettings = () => {
                   onChange={handleInputChange}
                   className="input input-bordered focus:input-primary transition-all"
                   placeholder="hello@yourbrand.com"
+                  autoComplete="off"
                 />
               </div>
               <div className="form-control">
@@ -205,6 +205,7 @@ const BrandSettings = () => {
                   onChange={handleInputChange}
                   className="input input-bordered focus:input-primary transition-all"
                   placeholder="Freshness in every bite"
+                  autoComplete="off"
                 />
               </div>
               <div className="form-control md:col-span-2">
@@ -218,6 +219,7 @@ const BrandSettings = () => {
                   onChange={handleInputChange}
                   className="input input-bordered focus:input-primary transition-all"
                   placeholder="https://www.yourbrand.com"
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -336,10 +338,11 @@ const BrandSettings = () => {
                         }));
                         setHasChanges(true);
                       }}
+                      autoComplete="off"
                     />
                     <div className="relative">
-                      <input
-                        type="number"
+                      <FormattedNumberInput
+                        name="taxGlobalRate"
                         placeholder="0.00"
                         className="input input-bordered w-28 focus:input-primary"
                         value={formData.taxSettings?.globalRate || ""}
@@ -348,13 +351,13 @@ const BrandSettings = () => {
                             ...p,
                             taxSettings: {
                               ...p.taxSettings,
-                              globalRate: parseFloat(e.target.value),
+                              globalRate: e.target.value,
                             },
                           }));
                           setHasChanges(true);
                         }}
                       />
-                      <span className="absolute right-4 top-3 text-base-content/30">
+                      <span className="absolute right-4 top-3 text-base-content/30 pointer-events-none">
                         %
                       </span>
                     </div>
@@ -409,11 +412,12 @@ const BrandSettings = () => {
                         }));
                         setHasChanges(true);
                       }}
+                      autoComplete="off"
                       disabled={!formData.serviceCharge?.enabled}
                     />
                     <div className="relative">
-                      <input
-                        type="number"
+                      <FormattedNumberInput
+                        name="serviceChargeRate"
                         placeholder="0"
                         className="input input-bordered w-28 focus:input-primary"
                         value={formData.serviceCharge?.rate || ""}
@@ -422,14 +426,14 @@ const BrandSettings = () => {
                             ...p,
                             serviceCharge: {
                               ...p.serviceCharge,
-                              rate: parseFloat(e.target.value),
+                              rate: e.target.value,
                             },
                           }));
                           setHasChanges(true);
                         }}
                         disabled={!formData.serviceCharge?.enabled}
                       />
-                      <span className="absolute right-4 top-3 text-base-content/30">
+                      <span className="absolute right-4 top-3 text-base-content/30 pointer-events-none">
                         %
                       </span>
                     </div>
