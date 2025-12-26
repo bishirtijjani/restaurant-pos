@@ -18,6 +18,7 @@ function Register() {
     email: "",
     password: "",
     confirmPassword: "",
+    pinCode: "",
   });
 
   const [securityQuestions, setSecurityQuestions] = useState([
@@ -27,12 +28,13 @@ function Register() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPin, setShowPin] = useState(false);
   const [passwordError, setPasswordError] = useState("");
 
   const submitForm = async (e) => {
     e.preventDefault();
 
-    const { fullname, email, password, confirmPassword } = registerObj;
+    const { fullname, email, password, confirmPassword, pinCode } = registerObj;
 
     if (!fullname || !email || !password || !confirmPassword) {
       setPasswordError("All fields are required.");
@@ -42,6 +44,18 @@ function Register() {
     if (password !== confirmPassword) {
       setPasswordError("Passwords do not match.");
       return;
+    }
+
+    // Validate PIN Code if provided
+    if (pinCode) {
+      if (!/^\d+$/.test(pinCode)) {
+        setPasswordError("PIN Code must be numbers only.");
+        return;
+      }
+      if (pinCode.length < 4 || pinCode.length > 6) {
+        setPasswordError("PIN Code must be between 4 and 6 digits.");
+        return;
+      }
     }
 
     // Validate security questions
@@ -72,6 +86,7 @@ function Register() {
           email,
           password,
           securityQuestions,
+          pinCode: registerObj.pinCode || undefined,
         })
       ).unwrap();
 
@@ -146,6 +161,44 @@ function Register() {
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
                   >
                     {showConfirmPassword ? (
+                      <EyeSlashIcon className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5 text-gray-500" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="relative mt-4">
+                  <div className={`form-control w-full`}>
+                    <label className="label">
+                      <span className={"label-text text-base-content "}>
+                        PIN Code (Optional, 4-6 digits)
+                      </span>
+                    </label>
+                    <input
+                      type={showPin ? "text" : "password"}
+                      value={registerObj.pinCode || ""}
+                      placeholder=""
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "" || /^\d+$/.test(val)) {
+                          if (val.length <= 6) {
+                            updateFormValue({
+                              updateType: "pinCode",
+                              value: val,
+                            });
+                          }
+                        }
+                      }}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="absolute right-3 top-12"
+                    onClick={() => setShowPin((prev) => !prev)}
+                  >
+                    {showPin ? (
                       <EyeSlashIcon className="h-5 w-5 text-gray-500" />
                     ) : (
                       <EyeIcon className="h-5 w-5 text-gray-500" />

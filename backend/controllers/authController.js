@@ -38,6 +38,20 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // Validate PIN Code if provided
+    if (pinCode) {
+      if (!/^\d+$/.test(pinCode)) {
+        return res
+          .status(400)
+          .json({ message: "PIN Code must be numbers only" });
+      }
+      if (pinCode.length < 4 || pinCode.length > 6) {
+        return res
+          .status(400)
+          .json({ message: "PIN Code must be between 4 and 6 digits" });
+      }
+    }
+
     // Validate security questions
     if (!securityQuestions || securityQuestions.length !== 2) {
       return res.status(400).json({
@@ -529,7 +543,20 @@ const updateCurrentUser = async (req, res) => {
     }
 
     if (fullname) user.fullname = fullname;
-    if (pinCode) user.pinCode = pinCode;
+    if (pinCode) {
+      if (!/^\d+$/.test(pinCode)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "PIN Code must be numbers only" });
+      }
+      if (pinCode.length < 4 || pinCode.length > 6) {
+        return res.status(400).json({
+          success: false,
+          message: "PIN Code must be between 4 and 6 digits",
+        });
+      }
+      user.pinCode = pinCode;
+    }
 
     if (password) {
       user.password = password; // Will be hashed by pre-save hook
