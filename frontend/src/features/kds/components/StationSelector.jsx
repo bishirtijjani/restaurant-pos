@@ -5,10 +5,13 @@ import { Monitor, Check } from "lucide-react";
 const StationSelector = ({ stations, currentStation, onStationChange }) => {
   return (
     <div className="dropdown dropdown-end">
-      <label tabIndex={0} className="btn btn-ghost gap-2">
-        <Monitor size={20} />
-        <span className="hidden md:inline">
-          {currentStation?.name || "Select Station"}
+      <label
+        tabIndex={0}
+        className="btn btn-ghost btn-sm md:btn-md gap-1 md:gap-2 px-2 md:px-4"
+      >
+        <Monitor size={18} className="md:w-5 md:h-5" />
+        <span className="hidden sm:inline text-xs md:text-sm max-w-[80px] md:max-w-none truncate">
+          {currentStation?.name || "Select"}
         </span>
       </label>
       <ul

@@ -288,43 +288,45 @@ const KDS = () => {
       className="min-h-screen bg-base-200 flex flex-col"
     >
       {/* Header */}
-      <div className="navbar bg-base-100 shadow-lg sticky top-0 z-50">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold ml-4">Kitchen Display</h1>
-          <div className="ml-4 flex items-center gap-2">
+      <div className="navbar bg-base-100 shadow-lg sticky top-0 z-50 px-2 lg:px-4">
+        <div className="flex-1 overflow-hidden">
+          <h1 className="text-lg md:text-2xl font-bold truncate">
+            Kitchen Display
+          </h1>
+          <div className="ml-2 md:ml-4 flex items-center gap-1 md:gap-2 shrink-0">
             {wsConnected && isOnline ? (
-              <Wifi size={16} className="text-success" />
+              <Wifi size={14} className="text-success" />
             ) : (
-              <WifiOff size={16} className="text-error" />
+              <WifiOff size={14} className="text-error" />
             )}
-            <span className="text-sm opacity-70">
+            <span className="text-xs md:text-sm opacity-70">
               {wsConnected && isOnline ? "Live" : "Offline"}
             </span>
           </div>
         </div>
 
-        <div className="flex-none gap-2">
+        <div className="flex-none gap-1 md:gap-2">
           <StationSelector
             stations={stations}
             currentStation={currentStation}
             onStationChange={handleStationChange}
           />
 
-          <div className="form-control">
-            <label className="label cursor-pointer gap-2 px-4">
+          <div className="form-control hidden sm:flex">
+            <label className="label cursor-pointer gap-2 px-2 lg:px-4">
               <span className="label-text hidden md:inline">
                 {showCompleted ? "Completed" : "Active"}
               </span>
               <input
                 type="checkbox"
-                className="toggle toggle-primary"
+                className="toggle toggle-primary toggle-sm md:toggle-md"
                 checked={showCompleted}
                 onChange={(e) => setShowCompleted(e.target.checked)}
               />
             </label>
           </div>
 
-          <div className="badge badge-primary badge-lg gap-2">
+          <div className="badge badge-primary badge-sm md:badge-lg gap-1 md:gap-2">
             <span className="font-bold">{orders.length}</span>
             <span className="hidden md:inline">
               {showCompleted
@@ -335,48 +337,117 @@ const KDS = () => {
             </span>
           </div>
 
-          <button
-            onClick={handleManualRefresh}
-            className={`btn btn-ghost btn-circle ${
-              manualRefresh ? "animate-spin" : ""
-            }`}
-            title="Refresh Orders"
-            disabled={!currentStation}
-          >
-            <RefreshCw size={20} />
-          </button>
-
-          {can("editKDSSettings") && (
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex gap-1">
             <button
-              className="btn btn-ghost btn-circle"
-              title="KDS Settings"
-              onClick={() => {
-                dispatch(
-                  openModal({
-                    title: "KDS Settings",
-                    bodyType: MODAL_BODY_TYPES.KDS_SETTINGS,
-                    size: "lg",
-                  })
-                );
-              }}
+              onClick={handleManualRefresh}
+              className={`btn btn-ghost btn-circle ${
+                manualRefresh ? "animate-spin" : ""
+              }`}
+              title="Refresh Orders"
+              disabled={!currentStation}
             >
-              <Settings size={20} />
+              <RefreshCw size={20} />
             </button>
-          )}
 
-          <button
-            onClick={toggleFullscreen}
-            className="btn btn-ghost btn-circle"
-            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          >
-            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
-          </button>
+            {can("editKDSSettings") && (
+              <button
+                className="btn btn-ghost btn-circle"
+                title="KDS Settings"
+                onClick={() => {
+                  dispatch(
+                    openModal({
+                      title: "KDS Settings",
+                      bodyType: MODAL_BODY_TYPES.KDS_SETTINGS,
+                      size: "lg",
+                    })
+                  );
+                }}
+              >
+                <Settings size={20} />
+              </button>
+            )}
 
-          {lastUpdate && (
-            <div className="hidden lg:block text-xs opacity-70">
-              Last updated: {new Date(lastUpdate).toLocaleTimeString()}
-            </div>
-          )}
+            <button
+              onClick={toggleFullscreen}
+              className="btn btn-ghost btn-circle"
+              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            >
+              {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+            </button>
+          </div>
+
+          {/* Mobile Actions Dropdown */}
+          <div className="dropdown dropdown-end lg:hidden">
+            <label tabIndex={0} className="btn btn-ghost btn-circle btn-sm">
+              <Settings size={20} />
+            </label>
+            <ul
+              tabIndex={0}
+              className="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2 z-[100]"
+            >
+              <li className="sm:hidden">
+                <div className="flex justify-between items-center py-2 px-4">
+                  <span className="text-sm font-medium">
+                    {showCompleted ? "Completed" : "Active"}
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="toggle toggle-primary toggle-sm"
+                    checked={showCompleted}
+                    onChange={(e) => setShowCompleted(e.target.checked)}
+                  />
+                </div>
+              </li>
+              <li>
+                <button
+                  onClick={handleManualRefresh}
+                  disabled={!currentStation}
+                >
+                  <RefreshCw
+                    size={18}
+                    className={manualRefresh ? "animate-spin" : ""}
+                  />
+                  Refresh
+                </button>
+              </li>
+              {can("editKDSSettings") && (
+                <li>
+                  <button
+                    onClick={() => {
+                      dispatch(
+                        openModal({
+                          title: "KDS Settings",
+                          bodyType: MODAL_BODY_TYPES.KDS_SETTINGS,
+                          size: "lg",
+                        })
+                      );
+                    }}
+                  >
+                    <Settings size={18} />
+                    Settings
+                  </button>
+                </li>
+              )}
+              <li>
+                <button onClick={toggleFullscreen}>
+                  {isFullscreen ? (
+                    <Minimize size={18} />
+                  ) : (
+                    <Maximize size={18} />
+                  )}
+                  {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                </button>
+              </li>
+              {lastUpdate && (
+                <li className="menu-title mt-2 pt-2 border-t">
+                  <span className="text-[10px] opacity-70">
+                    Last updated: {new Date(lastUpdate).toLocaleTimeString()}
+                  </span>
+                </li>
+              )}
+            </ul>
+          </div>
         </div>
       </div>
 

@@ -139,11 +139,11 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
   const getFontSize = () => {
     switch (settings.fontSize) {
       case "small":
-        return "text-sm";
+        return "text-xs md:text-sm";
       case "large":
-        return "text-lg";
+        return "text-base md:text-lg";
       default:
-        return "text-base";
+        return "text-sm md:text-base";
     }
   };
 
@@ -153,18 +153,26 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
     >
       <div className="card-body p-4">
         {/* Header */}
-        <div className="flex justify-between items-start mb-3">
+        <div className="flex justify-between items-start mb-2 md:mb-3">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-bold text-2xl">#{order.orderNumber}</h3>
+            <div className="flex flex-wrap items-center gap-1 md:gap-2 mb-1">
+              <h3 className="font-bold text-xl md:text-2xl">
+                #{order.orderNumber}
+              </h3>
               {order.orderType === "delivery" && (
-                <span className="badge badge-info badge-sm">Delivery</span>
+                <span className="badge badge-info badge-xs md:badge-sm">
+                  Delivery
+                </span>
               )}
               {order.orderType === "takeaway" && (
-                <span className="badge badge-warning badge-sm">Takeaway</span>
+                <span className="badge badge-warning badge-xs md:badge-sm">
+                  Takeaway
+                </span>
               )}
               {order.orderStatus === "pending" && (
-                <span className="badge badge-error badge-sm">New</span>
+                <span className="badge badge-error badge-xs md:badge-sm">
+                  New
+                </span>
               )}
               {order.orderStatus === "preparing" && (
                 <span className="badge badge-warning badge-sm">
@@ -205,8 +213,10 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
           )}
           {order.orderType === "delivery" && order.customerDetails?.address && (
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 opacity-70" />
-              <span className="text-xs">{order.customerDetails.address}</span>
+              <MapPin className="w-3 h-3 md:w-4 md:h-4 opacity-70" />
+              <span className="text-[10px] md:text-xs">
+                {order.customerDetails.address}
+              </span>
             </div>
           )}
           {order.table && order.table !== "Takeaway" && (
