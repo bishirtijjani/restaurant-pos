@@ -6,12 +6,24 @@ import GridLayer from "./GridLayer";
 import { Fullscreen, Minus, Plus } from "lucide-react";
 
 // Helper to get center of table
-const getCenter = (table) => {
+const getTableCenter = (table) => {
   const x = table.position?.x || 0;
   const y = table.position?.y || 0;
   const w = table.position?.width || table.width || 60;
   const h = table.position?.height || table.height || 60;
   return { x: x + w / 2, y: y + h / 2 };
+};
+
+// Touch Helpers
+const getDistance = (p1, p2) => {
+  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+};
+
+const getCenter = (p1, p2) => {
+  return {
+    x: (p1.x + p2.x) / 2,
+    y: (p1.y + p2.y) / 2,
+  };
 };
 
 const FloorCanvas = React.forwardRef(
@@ -35,6 +47,10 @@ const FloorCanvas = React.forwardRef(
     const stageRef = useRef(null);
     const containerRef = useRef(null);
     const transformerRef = useRef(null);
+
+    // Touch Zoom Refs
+    const lastCenter = useRef(null);
+    const lastDist = useRef(0);
 
     // Local state
     const [scale, setScale] = useState(1);
@@ -157,6 +173,72 @@ const FloorCanvas = React.forwardRef(
       if (onViewChange) onViewChange({ scale: newScale, position: newPos });
     };
 
+    // Touch Handlers
+    const handleTouchMove = (e) => {
+      const stage = stageRef.current;
+      const touch1 = e.evt.touches[0];
+      const touch2 = e.evt.touches[1];
+
+      if (touch1 && touch2) {
+        e.evt.preventDefault();
+        // Stop dragging if pinch starts
+        if (stage.isDragging()) {
+          stage.stopDrag();
+        }
+
+        const p1 = { x: touch1.clientX, y: touch1.clientY };
+        const p2 = { x: touch2.clientX, y: touch2.clientY };
+
+        if (!lastCenter.current) {
+          lastCenter.current = getCenter(p1, p2);
+          lastDist.current = getDistance(p1, p2);
+          return;
+        }
+
+        const newCenter = getCenter(p1, p2);
+        const dist = getDistance(p1, p2);
+
+        if (!dist) return;
+
+        // Calculate scale
+        const pointTo = {
+          x: (newCenter.x - stage.x()) / stage.scaleX(),
+          y: (newCenter.y - stage.y()) / stage.scaleX(),
+        };
+
+        const scale = stage.scaleX() * (dist / lastDist.current);
+        const newScale = Math.min(Math.max(scale, 0.1), 5);
+
+        // Calculate new position
+        const dx = newCenter.x - lastCenter.current.x;
+        const dy = newCenter.y - lastCenter.current.y;
+
+        const newPos = {
+          x: newCenter.x - pointTo.x * newScale + dx,
+          y: newCenter.y - pointTo.y * newScale + dy,
+        };
+
+        // Update state
+        setScale(newScale);
+        setPosition(newPos);
+
+        // Konva manual update for smoothness
+        // stage.scaleX(newScale);
+        // stage.scaleY(newScale);
+        // stage.position(newPos);
+        // stage.batchDraw();
+
+        lastDist.current = dist;
+        lastCenter.current = newCenter;
+        if (onViewChange) onViewChange({ scale: newScale, position: newPos });
+      }
+    };
+
+    const handleTouchEnd = () => {
+      lastCenter.current = null;
+      lastDist.current = 0;
+    };
+
     const handleDragEnd = (e) => {
       if (e.target === stageRef.current) {
         setPosition({ x: e.target.x(), y: e.target.y() });
@@ -215,6 +297,8 @@ const FloorCanvas = React.forwardRef(
           y={position.y}
           draggable={!locked} // Disable panning if locked (for mobile scroll)
           onWheel={handleWheel}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           onMouseDown={(e) => {
             const clickedOnEmpty = e.target === e.target.getStage();
             if (clickedOnEmpty) {
@@ -241,7 +325,7 @@ const FloorCanvas = React.forwardRef(
               if (!table.mergedWith || table.mergedWith.length === 0)
                 return null;
 
-              const start = getCenter(table);
+              const start = getTableCenter(table);
 
               return table.mergedWith.map((mergedId) => {
                 // mergedWith can be objects or IDs depending on population
@@ -250,7 +334,7 @@ const FloorCanvas = React.forwardRef(
                 const targetTable = tables.find((t) => t._id === targetId);
                 if (!targetTable) return null;
 
-                const end = getCenter(targetTable);
+                const end = getTableCenter(targetTable);
 
                 return (
                   <Line
