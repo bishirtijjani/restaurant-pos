@@ -99,112 +99,196 @@ function Header() {
           </h1>
         </div>
 
-        <button
-          className="btn btn-sm rounded-box mx-2 md:btn-md"
-          onClick={() => window.location.reload()}
-        >
-          <RefreshCw className="h-5 w-5" />
-          <span className="hidden md:inline">Refresh</span>
-        </button>
-
-        <div className="flex-none ">
-          <button
-            className={`btn btn-sm rounded-box mx-2 gap-2 ${
-              !isOnline
-                ? "btn-error"
-                : queueStats.total > 0
-                ? "btn-warning"
-                : "btn-ghost"
-            }`}
-            onClick={() => setShowSyncManager(true)}
-          >
-            {!isOnline ? (
-              <WifiOff className="w-4 h-4" />
-            ) : (
-              <Database className="w-4 h-4" />
-            )}
-            <span className="hidden md:inline">
-              {!isOnline
-                ? "Offline"
-                : queueStats.total > 0
-                ? `Sync (${queueStats.total})`
-                : "Synced"}
-            </span>
-          </button>
-          {/* Tour Button */}
-          {getTourId(location.pathname) && (
-            <TourTriggerButton
-              tourId={getTourId(location.pathname)}
-              className="mr-2"
-            />
-          )}
-          {/* Theme selection dropdown */}
-          <div className="dropdown dropdown-end">
-            <div
-              tabIndex={0}
-              role="button"
-              className="theme-div btn btn-sm rounded-box shadow-sm mx-2 md:btn-md"
-            >
-              <PaletteIcon className="h-5 w-5" />
-              <span className="hidden md:inline">Theme</span>
-              <ChevronDownIcon className="h-5 w-5" />
+        {/* Right side utility buttons and profile */}
+        <div className="flex items-center gap-1 md:gap-2">
+          {/* Mobile View Utils Dropdown */}
+          <div className="lg:hidden">
+            <div className="dropdown dropdown-end">
+              <label tabIndex={0} className="btn btn-ghost btn-circle btn-sm">
+                <RefreshCw className="h-5 w-5" />
+              </label>
+              <ul
+                tabIndex={0}
+                className="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-3 z-[6000]"
+              >
+                <li>
+                  <button onClick={() => window.location.reload()}>
+                    <RefreshCw className="h-4 w-4" /> Refresh
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`${
+                      !isOnline
+                        ? "text-error"
+                        : queueStats.total > 0
+                        ? "text-warning"
+                        : ""
+                    }`}
+                    onClick={() => setShowSyncManager(true)}
+                  >
+                    {!isOnline ? (
+                      <WifiOff className="w-4 h-4" />
+                    ) : (
+                      <Database className="w-4 h-4" />
+                    )}
+                    <span>
+                      {!isOnline
+                        ? "Offline"
+                        : queueStats.total > 0
+                        ? `Sync (${queueStats.total})`
+                        : "Synced"}
+                    </span>
+                  </button>
+                </li>
+                {getTourId(location.pathname) && (
+                  <li>
+                    <div className="p-0">
+                      <TourTriggerButton
+                        tourId={getTourId(location.pathname)}
+                        className="btn-ghost btn-sm w-full justify-start font-normal"
+                      />
+                    </div>
+                  </li>
+                )}
+                <div className="divider my-1"></div>
+                <li className="menu-title">Theme</li>
+                <li>
+                  <div className="grid grid-cols-2 gap-1 p-2">
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="light"
+                    >
+                      Light
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="dark"
+                    >
+                      Dark
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="retro"
+                    >
+                      Retro
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="luxury"
+                    >
+                      Luxury
+                    </button>
+                  </div>
+                </li>
+              </ul>
             </div>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-50 menu p-2 shadow bg-base-100 rounded-box w-40"
-            >
-              <li>
-                <a data-set-theme="light" data-act-class="active">
-                  Light
-                </a>
-              </li>
-              <li>
-                <a data-set-theme="dark" data-act-class="active">
-                  Dark
-                </a>
-              </li>
-              <li>
-                <a data-set-theme="retro" data-act-class="active">
-                  Retro
-                </a>
-              </li>
-              <li>
-                <a data-set-theme="lofi" data-act-class="active">
-                  Lofi
-                </a>
-              </li>
-              <li>
-                <a data-set-theme="black" data-act-class="active">
-                  Black
-                </a>
-              </li>
-              <li>
-                <a data-set-theme="luxury" data-act-class="active">
-                  Luxury
-                  <span className="badge badge-ghost">New</span>
-                </a>
-              </li>
-            </ul>
           </div>
 
-          {/* Notification icon */}
-          {/* <button
-            className="btn btn-ghost ml-4  btn-circle"
-            onClick={() => openNotification()}
-          >
-            <div className="indicator">
-              <BellIcon className="h-6 w-6" />
-              {noOfNotifications > 0 ? (
-                <span className="indicator-item animate-[bounce_3s_linear_4s_infinite_alternate]  badge badge-secondary badge-sm">
-                  {noOfNotifications}
-                </span>
-              ) : null}
+          {/* Desktop View Utils */}
+          <div className="hidden lg:flex items-center">
+            <button
+              className="btn btn-sm btn-ghost rounded-box mx-1"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCw className="h-5 w-5" />
+              <span className="hidden xl:inline ml-2">Refresh</span>
+            </button>
+
+            <button
+              className={`btn btn-sm rounded-box mx-1 gap-2 ${
+                !isOnline
+                  ? "btn-error"
+                  : queueStats.total > 0
+                  ? "btn-warning"
+                  : "btn-ghost"
+              }`}
+              onClick={() => setShowSyncManager(true)}
+            >
+              {!isOnline ? (
+                <WifiOff className="w-4 h-4" />
+              ) : (
+                <Database className="w-4 h-4" />
+              )}
+              <span className="hidden xl:inline">
+                {!isOnline
+                  ? "Offline"
+                  : queueStats.total > 0
+                  ? `Sync (${queueStats.total})`
+                  : "Synced"}
+              </span>
+            </button>
+
+            {getTourId(location.pathname) && (
+              <TourTriggerButton
+                tourId={getTourId(location.pathname)}
+                className="mx-1"
+              />
+            )}
+
+            <div className="dropdown dropdown-end">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-sm btn-ghost rounded-box shadow-sm mx-1"
+              >
+                <PaletteIcon className="h-5 w-5" />
+                <span className="hidden xl:inline ml-2">Theme</span>
+                <ChevronDownIcon className="h-4 w-4 ml-1" />
+              </div>
+              <ul
+                tabIndex={0}
+                className="dropdown-content z-[6000] menu p-2 shadow-lg bg-base-100 rounded-box w-40 mt-2"
+              >
+                <li>
+                  <a data-set-theme="light" data-act-class="active">
+                    {" "}
+                    Light{" "}
+                  </a>
+                </li>
+                <li>
+                  <a data-set-theme="dark" data-act-class="active">
+                    {" "}
+                    Dark{" "}
+                  </a>
+                </li>
+                <li>
+                  <a data-set-theme="retro" data-act-class="active">
+                    {" "}
+                    Retro{" "}
+                  </a>
+                </li>
+                <li>
+                  <a data-set-theme="lofi" data-act-class="active">
+                    {" "}
+                    Lofi{" "}
+                  </a>
+                </li>
+                <li>
+                  <a data-set-theme="black" data-act-class="active">
+                    {" "}
+                    Black{" "}
+                  </a>
+                </li>
+                <li>
+                  <a data-set-theme="luxury" data-act-class="active">
+                    {" "}
+                    Luxury{" "}
+                  </a>
+                </li>
+              </ul>
             </div>
-          </button> */}
+          </div>
 
           {/* Profile icon, opening menu on click */}
-          <div className="dropdown dropdown-end ml-4 " style={{ zIndex: 5000 }}>
-            <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
+          <div
+            className="dropdown dropdown-end ml-2 md:ml-4"
+            style={{ zIndex: 5000 }}
+          >
+            <label
+              tabIndex={0}
+              className="btn btn-ghost btn-circle avatar btn-sm md:btn-md"
+            >
               <UserCircle2 className="size-full" />
             </label>
             <ul
