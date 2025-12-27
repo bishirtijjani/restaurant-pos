@@ -89,4 +89,6 @@ reservationSchema.index({ tableId: 1, reservationDate: 1 });
 reservationSchema.index({ status: 1 });
 reservationSchema.index({ customerPhone: 1 });
 
-module.exports = mongoose.model("Reservation", reservationSchema);
+module.exports =
+  mongoose.models.Reservation ||
+  mongoose.model("Reservation", reservationSchema);

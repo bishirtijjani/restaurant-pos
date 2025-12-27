@@ -178,31 +178,58 @@ const reservationSlice = createSlice({
       })
       .addCase(checkInReservation.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Failed to check in reservation";
+        state.error =
+          action.payload?.message || "Failed to check in reservation";
       });
   },
 });
 
-export const selectTodaysReservations = (state) => {
+import { toZonedTime } from "date-fns-tz";
+
+export const selectTodaysReservations = (state, timezone = "UTC") => {
   const { items } = state.reservations;
-  const today = new Date().toISOString().split('T')[0];
-  return items.filter(r => r.reservationDate.startsWith(today) && r.status !== 'cancelled');
+  // Get "Now" in Store's Timezone
+  const now = new Date();
+  const zonedNow = toZonedTime(now, timezone);
+  const todayStr = zonedNow.toISOString().split("T")[0];
+
+  return items.filter((r) => {
+    // Assuming r.reservationDate is stored as UTC ISO string
+    // We need to check if that date *in the store's timezone* matches today
+    if (r.status === "cancelled") return false;
+
+    const resDate = new Date(r.reservationDate);
+    const zonedResDate = toZonedTime(resDate, timezone);
+    const resDateStr = zonedResDate.toISOString().split("T")[0];
+
+    return resDateStr === todayStr;
+  });
 };
 
-export const selectReservedSoon = (state, leadTimeMinutes = 60) => {
-    const { items } = state.reservations;
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    
-    return items.filter(r => {
-        if (r.status !== 'confirmed' && r.status !== 'pending') return false;
-        if (!r.reservationDate.startsWith(today)) return false;
-        
-        const resTime = new Date(`${r.reservationDate.split('T')[0]}T${r.reservationTime}`);
-        const timeDiff = (resTime - now) / 60000; // diff in minutes
-        
-        return timeDiff > 0 && timeDiff <= leadTimeMinutes;
-    });
+export const selectReservedSoon = (
+  state,
+  timezone = "UTC",
+  leadTimeMinutes = 60
+) => {
+  const { items } = state.reservations;
+  const now = new Date();
+
+  // We compare everything in absolute UTC time (timestamps)
+  // The "reservationDate" in DB is absolute UTC start time (as per new backend logic).
+
+  return items.filter((r) => {
+    if (r.status !== "confirmed" && r.status !== "pending") return false;
+
+    // If legacy data exists where date doesn't have time, this might fail,
+    // but new logic ensures reservationDate is full ISO start time.
+    const resTime = new Date(r.reservationDate);
+
+    // Check if reservation is for "today" (store time)
+    // strictly speaking "soon" just means delta in minutes, regardless of "day" boundary
+    const timeDiff = (resTime - now) / 60000; // diff in minutes
+
+    return timeDiff > 0 && timeDiff <= leadTimeMinutes;
+  });
 };
 
 export default reservationSlice.reducer;

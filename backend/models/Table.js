@@ -141,4 +141,4 @@ tableSchema.index({ status: 1 });
 tableSchema.index({ currentOrder: 1 });
 tableSchema.index({ isActive: 1 });
 
-module.exports = mongoose.model("Table", tableSchema);
+module.exports = mongoose.models.Table || mongoose.model("Table", tableSchema);

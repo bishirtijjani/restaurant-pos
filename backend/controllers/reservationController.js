@@ -83,6 +83,9 @@ exports.getReservationById = async (req, res) => {
 };
 
 exports.createReservation = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const {
       tableId,
@@ -103,6 +106,8 @@ exports.createReservation = async (req, res) => {
       !reservationDate ||
       !reservationTime
     ) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({
         success: false,
         message:
@@ -110,10 +115,20 @@ exports.createReservation = async (req, res) => {
       });
     }
 
+    // 1. Get Store Settings for Timezone
+    const store = await Store.findById(req.storeId).session(session);
+    const timezone = store?.settings?.timezone || "UTC";
+
+    // 2. Validate Table
     let table = null;
     if (tableId) {
-      table = await Table.findOne({ _id: tableId, storeId: req.storeId });
+      table = await Table.findOne({
+        _id: tableId,
+        storeId: req.storeId,
+      }).session(session);
       if (!table) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(404).json({
           success: false,
           message: "Table not found",
@@ -121,6 +136,8 @@ exports.createReservation = async (req, res) => {
       }
 
       if (!table.isActive) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(400).json({
           success: false,
           message: "Table is not active",
@@ -128,6 +145,8 @@ exports.createReservation = async (req, res) => {
       }
 
       if (partySize > table.capacity) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(400).json({
           success: false,
           message: `Party size exceeds table capacity (${table.capacity})`,
@@ -135,102 +154,147 @@ exports.createReservation = async (req, res) => {
       }
     }
 
-    // Check for conflicts with proper time overlap detection
-    const resDate = new Date(reservationDate);
-    const startOfDay = new Date(resDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(resDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    // 3. Timezone-Aware Date Construction
+    // Combine date and time strings, treating them as originating in the Store's timezone
+    // We utilize date-fns-tz to handle this conversion accurately
+    const { toZonedTime, fromZonedTime } = require("date-fns-tz"); // inline require or move to top
 
-    // Helper function to convert time string to minutes from midnight
-    const timeToMinutes = (timeStr) => {
-      const [hours, minutes] = timeStr.split(":").map(Number);
-      return hours * 60 + minutes;
-    };
+    // Normalize date part (remove time component if present in string)
+    const datePart = new Date(reservationDate).toISOString().split("T")[0];
+    const timeString = `${datePart}T${reservationTime}:00`; // "YYYY-MM-DDTHH:mm:00"
 
-    // Buffer time in minutes (time needed between reservations for table turnover)
-    const BUFFER_MINUTES = 15;
-    const newResDuration = duration || 120; // Default 2 hours if not specified
-    const newResStartMinutes = timeToMinutes(reservationTime);
-    const newResEndMinutes =
-      newResStartMinutes + newResDuration + BUFFER_MINUTES;
+    // This is the absolute UTC moment that represents the store's local time
+    const reservationStartUtc = fromZonedTime(timeString, timezone);
+    const durationMinutes = duration || 120;
+    const reservationEndUtc = new Date(
+      reservationStartUtc.getTime() + durationMinutes * 60000
+    );
+    const bufferMinutes = 15;
+    const bufferedEndUtc = new Date(
+      reservationEndUtc.getTime() + bufferMinutes * 60000
+    );
 
+    // 4. Check for Conflicts (scoped to transaction)
     if (tableId) {
+      // Find overlapping reservations for this table
+      // We look for any reservation where (Start < NewEnd) AND (End > NewStart)
+      // Including the buffer time for the existing reservations
+
+      // Get all active reservations for this table around the target time
+      // Expanding search window slightly to be safe
+      const searchStart = new Date(
+        reservationStartUtc.getTime() - 24 * 60 * 60 * 1000
+      );
+      const searchEnd = new Date(
+        reservationEndUtc.getTime() + 24 * 60 * 60 * 1000
+      );
+
       const existingReservations = await Reservation.find({
         tableId,
         storeId: req.storeId,
-        reservationDate: { $gte: startOfDay, $lte: endOfDay },
+        reservationDate: { $gte: searchStart, $lte: searchEnd },
         status: { $in: ["pending", "confirmed", "seated"] },
-      });
+      }).session(session);
 
       for (const existing of existingReservations) {
-        const existingStartMinutes = timeToMinutes(existing.reservationTime);
+        // Re-construct existing reservation's absolute UTC window
+        // Note: existing.reservationDate is stored as UTC. existing.reservationTime is "HH:mm" string
+        // We must rely on the stored reservationDate field which *should* represent the start time correctly if previously saved correctly.
+        // However, to be consistent with our new logic, we should probably reconstruct it using the timezone.
+
+        let existingStartUtc;
+        if (existing.reservationDate) {
+          existingStartUtc = new Date(existing.reservationDate); // Assuming stored correctly
+          // If stored date was just the "day" (00:00:00), we act differently.
+          // Audit showed reservationDate includes time?
+          // Let's assume reservationDate is the source of truth for Date, and reservationTime for Time.
+
+          // Safer reconstruction:
+          const exDatePart = existing.reservationDate
+            .toISOString()
+            .split("T")[0];
+          const exTimeString = `${exDatePart}T${existing.reservationTime}:00`;
+          existingStartUtc = fromZonedTime(exTimeString, timezone);
+        }
+
         const existingDuration = existing.duration || 120;
-        const existingEndMinutes =
-          existingStartMinutes + existingDuration + BUFFER_MINUTES;
+        const existingEndUtc = new Date(
+          existingStartUtc.getTime() + existingDuration * 60000
+        );
+        const existingBufferedEndUtc = new Date(
+          existingEndUtc.getTime() + bufferMinutes * 60000
+        );
 
-        // Check for overlap: new reservation starts before existing ends AND new ends after existing starts
-        const hasOverlap =
-          newResStartMinutes < existingEndMinutes &&
-          newResEndMinutes > existingStartMinutes;
+        // Check Overlap:
+        // New Start < Existing Buffered End AND New Buffered End > Existing Start
+        // We apply buffer to the *end* of each reservation.
 
-        if (hasOverlap) {
-          const formatTime = (mins) => {
-            const h = Math.floor(mins / 60);
-            const m = mins % 60;
-            return `${h.toString().padStart(2, "0")}:${m
-              .toString()
-              .padStart(2, "0")}`;
+        if (
+          reservationStartUtc < existingBufferedEndUtc &&
+          bufferedEndUtc > existingStartUtc
+        ) {
+          await session.abortTransaction();
+          session.endSession();
+
+          // Format times for error message (convert back to store timezone for display)
+          const formatTime = (date) => {
+            const zoned = toZonedTime(date, timezone);
+            const h = zoned.getHours().toString().padStart(2, "0");
+            const m = zoned.getMinutes().toString().padStart(2, "0");
+            return `${h}:${m}`;
           };
+
           return res.status(400).json({
             success: false,
-            message: `Time conflict: Table is reserved from ${
-              existing.reservationTime
-            } to ${formatTime(existingEndMinutes - BUFFER_MINUTES)} for "${
+            message: `Time conflict: Table is reserved from ${formatTime(
+              existingStartUtc
+            )} to ${formatTime(existingBufferedEndUtc)} (incl. buffer) for "${
               existing.customerName
             }"`,
-            conflictDetails: {
-              existingReservation: existing.customerName,
-              existingTime: existing.reservationTime,
-              existingDuration: existingDuration,
-            },
           });
         }
       }
 
-      // Also check if the table is currently occupied
+      // Check Real-Time Table Status if for Today
       if (table.status === "occupied") {
-        // If reservation is for today, check if table will be free in time
-        const now = new Date();
-        const isToday = resDate.toDateString() === now.toDateString();
-        if (isToday) {
-          const currentMinutes = now.getHours() * 60 + now.getMinutes();
-          // If trying to reserve for a time that's less than buffer time from now
-          if (newResStartMinutes < currentMinutes + BUFFER_MINUTES) {
-            return res.status(400).json({
-              success: false,
-              message:
-                "Table is currently occupied. Please select a later time or different table.",
-            });
-          }
+        const nowUtc = new Date();
+        const startDiffMinutes = (reservationStartUtc - nowUtc) / 60000;
+
+        // If trying to reserve within next 15 mins and table is occupied
+        // logic: if (reservationStart < now + buffer)
+        if (startDiffMinutes < bufferMinutes && startDiffMinutes > -120) {
+          // and it's not in the distant past (e.g. creating a past reservation)
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(400).json({
+            success: false,
+            message:
+              "Table is currently occupied and likely won't be ready in time.",
+          });
         }
       }
     }
 
-    const reservation = await Reservation.create({
-      tableId: tableId || null,
-      customerName,
-      customerPhone,
-      customerEmail: customerEmail || "",
-      partySize,
-      reservationDate: resDate,
-      reservationTime,
-      duration: duration || 120,
-      notes: notes || "",
-      createdBy: req.user.id,
-      status: "pending",
-      storeId: req.storeId,
-    });
+    // 5. Create Reservation
+    const [reservation] = await Reservation.create(
+      [
+        {
+          tableId: tableId || null,
+          customerName,
+          customerPhone,
+          customerEmail: customerEmail || "",
+          partySize,
+          reservationDate: reservationStartUtc, // Store as UTC
+          reservationTime, // Store string as valid reference
+          duration: durationMinutes,
+          notes: notes || "",
+          createdBy: req.user.id,
+          status: "pending",
+          storeId: req.storeId,
+        },
+      ],
+      { session }
+    );
 
     await logAction(
       req.user.id,
@@ -242,21 +306,31 @@ exports.createReservation = async (req, res) => {
       reservation,
       `Created reservation for ${customerName}${
         table ? ` at table ${table.tableNumber}` : ""
-      }`
+      }`,
+      session
     );
 
+    await session.commitTransaction();
+    session.endSession();
+
+    // 6. Post-Transaction: Populate and Notify
     const populatedReservation = await Reservation.findById(reservation._id)
       .populate("tableId", "tableNumber floorId")
       .populate("createdBy", "fullname");
 
-    // Send Reservation Confirmation
     if (customerEmail || customerPhone) {
+      // Use date-fns-tz or standard formatting
+      const displayDate =
+        populatedReservation.reservationDate.toLocaleDateString("en-US", {
+          timeZone: timezone,
+        });
+
       const tplData = {
         customerName,
-        reservationDate: resDate.toLocaleDateString(),
+        reservationDate: displayDate,
         reservationTime,
         partySize,
-        restaurantName: populatedReservation.storeId?.name || "Our Restaurant",
+        restaurantName: store.settings?.restaurantName || "Our Restaurant",
       };
 
       if (customerEmail) {
@@ -282,6 +356,8 @@ exports.createReservation = async (req, res) => {
       data: populatedReservation,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error creating reservation:", error);
     res.status(500).json({
       success: false,

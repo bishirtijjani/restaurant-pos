@@ -28,6 +28,7 @@ const FloorCanvas = React.forwardRef(
       reservedSoonTableIds = [], // NEW: tables with upcoming reservations
       selectedTableIds = [], // Lifted state
       onTableSelect, // Lifted handler
+      locked = false, // NEW: Lock view
     },
     ref
   ) => {
@@ -212,7 +213,7 @@ const FloorCanvas = React.forwardRef(
           scaleY={scale}
           x={position.x}
           y={position.y}
-          draggable={true}
+          draggable={!locked} // Disable panning if locked (for mobile scroll)
           onWheel={handleWheel}
           onMouseDown={(e) => {
             const clickedOnEmpty = e.target === e.target.getStage();
