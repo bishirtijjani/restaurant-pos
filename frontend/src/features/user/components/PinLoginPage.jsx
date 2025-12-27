@@ -79,13 +79,16 @@ function PinLoginPage() {
           <InputText
             defaultValue={email}
             updateType="email"
+            autoComplete="email"
             containerStyle="mt-4"
             labelTitle="Email"
             updateFormValue={updateEmail}
           />
           <button
             type="submit"
-            className={`btn mt-4 w-full btn-primary ${loading ? "loading" : ""}`}
+            className={`btn mt-4 w-full btn-primary ${
+              loading ? "loading" : ""
+            }`}
             disabled={loading}
           >
             Continue

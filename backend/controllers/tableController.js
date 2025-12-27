@@ -130,6 +130,7 @@ exports.updateTable = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Table",
       req.params.id,
       "update",
@@ -349,6 +350,7 @@ exports.createTable = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Table",
       table._id,
       "create",
@@ -416,6 +418,7 @@ exports.updateTableStatus = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Table",
       req.params.id,
       "state_change",
@@ -495,6 +498,7 @@ exports.linkTableToOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Table",
       req.params.id,
       "update",
@@ -547,6 +551,7 @@ exports.unlinkTableFromOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Table",
       req.params.id,
       "update",
@@ -629,6 +634,7 @@ exports.mergeTables = async (req, res) => {
       await logAction(
         req.user.id,
         req.storeId,
+        req.organizationId,
         "Table",
         table._id,
         "merge",
@@ -699,6 +705,7 @@ exports.splitTables = async (req, res) => {
       await logAction(
         req.user.id,
         req.storeId,
+        req.organizationId,
         "Table",
         tableId,
         "split",

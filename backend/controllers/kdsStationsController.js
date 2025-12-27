@@ -1,5 +1,6 @@
 // backend/controllers/kdsStationsController.js
 const KDSStation = require("../models/KDSStation");
+const logAction = require("../utils/logAction");
 
 // Get all KDS stations
 exports.getAllStations = async (req, res) => {
@@ -27,7 +28,19 @@ exports.createStation = async (req, res) => {
     const station = await KDSStation.create({
       ...req.body,
       storeId: req.storeId,
+      organizationId: req.organizationId,
     });
+
+    await logAction(
+      req.user._id,
+      "CREATED_KDS_STATION",
+      req.organizationId,
+      {
+        stationId: station._id,
+        name: station.name,
+      },
+      req.ip
+    );
 
     res.status(201).json({
       success: true,
@@ -50,7 +63,7 @@ exports.updateStation = async (req, res) => {
 
     const station = await KDSStation.findOneAndUpdate(
       { _id: id, storeId: req.storeId },
-      req.body,
+      { ...req.body, organizationId: req.organizationId },
       { new: true, runValidators: true }
     );
 
@@ -60,6 +73,18 @@ exports.updateStation = async (req, res) => {
         message: "Station not found",
       });
     }
+
+    await logAction(
+      req.user._id,
+      "UPDATED_KDS_STATION",
+      req.organizationId,
+      {
+        stationId: station._id,
+        name: station.name,
+        updates: req.body,
+      },
+      req.ip
+    );
 
     res.json({
       success: true,
@@ -91,6 +116,17 @@ exports.deleteStation = async (req, res) => {
         message: "Station not found",
       });
     }
+
+    await logAction(
+      req.user._id,
+      "DELETED_KDS_STATION",
+      req.organizationId,
+      {
+        stationId: id,
+        name: station.name,
+      },
+      req.ip
+    );
 
     res.json({
       success: true,

@@ -11,14 +11,12 @@ import { fetchAllCustomers } from "./customersSlice";
 import { fetchSettings } from "../settings/generalSettings/generalSettingsSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
 import {
-  Search,
-  Filter,
-  Plus,
+  PlusCircle,
   RefreshCw,
   Edit3,
   Trash2,
   Table,
-  Grid3X3,
+  SquareGanttChart,
   Mail,
   Phone,
   MapPin,
@@ -26,7 +24,10 @@ import {
   Calendar,
   User,
   Eye,
+  MoreVertical,
+  Users,
 } from "lucide-react";
+import SearchBar from "../../components/Input/SearchBar";
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
 import { Link } from "react-router-dom";
@@ -36,24 +37,48 @@ const TopSideButtons = ({ onRefresh, onAddNew }) => {
   const { can } = useAuth();
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Can do="createCustomers">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
         <button
-          onClick={onAddNew}
-          className="btn btn-primary btn-sm lg:btn-md gap-2"
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
         >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Add Customer</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
-      </Can>
+        <Can do="createCustomers">
+          <button onClick={onAddNew} className="btn btn-primary btn-sm gap-2">
+            <PlusCircle className="w-4 h-4" />
+            <span>Add Customer</span>
+          </button>
+        </Can>
+      </div>
 
-      <button
-        onClick={onRefresh}
-        className="btn btn-ghost btn-sm lg:btn-md gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-        <span className="hidden sm:inline">Refresh</span>
-      </button>
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
+        >
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="createCustomers">
+            <li>
+              <button onClick={onAddNew} className="text-primary font-medium">
+                <PlusCircle className="w-4 h-4" /> Add Customer
+              </button>
+            </li>
+          </Can>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -68,106 +93,120 @@ const CustomerCard = ({ customer, onEdit, onDelete, settings }) => {
           <div className="flex items-center gap-3">
             <div className="avatar placeholder">
               <div className="bg-primary text-primary-content rounded-full w-12 h-12">
-                <User className="w-6 h-6" />
+                <span className="text-lg font-semibold">
+                  {customer.fullname.charAt(0).toUpperCase()}
+                </span>
               </div>
             </div>
             <div>
-              <h3 className="card-title text-lg font-bold">
+              <h3 className="card-title text-base font-bold leading-tight">
                 {customer.fullname}
               </h3>
-              <div className="badge badge-outline badge-sm">
-                ID: {customer._id.slice(-6)}
+              <div className="flex items-center gap-2 mt-0.5">
+                <div className="badge badge-ghost badge-sm opacity-70">
+                  #{customer._id.slice(-6).toUpperCase()}
+                </div>
               </div>
             </div>
           </div>
 
-            <div className="dropdown dropdown-end">
-              <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-              </div>
-              <ul
-                tabIndex={0}
-                className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
-              >
-                <li>
-                    <Link to={`/app/customers/${customer._id}`} className="text-info">
-                        <Eye className="w-4 h-4" />
-                        View
-                    </Link>
-                </li>
-                <Can do="editCustomers">
-                  <li>
-                    <button
-                      onClick={() => onEdit(customer)}
-                      className="text-primary"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                      Edit
-                    </button>
-                  </li>
-                </Can>
-                <Can do="deleteCustomers">
-                  <li>
-                    <button
-                      onClick={() => onDelete(customer)}
-                      className="text-error"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </button>
-                  </li>
-                </Can>
-              </ul>
+          <div className="dropdown dropdown-end">
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+              </svg>
             </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
+            >
+              <li>
+                <Link
+                  to={`/app/customers/${customer._id}`}
+                  className="text-info"
+                >
+                  <Eye className="w-4 h-4" />
+                  View
+                </Link>
+              </li>
+              <Can do="editCustomers">
+                <li>
+                  <button
+                    onClick={() => onEdit(customer)}
+                    className="text-primary"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit
+                  </button>
+                </li>
+              </Can>
+              <Can do="deleteCustomers">
+                <li>
+                  <button
+                    onClick={() => onDelete(customer)}
+                    className="text-error"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </li>
+              </Can>
+            </ul>
+          </div>
 
           {!(can("editCustomers") || can("deleteCustomers")) && (
-             <Link to={`/app/customers/${customer._id}`} className="btn btn-ghost btn-sm btn-circle">
-                <Eye className="w-4 h-4" />
-             </Link>
+            <Link
+              to={`/app/customers/${customer._id}`}
+              className="btn btn-ghost btn-sm btn-circle"
+            >
+              <Eye className="w-4 h-4" />
+            </Link>
           )}
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Phone className="w-4 h-4 text-primary" />
+          <div className="flex items-center gap-3 text-sm">
+            <div className="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center shrink-0">
+              <Phone className="w-4 h-4 text-primary" />
+            </div>
             <span className="font-medium">{customer.phone}</span>
           </div>
 
           {customer.email && (
-            <div className="flex items-center gap-2 text-sm">
-              <Mail className="w-4 h-4 text-primary" />
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center shrink-0">
+                <Mail className="w-4 h-4 text-primary" />
+              </div>
               <span className="truncate">{customer.email}</span>
             </div>
           )}
 
           {customer.address && (
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-primary" />
-              <span className="truncate">{customer.address}</span>
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-primary" />
+              </div>
+              <span className="line-clamp-1">{customer.address}</span>
             </div>
           )}
 
-          <div className="flex items-center gap-2 text-sm">
-            <CreditCard className="w-4 h-4 text-primary" />
-            <span>
-              Debt Limit:{" "}
-              <span className="font-bold text-success">
-                {settings?.currency.symbol}
+          <div className="flex items-center gap-3 text-sm">
+            <div className="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center shrink-0">
+              <CreditCard className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs opacity-60">Debt Limit</p>
+              <span className="font-bold text-success text-base">
+                {settings?.currency?.symbol || "₦"}
                 {customer.debtLimit?.toLocaleString() || 0}
               </span>
-            </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-base-content/70">
-            <Calendar className="w-4 h-4" />
+          <div className="flex items-center gap-3 text-xs text-base-content/50 pt-2 border-t border-base-200">
+            <Calendar className="w-3 h-3" />
             <span>
-              Created: {new Date(customer.createdAt).toLocaleDateString()}
+              Joined {new Date(customer.createdAt).toLocaleDateString()}
             </span>
           </div>
         </div>
@@ -204,13 +243,15 @@ const CustomerTable = ({ customers, onEdit, onDelete, settings }) => {
                 <div className="flex items-center gap-3">
                   <div className="avatar placeholder">
                     <div className="bg-primary text-primary-content rounded-full w-10 h-10">
-                      <User className="w-5 h-5" />
+                      <span className="text-sm font-semibold">
+                        {customer.fullname.charAt(0).toUpperCase()}
+                      </span>
                     </div>
                   </div>
                   <div>
                     <div className="font-bold">{customer.fullname}</div>
-                    <div className="text-sm opacity-70">
-                      ID: {customer._id.slice(-6)}
+                    <div className="text-xs opacity-50 uppercase">
+                      #{customer._id.slice(-6)}
                     </div>
                   </div>
                 </div>
@@ -248,15 +289,15 @@ const CustomerTable = ({ customers, onEdit, onDelete, settings }) => {
                   {new Date(customer.createdAt).toLocaleDateString()}
                 </div>
               </td>
-              {(can("editCustomers") || can("deleteCustomers")) ? (
+              {can("editCustomers") || can("deleteCustomers") ? (
                 <td>
                   <div className="flex gap-2">
                     <Link
-                        to={`/app/customers/${customer._id}`}
-                        className="btn btn-ghost btn-sm gap-1"
+                      to={`/app/customers/${customer._id}`}
+                      className="btn btn-ghost btn-sm gap-1"
                     >
-                        <Eye className="w-4 h-4" />
-                        <span className="hidden lg:inline">View</span>
+                      <Eye className="w-4 h-4" />
+                      <span className="hidden lg:inline">View</span>
                     </Link>
                     <Can do="editCustomers">
                       <button
@@ -280,13 +321,13 @@ const CustomerTable = ({ customers, onEdit, onDelete, settings }) => {
                 </td>
               ) : (
                 <td>
-                    <Link
-                        to={`/app/customers/${customer._id}`}
-                        className="btn btn-ghost btn-sm gap-1"
-                    >
-                        <Eye className="w-4 h-4" />
-                        <span className="hidden lg:inline">View</span>
-                    </Link>
+                  <Link
+                    to={`/app/customers/${customer._id}`}
+                    className="btn btn-ghost btn-sm gap-1"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span className="hidden lg:inline">View</span>
+                  </Link>
                 </td>
               )}
             </tr>
@@ -308,84 +349,92 @@ const SearchAndFilters = ({
   onViewModeChange,
   settings,
 }) => (
-  <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
-    <div className="flex flex-col lg:flex-row gap-4">
+  <div className="mb-6">
+    <div className="flex flex-col xl:flex-row gap-4">
       {/* Search Bar */}
       <div className="flex-1">
-        <div className="form-control w-full">
-          <label className="input input-bordered flex items-center gap-2 w-full">
-            <Search className="w-5 h-5 text-info" />
-            <input
-              type="text"
-              className="grow"
-              placeholder="Search customers by name, phone, or email..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
-          </label>
-        </div>
+        <SearchBar                    
+          searchText={searchTerm}
+          setSearchText={onSearchChange}
+          placeholderText="Search customers by name, phone, or email..."
+          styleClass="w-full"
+          inputStyleClass="!h-10"
+        />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="form-control w-full max-w-xs">
-          <SearchableSelect
-            options={[
-              { value: "", name: "Sort by..." },
-              { value: "name", name: "Name (A-Z)" },
-              { value: "name_desc", name: "Name (Z-A)" },
-              { value: "date", name: "Newest First" },
-              { value: "date_desc", name: "Oldest First" },
-              { value: "debt_limit", name: "Debt Limit (Low-High)" },
-              { value: "debt_limit_desc", name: "Debt Limit (High-Low)" },
-            ]}
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value)}
-            name="sortBy"
-            placeholder="Sort by..."
-            className="w-full"
-            valueKey="value"
-            labelKey="name"
-          />
-        </div>
+      {/* Filters & Toggles Group */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex flex-row gap-3 flex-1 sm:flex-none">
+          <div className="form-control flex-1 sm:flex-none">
+            <SearchableSelect
+              options={[
+                { value: "", name: "Sort by..." },
+                { value: "name", name: "Name (A-Z)" },
+                { value: "name_desc", name: "Name (Z-A)" },
+                { value: "date", name: "Newest First" },
+                { value: "date_desc", name: "Oldest First" },
+                { value: "debt_limit", name: "Debt Limit (Low-High)" },
+                { value: "debt_limit_desc", name: "Debt Limit (High-Low)" },
+              ]}
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value)}
+              name="sortBy"
+              placeholder="Sort by..."
+              className="w-full sm:w-48"
+              size="!h-10 text-xs"
+              valueKey="value"
+              labelKey="name"
+            />
+          </div>
 
-        <div className="form-control w-full max-w-xs">
-          <SearchableSelect
-            options={[
-              { value: "", name: "All Debt Limits" },
-              { value: "low", name: `${settings?.currency.symbol}0 - ${settings?.currency.symbol}50,000` },
-              { value: "medium", name: `${settings?.currency.symbol}50,001 - ${settings?.currency.symbol}200,000` },
-              { value: "high", name: `${settings?.currency.symbol}200,001+` },
-            ]}
-            value={debtLimitFilter}
-            onChange={(e) => onDebtLimitFilterChange(e.target.value)}
-            name="debtLimitFilter"
-            placeholder="All Debt Limits"
-            className="w-full"
-            valueKey="value"
-            labelKey="name"
-          />
+          <div className="form-control flex-1 sm:flex-none">
+            <SearchableSelect
+              options={[
+                { value: "", name: "All Debt Limits" },
+                {
+                  value: "low",
+                  name: `Range: ${settings?.currency?.symbol || "₦"}0 - 50k`,
+                },
+                {
+                  value: "medium",
+                  name: `Range: 50k - 200k`,
+                },
+                {
+                  value: "high",
+                  name: `Range: 200k+`,
+                },
+              ]}
+              value={debtLimitFilter}
+              onChange={(e) => onDebtLimitFilterChange(e.target.value)}
+              name="debtLimitFilter"
+              placeholder="Debt Range"
+              className="w-full sm:w-52"
+              size="!h-10 text-xs"
+              valueKey="value"
+              labelKey="name"
+            />
+          </div>
         </div>
 
         {/* View Toggle */}
-        <div className="btn-group">
+        <div className="flex items-center flex-shrink-0 bg-base-200 rounded-lg p-1 h-10">
           <button
-            className={`btn btn-sm ${
-              viewMode === "table" ? "btn-primary" : "btn-outline"
+            className={`flex-1 sm:flex-none btn btn-sm btn-ghost h-8 min-h-8 px-4 ${
+              viewMode === "table" ? "bg-base-100 shadow-sm" : "opacity-50"
             }`}
             onClick={() => onViewModeChange("table")}
           >
             <Table className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">Table</span>
+            <span className="inline ml-2">Table</span>
           </button>
           <button
-            className={`btn btn-sm ${
-              viewMode === "card" ? "btn-primary" : "btn-outline"
+            className={`flex-1 sm:flex-none btn btn-sm btn-ghost h-8 min-h-8 px-4 ${
+              viewMode === "card" ? "bg-base-100 shadow-sm" : "opacity-50"
             }`}
             onClick={() => onViewModeChange("card")}
           >
-            <Grid3X3 className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">Cards</span>
+            <SquareGanttChart className="w-4 h-4" />
+            <span className="inline ml-2">Cards</span>
           </button>
         </div>
       </div>
@@ -582,25 +631,41 @@ const Customers = () => {
             </div>
           )
         ) : (
-          <div className="hero min-h-[300px] bg-base-200 rounded-lg">
+          <div className="hero min-h-[400px] bg-base-200/50 rounded-2xl border-2 border-dashed border-base-300">
             <div className="hero-content text-center">
               <div className="max-w-md">
-                <div className="text-6xl mb-4">👥</div>
+                <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Users className="w-12 h-12 text-primary" />
+                </div>
                 <h1 className="text-2xl font-bold">No customers found</h1>
-                <p className="py-4">
+                <p className="py-4 text-base-content/60">
                   {searchTerm || sortBy || debtLimitFilter
-                    ? "Try adjusting your search or filters"
-                    : "Get started by adding your first customer"}
+                    ? "Try adjusting your search or filters to find what you're looking for."
+                    : "Your customer list is empty. Start growing your client base by adding your first customer."}
                 </p>
-                <Can do="createCustomers">
-                  <button
-                    onClick={handleAddNew}
-                    className="btn btn-primary gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add First Customer
-                  </button>
-                </Can>
+                <div className="flex justify-center gap-3">
+                  {(searchTerm || sortBy || debtLimitFilter) && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSortBy("");
+                        setDebtLimitFilter("");
+                      }}
+                      className="btn btn-ghost"
+                    >
+                      Clear All Filters
+                    </button>
+                  )}
+                  <Can do="createCustomers">
+                    <button
+                      onClick={handleAddNew}
+                      className="btn btn-primary gap-2 px-6"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      Add First Customer
+                    </button>
+                  </Can>
+                </div>
               </div>
             </div>
           </div>

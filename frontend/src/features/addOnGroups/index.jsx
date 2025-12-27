@@ -1,5 +1,6 @@
 // frontend/src/features/addOnGroups/index.jsx
 import React, { useEffect, useState, useMemo } from "react";
+import SearchBar from "../../components/Input/SearchBar";
 import { useDispatch, useSelector } from "react-redux";
 import TitleCard from "../../components/Cards/TitleCard";
 import SuspenseContent from "../../containers/SuspenseContent";
@@ -19,44 +20,80 @@ import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
 import {
   Plus,
+  PlusCircle,
   RefreshCw,
+  MoreVertical,
+  Tag,
   Edit3,
   Trash2,
-  Search,
-  Tag,
-  Grid3x3,
-  List as ListIcon,
 } from "lucide-react";
 
 const TopSideButtons = () => {
   const dispatch = useDispatch();
 
+  const openAddGroup = () => {
+    dispatch(
+      openModal({
+        title: "Create Add-On Group",
+        bodyType: MODAL_BODY_TYPES.ADD_ADDON_GROUP,
+        size: "lg",
+      })
+    );
+  };
+
+  const onRefresh = () => {
+    dispatch(fetchAddOnGroups());
+  };
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <Can do="editMenu">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
         <button
-          onClick={() =>
-            dispatch(
-              openModal({
-                title: "Create Add-On Group",
-                bodyType: MODAL_BODY_TYPES.ADD_ADDON_GROUP,
-                size: "lg",
-              })
-            )
-          }
-          className="btn btn-primary btn-sm lg:btn-md gap-2"
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
         >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">New Group</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
-      </Can>
-      <button
-        onClick={() => window.location.reload()}
-        className="btn btn-ghost btn-sm lg:btn-md gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-        <span className="hidden sm:inline">Refresh</span>
-      </button>
+        <Can do="editMenu">
+          <button
+            onClick={openAddGroup}
+            className="btn btn-primary btn-sm gap-2"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>New Group</span>
+          </button>
+        </Can>
+      </div>
+
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
+        >
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="editMenu">
+            <li>
+              <button
+                onClick={openAddGroup}
+                className="text-primary font-medium"
+              >
+                <PlusCircle className="w-4 h-4" /> Add New Group
+              </button>
+            </li>
+          </Can>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -258,17 +295,14 @@ const AddOnGroupsManagement = () => {
       topMargin="mt-2"
     >
       {/* Search Bar */}
-      <div className="bg-base-100 rounded-lg shadow-md p-4 mb-6">
-        <label className="input input-bordered flex items-center gap-2">
-          <Search className="w-5 h-5 opacity-70" />
-          <input
-            type="text"
-            className="grow"
-            placeholder="Search add-on groups..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </label>
+      <div className="bg-base-100 rounded-lg w-full shadow-sm mb-6">
+        <SearchBar
+          searchText={searchQuery}
+          setSearchText={setSearchQuery}
+          placeholderText="Search add-on groups..."
+          styleClass="w-full"
+          inputStyleClass="!h-10"
+        />
       </div>
 
       {filteredGroups.length === 0 ? (

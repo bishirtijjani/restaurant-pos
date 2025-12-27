@@ -731,7 +731,7 @@ export default function POS() {
           disabled={!canCreateOrders}
         />
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto flex-1 pr-2 content-start">
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 overflow-y-auto flex-1 pr-2 content-start">
           {filteredItems.map((item) => (
             <MenuItem
               key={item._id}

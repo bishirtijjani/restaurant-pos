@@ -299,6 +299,7 @@ exports.createReservation = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Reservation",
       reservation._id,
       "create",
@@ -417,6 +418,7 @@ exports.updateReservation = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Reservation",
       req.params.id,
       "update",
@@ -483,6 +485,7 @@ exports.updateReservationStatus = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Reservation",
       req.params.id,
       "update",
@@ -532,6 +535,7 @@ exports.deleteReservation = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Reservation",
       req.params.id,
       "delete",
@@ -658,6 +662,7 @@ exports.checkInReservation = async (req, res) => {
       await logAction(
         req.user.id,
         req.storeId,
+        req.organizationId,
         "Reservation",
         req.params.id,
         "update",

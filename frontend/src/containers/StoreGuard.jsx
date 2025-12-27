@@ -8,6 +8,8 @@ import {
   clearFilters,
 } from "../features/orders/ordersSlice";
 import { clearCurrentItem } from "../features/inventory/inventorySlice";
+import { openModal } from "../features/common/modalSlice";
+import { MODAL_BODY_TYPES } from "../utils/globalConstantUtil";
 import { showNotification } from "../features/common/headerSlice";
 
 // NOTE: Offline storage is automatically scoped per store via storage.js factory pattern
@@ -59,16 +61,30 @@ function StoreGuard({ children }) {
     location.pathname.startsWith(path)
   );
 
-  if (!activeStoreId && isStoreRoute) {
-    // Show notification before redirecting
-    dispatch(
-      showNotification({
-        message: "Please select a store to continue",
-        status: 0,
-      })
-    );
+  useEffect(() => {
+    if (!activeStoreId && isStoreRoute) {
+      dispatch(
+        openModal({
+          title: "Select Active Store",
+          bodyType: MODAL_BODY_TYPES.SELECT_STORE,
+          size: "lg",
+        })
+      );
+    }
+  }, [activeStoreId, isStoreRoute, dispatch]);
 
-    return <Navigate to="/app/stores" replace />;
+  if (!activeStoreId && isStoreRoute) {
+    return (
+      <div className="relative min-h-[50vh] flex items-center justify-center p-8">
+        <div className="absolute inset-0 bg-base-100/50 backdrop-blur-sm z-0"></div>
+        <div className="z-10 text-center animate-pulse">
+          <div className="loading loading-ring loading-lg text-primary opacity-20"></div>
+          <p className="mt-4 font-bold text-base-content/20 uppercase tracking-widest text-xs">
+            Waiting for store selection...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return children;

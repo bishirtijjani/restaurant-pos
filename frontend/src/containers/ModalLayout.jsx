@@ -88,6 +88,7 @@ import Receipt from "../features/common/components/Receipt";
 
 // Store modals
 import AddStoreModalBody from "../features/stores/components/AddStoreModalBody";
+import SelectStoreModalBody from "../features/stores/components/SelectStoreModalBody";
 import StoreAccessMatrix from "../features/users/components/StoreAccessMatrix";
 import PermissionMatrix from "../features/users/components/PermissionMatrix";
 
@@ -439,6 +440,12 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.ADD_NEW_STORE]: (
                   <AddStoreModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.SELECT_STORE]: (
+                  <SelectStoreModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />

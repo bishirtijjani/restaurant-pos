@@ -23,9 +23,7 @@ import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
 import {
   Package,
-  Search,
-  Filter,
-  Plus,
+  PlusCircle,
   RefreshCw,
   Edit3,
   Trash2,
@@ -33,58 +31,94 @@ import {
   TrendingDown,
   TrendingUp,
   Link as LinkIcon,
-  DollarSign,
   Calendar,
-  User,
+  SquareGanttChart,
+  Table,
+  MoreVertical,
   FileText,
-  Grid3x3,
-  List,
 } from "lucide-react";
+import SearchBar from "../../components/Input/SearchBar";
 import SearchableSelect from "../../components/Input/SearchableSelect";
-
-
 
 const TopSideButtons = ({ onRefresh }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { can } = useAuth();
 
+  const openAddItem = () => {
+    dispatch(
+      openModal({
+        title: "Add Inventory Item",
+        bodyType: MODAL_BODY_TYPES.ADD_INVENTORY_ITEM,
+        size: "lg",
+      })
+    );
+  };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Can do="editInventory">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
         <button
-          onClick={() =>
-            dispatch(
-              openModal({
-                title: "Add Inventory Item",
-                bodyType: MODAL_BODY_TYPES.ADD_INVENTORY_ITEM,
-                size: "lg",
-              })
-            )
-          }
-          className="btn btn-primary btn-sm lg:btn-md gap-2"
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
         >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Add Item</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
+        <Can do="editInventory">
+          <button
+            onClick={openAddItem}
+            className="btn btn-primary btn-sm gap-2"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Add Item</span>
+          </button>
+          <button
+            onClick={() => navigate("/app/purchase-orders/new")}
+            className="btn btn-secondary btn-sm gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Order Stock</span>
+          </button>
+        </Can>
+      </div>
 
-        <button
-          onClick={() => navigate("/app/purchase-orders/new")}
-          className="btn btn-secondary btn-sm lg:btn-md gap-2"
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
         >
-          <FileText className="w-4 h-4" />
-          <span className="hidden sm:inline">Order Stock</span>
-        </button>
-      </Can>
-
-      <button
-        onClick={onRefresh}
-        className="btn btn-ghost btn-sm lg:btn-md gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-        <span className="hidden sm:inline">Refresh</span>
-      </button>
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="editInventory">
+            <li>
+              <button
+                onClick={openAddItem}
+                className="text-primary font-medium"
+              >
+                <PlusCircle className="w-4 h-4" /> Add Item
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => navigate("/app/purchase-orders/new")}
+                className="text-secondary font-medium"
+              >
+                <FileText className="w-4 h-4" /> Order Stock
+              </button>
+            </li>
+          </Can>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -101,7 +135,7 @@ const SearchAndFilters = ({
 }) => {
   const categoryOptions = [
     { value: "", name: "All Categories" },
-    ...INVENTORY_CATEGORIES.map(cat => ({ value: cat, name: cat }))
+    ...INVENTORY_CATEGORIES.map((cat) => ({ value: cat, name: cat })),
   ];
 
   const stockOptions = [
@@ -112,65 +146,71 @@ const SearchAndFilters = ({
   ];
 
   return (
-    <div className="bg-base-100 rounded-lg shadow-md p-4 mb-6">
-      <div className="flex flex-col lg:flex-row gap-4">
+    <div className="mb-6">
+      <div className="flex flex-col xl:flex-row gap-4">
         {/* Search */}
         <div className="flex-1">
-          <label className="input input-bordered flex items-center gap-2">
-            <Search className="w-5 h-5 opacity-70" />
-            <input
-              type="text"
-              className="grow"
-              placeholder="Search by name or SKU..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </label>
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            placeholderText="Search by name or SKU..."
+            styleClass="w-full"
+            inputStyleClass="!h-10"
+          />
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-2">
-          <SearchableSelect
-            options={categoryOptions}
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            name="categoryFilter"
-            placeholder="All Categories"
-            className=""
-            size="select-sm lg:select-md"
-            valueKey="value"
-            labelKey="name"
-          />
+        {/* Filters & Toggles Group */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Filters Group - Stay on same line on small screens */}
+          <div className="flex flex-row gap-2 w-full sm:w-auto">
+            <div className="form-control flex-1 sm:flex-none">
+              <SearchableSelect
+                options={categoryOptions}
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                name="categoryFilter"
+                placeholder="All Categories"
+                className="w-full sm:w-48"
+                size="!h-10 text-xs"
+                valueKey="value"
+                labelKey="name"
+              />
+            </div>
 
-          <SearchableSelect
-            options={stockOptions}
-            value={stockFilter}
-            onChange={(e) => setStockFilter(e.target.value)}
-            name="stockFilter"
-            placeholder="All Stock"
-            className=""
-            size="select-sm lg:select-md"
-            valueKey="value"
-            labelKey="name"
-          />
+            <div className="form-control flex-1 sm:flex-none">
+              <SearchableSelect
+                options={stockOptions}
+                value={stockFilter}
+                onChange={(e) => setStockFilter(e.target.value)}
+                name="stockFilter"
+                placeholder="All Stock"
+                className="w-full sm:w-44"
+                size="!h-10 text-xs"
+                valueKey="value"
+                labelKey="name"
+              />
+            </div>
+          </div>
 
           {/* View Toggle */}
-          <div className="btn-group">
+          <div className="flex items-center flex-shrink-0 bg-base-200 rounded-lg p-1 h-10">
             <button
-              className={`btn btn-sm lg:btn-md ${
-                viewMode === "grid" ? "btn-active" : ""
+              className={`flex-1 sm:flex-none btn btn-sm btn-ghost h-8 min-h-8 px-4 flex-nowrap ${
+                viewMode === "table" ? "bg-base-100 shadow-sm" : "opacity-50"
               }`}
-              onClick={() => setViewMode("grid")}
+              onClick={() => setViewMode("table")}
             >
-              <Grid3x3 className="w-4 h-4" />
+              <Table className="w-4 h-4" />
+              <span className="ml-2">Table</span>
             </button>
             <button
-              className={`btn btn-sm lg:btn-md ${
-                viewMode === "list" ? "btn-active" : ""
+              className={`flex-1 sm:flex-none btn btn-sm btn-ghost h-8 min-h-8 px-4 flex-nowrap ${
+                viewMode === "cards" ? "bg-base-100 shadow-sm" : "opacity-50"
               }`}
-              onClick={() => setViewMode("list")}
+              onClick={() => setViewMode("cards")}
             >
-              <List className="w-4 h-4" />
+              <SquareGanttChart className="w-4 h-4" />
+              <span className="ml-2">Cards</span>
             </button>
           </div>
         </div>
@@ -432,10 +472,12 @@ const InventoryManagement = () => {
   const [viewMode, setViewMode] = useState("grid");
 
   useEffect(() => {
-    dispatch(fetchInventoryItems({
-      category: categoryFilter,
-      lowStock: stockFilter === "low"
-    }));
+    dispatch(
+      fetchInventoryItems({
+        category: categoryFilter,
+        lowStock: stockFilter === "low",
+      })
+    );
   }, [dispatch, categoryFilter, stockFilter]);
 
   useEffect(() => {
@@ -458,7 +500,7 @@ const InventoryManagement = () => {
     return list.filter((item) => {
       // Server handles category and low_stock filtering (mostly)
       // We double-check or handle cases server doesn't (like out-of-stock, in-stock, search)
-      
+
       const matchesSearch =
         item.name?.toLowerCase().includes(q) ||
         item.sku?.toLowerCase().includes(q);
@@ -512,12 +554,13 @@ const InventoryManagement = () => {
   };
 
   const handleRefresh = () => {
-    dispatch(fetchInventoryItems({
-      category: categoryFilter,
-      lowStock: stockFilter === "low"
-    }));
+    dispatch(
+      fetchInventoryItems({
+        category: categoryFilter,
+        lowStock: stockFilter === "low",
+      })
+    );
   };
-
 
   if (status === "loading") return <SuspenseContent />;
 
@@ -585,7 +628,7 @@ const InventoryManagement = () => {
               }
               className="btn btn-primary mt-4 gap-2"
             >
-              <Plus className="w-4 h-4" />
+              <PlusCircle className="w-4 h-4" />
               Add First Item
             </button>
           </Can>

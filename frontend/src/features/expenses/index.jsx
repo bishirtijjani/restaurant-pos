@@ -13,7 +13,7 @@ import SearchableSelect from "../../components/Input/SearchableSelect";
 import {
   Search,
   Filter,
-  Plus,
+  PlusCircle,
   RefreshCw,
   Edit3,
   Trash2,
@@ -47,16 +47,16 @@ const TopSideButtons = () => {
       <Can do="createExpenses">
         <button
           onClick={openAddNewExpense}
-          className="btn btn-primary flex-nowrap btn-sm lg:btn-md"
+          className="btn btn-primary flex-nowrap btn-sm lg:btn-md gap-2"
         >
-          <Plus className="h-4 w-4" />
+          <PlusCircle className="h-4 w-4" />
           <span className="hidden sm:inline">Add Expense</span>
         </button>
       </Can>
 
       <button
-        onClick={() => location.reload()}
-        className="btn btn-ghost flex-nowrap btn-sm lg:btn-md"
+        onClick={() => dispatch(fetchAllExpenses())}
+        className="btn btn-ghost flex-nowrap btn-sm lg:btn-md gap-2"
       >
         <RefreshCw className="h-4 w-4" />
         <span className="hidden sm:inline">Refresh</span>
@@ -83,12 +83,12 @@ const SearchAndFilters = ({
 
   const categoryOptions = [
     { value: "", name: "All Categories" },
-    ...categories.map(cat => ({ value: cat, name: cat }))
+    ...categories.map((cat) => ({ value: cat, name: cat })),
   ];
 
   const paymentMethodOptions = [
     { value: "", name: "All Methods" },
-    ...paymentMethods.map(method => ({ value: method, name: method }))
+    ...paymentMethods.map((method) => ({ value: method, name: method })),
   ];
 
   const dateRangeOptions = [
@@ -101,9 +101,9 @@ const SearchAndFilters = ({
   ];
 
   return (
-    <div className="bg-base-100 border-b border-base-300 -mx-6 px-6 py-4 mb-6">
+    <div className="mb-6">
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div className="flex flex-col xl:flex-row gap-4 items-stretch xl:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-base-content/60" />
             <input
@@ -115,12 +115,12 @@ const SearchAndFilters = ({
             />
           </div>
 
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-2 shrink-0">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`btn ${
                 hasActiveFilters ? "btn-primary" : "btn-outline"
-              } flex-nowrap btn-sm lg:btn-md`}
+              } flex-nowrap btn-sm h-10 min-h-10 px-4`}
             >
               <Filter className="h-4 w-4" />
               Filters
@@ -138,7 +138,7 @@ const SearchAndFilters = ({
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="btn btn-ghost flex-nowrap btn-sm lg:btn-md"
+                className="btn btn-ghost btn-sm h-10 min-h-10 px-4"
                 title="Clear all filters"
               >
                 <X className="h-4 w-4" />
@@ -182,7 +182,7 @@ const SearchAndFilters = ({
                   name="categoryFilter"
                   placeholder="Filter by category"
                   className=""
-                  size="select-sm"
+                  size="!h-9 text-sm"
                   valueKey="value"
                   labelKey="name"
                 />
@@ -202,7 +202,7 @@ const SearchAndFilters = ({
                   name="paymentMethodFilter"
                   placeholder="Filter by payment"
                   className=""
-                  size="select-sm"
+                  size="!h-9 text-sm"
                   valueKey="value"
                   labelKey="name"
                 />
@@ -222,7 +222,7 @@ const SearchAndFilters = ({
                   name="dateRange"
                   placeholder="Filter by date"
                   className=""
-                  size="select-sm"
+                  size="!h-9 text-sm"
                   valueKey="value"
                   labelKey="name"
                 />

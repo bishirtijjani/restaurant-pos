@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
+import SearchBar from "../../components/Input/SearchBar";
 import SearchableSelect from "../../components/Input/SearchableSelect";
 import { openModal } from "../common/modalSlice";
 import { showNotification } from "../common/headerSlice";
@@ -9,44 +10,69 @@ import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
 import {
   Search,
-  Plus,
+  PlusCircle,
   RefreshCw,
   Edit3,
   Trash2,
   Table,
-  Grid3X3,
+  SquareGanttChart,
+  MoreVertical,
   Mail,
   User,
   Shield,
   Calendar,
-  Crown,
-  UserCheck,
-  Settings,
   Eye,
   Key,
+  UsersIcon,
+  UserPlus,
 } from "lucide-react";
 import SuspenseContent from "../../containers/SuspenseContent";
 import { MODAL_BODY_TYPES } from "../../utils/globalConstantUtil";
 
 const TopSideButtons = ({ onRefresh, onAddNew }) => {
   return (
-    <div className="flex flex-wrap gap-2">
-      <Can do="manageUsers">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
         <button
-          onClick={onAddNew}
-          className="btn btn-primary btn-sm lg:btn-md gap-2"
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
         >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Add User</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
-      </Can>
-      <button
-        onClick={onRefresh}
-        className="btn btn-ghost btn-sm lg:btn-md gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-        <span className="hidden sm:inline">Refresh</span>
-      </button>
+        <Can do="manageUsers">
+          <button onClick={onAddNew} className="btn btn-primary btn-sm gap-2">
+            <PlusCircle className="w-4 h-4" />
+            <span>Add User</span>
+          </button>
+        </Can>
+      </div>
+
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
+        >
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="manageUsers">
+            <li>
+              <button onClick={onAddNew} className="text-primary font-medium">
+                <PlusCircle className="w-4 h-4" /> Add User
+              </button>
+            </li>
+          </Can>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -72,18 +98,20 @@ const UserCard = ({ user, onView, onEdit, onDelete }) => {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="avatar placeholder">
-              <div className="bg-neutral text-neutral-content rounded-full w-12 h-12">
+              <div className="bg-primary text-primary-content rounded-full w-12 h-12">
                 <span className="text-lg font-semibold">
                   {user.fullname?.charAt(0).toUpperCase()}
                 </span>
               </div>
             </div>
             <div>
-              <h3 className="card-title text-lg font-bold">{user.fullname}</h3>
+              <h3 className="card-title text-base font-bold leading-tight">
+                {user.fullname}
+              </h3>
               <div
                 className={`badge ${getRoleColor(
                   user.role
-                )} badge-sm capitalize`}
+                )} badge-xs capitalize border-none font-medium mt-1 px-2`}
               >
                 {user.role}
               </div>
@@ -146,14 +174,16 @@ const UserCard = ({ user, onView, onEdit, onDelete }) => {
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Mail className="w-4 h-4 text-secondary" />
+          <div className="flex items-center gap-3 text-sm">
+            <div className="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center shrink-0">
+              <Mail className="w-4 h-4 text-primary" />
+            </div>
             <span className="truncate">{user.email}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-base-content/70">
-            <Calendar className="w-4 h-4" />
-            <span>Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
+          <div className="flex items-center gap-3 text-xs text-base-content/50 pt-2 border-t border-base-200">
+            <Calendar className="w-3 h-3" />
+            <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
       </div>
@@ -194,14 +224,17 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
               <td>
                 <div className="flex items-center gap-3">
                   <div className="avatar placeholder">
-                    <div className="bg-neutral text-neutral-content rounded-full w-12 h-12">
-                      <span className="text-lg font-semibold">
+                    <div className="bg-primary text-primary-content rounded-full w-10 h-10">
+                      <span className="text-sm font-semibold">
                         {user.fullname?.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <div className="font-bold">{user.fullname}</div>
+                    <div className="font-bold text-sm">{user.fullname}</div>
+                    <div className="text-[10px] opacity-50 uppercase">
+                      ID: {user._id.slice(-6)}
+                    </div>
                   </div>
                 </div>
               </td>
@@ -299,68 +332,67 @@ const SearchAndFilters = ({
   ];
 
   return (
-    <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
-      <div className="flex flex-col lg:flex-row gap-4">
+    <div className="mb-6">
+      <div className="flex flex-col xl:flex-row gap-4">
         <div className="flex-1">
-          <div className="form-control w-full">
-            <label className="input input-bordered flex items-center gap-2 w-full">
-              <Search className="w-5 h-5 text-info" />
-              <input
-                type="search"
-                className="grow"
-                placeholder="Search users by name or email..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-              />
-            </label>
-          </div>
+          <SearchBar
+            searchText={searchTerm}
+            setSearchText={onSearchChange}
+            placeholderText="Search users by name or email..."
+            styleClass="w-full"
+            inputStyleClass="!h-10"
+          />
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <div className="form-control">
-            <SearchableSelect
-              options={sortOptions}
-              value={sortBy}
-              onChange={(e) => onSortChange(e.target.value)}
-              name="sortBy"
-              placeholder="Sort by"
-              className="w-full max-w-xs"
-              valueKey="value"
-              labelKey="name"
-            />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex flex-row gap-3 flex-1 sm:flex-none">
+            <div className="form-control flex-1 sm:flex-none">
+              <SearchableSelect
+                options={sortOptions}
+                value={sortBy}
+                onChange={(e) => onSortChange(e.target.value)}
+                name="sortBy"
+                placeholder="Sort by"
+                className="w-full sm:w-44"
+                size="!h-10 text-xs"
+                valueKey="value"
+                labelKey="name"
+              />
+            </div>
+
+            <div className="form-control flex-1 sm:flex-none">
+              <SearchableSelect
+                options={roleOptions}
+                value={roleFilter}
+                onChange={(e) => onRoleFilterChange(e.target.value)}
+                name="roleFilter"
+                placeholder="Filter by Role"
+                className="w-full sm:w-44"
+                size="!h-10 text-xs"
+                valueKey="value"
+                labelKey="name"
+              />
+            </div>
           </div>
 
-          <div className="form-control">
-            <SearchableSelect
-              options={roleOptions}
-              value={roleFilter}
-              onChange={(e) => onRoleFilterChange(e.target.value)}
-              name="roleFilter"
-              placeholder="Filter by Role"
-              className="w-full max-w-xs"
-              valueKey="value"
-              labelKey="name"
-            />
-          </div>
-
-          <div className="btn-group">
+          <div className="flex items-center flex-shrink-0 bg-base-200 rounded-lg p-1 h-10">
             <button
-              className={`btn btn-sm ${
-                viewMode === "table" ? "btn-primary" : "btn-outline"
+              className={`flex-1 sm:flex-none btn btn-sm btn-ghost h-8 min-h-8 px-4 ${
+                viewMode === "table" ? "bg-base-100 shadow-sm" : "opacity-50"
               }`}
               onClick={() => onViewModeChange("table")}
             >
               <Table className="w-4 h-4" />
-              <span className="hidden sm:inline ml-1">Table</span>
+              <span className="inline ml-2">Table</span>
             </button>
             <button
-              className={`btn btn-sm ${
-                viewMode === "card" ? "btn-primary" : "btn-outline"
+              className={`flex-1 sm:flex-none btn btn-sm btn-ghost h-8 min-h-8 px-4 ${
+                viewMode === "card" ? "bg-base-100 shadow-sm" : "opacity-50"
               }`}
               onClick={() => onViewModeChange("card")}
             >
-              <Grid3X3 className="w-4 h-4" />
-              <span className="hidden sm:inline ml-1">Cards</span>
+              <SquareGanttChart className="w-4 h-4" />
+              <span className="inline ml-2">Cards</span>
             </button>
           </div>
         </div>
@@ -585,25 +617,41 @@ const Users = () => {
             </div>
           )
         ) : (
-          <div className="hero min-h-[300px] bg-base-200 rounded-lg">
+          <div className="hero min-h-[400px] bg-base-200/50 rounded-2xl border-2 border-dashed border-base-300">
             <div className="hero-content text-center">
               <div className="max-w-md">
-                <div className="text-6xl mb-4">👤</div>
+                <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <UserPlus className="w-12 h-12 text-primary" />
+                </div>
                 <h1 className="text-2xl font-bold">No users found</h1>
-                <p className="py-4">
+                <p className="py-4 text-base-content/60">
                   {searchTerm || sortBy || roleFilter
-                    ? "Try adjusting your search or filters"
-                    : "Get started by adding your first user"}
+                    ? "Try adjusting your search or filters to find the staff member you're looking for."
+                    : "Your team is empty. Start building your organization by adding your first user."}
                 </p>
-                <Can do="manageUsers">
-                  <button
-                    onClick={handleAddNew}
-                    className="btn btn-primary gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add First User
-                  </button>
-                </Can>
+                <div className="flex justify-center gap-3">
+                  {(searchTerm || sortBy || roleFilter) && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSortBy("");
+                        setRoleFilter("");
+                      }}
+                      className="btn btn-ghost"
+                    >
+                      Clear All Filters
+                    </button>
+                  )}
+                  <Can do="manageUsers">
+                    <button
+                      onClick={handleAddNew}
+                      className="btn btn-primary gap-2 px-6"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      Add First User
+                    </button>
+                  </Can>
+                </div>
               </div>
             </div>
           </div>

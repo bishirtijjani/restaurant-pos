@@ -9,13 +9,17 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllCategories } from "./categoriesSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
-import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
-import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
-import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
-import PlusCircleIcon from "@heroicons/react/24/outline/PlusCircleIcon";
+import {
+  Pencil,
+  Trash2,
+  PlusCircle,
+  RefreshCw,
+  MoreVertical,
+} from "lucide-react";
 import SearchBar from "../../components/Input/SearchBar";
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
+// Lucide imports handled above
 
 const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
   const dispatch = useDispatch();
@@ -31,32 +35,59 @@ const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
     );
   };
 
+  const onRefresh = () => {
+    dispatch(fetchAllCategories());
+  };
+
   return (
-    <div className="flex justify-between flex-wrap gap-2 w-100 space-x-3">
-      <SearchBar
-        searchText={searchQuery}
-        setSearchText={setSearchQuery}
-        placeholderText="Search categories..."
-        styleClass=""
-      />
-
-      <Can do="createCategories">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
         <button
-          onClick={openAddNewCategory}
-          className="btn btn-primary btn-sm lg:btn-md"
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
         >
-          <PlusCircleIcon className="w-6 h-6" />
-          <span className="hidden sm:inline">Add New Category</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
-      </Can>
+        <Can do="createCategories">
+          <button
+            onClick={openAddNewCategory}
+            className="btn btn-primary btn-sm gap-2"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Add Category</span>
+          </button>
+        </Can>
+      </div>
 
-      <button
-        onClick={() => location.reload()}
-        className="btn btn-primary btn-sm lg:btn-md"
-      >
-        <ArrowPathIcon className="w-6 h-6" />
-        <span className="hidden sm:inline">Reload</span>
-      </button>
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
+        >
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="createCategories">
+            <li>
+              <button
+                onClick={openAddNewCategory}
+                className="text-primary font-medium"
+              >
+                <PlusCircle className="w-4 h-4" /> Add Category
+              </button>
+            </li>
+          </Can>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -102,10 +133,12 @@ const Categories = () => {
   );
 
   const CategoryCard = ({ categoryItem }) => (
-    <div className="card bg-base-100 shadow-xl mb-4 border border-base-content/30">
-      <div className="card-body">
-        <h2 className="card-title">{categoryItem.name}</h2>
-        <p>{categoryItem.description || "N/A"}</p>
+    <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 mb-4 border border-base-200">
+      <div className="card-body p-6">
+        <h2 className="card-title text-lg font-bold">{categoryItem.name}</h2>
+        <p className="text-sm text-base-content/70 mt-1 line-clamp-2">
+          {categoryItem.description || "No description provided"}
+        </p>
 
         {(can("editCategories") || can("deleteCategories")) && (
           <div className="card-actions mt-4 space-x-2">
@@ -122,7 +155,7 @@ const Categories = () => {
                   )
                 }
               >
-                <PencilSquareIcon className="w-5 h-5 mr-1" />
+                <Pencil className="w-5 h-5 mr-1" />
                 Edit
               </button>
             </Can>
@@ -144,7 +177,7 @@ const Categories = () => {
                   )
                 }
               >
-                <TrashIcon className="w-5 h-5 mr-1" />
+                <Trash2 className="w-5 h-5 mr-1" />
                 Delete
               </button>
             </Can>
@@ -165,6 +198,15 @@ const Categories = () => {
       }
       topMargin="mt-2"
     >
+      <div className="mb-6">
+        <SearchBar
+          searchText={searchQuery}
+          setSearchText={setSearchQuery}
+          placeholderText="Search categories by name or description..."
+          styleClass="w-full max-w-md"
+          inputStyleClass="!h-10"
+        />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
         {filteredCategories.length > 0 ? (
           filteredCategories.map((categoryItem) => (

@@ -80,24 +80,24 @@ const suppliersSlice = createSlice({
       })
       // Add a new supplier
       .addCase(addSupplier.pending, (state) => {
-        state.loading = true;
+        state.status = "loading";
         state.error = null;
       })
       .addCase(addSupplier.fulfilled, (state, action) => {
-        state.loading = false;
+        state.status = "succeeded";
         state.suppliers.push(action.payload);
       })
       .addCase(addSupplier.rejected, (state, action) => {
-        state.loading = false;
+        state.status = "failed";
         state.error = action.payload;
       })
       // Update an existing supplier
       .addCase(updateSupplier.pending, (state) => {
-        state.loading = true;
+        state.status = "loading";
         state.error = null;
       })
       .addCase(updateSupplier.fulfilled, (state, action) => {
-        state.loading = false;
+        state.status = "succeeded";
         const index = state.suppliers.findIndex(
           (supplier) => supplier._id === action.payload._id
         );
@@ -106,22 +106,22 @@ const suppliersSlice = createSlice({
         }
       })
       .addCase(updateSupplier.rejected, (state, action) => {
-        state.loading = false;
+        state.status = "failed";
         state.error = action.payload;
       })
       // Delete a supplier
       .addCase(deleteSupplier.pending, (state) => {
-        state.loading = true;
+        state.status = "loading";
         state.error = null;
       })
       .addCase(deleteSupplier.fulfilled, (state, action) => {
-        state.loading = false;
+        state.status = "succeeded";
         state.suppliers = state.suppliers.filter(
           (supplier) => supplier._id !== action.payload.id
         );
       })
       .addCase(deleteSupplier.rejected, (state, action) => {
-        state.loading = false;
+        state.status = "failed";
         state.error = action.payload;
       });
   },

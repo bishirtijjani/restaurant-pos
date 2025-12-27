@@ -6,34 +6,19 @@ import {
   CONFIRMATION_MODAL_CLOSE_TYPES,
 } from "../../../utils/globalConstantUtil";
 import { useDispatch } from "react-redux";
-import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
-import InformationCircleIcon from "@heroicons/react/24/outline/InformationCircleIcon";
-import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
-import XCircleIcon from "@heroicons/react/24/outline/XCircleIcon";
-import PhotoIcon from "@heroicons/react/24/outline/PhotoIcon";
-import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
-import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
+import {
+  Trash2,
+  Info,
+  CheckCircle,
+  XCircle,
+  Image as ImageIcon,
+  FileText,
+  Pencil,
+  Clock,
+} from "lucide-react";
 import { formatCurrency } from "../../../utils/numberFormat";
 import { useAuth } from "../../../utils/permission";
 import Can from "../../../components/Auth/Can";
-
-// Clock icon component
-const ClockIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-);
 
 const MenuItemCard = ({ item, handleToggleAvailability }) => {
   const dispatch = useDispatch();
@@ -77,7 +62,7 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
           />
         ) : (
           <div className="w-full h-full bg-base-200 flex items-center justify-center">
-            <PhotoIcon className="w-12 h-12 " />
+            <ImageIcon className="w-12 h-12 " />
           </div>
         )}
         <div className="absolute top-2 right-2">
@@ -110,11 +95,11 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
 
         <div className="flex items-center gap-2 text-sm text-base-content/70 mt-1">
           <span className="flex items-center gap-1">
-            <DocumentTextIcon className="w-4 h-4" />
+            <FileText className="w-4 h-4" />
             {item.itemCode || "No Code"}
           </span>
           <span className="flex items-center gap-1">
-            <ClockIcon /> {item.preparationTime} mins
+            <Clock className="w-4 h-4" /> {item.preparationTime} mins
           </span>
         </div>
 
@@ -139,7 +124,7 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
                 )
               }
             >
-              <InformationCircleIcon className="w-5 h-5" />
+              <Info className="w-5 h-5" />
             </button>
 
             {can("viewMenu") && (
@@ -151,9 +136,9 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
                 onClick={handleStatusToggle}
               >
                 {item.isAvailable ? (
-                  <XCircleIcon className="w-5 h-5 text-error" />
+                  <XCircle className="w-5 h-5 text-error" />
                 ) : (
-                  <CheckCircleIcon className="w-5 h-5 text-success" />
+                  <CheckCircle className="w-5 h-5 text-success" />
                 )}
               </button>
             )}
@@ -172,7 +157,7 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
                   )
                 }
               >
-                <PencilSquareIcon className="w-5 h-5" />
+                <Pencil className="w-5 h-5" />
               </button>
             </Can>
 
@@ -194,7 +179,7 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
                   )
                 }
               >
-                <TrashIcon className="w-5 h-5 text-error" />
+                <Trash2 className="w-5 h-5 text-error" />
               </button>
             </Can>
           </div>

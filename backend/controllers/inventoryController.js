@@ -126,6 +126,7 @@ exports.createInventoryItem = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "InventoryItem",
       inventoryItem._id,
       "create",
@@ -199,6 +200,7 @@ exports.updateInventoryItem = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "InventoryItem",
       req.params.id,
       "update",
@@ -258,6 +260,7 @@ exports.deleteInventoryItem = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "InventoryItem",
       req.params.id,
       "delete",
@@ -361,6 +364,7 @@ exports.linkToMenuItem = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "InventoryItem",
       inventoryItem._id,
       "link_menu_item",
@@ -421,6 +425,7 @@ exports.unlinkMenuItem = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "InventoryItem",
       inventoryItem._id,
       "unlink_menu_item",

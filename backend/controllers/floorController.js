@@ -98,6 +98,7 @@ exports.createFloor = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Floor",
       floor._id,
       "create",
@@ -168,6 +169,7 @@ exports.updateFloor = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Floor",
       req.params.id,
       "update",
@@ -292,6 +294,7 @@ exports.deleteFloor = async (req, res) => {
       await logAction(
         req.user.id,
         req.storeId,
+        req.organizationId,
         "Floor",
         req.params.id,
         "update",
@@ -312,6 +315,7 @@ exports.deleteFloor = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Floor",
       req.params.id,
       "delete",

@@ -6,9 +6,10 @@ const logAction = require("../utils/logAction"); // Import log function
 exports.createSupplier = async (req, res) => {
   try {
     const { name, phone, email, address } = req.body;
+    const { storeId, organizationId } = req;
 
-    if (!name || !phone || !email || !address) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!name || !address) {
+      return res.status(400).json({ message: "Name and Address are required" });
     }
 
     const existingSupplier = await Supplier.findOne({
@@ -27,13 +28,15 @@ exports.createSupplier = async (req, res) => {
       phone,
       email,
       address,
-      storeId: req.storeId,
+      storeId,
+      organizationId,
     });
     await newSupplier.save();
     // Log the action
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Supplier",
       newSupplier._id,
       "create",
@@ -57,9 +60,6 @@ exports.getAllSuppliers = async (req, res) => {
     const suppliers = await Supplier.find({ storeId: req.storeId })
       .populate("lastAction.performedBy", "fullname")
       .sort({ createdAt: -1 });
-    if (!suppliers.length) {
-      return res.status(404).json({ message: "No suppliers found" });
-    }
     res.status(200).json(suppliers);
   } catch (error) {
     console.error("Error fetching suppliers:", error);
@@ -110,7 +110,8 @@ exports.updateSupplier = async (req, res) => {
 
     const updatedSupplier = await Supplier.findOneAndUpdate(
       { _id: id, storeId: req.storeId },
-      { name, phone, email, address }
+      { name, phone, email, address },
+      { new: true }
     );
 
     if (!updatedSupplier) {
@@ -121,6 +122,7 @@ exports.updateSupplier = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Supplier",
       id,
       "update",
@@ -159,6 +161,7 @@ exports.deleteSupplier = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Supplier",
       id,
       "delete",

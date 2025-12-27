@@ -4,6 +4,7 @@ function InputText({
   labelTitle,
   labelStyle,
   type,
+  autoComplete,
   containerStyle,
   defaultValue,
   placeholder,
@@ -28,6 +29,7 @@ function InputText({
       <input
         id={inputId}
         type={type || "text"}
+        autoComplete={autoComplete || "off"}
         value={value}
         placeholder={placeholder || ""}
         onChange={(e) => updateInputValue(e.target.value)}

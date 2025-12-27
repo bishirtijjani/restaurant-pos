@@ -1,6 +1,12 @@
 import React from "react";
 
-function SearchBar({ searchText, setSearchText, placeholderText, styleClass }) {
+function SearchBar({
+  searchText,
+  setSearchText,
+  placeholderText,
+  styleClass,
+  inputStyleClass = "",
+}) {
   const updateSearchInput = (value) => {
     setSearchText(value);
   };
@@ -13,7 +19,7 @@ function SearchBar({ searchText, setSearchText, placeholderText, styleClass }) {
           value={searchText}
           placeholder={placeholderText || "Search"}
           onChange={(e) => updateSearchInput(e.target.value)}
-          className="input input-bordered w-full"
+          className={`input input-bordered w-full ${inputStyleClass}`}
         />
       </div>
     </div>

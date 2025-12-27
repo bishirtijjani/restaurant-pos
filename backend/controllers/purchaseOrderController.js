@@ -179,6 +179,7 @@ exports.createPurchaseOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "PurchaseOrder",
       purchaseOrder._id,
       "create",
@@ -308,6 +309,7 @@ exports.updatePurchaseOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "PurchaseOrder",
       req.params.id,
       "update",
@@ -376,6 +378,7 @@ exports.approvePurchaseOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "PurchaseOrder",
       req.params.id,
       "approve",
@@ -496,6 +499,7 @@ exports.receivePurchaseOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "PurchaseOrder",
       req.params.id,
       "receive",
@@ -575,6 +579,7 @@ exports.cancelPurchaseOrder = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "PurchaseOrder",
       req.params.id,
       "cancel",
@@ -660,6 +665,7 @@ exports.updatePaymentStatus = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "PurchaseOrder",
       req.params.id,
       "update",

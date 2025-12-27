@@ -355,8 +355,8 @@ const FloorManager = () => {
                   activeFloorId={activeFloorId}
                   onSelectFloor={handleFloorSelect}
                   onAddFloor={handleAddFloor}
-                  onEditFloor={(f) => {}} // TODO
-                  onDeleteFloor={(id) => {}} // TODO
+                  onEditFloor={(f) => {}}
+                  onDeleteFloor={(id) => {}}
                   reservations={reservations}
                   onAddReservation={handleAddReservation}
                   timezone={timezone}
@@ -388,16 +388,20 @@ const FloorManager = () => {
 
               <div className="flex items-center gap-2">
                 <button
-                  className={`btn btn-sm btn-circle ${
-                    locked ? "btn-error text-white" : "btn-ghost"
+                  className={`btn btn-sm btn-rounded me-2 ${
+                    locked ? "btn-error text-white" : ""
                   }`}
                   onClick={() => setLocked(!locked)}
                   title={locked ? "Unlock View" : "Lock View"}
                 >
                   {locked ? (
-                    <Lock className="w-4 h-4" />
+                    <span className="flex items-center">
+                      <Lock className="w-4 h-4 inline" /> floor{" "}
+                    </span>
                   ) : (
-                    <Unlock className="w-4 h-4" />
+                    <span className="flex items-center">
+                      <Unlock className="w-4 h-4 inline" /> floor{" "}
+                    </span>
                   )}
                 </button>
 
@@ -409,7 +413,7 @@ const FloorManager = () => {
                     onClick={() => setEditMode(false)}
                   >
                     <Monitor className="w-4 h-4 mr-1" />{" "}
-                    <span className="hidden sm:inline">Live</span>
+                    <span className="inline">Live</span>
                   </button>
                   <button
                     className={`join-item btn btn-sm ${
@@ -418,7 +422,7 @@ const FloorManager = () => {
                     onClick={() => setEditMode(true)}
                   >
                     <Settings className="w-4 h-4 mr-1" />{" "}
-                    <span className="hidden sm:inline">Edit</span>
+                    <span className="inline">Edit</span>
                   </button>
                 </div>
 
@@ -469,7 +473,7 @@ const FloorManager = () => {
                   )}
                   editMode={editMode}
                   locked={locked}
-                  snapTarget={null} // TODO: Implement snapping logic if needed
+                  snapTarget={null}
                   onTableChange={(id, newAttrs) => {
                     dispatch(
                       optimisticUpdateTablePositionTableSlice({

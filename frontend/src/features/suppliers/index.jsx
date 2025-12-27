@@ -12,43 +12,68 @@ import { fetchAllSuppliers } from "./suppliersSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
+import SearchBar from "../../components/Input/SearchBar";
 import SearchableSelect from "../../components/Input/SearchableSelect";
 import {
-  Search,
   PlusCircle,
   RefreshCw,
+  MoreVertical,
   Edit3,
   Trash2,
-  Table,
-  SquareGanttChart,
   Mail,
   Phone,
   MapPin,
   Calendar,
-  Clock,
-  UserCheck,
-  Plus,
+  Table,
+  SquareGanttChart,
 } from "lucide-react";
 
 const TopSideButtons = ({ onRefresh, onAddNew }) => {
+  const { can } = useAuth();
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <Can do="editInventory">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
         <button
-          onClick={onAddNew}
-          className="btn btn-primary btn-sm lg:btn-md gap-2"
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
         >
-          <PlusCircle className="w-4 h-4" />
-          <span className="hidden sm:inline">Add Supplier</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
-      </Can>
-      <button
-        onClick={onRefresh}
-        className="btn btn-ghost btn-sm lg:btn-md gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-        <span className="hidden sm:inline">Refresh</span>
-      </button>
+        <Can do="editInventory">
+          <button onClick={onAddNew} className="btn btn-primary btn-sm gap-2">
+            <PlusCircle className="w-4 h-4" />
+            <span>Add Supplier</span>
+          </button>
+        </Can>
+      </div>
+
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
+        >
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="editInventory">
+            <li>
+              <button onClick={onAddNew} className="text-primary font-medium">
+                <PlusCircle className="w-4 h-4" /> Add Supplier
+              </button>
+            </li>
+          </Can>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -261,21 +286,16 @@ const SearchAndFilters = ({
   ];
 
   return (
-    <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+    <div className="bg-base-100 rounded-lg shadow-sm mb-6">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
-          <div className="form-control w-full">
-            <label className="input input-bordered flex items-center gap-2 w-full">
-              <Search className="w-5 h-5 text-info" />
-              <input
-                type="text"
-                className="grow"
-                placeholder="Search suppliers by name, phone, or email..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-              />
-            </label>
-          </div>
+          <SearchBar
+            searchText={searchTerm}
+            setSearchText={onSearchChange}
+            placeholderText="Search suppliers by name, phone, or email..."
+            styleClass="w-full"
+            inputStyleClass="!h-10"
+          />
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -286,30 +306,31 @@ const SearchAndFilters = ({
               onChange={(e) => onSortChange(e.target.value)}
               name="sortBy"
               placeholder="Sort by"
-              className="w-full max-w-xs"
+              className="w-full md:w-56"
+              size="!h-10"
               valueKey="value"
               labelKey="name"
             />
           </div>
 
-          <div className="btn-group">
+          <div className="flex items-center bg-base-200 rounded-lg p-1 h-10">
             <button
-              className={`btn btn-sm ${
-                viewMode === "table" ? "btn-primary" : "btn-outline"
+              className={`btn btn-sm btn-ghost h-8 min-h-8 px-4 ${
+                viewMode === "table" ? "bg-base-100 shadow-sm" : "opacity-50"
               }`}
               onClick={() => onViewModeChange("table")}
             >
               <Table className="w-4 h-4" />
-              <span className="hidden sm:inline ml-1">Table</span>
+              <span className="inline ml-2">Table</span>
             </button>
             <button
-              className={`btn btn-sm ${
-                viewMode === "card" ? "btn-primary" : "btn-outline"
+              className={`btn btn-sm btn-ghost h-8 min-h-8 px-4 ${
+                viewMode === "card" ? "bg-base-100 shadow-sm" : "opacity-50"
               }`}
               onClick={() => onViewModeChange("card")}
             >
               <SquareGanttChart className="w-4 h-4" />
-              <span className="hidden sm:inline ml-1">Cards</span>
+              <span className="inline ml-2">Cards</span>
             </button>
           </div>
         </div>
@@ -374,7 +395,7 @@ const Suppliers = () => {
   };
 
   const handleRefresh = () => {
-    location.reload();
+    dispatch(fetchAllSuppliers());
   };
 
   const handleEdit = (supplier) => {

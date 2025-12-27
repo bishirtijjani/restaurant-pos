@@ -15,16 +15,16 @@ import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
 import {
   ClipboardList,
-  Search,
   Plus,
   RefreshCw,
   TrendingUp,
   TrendingDown,
   Calendar,
-  Package,
-  AlertCircle,
   Eye,
+  MoreVertical,
+  AlertCircle,
 } from "lucide-react";
+import SearchBar from "../../components/Input/SearchBar";
 import SearchableSelect from "../../components/Input/SearchableSelect";
 
 const ADJUSTMENT_TYPES = {
@@ -51,33 +51,65 @@ const REASON_LABELS = {
 const TopSideButtons = ({ onRefresh }) => {
   const dispatch = useDispatch();
 
+  const openNewAdjustment = () => {
+    dispatch(
+      openModal({
+        title: "New Stock Adjustment",
+        bodyType: MODAL_BODY_TYPES.ADD_STOCK_ADJUSTMENT,
+        size: "lg",
+      })
+    );
+  };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Can do="editInventory">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
         <button
-          onClick={() =>
-            dispatch(
-              openModal({
-                title: "New Stock Adjustment",
-                bodyType: MODAL_BODY_TYPES.ADD_STOCK_ADJUSTMENT,
-                size: "lg",
-              })
-            )
-          }
-          className="btn btn-primary btn-sm lg:btn-md gap-2"
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
         >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">New Adjustment</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
-      </Can>
-      <button
-        onClick={onRefresh}
-        className="btn btn-ghost btn-sm lg:btn-md gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-        <span className="hidden sm:inline">Refresh</span>
-      </button>
+        <Can do="editInventory">
+          <button
+            onClick={openNewAdjustment}
+            className="btn btn-primary btn-sm gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Adjustment</span>
+          </button>
+        </Can>
+      </div>
+
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
+        >
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="editInventory">
+            <li>
+              <button
+                onClick={openNewAdjustment}
+                className="text-primary font-medium"
+              >
+                <Plus className="w-4 h-4" /> New Adjustment
+              </button>
+            </li>
+          </Can>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -100,34 +132,31 @@ const SearchAndFilters = ({
 
   const itemOptions = [
     { value: "", name: "All Items" },
-    ...inventoryItems.map(item => ({ value: item._id, name: item.name }))
+    ...inventoryItems.map((item) => ({ value: item._id, name: item.name })),
   ];
 
   return (
-    <div className="bg-base-100 rounded-lg shadow-md p-4 mb-6">
+    <div className="bg-base-100 rounded-lg shadow-sm mb-6">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
-          <label className="input input-bordered flex items-center gap-2">
-            <Search className="w-5 h-5 opacity-70" />
-            <input
-              type="text"
-              className="grow"
-              placeholder="Search by adjustment number, item, or reason..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </label>
+          <SearchBar
+            searchText={searchQuery}
+            setSearchText={setSearchQuery}
+            placeholderText="Search by adjustment number, item, or reason..."
+            styleClass="w-full"
+            inputStyleClass="!h-10"
+          />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-row gap-2">
           <SearchableSelect
             options={typeOptions}
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             name="typeFilter"
             placeholder="All Types"
-            className=""
-            size="select-sm lg:select-md"
+            className="flex-1 md:w-48"
+            size="!h-10"
             valueKey="value"
             labelKey="name"
           />
@@ -138,8 +167,8 @@ const SearchAndFilters = ({
             onChange={(e) => setItemFilter(e.target.value)}
             name="itemFilter"
             placeholder="All Items"
-            className=""
-            size="select-sm lg:select-md"
+            className="flex-[2] md:w-64"
+            size="!h-10"
             valueKey="value"
             labelKey="name"
           />
@@ -262,12 +291,14 @@ const StockAdjustmentsManagement = () => {
   const [itemFilter, setItemFilter] = useState("");
 
   useEffect(() => {
-    dispatch(fetchStockAdjustments({
-      type: typeFilter,
-      inventoryItem: itemFilter
-    }));
+    dispatch(
+      fetchStockAdjustments({
+        type: typeFilter,
+        inventoryItem: itemFilter,
+      })
+    );
     // Only fetch items once or if needed, but here we just need it for the dropdown
-    if (inventoryItems.length === 0) dispatch(fetchInventoryItems()); 
+    if (inventoryItems.length === 0) dispatch(fetchInventoryItems());
   }, [dispatch, typeFilter, itemFilter]);
 
   useEffect(() => {
@@ -333,10 +364,12 @@ const StockAdjustmentsManagement = () => {
   }
 
   const handleRefresh = () => {
-    dispatch(fetchStockAdjustments({
-      type: typeFilter,
-      inventoryItem: itemFilter
-    }));
+    dispatch(
+      fetchStockAdjustments({
+        type: typeFilter,
+        inventoryItem: itemFilter,
+      })
+    );
   };
 
   return (

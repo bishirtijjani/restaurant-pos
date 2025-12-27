@@ -34,6 +34,7 @@ const createExpense = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Expense",
       savedExpense._id,
       "create",
@@ -102,6 +103,7 @@ const updateExpense = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Expense",
       id,
       "update",
@@ -136,6 +138,7 @@ const deleteExpense = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "Expense",
       id,
       "delete",

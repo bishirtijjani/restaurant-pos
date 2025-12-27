@@ -17,6 +17,7 @@ import { getCurrentUser, setUserFromToken } from "./app/authSlice";
 import OfflineIndicator from "./components/OfflineIndicator";
 import SuspenseContent from "./containers/SuspenseContent";
 import StoreGuard from "./containers/StoreGuard";
+import ModalLayout from "./containers/ModalLayout";
 
 const Layout = lazy(() => import("./containers/Layout"));
 const Login = lazy(() => import("./pages/Login"));
@@ -156,7 +157,7 @@ function App() {
           />
         </Routes>
       </Router>
-
+      <ModalLayout />
       <OfflineIndicator />
     </>
   );

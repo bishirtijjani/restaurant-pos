@@ -49,6 +49,7 @@ const createPromoCode = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "PromoCode",
       promoCode._id,
       "create",
@@ -248,6 +249,7 @@ const updatePromoCode = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "PromoCode",
       promoCode._id,
       "edit",
@@ -292,6 +294,7 @@ const deletePromoCode = async (req, res) => {
     await logAction(
       req.user.id,
       req.storeId,
+      req.organizationId,
       "PromoCode",
       id,
       "delete",

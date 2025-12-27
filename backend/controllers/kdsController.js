@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const KDSStation = require("../models/KDSStation");
 const MenuItem = require("../models/MenuItem");
 const { notifyKDS } = require("../utils/webSocket");
+const logAction = require("../utils/logAction");
 
 exports.getKDSOrders = async (req, res) => {
   try {
@@ -124,6 +125,18 @@ exports.updateKDSOrderStatus = async (req, res) => {
     // Notify KDS via WebSocket
     notifyKDS("order:statusChanged", order, null, req.storeId);
 
+    await logAction(
+      req.user._id,
+      "UPDATED_KDS_ORDER_STATUS",
+      req.organizationId,
+      {
+        orderId: order._id,
+        action,
+        status: order.orderStatus,
+      },
+      req.ip
+    );
+
     res.json({
       success: true,
       message: `Order ${
@@ -184,6 +197,18 @@ exports.recallOrder = async (req, res) => {
 
     // Notify KDS via WebSocket
     notifyKDS("order:recalled", order, null, req.storeId);
+
+    await logAction(
+      req.user._id,
+      "RECALLED_KDS_ORDER",
+      req.organizationId,
+      {
+        orderId: order._id,
+        reason,
+        status: order.orderStatus,
+      },
+      req.ip
+    );
 
     res.json({
       success: true,

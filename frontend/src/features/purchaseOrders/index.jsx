@@ -17,8 +17,6 @@ import {
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
 import {
-  Package,
-  Search,
   Plus,
   RefreshCw,
   Eye,
@@ -28,7 +26,9 @@ import {
   FileText,
   Truck,
   Calendar,
+  MoreVertical,
 } from "lucide-react";
+import SearchBar from "../../components/Input/SearchBar";
 import SearchableSelect from "../../components/Input/SearchableSelect";
 
 const STATUS_COLORS = {
@@ -49,25 +49,53 @@ const TopSideButtons = ({ onRefresh }) => {
   const navigate = useNavigate();
   const { can } = useAuth();
 
+  const openNewPO = () => {
+    navigate("/app/purchase-orders/new");
+  };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Can do="createPurchaseOrders">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
         <button
-          onClick={() => navigate("/app/purchase-orders/new")}
-          className="btn btn-primary btn-sm lg:btn-md gap-2"
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
         >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">New Purchase Order</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
-      </Can>
-      <button
-        onClick={onRefresh}
-        className="btn btn-ghost btn-sm lg:btn-md gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-        <span className="hidden sm:inline">Refresh</span>
-      </button>
+        <Can do="createPurchaseOrders">
+          <button onClick={openNewPO} className="btn btn-primary btn-sm gap-2">
+            <Plus className="w-4 h-4" />
+            <span>New PO</span>
+          </button>
+        </Can>
+      </div>
+
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
+        >
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="createPurchaseOrders">
+            <li>
+              <button onClick={openNewPO} className="text-primary font-medium">
+                <Plus className="w-4 h-4" /> New PO
+              </button>
+            </li>
+          </Can>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -92,34 +120,31 @@ const SearchAndFilters = ({
 
   const supplierOptions = [
     { value: "", name: "All Suppliers" },
-    ...suppliers.map(s => ({ value: s._id, name: s.name }))
+    ...suppliers.map((s) => ({ value: s._id, name: s.name })),
   ];
 
   return (
-    <div className="bg-base-100 rounded-lg shadow-md p-4 mb-6">
+    <div className="bg-base-100 rounded-lg shadow-sm mb-6">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
-          <label className="input input-bordered flex items-center gap-2">
-            <Search className="w-5 h-5 opacity-70" />
-            <input
-              type="text"
-              className="grow"
-              placeholder="Search by PO number, supplier, or invoice..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </label>
+          <SearchBar
+            searchText={searchQuery}
+            setSearchText={setSearchQuery}
+            placeholderText="Search by PO number, supplier, or invoice..."
+            styleClass="w-full"
+            inputStyleClass="!h-10"
+          />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-row">
           <SearchableSelect
             options={statusOptions}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             name="statusFilter"
             placeholder="All Status"
-            className=""
-            size="select-sm lg:select-md"
+            className="w-full lg:w-48"
+            size="!h-10"
             valueKey="value"
             labelKey="name"
           />
@@ -130,8 +155,8 @@ const SearchAndFilters = ({
             onChange={(e) => setSupplierFilter(e.target.value)}
             name="supplierFilter"
             placeholder="All Suppliers"
-            className=""
-            size="select-sm lg:select-md"
+            className="w-full lg:w-56"
+            size="!h-10"
             valueKey="value"
             labelKey="name"
           />
@@ -286,9 +311,13 @@ const PurchaseOrdersManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { can } = useAuth();
-  const { orders = [], loading, error, success, message } = useSelector(
-    (state) => state.purchaseOrders || {}
-  );
+  const {
+    orders = [],
+    loading,
+    error,
+    success,
+    message,
+  } = useSelector((state) => state.purchaseOrders || {});
   const suppliers = useSelector((state) => state.suppliers.suppliers || []);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -296,10 +325,12 @@ const PurchaseOrdersManagement = () => {
   const [supplierFilter, setSupplierFilter] = useState("");
 
   useEffect(() => {
-    dispatch(fetchPurchaseOrders({
-      status: statusFilter,
-      supplier: supplierFilter
-    }));
+    dispatch(
+      fetchPurchaseOrders({
+        status: statusFilter,
+        supplier: supplierFilter,
+      })
+    );
   }, [dispatch, statusFilter, supplierFilter]);
 
   useEffect(() => {
@@ -348,9 +379,19 @@ const PurchaseOrdersManagement = () => {
           action: async () => {
             try {
               await dispatch(approvePurchaseOrder(id)).unwrap();
-              dispatch(showNotification({ message: "Purchase order approved successfully", status: 1 }));
+              dispatch(
+                showNotification({
+                  message: "Purchase order approved successfully",
+                  status: 1,
+                })
+              );
             } catch (err) {
-              dispatch(showNotification({ message: err.message || "Failed to approve order", status: 0 }));
+              dispatch(
+                showNotification({
+                  message: err.message || "Failed to approve order",
+                  status: 0,
+                })
+              );
             }
           },
         },
@@ -382,9 +423,19 @@ const PurchaseOrdersManagement = () => {
           confirmAction: async (reason) => {
             try {
               await dispatch(cancelPurchaseOrder({ id, reason })).unwrap();
-              dispatch(showNotification({ message: "Purchase order cancelled successfully", status: 1 }));
+              dispatch(
+                showNotification({
+                  message: "Purchase order cancelled successfully",
+                  status: 1,
+                })
+              );
             } catch (err) {
-              dispatch(showNotification({ message: err.message || "Failed to cancel order", status: 0 }));
+              dispatch(
+                showNotification({
+                  message: err.message || "Failed to cancel order",
+                  status: 0,
+                })
+              );
             }
           },
         },
@@ -413,10 +464,12 @@ const PurchaseOrdersManagement = () => {
   }
 
   const handleRefresh = () => {
-    dispatch(fetchPurchaseOrders({
-      status: statusFilter,
-      supplier: supplierFilter
-    }));
+    dispatch(
+      fetchPurchaseOrders({
+        status: statusFilter,
+        supplier: supplierFilter,
+      })
+    );
   };
 
   return (

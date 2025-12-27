@@ -68,6 +68,7 @@ const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
           <input
             type="email"
             placeholder="Email address"
+            autoComplete="email"
             className="input input-bordered w-full"
             autoFocus
             onKeyDown={(e) => {

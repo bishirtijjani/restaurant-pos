@@ -26,6 +26,8 @@ function AddSupplierModalBody({ closeModal }) {
       return setErrorMessage("Supplier name is required!");
     if (!supplier.phone.trim()) return setErrorMessage("Phone is required!");
     if (!supplier.email.trim()) return setErrorMessage("Email is required!");
+    if (!supplier.address.trim())
+      return setErrorMessage("Address is required!");
 
     setLoading(true);
     dispatch(addSupplier(supplier))

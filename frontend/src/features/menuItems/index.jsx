@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
 import { openModal } from "../common/modalSlice";
+import SearchBar from "../../components/Input/SearchBar";
 import {
   MODAL_BODY_TYPES,
   CONFIRMATION_MODAL_CLOSE_TYPES,
@@ -11,33 +12,27 @@ import {
   toggleMenuItemAvailability,
 } from "./menuItemsSlice";
 import SuspenseContent from "../../containers/SuspenseContent";
-import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
-import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
-import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
-import PlusCircleIcon from "@heroicons/react/24/outline/PlusCircleIcon";
-import InformationCircleIcon from "@heroicons/react/24/outline/InformationCircleIcon";
-import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
-import XCircleIcon from "@heroicons/react/24/outline/XCircleIcon";
-import FunnelIcon from "@heroicons/react/24/outline/FunnelIcon";
-import PhotoIcon from "@heroicons/react/24/outline/PhotoIcon";
-import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
-import DocumentTextIcon from "@heroicons/react/24/outline/DocumentTextIcon";
-import { formatCurrency } from "../../utils/numberFormat";
-import SearchBar from "../../components/Input/SearchBar";
-import { showNotification } from "../common/headerSlice";
 import MenuItemCard from "./components/MenuItemCard";
+import { formatCurrency } from "../../utils/numberFormat";
+import {
+  PlusCircle,
+  RefreshCw,
+  MoreVertical,
+  SquareGanttChart,
+  Filter,
+  AlertCircle,
+  Info,
+  XCircle,
+  CheckCircle,
+  Pencil,
+  Trash2,
+  FileText,
+  Table,
+} from "lucide-react";
 import Can from "../../components/Auth/Can";
 import { useAuth } from "../../utils/permission";
 
-const TopSideButtons = ({
-  searchQuery,
-  setSearchQuery,
-  selectedCategory,
-  categories,
-  setSelectedCategory,
-  viewMode,
-  setViewMode,
-}) => {
+const TopSideButtons = () => {
   const dispatch = useDispatch();
   const { can } = useAuth();
 
@@ -51,112 +46,58 @@ const TopSideButtons = ({
     );
   };
 
+  const onRefresh = () => {
+    dispatch(fetchAllMenuItems());
+  };
+
   return (
-    <div className="flex flex-col lg:flex-row justify-between items-center w-full gap-2 lg:gap-4 mb-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-2 w-full">
-        <div className="w-full md:w-64">
-          <SearchBar
-            searchText={searchQuery}
-            setSearchText={setSearchQuery}
-            placeholderText="Search menu items..."
-            styleClass="w-full"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <div className="dropdown dropdown-end">
-            <label tabIndex={0} className="btn btn-sm btn-outline">
-              <FunnelIcon className="w-4 h-4 mr-1" />
-              {selectedCategory ? selectedCategory : "All Categories"}
-            </label>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-52 max-h-60 overflow-auto"
-            >
-              <li>
-                <a
-                  className={selectedCategory === "" ? "active" : ""}
-                  onClick={() => setSelectedCategory("")}
-                >
-                  All Categories
-                </a>
-              </li>
-              {categories.map((category, index) => (
-                <li key={index}>
-                  <a
-                    className={selectedCategory === category ? "active" : ""}
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    {category}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="btn-group">
-            <button
-              className={`btn btn-sm ${
-                viewMode === "grid" ? "btn-active" : ""
-              }`}
-              onClick={() => setViewMode("grid")}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                />
-              </svg>
-            </button>
-            <button
-              className={`btn btn-sm ${
-                viewMode === "list" ? "btn-active" : ""
-              }`}
-              onClick={() => setViewMode("list")}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 shrink-0">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
+        <button
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </button>
         <Can do="editMenu">
           <button
             onClick={openAddNewMenuItem}
-            className="btn btn-primary btn-sm md:btn-md"
+            className="btn btn-primary btn-sm gap-2"
           >
-            <PlusCircleIcon className="w-5 h-5 mr-1" /> New Item
+            <PlusCircle className="w-4 h-4" />
+            <span>New Item</span>
           </button>
         </Can>
-        <button
-          onClick={() => dispatch(fetchAllMenuItems())}
-          className="btn btn-outline btn-sm md:btn-md"
-          aria-label="Refresh"
+      </div>
+
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
         >
-          <ArrowPathIcon className="w-5 h-5" />
-        </button>
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="editMenu">
+            <li>
+              <button
+                onClick={openAddNewMenuItem}
+                className="text-primary font-medium"
+              >
+                <PlusCircle className="w-4 h-4" /> Add New Item
+              </button>
+            </li>
+          </Can>
+        </ul>
       </div>
     </div>
   );
@@ -171,7 +112,7 @@ const MenuItems = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState("cards");
 
   useEffect(() => {
     if (status === "idle") {
@@ -214,7 +155,7 @@ const MenuItems = () => {
   // Error display component
   const ErrorDisplay = () => (
     <div className="bg-error bg-opacity-10 rounded-lg p-6 text-center">
-      <ExclamationCircleIcon className="w-12 h-12 text-error mx-auto mb-3" />
+      <AlertCircle className="w-12 h-12 text-error mx-auto mb-3" />
       <h3 className="text-lg font-semibold mb-2">Error Loading Menu Items</h3>
       <p className="text-base-content/70 mb-4">
         {error?.message || "An unknown error occurred"}
@@ -223,13 +164,13 @@ const MenuItems = () => {
         onClick={() => dispatch(fetchAllMenuItems())}
         className="btn btn-error btn-sm"
       >
-        <ArrowPathIcon className="w-4 h-4 mr-2" /> Try Again
+        <RefreshCw className="w-4 h-4 mr-2" /> Try Again
       </button>
     </div>
   );
 
-  // Grid view component
-  const GridView = () => (
+  // card view component
+  const CardView = () => (
     <>
       {Object.keys(groupedItems).length > 0 ? (
         Object.keys(groupedItems)
@@ -253,15 +194,15 @@ const MenuItems = () => {
       ) : (
         <EmptyState
           message="No menu items match your search"
-          icon={<FunnelIcon className="w-12 h-12 text-base-content/30" />}
+          icon={<Filter className="w-12 h-12 text-base-content/30" />}
           helpText="Try changing your search or filter criteria"
         />
       )}
     </>
   );
 
-  // List view component
-  const ListView = () => (
+  // Table view component
+  const TableView = () => (
     <>
       {Object.keys(groupedItems).length > 0 ? (
         Object.keys(groupedItems)
@@ -316,7 +257,7 @@ const MenuItems = () => {
                                 )
                               }
                             >
-                              <InformationCircleIcon className="w-5 h-5" />
+                              <Info className="w-5 h-5" />
                             </button>
 
                             {can("viewMenu") && (
@@ -332,10 +273,8 @@ const MenuItems = () => {
                                 }
                               >
                                 {item.isAvailable ? (
-                                  <XCircleIcon className="w-5 h-5 text-error" />
-                                ) : (
-                                  <CheckCircleIcon className="w-5 h-5 text-success" />
-                                )}
+                                  <CheckCircle className="w-5 h-5 text-success" />
+                                ) : null}
                               </button>
                             )}
 
@@ -353,7 +292,7 @@ const MenuItems = () => {
                                   )
                                 }
                               >
-                                <PencilSquareIcon className="w-5 h-5" />
+                                <Pencil className="w-5 h-5" />
                               </button>
                             </Can>
 
@@ -375,7 +314,7 @@ const MenuItems = () => {
                                   )
                                 }
                               >
-                                <TrashIcon className="w-5 h-5 text-error" />
+                                <Trash2 className="w-5 h-5 text-error" />
                               </button>
                             </Can>
                           </div>
@@ -390,7 +329,7 @@ const MenuItems = () => {
       ) : (
         <EmptyState
           message="No menu items match your search"
-          icon={<FunnelIcon className="w-12 h-12 text-base-content/30" />}
+          icon={<Filter className="w-12 h-12 text-base-content/30" />}
           helpText="Try changing your search or filter criteria"
         />
       )}
@@ -416,7 +355,7 @@ const MenuItems = () => {
           }
           className="btn btn-primary mt-4"
         >
-          <PlusCircleIcon className="w-5 h-5 mr-2" /> Add Menu Item
+          <PlusCircle className="w-5 h-5 mr-2" /> Add Menu Item
         </button>
       </Can>
     </div>
@@ -444,16 +383,107 @@ const MenuItems = () => {
   }
 
   return (
-    <TitleCard title="Menu Items" topMargin="mt-2">
-      <TopSideButtons
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        categories={categories}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-      />
+    <TitleCard
+      title="Menu Items"
+      TopSideButtons={
+        <TopSideButtons
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          categories={categories}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+        />
+      }
+      topMargin="mt-2"
+    >
+      {/* Filters Row */}
+      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 lg:max-w-4xl">
+          <div className="relative flex-1">
+            <SearchBar
+              searchText={searchQuery}
+              setSearchText={setSearchQuery}
+              placeholderText="Search menu items..."
+              styleClass="w-full"
+              inputStyleClass="!h-10"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="dropdown dropdown-bottom dropdown-start sm:dropdown-end w-full sm:w-auto">
+              <label
+                tabIndex={0}
+                className="btn btn-outline btn-sm h-10 min-h-10 w-full sm:w-auto px-4 justify-between flex-nowrap"
+              >
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <Filter className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">
+                    {selectedCategory ? selectedCategory : "All Categories"}
+                  </span>
+                </div>
+                <svg
+                  className="w-4 h-4 ml-1 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </label>
+              <ul
+                tabIndex={0}
+                className="dropdown-content z-20 menu p-2 shadow-xl bg-base-100 rounded-box w-64 max-h-80 overflow-auto border border-base-200 mt-1"
+              >
+                <li>
+                  <button
+                    className={selectedCategory === "" ? "active" : ""}
+                    onClick={() => setSelectedCategory("")}
+                  >
+                    All Categories
+                  </button>
+                </li>
+                {categories.map((category, index) => (
+                  <li key={index}>
+                    <button
+                      className={selectedCategory === category ? "active" : ""}
+                      onClick={() => setSelectedCategory(category)}
+                    >
+                      {category}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex items-center flex-shrink-0 bg-base-200 rounded-lg p-1 h-10">
+              <button
+                className={`flex-1 sm:flex-none btn btn-sm btn-ghost h-8 min-h-8 px-4 flex-nowrap ${
+                  viewMode === "table" ? "bg-base-100 shadow-sm" : "opacity-50"
+                }`}
+                onClick={() => setViewMode("table")}
+              >
+                <Table className="w-4 h-4" />
+                <span className="ml-2">Table</span>
+              </button>
+              <button
+                className={`flex-1 sm:flex-none btn btn-sm btn-ghost h-8 min-h-8 px-4 flex-nowrap ${
+                  viewMode === "cards" ? "bg-base-100 shadow-sm" : "opacity-50"
+                }`}
+                onClick={() => setViewMode("cards")}
+              >
+                <SquareGanttChart className="w-4 h-4" />
+                <span className="ml-2">Cards</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {error ? (
         <ErrorDisplay />
@@ -462,13 +492,13 @@ const MenuItems = () => {
         !searchQuery ? (
         <EmptyState
           message="No menu items found"
-          icon={<DocumentTextIcon className="w-full h-full" />}
+          icon={<FileText className="w-full h-full" />}
           helpText="Start by adding your first menu item"
         />
-      ) : viewMode === "grid" ? (
-        <GridView />
+      ) : viewMode === "cards" ? (
+        <CardView />
       ) : (
-        <ListView />
+        <TableView />
       )}
     </TitleCard>
   );

@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { removeNotificationMessage } from "../features/common/headerSlice";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import ModalLayout from "./ModalLayout";
 import OnboardingTour from "../features/onboarding/OnboardingTour";
 import { useLocation } from "react-router-dom";
 import { getTourId } from "../utils/Helpers";
@@ -45,9 +44,6 @@ function Layout() {
       <RightSidebar />
 
       <ToastContainer />
-
-      <ModalLayout />
-
       <OnboardingTour tourId={getTourId(location.pathname)} />
     </>
   );

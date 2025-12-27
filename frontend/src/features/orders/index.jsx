@@ -33,6 +33,9 @@ import {
   Clock,
   User,
   SlidersHorizontal,
+  MoreVertical,
+  CreditCard,
+  ChefHat,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/permission";
@@ -92,7 +95,7 @@ const OrderFilters = ({ currentFilters, applyFilters, clearFiltersAction }) => {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-4">
+      <div className="flex gap-4">
         <div className="form-control">
           <label className="label py-1">
             <span className="label-text text-xs">Status</span>
@@ -103,8 +106,8 @@ const OrderFilters = ({ currentFilters, applyFilters, clearFiltersAction }) => {
             onChange={(e) => applyFilters({ status: e.target.value })}
             name="status"
             placeholder="Filter by status"
-            className=""
-            size="select-sm"
+            className="w-full md:w-40"
+            size="!h-10"
             valueKey="value"
             labelKey="name"
           />
@@ -120,23 +123,25 @@ const OrderFilters = ({ currentFilters, applyFilters, clearFiltersAction }) => {
             onChange={(e) => applyFilters({ paymentStatus: e.target.value })}
             name="paymentStatus"
             placeholder="Filter by payment"
-            className=""
-            size="select-sm"
+            className="w-full md:w-40"
+            size="!h-10"
             valueKey="value"
             labelKey="name"
           />
         </div>
 
-        <div className="form-control min-w-[200px]">
+        <div className="form-control w-full">
           <label className="label py-1">
             <span className="label-text text-xs">Date Range</span>
           </label>
-          <Datepicker
-            value={dateRange}
-            onChange={handleDateChange}
-            showShortcuts={true}
-            inputClassName="input input-sm input-bordered w-full"
-          />
+          <div className="h-10">
+            <Datepicker
+              value={dateRange}
+              onChange={handleDateChange}
+              showShortcuts={true}
+              inputClassName="input input-bordered w-full !h-10"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -168,96 +173,151 @@ const OrderCard = ({
   return (
     <div className="card bg-base-100 shadow-md hover:shadow-lg transition-all border border-base-200">
       <div className="card-body p-4">
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-bold">#{order.orderNumber}</h3>
-              <span
-                className={`badge badge-sm ${statusColors[order.orderStatus]}`}
-              >
-                {order.orderStatus}
-              </span>
-              {order.isModified && (
-                <span className="badge badge-sm badge-outline badge-info">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  Modified
-                </span>
-              )}
-              {order.hasVoidedItems && (
-                <span className="badge badge-sm badge-outline badge-warning">
-                  Voided
-                </span>
-              )}
-            </div>
-            <p className="text-xs flex items-center gap-1 text-base-content/70 mt-1">
-              <User className="w-3 h-3" />
-              {order.customerDetails?.name || "Walk-in"}
-            </p>
-          </div>
-          <span className={`badge ${paymentColors[order.paymentStatus]}`}>
-            {order.paymentStatus}
+        {/* Header - Order # */}
+        <div className="flex justify-between items-center mb-2 pb-2 border-b border-base-200">
+          <h3 className="font-bold text-xl">#{order.orderNumber}</h3>
+          <span className="font-bold text-lg text-primary">
+            {currency}
+            {order.totalAmount?.toFixed(2)}
           </span>
         </div>
 
-        <div className="text-sm space-y-1">
-          <div className="flex justify-between">
-            <span className="text-base-content/70">Total</span>
-            <span className="font-semibold">
-              {currency}
-              {order.totalAmount?.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-xs text-base-content/50">
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {formatDate(order.createdAt)}
-            </span>
-            <span className="capitalize">{order.orderType}</span>
-          </div>
+        {/* Info Table */}
+        <div className="overflow-x-auto mb-4">
+          <table className="table w-full">
+            <tbody>
+              <tr>
+                <td className="font-semibold text-base-content/70 pl-0 py-1">
+                  Customer
+                </td>
+                <td className="text-right pr-0 py-1 flex items-center justify-end gap-1">
+                  <User className="w-4 h-4" />
+                  {order.customerDetails?.name || "Walk-in"}
+                </td>
+              </tr>
+              <tr>
+                <td className="font-semibold text-base-content/70 pl-0 py-1">
+                  Date
+                </td>
+                <td className="text-right pr-0 py-1 flex items-center justify-end gap-1">
+                  <Clock className="w-4 h-4" />
+                  {formatDate(order.createdAt)}
+                </td>
+              </tr>
+              <tr>
+                <td className="font-semibold text-base-content/70 pl-0 py-1">
+                  Type
+                </td>
+                <td className="text-right pr-0 py-1 capitalize font-medium">
+                  {order.orderType}
+                </td>
+              </tr>
+              <tr>
+                <td className="font-semibold text-base-content/70 pl-0 py-1 align-middle">
+                  Status
+                </td>
+                <td className="text-right pr-0 py-1">
+                  <span
+                    className={`badge badge-sm gap-1 ${
+                      statusColors[order.orderStatus]
+                    }`}
+                  >
+                    <ChefHat className="w-4 h-4" />
+                    {order.orderStatus}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td className="font-semibold text-base-content/70 pl-0 py-1 align-middle">
+                  Payment
+                </td>
+                <td className="text-right pr-0 py-1">
+                  <div
+                    className={`badge badge-sm gap-1 ${
+                      paymentColors[order.paymentStatus]
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    {order.paymentStatus}
+                  </div>
+                </td>
+              </tr>
+              {(order.isModified || order.hasVoidedItems) && (
+                <tr>
+                  <td className="font-semibold text-base-content/70 pl-0 py-1 align-middle">
+                    Flags
+                  </td>
+                  <td className="text-right pr-0 py-1 flex justify-end gap-1">
+                    {order.isModified && (
+                      <span className="badge badge-sm badge-outline badge-info">
+                        Modified
+                      </span>
+                    )}
+                    {order.hasVoidedItems && (
+                      <span className="badge badge-sm badge-outline badge-warning">
+                        Voided
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
-        <div className="card-actions justify-end mt-3 flex-wrap gap-1">
+        {/* Action Buttons */}
+        <div className="card-actions justify-end gap-2 mt-auto pt-2 border-t border-base-200">
           <button
-            className="btn btn-xs btn-outline"
+            className="btn btn-sm btn-outline gap-2"
             onClick={() => onViewDetails(order)}
           >
-            <Eye className="w-3 h-3" />
+            <Eye className="w-4 h-4" />
+            View
           </button>
+
           {canModify && (
-            <>
-              <Can do="editOrders">
-                <button
-                  className="btn btn-xs btn-outline btn-info"
-                  onClick={() => onModify(order)}
-                  title="Modify"
-                >
-                  <Edit3 className="w-3 h-3" />
-                </button>
-                <button
-                  className="btn btn-xs btn-outline btn-warning"
-                  onClick={() => onVoid(order)}
-                  title="Void Items"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-                <button
-                  className="btn btn-xs btn-outline"
-                  onClick={() => onUpdatePayment(order)}
-                  title="Update Payment"
-                >
-                  <DollarSign className="w-3 h-3" />
-                </button>
-              </Can>
-              <Can do="cancelOrders">
-                <button
-                  className="btn btn-xs btn-outline btn-error"
-                  onClick={() => onCancel(order)}
-                  title="Cancel"
-                >
-                  <XCircle className="w-3 h-3" />
-                </button>
-              </Can>
-            </>
+            <div className="dropdown dropdown-top dropdown-end">
+              <label
+                tabIndex={0}
+                className="btn btn-sm btn-primary gap-2 text-white"
+              >
+                Actions
+                <MoreVertical className="w-4 h-4" />
+              </label>
+              <ul
+                tabIndex={0}
+                className="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-box w-52 border border-base-200 mb-1"
+              >
+                <Can do="editOrders">
+                  <li>
+                    <a onClick={() => onModify(order)}>
+                      <Edit3 className="w-4 h-4" /> Modify Order
+                    </a>
+                  </li>
+                  <li>
+                    <a onClick={() => onUpdatePayment(order)}>
+                      <DollarSign className="w-4 h-4" /> Update Payment
+                    </a>
+                  </li>
+                  <li>
+                    <a onClick={() => onVoid(order)}>
+                      <Trash2 className="w-4 h-4" /> Void Items
+                    </a>
+                  </li>
+                </Can>
+                <Can do="cancelOrders">
+                  <div className="divider my-1"></div>
+                  <li>
+                    <a
+                      onClick={() => onCancel(order)}
+                      className="text-error hover:bg-error/10"
+                    >
+                      <XCircle className="w-4 h-4" /> Cancel Order
+                    </a>
+                  </li>
+                </Can>
+              </ul>
+            </div>
           )}
         </div>
       </div>
@@ -265,25 +325,57 @@ const OrderCard = ({
   );
 };
 
-const TopSideButtons = () => {
+const TopSideButtons = ({ onRefresh }) => {
   const navigate = useNavigate();
   return (
-    <div className="flex flex-wrap gap-2">
-      <Can do="createOrders">
+    <div className="flex items-center gap-2">
+      {/* Desktop View */}
+      <div className="hidden sm:flex items-center gap-2">
         <button
-          onClick={() => navigate("/app/pos")}
-          className="btn btn-primary btn-sm gap-2"
+          onClick={onRefresh}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Refresh"
         >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">New Order</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
-      </Can>
-      <button
-        onClick={() => window.location.reload()}
-        className="btn btn-ghost btn-sm gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-      </button>
+        <Can do="createOrders">
+          <button
+            onClick={() => navigate("/app/pos")}
+            className="btn btn-primary btn-sm gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Order</span>
+          </button>
+        </Can>
+      </div>
+
+      {/* Mobile View - Single Dropdown */}
+      <div className="sm:hidden dropdown dropdown-end">
+        <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+          <MoreVertical className="w-5 h-5" />
+        </label>
+        <ul
+          tabIndex={0}
+          className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-2 z-[1000] border border-base-200"
+        >
+          <li>
+            <button onClick={onRefresh}>
+              <RefreshCw className="w-4 h-4" /> Refresh Data
+            </button>
+          </li>
+          <div className="divider my-1"></div>
+          <Can do="createOrders">
+            <li>
+              <button
+                onClick={() => navigate("/app/pos")}
+                className="text-primary font-medium"
+              >
+                <Plus className="w-4 h-4" /> New Order
+              </button>
+            </li>
+          </Can>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -400,7 +492,9 @@ const Orders = () => {
   return (
     <TitleCard
       title="Orders Management"
-      TopSideButtons={<TopSideButtons />}
+      TopSideButtons={
+        <TopSideButtons onRefresh={() => dispatch(fetchOrders(filters))} />
+      }
       topMargin="mt-2"
     >
       <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
@@ -408,15 +502,9 @@ const Orders = () => {
           searchText={searchQuery}
           setSearchText={setSearchQuery}
           placeholderText="Search by order # or customer..."
-          styleClass="w-full lg:w-96"
+          styleClass="flex-1 lg:flex-none w-full"
+          inputStyleClass="!h-10"
         />
-        <button
-          onClick={() => dispatch(fetchOrders(filters))}
-          className="btn btn-sm btn-circle"
-          title="Refresh"
-        >
-          <RefreshCw className="w-4 h-4" />
-        </button>
       </div>
 
       <OrderFilters
@@ -449,7 +537,7 @@ const Orders = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredOrders.map((order) => (
             <OrderCard
               key={order._id}
