@@ -115,32 +115,36 @@ const FloorManager = () => {
 
   // Reservation Lifecycle Hook
   const { activeReservation, handleDragStart, handleDragEnd } =
-    useReservationLifecycle(tables, (reservationId, tableId) => {
-      dispatch(
-        updateReservation({
-          id: reservationId,
-          tableId: tableId,
-          status: "confirmed", // Auto confirm when dropped
-        })
-      )
-        .unwrap()
-        .then(() => {
-          dispatch(
-            showNotification({
-              message: "Reservation assigned and confirmed!",
-              status: 1,
-            })
-          );
-        })
-        .catch((err) => {
-          dispatch(
-            showNotification({
-              message: err.message || "Failed to assign reservation",
-              status: 0,
-            })
-          );
-        });
-    });
+    useReservationLifecycle(
+      tables,
+      (reservationId, tableId) => {
+        dispatch(
+          updateReservation({
+            id: reservationId,
+            tableId: tableId,
+            status: "confirmed", // Auto confirm when dropped
+          })
+        )
+          .unwrap()
+          .then(() => {
+            dispatch(
+              showNotification({
+                message: "Reservation assigned and confirmed!",
+                status: 1,
+              })
+            );
+          })
+          .catch((err) => {
+            dispatch(
+              showNotification({
+                message: err.message || "Failed to assign reservation",
+                status: 0,
+              })
+            );
+          });
+      },
+      stageRef // Pass stageRef for coordinate translation
+    );
 
   // DnD Sensors
   const sensors = useSensors(

@@ -181,13 +181,6 @@ function Login() {
                 <button type="submit" className={`btn mt-2 w-full btn-primary`}>
                   <span className={`${loading ? "loading" : ""}`}>Login</span>
                 </button>
-
-                <div className="text-center mt-4">
-                  Don't have an account?{" "}
-                  <Link className="text-primary hover:underline" to="/register">
-                    Register
-                  </Link>
-                </div>
               </form>
             ) : (
               <PinLogin
@@ -201,6 +194,12 @@ function Login() {
                 }}
               />
             )}
+          </div>
+          <div className="text-center mt-4">
+            Don't have an account?{" "}
+            <Link className="text-primary hover:underline" to="/register">
+              Register
+            </Link>
           </div>
         </div>
       </div>
