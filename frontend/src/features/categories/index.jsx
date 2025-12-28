@@ -15,7 +15,11 @@ import {
   PlusCircle,
   RefreshCw,
   MoreVertical,
+  Upload,
+  Download,
 } from "lucide-react";
+import importService from "../../services/importService";
+import { showNotification } from "../common/headerSlice";
 import SearchBar from "../../components/Input/SearchBar";
 import { useAuth } from "../../utils/permission";
 import Can from "../../components/Auth/Can";
@@ -35,8 +39,38 @@ const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
     );
   };
 
+  const openImportWizard = () => {
+    dispatch(
+      openModal({
+        title: "Import Categories",
+        bodyType: MODAL_BODY_TYPES.IMPORT_WIZARD,
+        size: "lg",
+        extraObject: {
+          type: "category",
+          title: "Category",
+        },
+      })
+    );
+  };
+
   const onRefresh = () => {
     dispatch(fetchAllCategories());
+  };
+
+  const handleExport = async () => {
+    try {
+      await importService.exportFile("category", "csv");
+      dispatch(
+        showNotification({
+          message: "Export downloaded successfully!",
+          status: 1,
+        })
+      );
+    } catch (err) {
+      dispatch(
+        showNotification({ message: "Export failed: " + err, status: 0 })
+      );
+    }
   };
 
   return (
@@ -44,12 +78,28 @@ const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
       {/* Desktop View */}
       <div className="hidden sm:flex items-center gap-2">
         <button
+          onClick={handleExport}
+          className="btn btn-ghost btn-sm btn-circle"
+          title="Export Categories"
+        >
+          <Download className="w-4 h-4" />
+        </button>
+        <button
           onClick={onRefresh}
           className="btn btn-ghost btn-sm btn-circle"
           title="Refresh"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
+        <Can do="createCategories">
+          <button
+            onClick={openImportWizard}
+            className="btn btn-ghost btn-sm btn-circle"
+            title="Import Categories"
+          >
+            <Upload className="w-4 h-4" />
+          </button>
+        </Can>
         <Can do="createCategories">
           <button
             onClick={openAddNewCategory}
@@ -75,6 +125,18 @@ const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
               <RefreshCw className="w-4 h-4" /> Refresh Data
             </button>
           </li>
+          <li>
+            <button onClick={handleExport}>
+              <Download className="w-4 h-4" /> Export Categories
+            </button>
+          </li>
+          <Can do="createCategories">
+            <li>
+              <button onClick={openImportWizard}>
+                <Upload className="w-4 h-4" /> Import Categories
+              </button>
+            </li>
+          </Can>
           <div className="divider my-1"></div>
           <Can do="createCategories">
             <li>

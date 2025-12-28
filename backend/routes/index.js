@@ -48,6 +48,7 @@ router.use("/tables", require("./tableRoutes"));
 router.use("/reservations", require("./reservationRoutes"));
 router.use("/analytics", require("./analyticsRoutes"));
 router.use("/reports", require("./reportRoutes"));
+router.use("/import", require("./importExportRoutes"));
 router.use("/stores", require("./storeRoutes"));
 router.use("/organizations", require("./organizationRoutes"));
 router.use("/payments", require("./paymentRoutes"));
