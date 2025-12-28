@@ -1,5 +1,5 @@
 // frontend/src/features/expenses/expensesSlice.js
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const initialState = {

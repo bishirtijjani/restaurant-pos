@@ -1,6 +1,6 @@
 // frontend/src/features/ultraFastPOS/ultraFastPOSSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios";
 
 const initialState = {
   keyboardSettings: null,

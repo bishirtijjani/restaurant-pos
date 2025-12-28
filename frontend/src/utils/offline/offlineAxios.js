@@ -3,6 +3,7 @@ import axios from "axios";
 import offlineStorage from "./storage";
 import { syncQueue } from "./syncQueue";
 import { connectionMonitor } from "./connectionMonitor";
+import store from "../../app/store"; // Import store to access state
 
 // Generate temporary ID for offline items
 const generateTempId = () =>
@@ -33,9 +34,9 @@ function getStoreNameFromUrl(url) {
     "/api/general-settings": "settings",
   };
 
-  for (const [path, store] of Object.entries(urlMap)) {
+  for (const [path, storeName] of Object.entries(urlMap)) {
     if (url.includes(path)) {
-      return store;
+      return storeName;
     }
   }
 
@@ -45,6 +46,22 @@ function getStoreNameFromUrl(url) {
 // Request interceptor
 axios.interceptors.request.use(
   async (config) => {
+    // 1. Inject Authorization Token
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.authorization = `Bearer ${token}`;
+    }
+
+    // 2. Inject Store ID (Context)
+    // Try to get from Redux first, then localStorage
+    const state = store.getState();
+    const activeStoreId =
+      state.commonStore?.activeStoreId || localStorage.getItem("activeStoreId");
+
+    if (activeStoreId) {
+      config.headers["x-store-id"] = activeStoreId;
+    }
+
     // If online, proceed normally
     if (connectionMonitor.isOnline()) {
       return config;
@@ -56,14 +73,14 @@ axios.interceptors.request.use(
       config.url
     );
 
-    // Check for duplicate request
     const signature = getRequestSignature(config);
-    if (processedRequests.has(signature)) {
-      console.log("⚠️ Duplicate request detected, skipping:", signature);
-      const error = new Error("Duplicate request blocked");
-      error.isDuplicate = true;
-      config.adapter = () => Promise.reject(error);
-      return config;
+
+    // SKIP offline queue for sync manager requests
+    if (config.headers["x-sync-request"]) {
+      console.log(
+        "⚠️ Sync request failed (offline) - rejecting without queueing"
+      );
+      return Promise.reject(new Error("Sync blocked - offline"));
     }
 
     const storeName = getStoreNameFromUrl(config.url);

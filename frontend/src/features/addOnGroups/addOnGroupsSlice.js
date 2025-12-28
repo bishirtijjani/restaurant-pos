@@ -1,6 +1,6 @@
 // frontend/src/features/addOnGroups/addOnGroupsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios";
 
 const API_URL = "/api/add-on-groups"; // Fixed: matches backend route
 

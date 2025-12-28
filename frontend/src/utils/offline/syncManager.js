@@ -1,5 +1,5 @@
 // frontend/src/utils/offline/syncManager.js
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios"; // Use offlineAxios for interceptor magic
 import offlineStorage from "./storage";
 import { syncQueue } from "./syncQueue";
 import store from "../../app/store";
@@ -10,6 +10,18 @@ export class SyncManager {
     this.syncing = false;
     this.syncInterval = null;
     this.listeners = new Set();
+    this.stores = [
+      "categories",
+      "menuItems",
+      "orders",
+      "customers",
+      "suppliers",
+      "expenses",
+      "inventory",
+      "purchaseOrders",
+      "users",
+      "settings",
+    ];
   }
 
   startAutoSync(intervalMs = 30000) {
@@ -18,6 +30,7 @@ export class SyncManager {
     }
 
     this.syncInterval = setInterval(() => {
+      // Basic online check, robust check happen in axios
       if (navigator.onLine) {
         this.syncAll();
       }
@@ -36,12 +49,10 @@ export class SyncManager {
   }
 
   async syncAll() {
-    // Check if user is logged in
     const state = store.getState();
     const token = state.auth?.token;
-    
+
     if (!token || isTokenExpired(token)) {
-      // console.log("Sync skipped: Not logged in or token expired");
       return;
     }
 
@@ -54,10 +65,10 @@ export class SyncManager {
     this.notifyListeners({ type: "sync:start" });
 
     try {
-      // Push queued operations first
+      // 1. Push changes (up)
       await this.pushToServer();
 
-      // Then pull latest data
+      // 2. Pull changes (down) in clear, single batch
       await this.pullFromServer();
 
       this.notifyListeners({ type: "sync:complete", success: true });
@@ -73,70 +84,73 @@ export class SyncManager {
     }
   }
 
+  // --- BATCH PULL IMPLEMENTATION ---
   async pullFromServer() {
-    const stores = [
-      "categories",
-      "menuItems",
-      "orders",
-      "customers",
-      "suppliers",
-      "expenses",
-      "inventory",
-      "purchaseOrders",
-      "users",
-      "settings",
-    ];
-
-    for (const storeName of stores) {
-      try {
-        await this.pullStore(storeName);
-      } catch (error) {
-        console.error(`Failed to pull ${storeName}:`, error);
-        
-        // If we get a 401, stop the loop immediately to prevent request storm
-        if (error.response?.status === 401) {
-             console.log("Aborting sync loop due to authentication failure");
-             throw error; // Re-throw to stop syncAll
+    try {
+      // 1. Collect last sync timestamps for all stores
+      const lastSyncMap = {};
+      for (const storeName of this.stores) {
+        const lastSync = await offlineStorage.getLastSync(storeName);
+        if (lastSync) {
+          lastSyncMap[storeName] = lastSync;
         }
       }
+
+      // 2. Single Batch Request
+      // Uses offlineAxios but we might want to bypass the interceptor to avoid 2x logging?
+      // No, we keep it for auth header injection
+      const response = await axios.post("/api/sync/pull", {
+        lastSync: lastSyncMap,
+      });
+
+      const { changes, timestamp } = response.data;
+
+      // 3. Process changes for each store
+      for (const [storeName, items] of Object.entries(changes)) {
+        if (items && items.length > 0) {
+          await this.processStoreUpdates(storeName, items, timestamp);
+        } else {
+          // Even if no items, update timestamp so we don't query old data next time
+          await offlineStorage.setLastSync(storeName, timestamp);
+        }
+      }
+    } catch (error) {
+      console.error("Batch pull failed:", error);
+      // If 401, it will be handled by axios interceptors eventually or UI
     }
   }
 
-  async pullStore(storeName) {
-    const endpoint = this.getEndpoint(storeName);
-    if (!endpoint) return;
-
-    const lastSync = await offlineStorage.getLastSync(storeName);
-
+  async processStoreUpdates(storeName, items, newSyncTimestamp) {
     try {
-      const response = await axios.get(endpoint, {
-        params: lastSync ? { since: lastSync } : {},
-      });
+      // Bulk update IndexedDB
+      await offlineStorage.bulkSet(storeName, items);
 
-      const items = response.data.data || response.data;
+      // Update sync timestamp
+      await offlineStorage.setLastSync(storeName, newSyncTimestamp);
 
-      if (Array.isArray(items)) {
-        await offlineStorage.bulkSet(storeName, items);
-        await offlineStorage.setLastSync(storeName);
-
-        for (const item of items) {
-          await offlineStorage.markSynced(storeName, item._id || item.id);
-        }
-
-        // Dispatch to Redux to update UI
-        this.dispatchToRedux(storeName, items);
+      // Mark all as synced
+      for (const item of items) {
+        await offlineStorage.markSynced(storeName, item._id || item.id);
       }
+
+      // Serialize dates for Redux (Redux Toolkit warns about non-serializable data)
+      const serializedItems = items.map((item) =>
+        JSON.parse(JSON.stringify(item))
+      );
+
+      // Dispatch to Redux
+      this.dispatchToRedux(storeName, serializedItems);
 
       this.notifyListeners({
         type: "pull:complete",
         store: storeName,
         count: items.length,
       });
-    } catch (error) {
-      console.error(`Pull failed for ${storeName}:`, error);
-      throw error;
+    } catch (e) {
+      console.error(`Failed to process updates for ${storeName}`, e);
     }
   }
+  // ---------------------------------
 
   async pushToServer() {
     const pending = await syncQueue.getPending();
@@ -157,8 +171,20 @@ export class SyncManager {
           operation: operation.type,
         });
       } catch (error) {
-        console.error("Operation failed:", operation, error);
+        // CONFLICT HANDLING (409)
+        if (error.response?.status === 409) {
+          console.warn("Conflict detected for operation:", operation);
+          await syncQueue.markFailed(operation.id, error, "conflict");
+          // We do NOT increment attempts for conflicts; they need manual resolution
+          this.notifyListeners({
+            type: "sync:conflict",
+            operation: operation,
+            error: "Data conflict detected",
+          });
+          continue;
+        }
 
+        console.error("Operation failed:", operation, error);
         operation.attempts += 1;
 
         if (operation.attempts >= 3) {
@@ -181,28 +207,32 @@ export class SyncManager {
 
     switch (method) {
       case "POST":
-        response = await axios.post(endpoint, data);
+        response = await axios.post(endpoint, data, {
+          headers: { "x-sync-request": "true" },
+        });
         break;
       case "PUT":
-        response = await axios.put(endpoint, data);
+        response = await axios.put(endpoint, data, {
+          headers: { "x-sync-request": "true" },
+        });
         break;
       case "PATCH":
-        response = await axios.patch(endpoint, data);
+        response = await axios.patch(endpoint, data, {
+          headers: { "x-sync-request": "true" },
+        });
         break;
       case "DELETE":
-        response = await axios.delete(endpoint);
-
-        // For DELETE, manually set response data
+        response = await axios.delete(endpoint, {
+          headers: { "x-sync-request": "true" },
+        });
         response.data = { success: true, id: itemId };
         break;
       default:
         throw new Error(`Unsupported method: ${method}`);
     }
 
-    // Update local storage with server response
     if (response.data) {
       const serverData = response.data.data || response.data;
-
       if (method === "DELETE") {
         await offlineStorage.remove(storeName, itemId);
       } else {
@@ -220,12 +250,8 @@ export class SyncManager {
 
   async replaceTempId(operation, realData) {
     const { storeName, tempId } = operation;
-
     try {
-      // Remove temp item from storage
       await offlineStorage.remove(storeName, tempId);
-
-      // Add real item
       if (realData._id) {
         await offlineStorage.set(storeName, realData._id, {
           ...realData,
@@ -233,8 +259,6 @@ export class SyncManager {
           _offline: false,
         });
       }
-
-      // Dispatch update to Redux
       this.dispatchTempIdReplacement(storeName, tempId, realData);
     } catch (error) {
       console.error("Failed to replace temp ID:", error);
@@ -245,13 +269,13 @@ export class SyncManager {
     const actionMap = {
       categories: "categories/fetchAll/fulfilled",
       menuItems: "menuItems/fetchAllMenuItems/fulfilled",
-      orders: "orders/fetchAllOrders/fulfilled",
+      orders: "orders/fetchOrders/fulfilled",
       customers: "customers/fetchAllCustomers/fulfilled",
-      suppliers: "suppliers/fetchAll/fulfilled",
+      suppliers: "suppliers/fetchAllSuppliers/fulfilled",
       expenses: "expenses/fetchAll/fulfilled",
       inventory: "inventory/fetchAll/fulfilled",
       purchaseOrders: "purchaseOrders/fetchAll/fulfilled",
-      users: "users/fetchAll/fulfilled",
+      users: "users/fetchAllUsers/fulfilled",
     };
 
     const actionType = actionMap[storeName];
@@ -286,23 +310,6 @@ export class SyncManager {
     }
   }
 
-  getEndpoint(storeName) {
-    const endpoints = {
-      categories: "/api/categories",
-      menuItems: "/api/menu-items",
-      orders: "/api/orders",
-      customers: "/api/customers",
-      suppliers: "/api/suppliers",
-      expenses: "/api/expenses",
-      inventory: "/api/inventory",
-      purchaseOrders: "/api/purchase-orders",
-      users: "/api/users",
-      settings: "/api/general-settings",
-    };
-
-    return endpoints[storeName];
-  }
-
   addListener(callback) {
     this.listeners.add(callback);
     return () => this.listeners.delete(callback);
@@ -310,6 +317,29 @@ export class SyncManager {
 
   notifyListeners(event) {
     this.listeners.forEach((callback) => callback(event));
+  }
+  async retryFailedOperations() {
+    const failed = await syncQueue.getFailed();
+    if (failed.length === 0) return;
+
+    console.log(`Retrying ${failed.length} failed operations...`);
+
+    // Move back to pending queue
+    for (const op of failed) {
+      // Reset attempts so it gets a fresh chance
+      op.attempts = 0;
+      await syncQueue.enqueue(op);
+      // Remove from failed queue
+      await syncQueue.removeFailed(op.id);
+    }
+
+    // Trigger sync immediately
+    this.pushToServer();
+
+    this.notifyListeners({
+      type: "retry:started",
+      count: failed.length,
+    });
   }
 }
 

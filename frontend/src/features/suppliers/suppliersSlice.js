@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios";
 
 // API call to fetch suppliers from the backend
 export const fetchAllSuppliers = createAsyncThunk(
@@ -62,7 +62,19 @@ const initialState = {
 const suppliersSlice = createSlice({
   name: "suppliers",
   initialState,
-  reducers: {},
+  reducers: {
+    replaceTempId: (state, action) => {
+      const { tempId, realData } = action.payload;
+      const index = state.suppliers.findIndex((item) => item._id === tempId);
+      if (index !== -1) {
+        state.suppliers[index] = {
+          ...realData,
+          _synced: true,
+          _offline: false,
+        };
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Fetch all suppliers

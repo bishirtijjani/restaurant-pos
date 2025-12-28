@@ -1,5 +1,5 @@
 // frontend/src/features/menuItems/menuItemsSlice.js
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -82,11 +82,11 @@ const menuItemsSlice = createSlice({
   name: "menuItems",
   initialState,
   reducers: {
-    // ADD THIS - was missing!
+    // Replace temp ID with real one from sync
     replaceTempId: (state, action) => {
       const { tempId, realData } = action.payload;
       const index = state.menuItems.findIndex((item) => item._id === tempId);
-      if (index >= 0) {
+      if (index !== -1) {
         state.menuItems[index] = {
           ...realData,
           _synced: true,

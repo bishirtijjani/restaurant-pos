@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../../utils/offline/offlineAxios";
 
 export const fetchInventoryData = createAsyncThunk(
   "inventoryAnalytics/fetchInventoryData",
@@ -65,9 +65,11 @@ export const inventoryAnalyticsSlice = createSlice({
   },
 });
 
-export const { setInventoryData, setInventoryLoading } = inventoryAnalyticsSlice.actions;
+export const { setInventoryData, setInventoryLoading } =
+  inventoryAnalyticsSlice.actions;
 
-export const selectInventoryOverview = (state) => state.inventoryAnalytics.overview;
+export const selectInventoryOverview = (state) =>
+  state.inventoryAnalytics.overview;
 export const selectInventoryTrends = (state) => state.inventoryAnalytics.trends;
 export const selectWasteAnalytics = (state) => state.inventoryAnalytics.waste;
 export const selectLowStockItems = (state) => state.inventoryAnalytics.lowStock;

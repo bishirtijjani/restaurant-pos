@@ -77,24 +77,281 @@ const Header = () => {
           </nav>
           {/* Desktop: Theme Toggle and CTA Buttons */}
           <div className="hidden lg:flex items-center gap-4">
-            {/* Light and dark theme selection toggle */}
-            <label className="swap swap-rotate">
-              <input
-                type="checkbox"
-                className="theme-controller"
-                data-toggle-theme="dark,light"
-              />
-              <SunIcon
-                data-set-theme="light"
-                data-act-class="ACTIVECLASS"
-                className="swap-off fill-current w-6 h-6"
-              />
-              <MoonIcon
-                data-set-theme="dark"
-                data-act-class="ACTIVECLASS"
-                className="swap-on fill-current w-6 h-6"
-              />
-            </label>
+            {/* Theme selector dropdown */}
+            <div className="dropdown dropdown-end">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-ghost btn-circle"
+              >
+                {currentTheme === "dark" ? (
+                  <MoonIcon className="w-5 h-5" />
+                ) : (
+                  <SunIcon className="w-5 h-5" />
+                )}
+              </div>
+              <ul
+                tabIndex={0}
+                className="dropdown-content z-[60] p-3 shadow-2xl bg-base-100 rounded-box w-[600px] mt-2 grid grid-cols-4 gap-1"
+              >
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="light"
+                  >
+                    ☀️ Light
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="dark"
+                  >
+                    🌙 Dark
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="cupcake"
+                  >
+                    🧁 Cupcake
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="bumblebee"
+                  >
+                    🐝 Bumblebee
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="emerald"
+                  >
+                    💚 Emerald
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="corporate"
+                  >
+                    🏢 Corporate
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="synthwave"
+                  >
+                    🌃 Synthwave
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="retro"
+                  >
+                    📼 Retro
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="cyberpunk"
+                  >
+                    🤖 Cyberpunk
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="valentine"
+                  >
+                    💝 Valentine
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="halloween"
+                  >
+                    🎃 Halloween
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="garden"
+                  >
+                    🌸 Garden
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="forest"
+                  >
+                    🌲 Forest
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="aqua"
+                  >
+                    🌊 Aqua
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="lofi"
+                  >
+                    📻 Lofi
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="pastel"
+                  >
+                    🎨 Pastel
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="fantasy"
+                  >
+                    🧚 Fantasy
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="wireframe"
+                  >
+                    📐 Wireframe
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="black"
+                  >
+                    ⚫ Black
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="luxury"
+                  >
+                    💎 Luxury
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="dracula"
+                  >
+                    🧛 Dracula
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="cmyk"
+                  >
+                    🖨️ CMYK
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="autumn"
+                  >
+                    🍂 Autumn
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="business"
+                  >
+                    💼 Business
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="acid"
+                  >
+                    🧪 Acid
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="lemonade"
+                  >
+                    🍋 Lemonade
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="night"
+                  >
+                    🌃 Night
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="coffee"
+                  >
+                    ☕ Coffee
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="winter"
+                  >
+                    ❄️ Winter
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="dim"
+                  >
+                    🔅 Dim
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="nord"
+                  >
+                    🏔️ Nord
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="btn btn-xs btn-block btn-ghost justify-start px-2 py-2 text-xs"
+                    data-set-theme="sunset"
+                  >
+                    🌅 Sunset
+                  </button>
+                </li>
+              </ul>
+            </div>
 
             <Link
               to="/login"
@@ -150,28 +407,294 @@ const Header = () => {
                 Support
               </a>
               <div className="pt-4 border-t border-base-content/10 space-y-2">
-                {/* Mobile: Theme Toggle */}
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-base-content">Theme</span>
-                                    <label className="swap swap-rotate">
-                                      <input
-                                        type="checkbox"
-                                        className="theme-controller"
-                                        data-toggle-theme="dark,light"
-                                      />
-                                      <SunIcon
-                                        data-set-theme="light"
-                                        data-act-class="ACTIVECLASS"
-                                        className="swap-off fill-current w-6 h-6"
-                                      />
-                                      <MoonIcon
-                                        data-set-theme="dark"
-                                        data-act-class="ACTIVECLASS"
-                                        className="swap-on fill-current w-6 h-6"
-                                      />
-                                    </label>
+                {/* Mobile: Theme Selector */}
+                <div className="py-2">
+                  <span className="text-base-content block mb-2">Theme</span>
+                  <div className="dropdown dropdown-end w-full">
+                    <div
+                      tabIndex={0}
+                      role="button"
+                      className="btn btn-ghost btn-block justify-start"
+                    >
+                      {currentTheme === "dark" ? (
+                        <>
+                          <MoonIcon className="w-5 h-5 mr-2" />
+                          <span className="capitalize">
+                            {currentTheme || "Select Theme"}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <SunIcon className="w-5 h-5 mr-2" />
+                          <span className="capitalize">
+                            {currentTheme || "Select Theme"}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <ul
+                      tabIndex={0}
+                      className="dropdown-content z-[1] p-2 shadow-2xl bg-base-300 rounded-box w-full max-h-96 overflow-y-auto"
+                    >
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="light"
+                        >
+                          ☀️ Light
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="dark"
+                        >
+                          🌙 Dark
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="cupcake"
+                        >
+                          🧁 Cupcake
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="bumblebee"
+                        >
+                          🐝 Bumblebee
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="emerald"
+                        >
+                          💚 Emerald
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="corporate"
+                        >
+                          🏢 Corporate
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="synthwave"
+                        >
+                          🌃 Synthwave
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="retro"
+                        >
+                          📼 Retro
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="cyberpunk"
+                        >
+                          🤖 Cyberpunk
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="valentine"
+                        >
+                          💝 Valentine
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="halloween"
+                        >
+                          🎃 Halloween
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="garden"
+                        >
+                          🌸 Garden
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="forest"
+                        >
+                          🌲 Forest
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="aqua"
+                        >
+                          🌊 Aqua
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="lofi"
+                        >
+                          📻 Lofi
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="pastel"
+                        >
+                          🎨 Pastel
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="fantasy"
+                        >
+                          🧚 Fantasy
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="wireframe"
+                        >
+                          📐 Wireframe
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="black"
+                        >
+                          ⚫ Black
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="luxury"
+                        >
+                          💎 Luxury
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="dracula"
+                        >
+                          🧛 Dracula
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="cmyk"
+                        >
+                          🖨️ CMYK
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="autumn"
+                        >
+                          🍂 Autumn
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="business"
+                        >
+                          💼 Business
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="acid"
+                        >
+                          🧪 Acid
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="lemonade"
+                        >
+                          🍋 Lemonade
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="night"
+                        >
+                          🌃 Night
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="coffee"
+                        >
+                          ☕ Coffee
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="winter"
+                        >
+                          ❄️ Winter
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="dim"
+                        >
+                          🔅 Dim
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="nord"
+                        >
+                          🏔️ Nord
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="btn btn-sm btn-block btn-ghost justify-start"
+                          data-set-theme="sunset"
+                        >
+                          🌅 Sunset
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-
                 <Link
                   to="/login"
                   className="block w-full text-center py-2 text-base-content hover:text-primary transition-colors duration-200"

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../../utils/offline/offlineAxios";
 
 export const fetchPaymentData = createAsyncThunk(
   "paymentAnalytics/fetchPaymentData",
@@ -57,10 +57,12 @@ export const paymentAnalyticsSlice = createSlice({
   },
 });
 
-export const { setPaymentData, setPaymentLoading } = paymentAnalyticsSlice.actions;
+export const { setPaymentData, setPaymentLoading } =
+  paymentAnalyticsSlice.actions;
 
 export const selectPaymentOverview = (state) => state.paymentAnalytics.overview;
-export const selectPaymentMethods = (state) => state.paymentAnalytics.paymentMethods;
+export const selectPaymentMethods = (state) =>
+  state.paymentAnalytics.paymentMethods;
 export const selectRefunds = (state) => state.paymentAnalytics.refunds;
 
 export default paymentAnalyticsSlice.reducer;

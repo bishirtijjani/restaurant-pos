@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../../utils/offline/offlineAxios";
 
 // API base URL - adjust as needed
 const API_URL = "/api/general-settings";

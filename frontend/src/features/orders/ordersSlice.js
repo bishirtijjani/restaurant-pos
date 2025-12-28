@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios";
 
 // API base URL
 const API_URL = "/api/orders";
@@ -199,6 +199,18 @@ const ordersSlice = createSlice({
     },
     clearCurrentOrder: (state) => {
       state.currentOrder = null;
+    },
+    replaceTempId: (state, action) => {
+      const { tempId, realData } = action.payload;
+      // Update in orders list
+      const index = state.orders.findIndex((order) => order._id === tempId);
+      if (index !== -1) {
+        state.orders[index] = realData;
+      }
+      // Update current order if matched
+      if (state.currentOrder && state.currentOrder._id === tempId) {
+        state.currentOrder = realData;
+      }
     },
   },
   extraReducers: (builder) => {

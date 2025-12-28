@@ -154,30 +154,198 @@ function Header() {
                 <div className="divider my-1"></div>
                 <li className="menu-title">Theme</li>
                 <li>
-                  <div className="grid grid-cols-2 gap-1 p-2">
+                  <div className="grid grid-cols-2 gap-1 p-2 max-h-64 overflow-y-auto">
                     <button
                       className="btn btn-xs btn-outline"
                       data-set-theme="light"
                     >
-                      Light
+                      ☀️ Light
                     </button>
                     <button
                       className="btn btn-xs btn-outline"
                       data-set-theme="dark"
                     >
-                      Dark
+                      🌙 Dark
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="cupcake"
+                    >
+                      🧁 Cupcake
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="bumblebee"
+                    >
+                      🐝 Bumblebee
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="emerald"
+                    >
+                      💚 Emerald
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="corporate"
+                    >
+                      🏢 Corporate
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="synthwave"
+                    >
+                      🌃 Synthwave
                     </button>
                     <button
                       className="btn btn-xs btn-outline"
                       data-set-theme="retro"
                     >
-                      Retro
+                      📼 Retro
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="cyberpunk"
+                    >
+                      🤖 Cyberpunk
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="valentine"
+                    >
+                      💝 Valentine
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="halloween"
+                    >
+                      🎃 Halloween
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="garden"
+                    >
+                      🌸 Garden
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="forest"
+                    >
+                      🌲 Forest
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="aqua"
+                    >
+                      🌊 Aqua
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="lofi"
+                    >
+                      📻 Lofi
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="pastel"
+                    >
+                      🎨 Pastel
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="fantasy"
+                    >
+                      🧚 Fantasy
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="wireframe"
+                    >
+                      📐 Wireframe
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="black"
+                    >
+                      ⚫ Black
                     </button>
                     <button
                       className="btn btn-xs btn-outline"
                       data-set-theme="luxury"
                     >
-                      Luxury
+                      💎 Luxury
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="dracula"
+                    >
+                      🧛 Dracula
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="cmyk"
+                    >
+                      🖨️ CMYK
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="autumn"
+                    >
+                      🍂 Autumn
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="business"
+                    >
+                      💼 Business
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="acid"
+                    >
+                      🧪 Acid
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="lemonade"
+                    >
+                      🍋 Lemonade
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="night"
+                    >
+                      🌃 Night
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="coffee"
+                    >
+                      ☕ Coffee
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="winter"
+                    >
+                      ❄️ Winter
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="dim"
+                    >
+                      🔅 Dim
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="nord"
+                    >
+                      🏔️ Nord
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      data-set-theme="sunset"
+                    >
+                      🌅 Sunset
                     </button>
                   </div>
                 </li>
@@ -238,42 +406,294 @@ function Header() {
               </div>
               <ul
                 tabIndex={0}
-                className="dropdown-content z-[6000] menu p-2 shadow-lg bg-base-100 rounded-box w-40 mt-2"
+                className="dropdown-content z-[6000] menu p-3 shadow-2xl bg-base-100 rounded-box w-[600px] mt-2 grid grid-cols-4 gap-1"
               >
                 <li>
-                  <a data-set-theme="light" data-act-class="active">
-                    {" "}
-                    Light{" "}
+                  <a
+                    data-set-theme="light"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    ☀️ Light
                   </a>
                 </li>
                 <li>
-                  <a data-set-theme="dark" data-act-class="active">
-                    {" "}
-                    Dark{" "}
+                  <a
+                    data-set-theme="dark"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🌙 Dark
                   </a>
                 </li>
                 <li>
-                  <a data-set-theme="retro" data-act-class="active">
-                    {" "}
-                    Retro{" "}
+                  <a
+                    data-set-theme="cupcake"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🧁 Cupcake
                   </a>
                 </li>
                 <li>
-                  <a data-set-theme="lofi" data-act-class="active">
-                    {" "}
-                    Lofi{" "}
+                  <a
+                    data-set-theme="bumblebee"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🐝 Bumblebee
                   </a>
                 </li>
                 <li>
-                  <a data-set-theme="black" data-act-class="active">
-                    {" "}
-                    Black{" "}
+                  <a
+                    data-set-theme="emerald"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    💚 Emerald
                   </a>
                 </li>
                 <li>
-                  <a data-set-theme="luxury" data-act-class="active">
-                    {" "}
-                    Luxury{" "}
+                  <a
+                    data-set-theme="corporate"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🏢 Corporate
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="synthwave"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🌃 Synthwave
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="retro"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    📼 Retro
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="cyberpunk"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🤖 Cyberpunk
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="valentine"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    💝 Valentine
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="halloween"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🎃 Halloween
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="garden"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🌸 Garden
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="forest"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🌲 Forest
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="aqua"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🌊 Aqua
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="lofi"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    📻 Lofi
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="pastel"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🎨 Pastel
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="fantasy"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🧚 Fantasy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="wireframe"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    📐 Wireframe
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="black"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    ⚫ Black
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="luxury"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    💎 Luxury
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="dracula"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🧛 Dracula
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="cmyk"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🖨️ CMYK
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="autumn"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🍂 Autumn
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="business"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    💼 Business
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="acid"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🧪 Acid
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="lemonade"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🍋 Lemonade
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="night"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🌃 Night
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="coffee"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    ☕ Coffee
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="winter"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    ❄️ Winter
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="dim"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🔅 Dim
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="nord"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🏔️ Nord
+                  </a>
+                </li>
+                <li>
+                  <a
+                    data-set-theme="sunset"
+                    data-act-class="active"
+                    className="py-2 text-xs"
+                  >
+                    🌅 Sunset
                   </a>
                 </li>
               </ul>

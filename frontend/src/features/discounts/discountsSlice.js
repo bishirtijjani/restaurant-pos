@@ -1,6 +1,6 @@
 // frontend/src/features/discounts/discountsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios";
 
 const API_URL = "/api/discounts";
 const PROMO_API_URL = "/api/promo-codes";

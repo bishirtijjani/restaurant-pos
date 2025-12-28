@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { startOfMonth, endOfDay, subDays } from "date-fns";
-import axios from "axios";
+import axios from "../../../utils/offline/offlineAxios";
 
 export const fetchOverviewData = createAsyncThunk(
   "analyticsGlobal/fetchOverviewData",
@@ -76,8 +76,10 @@ export const { setDateRange, setGlobalFilter, resetGlobalFilters, setLoading } =
   analyticsGlobalSlice.actions;
 
 export const selectDateRange = (state) => state.analyticsGlobal.dateRange;
-export const selectGlobalFilters = (state) => state.analyticsGlobal.globalFilters;
-export const selectAnalyticsLoading = (state) => state.analyticsGlobal.ui.isLoading;
+export const selectGlobalFilters = (state) =>
+  state.analyticsGlobal.globalFilters;
+export const selectAnalyticsLoading = (state) =>
+  state.analyticsGlobal.ui.isLoading;
 export const selectOverviewData = (state) => state.analyticsGlobal.overview;
 
 export default analyticsGlobalSlice.reducer;

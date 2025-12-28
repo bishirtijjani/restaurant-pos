@@ -141,9 +141,25 @@ export const offlineStorage = {
     if (!store) throw new Error(`Store ${storeName} not found`);
 
     const items = [];
+    const limit = 5000; // Safeguard against memory explosion
+    let count = 0;
+
     await store.iterate((value) => {
-      items.push(value.data);
+      if (count < limit) {
+        items.push(value.data);
+        count++;
+      } else {
+        // Stop iteration - localforage iterate supports early exit by returning non-undefined
+        return "LIMIT_REACHED";
+      }
     });
+
+    if (count >= limit) {
+      console.warn(
+        `Storage limit reached for ${storeName}. Only returning first ${limit} items.`
+      );
+    }
+
     return items;
   },
 

@@ -94,11 +94,8 @@ class ImportExportService {
       return null; // Handle empty data in controller
     }
 
-    // Transform data for export (flatten objects if needed, remove internal fields)
-    const exportData = data.map((item) => {
-      const { _id, __v, organizationId, storeId, lastAction, ...rest } = item;
-      return rest; // Customize this per model if needed
-    });
+    // Transform and sanitize data for export
+    const exportData = this.transformForExport(data);
 
     if (format === "csv") {
       return stringify(exportData, { header: true, bom: true });
@@ -110,7 +107,7 @@ class ImportExportService {
         const columns = Object.keys(exportData[0]).map((key) => ({
           header: key,
           key,
-          width: 20,
+          width: 25,
         }));
         sheet.columns = columns;
         sheet.addRows(exportData);
@@ -120,6 +117,38 @@ class ImportExportService {
     } else {
       throw new Error(`Unsupported export format: ${format}`);
     }
+  }
+
+  /**
+   * Cleans data for export: removes internal IDs/meta and formats dates.
+   */
+  transformForExport(data) {
+    return data.map((item) => {
+      const { _id, __v, organizationId, storeId, lastAction, ...rest } = item;
+
+      // Deep clone/transform rest to avoid side effects
+      const cleanItem = {};
+
+      Object.keys(rest).forEach((key) => {
+        let value = rest[key];
+
+        // Format Date objects to ISO strings for consistent readability
+        if (value instanceof Date) {
+          value = value.toISOString().replace("T", " ").split(".")[0]; // YYYY-MM-DD HH:mm:ss
+        } else if (
+          value &&
+          typeof value === "object" &&
+          !Array.isArray(value)
+        ) {
+          // Flatten simple objects if necessary, or stringify
+          value = JSON.stringify(value);
+        }
+
+        cleanItem[key] = value;
+      });
+
+      return cleanItem;
+    });
   }
 
   parseCSV(buffer) {

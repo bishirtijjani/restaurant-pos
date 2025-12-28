@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios";
 
 // Fetch all stores available to the user (detailed list for management)
 export const getStores = createAsyncThunk(

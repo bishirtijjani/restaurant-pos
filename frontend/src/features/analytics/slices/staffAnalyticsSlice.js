@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../../utils/offline/offlineAxios";
 
 export const fetchStaffData = createAsyncThunk(
   "staffAnalytics/fetchStaffData",
@@ -59,7 +59,8 @@ export const staffAnalyticsSlice = createSlice({
 
 export const { setStaffData, setStaffLoading } = staffAnalyticsSlice.actions;
 
-export const selectStaffPerformance = (state) => state.staffAnalytics.performance;
+export const selectStaffPerformance = (state) =>
+  state.staffAnalytics.performance;
 export const selectLaborCost = (state) => state.staffAnalytics.laborCost;
 export const selectStaffList = (state) => state.staffAnalytics.staffList;
 

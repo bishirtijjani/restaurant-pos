@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../utils/offline/offlineAxios";
 
 // API call to fetch users from the backend
 export const fetchAllUsers = createAsyncThunk(
@@ -63,7 +63,19 @@ const initialState = {
 const usersSlice = createSlice({
   name: "users",
   initialState,
-  reducers: {},
+  reducers: {
+    replaceTempId: (state, action) => {
+      const { tempId, realData } = action.payload;
+      const index = state.users.findIndex((item) => item._id === tempId);
+      if (index !== -1) {
+        state.users[index] = {
+          ...realData,
+          _synced: true,
+          _offline: false,
+        };
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Fetch all users

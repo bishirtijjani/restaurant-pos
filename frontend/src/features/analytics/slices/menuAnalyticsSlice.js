@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../../utils/offline/offlineAxios";
 
 export const fetchMenuData = createAsyncThunk(
   "menuAnalytics/fetchMenuData",
@@ -66,8 +66,10 @@ export const menuAnalyticsSlice = createSlice({
 export const { setMenuData, setMenuLoading } = menuAnalyticsSlice.actions;
 
 export const selectMenuMatrix = (state) => state.menuAnalytics.matrix;
-export const selectCategoryPerformance = (state) => state.menuAnalytics.categoryPerformance;
+export const selectCategoryPerformance = (state) =>
+  state.menuAnalytics.categoryPerformance;
 export const selectTopPerformers = (state) => state.menuAnalytics.topPerformers;
-export const selectUnderPerformers = (state) => state.menuAnalytics.underPerformers;
+export const selectUnderPerformers = (state) =>
+  state.menuAnalytics.underPerformers;
 
 export default menuAnalyticsSlice.reducer;

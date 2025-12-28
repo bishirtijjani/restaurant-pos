@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../../utils/offline/offlineAxios";
 
 export const fetchSalesData = createAsyncThunk(
   "salesAnalytics/fetchSalesData",
@@ -69,7 +69,8 @@ export const { setSalesData, setSalesLoading } = salesAnalyticsSlice.actions;
 
 export const selectSalesOverview = (state) => state.salesAnalytics.overview;
 export const selectSalesTrends = (state) => state.salesAnalytics.trends;
-export const selectSalesByOrderType = (state) => state.salesAnalytics.byOrderType;
+export const selectSalesByOrderType = (state) =>
+  state.salesAnalytics.byOrderType;
 export const selectTopSellingItems = (state) => state.salesAnalytics.topItems;
 
 export default salesAnalyticsSlice.reducer;

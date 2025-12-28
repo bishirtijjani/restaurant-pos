@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../../utils/offline/offlineAxios";
 
 export const fetchAdvancedData = createAsyncThunk(
   "advancedAnalytics/fetchAdvancedData",
@@ -59,10 +59,13 @@ export const advancedAnalyticsSlice = createSlice({
   },
 });
 
-export const { setAdvancedData, setAdvancedLoading } = advancedAnalyticsSlice.actions;
+export const { setAdvancedData, setAdvancedLoading } =
+  advancedAnalyticsSlice.actions;
 
 export const selectHeatmapData = (state) => state.advancedAnalytics.heatmap;
-export const selectForecastingData = (state) => state.advancedAnalytics.forecasting;
-export const selectAnomalies = (state) => state.advancedAnalytics.anomalyDetection;
+export const selectForecastingData = (state) =>
+  state.advancedAnalytics.forecasting;
+export const selectAnomalies = (state) =>
+  state.advancedAnalytics.anomalyDetection;
 
 export default advancedAnalyticsSlice.reducer;

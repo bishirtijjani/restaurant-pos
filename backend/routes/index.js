@@ -52,5 +52,6 @@ router.use("/import", require("./importExportRoutes"));
 router.use("/stores", require("./storeRoutes"));
 router.use("/organizations", require("./organizationRoutes"));
 router.use("/payments", require("./paymentRoutes"));
+router.use("/sync", require("./syncRoutes"));
 
 module.exports = router;

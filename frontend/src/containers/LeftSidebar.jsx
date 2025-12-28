@@ -11,6 +11,10 @@ import { useDispatch } from "react-redux";
 import { logoutUser } from "../app/authSlice";
 
 // Helpers
+import { useState } from "react";
+import SyncStatusModal from "../features/common/components/SyncStatusModal";
+import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
+
 const token = localStorage.getItem("token");
 
 function ActiveIndicator({ path }) {
@@ -61,6 +65,7 @@ const SidebarContent = (() => {
 function LeftSidebar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   const closeSidebar = () => {
     const sidebarToggle = document.getElementById("left-sidebar-drawer");
@@ -104,8 +109,19 @@ function LeftSidebar() {
         </div>
         <div className="mt-2 space-y-2 px-2">{SidebarContent}</div>
 
+        {/* Sync Button */}
+        <li className="mt-auto px-2 pb-2">
+          <button
+            className="w-full btn btn-ghost justify-start gap-2 border border-base-300"
+            onClick={() => setIsSyncModalOpen(true)}
+          >
+            <ArrowPathIcon className="h-5 w-5" />
+            Sync Status
+          </button>
+        </li>
+
         {/* Logout Button */}
-        <li className="mt-auto px-2 py-6">
+        <li className="px-2 py-6 pt-2">
           <a
             className="w-full btn bg-error text-white hover:bg-error/90 shadow-md flex items-center justify-center gap-2"
             onClick={logoutUserHandler}
@@ -115,6 +131,10 @@ function LeftSidebar() {
           </a>
         </li>
       </ul>
+      <SyncStatusModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+      />
     </div>
   );
 }

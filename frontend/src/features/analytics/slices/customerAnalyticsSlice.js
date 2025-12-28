@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../../utils/offline/offlineAxios";
 
 export const fetchCustomerData = createAsyncThunk(
   "customerAnalytics/fetchCustomerData",
@@ -63,11 +63,16 @@ export const customerAnalyticsSlice = createSlice({
   },
 });
 
-export const { setCustomerData, setCustomerLoading } = customerAnalyticsSlice.actions;
+export const { setCustomerData, setCustomerLoading } =
+  customerAnalyticsSlice.actions;
 
-export const selectCustomerOverview = (state) => state.customerAnalytics.overview;
-export const selectCustomerRetention = (state) => state.customerAnalytics.retention;
-export const selectCustomerSegmentation = (state) => state.customerAnalytics.segmentation;
-export const selectTopCustomers = (state) => state.customerAnalytics.topCustomers;
+export const selectCustomerOverview = (state) =>
+  state.customerAnalytics.overview;
+export const selectCustomerRetention = (state) =>
+  state.customerAnalytics.retention;
+export const selectCustomerSegmentation = (state) =>
+  state.customerAnalytics.segmentation;
+export const selectTopCustomers = (state) =>
+  state.customerAnalytics.topCustomers;
 
 export default customerAnalyticsSlice.reducer;
