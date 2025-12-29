@@ -1,150 +1,103 @@
-import { motion, useInView } from "framer-motion";
-import { useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { Plus, Minus } from "lucide-react";
 
 export default function FAQ() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [openIndex, setOpenIndex] = useState(null);
 
   const faqs = [
     {
-      question: "How long does setup take?",
-      answer:
-        "Most restaurants complete setup in 10-30 minutes. We guide you through menu creation, tax settings, and staff accounts. If you need help, text us and we'll walk you through it.",
+      q: "Is there really no setup fee?",
+      a: "None. We believe your software should be an investment in growth, not a barrier to entry. You can be live in 15 minutes.",
     },
     {
-      question: "Do I need to buy hardware?",
-      answer:
-        "No. Our software works on any iPad, Android tablet, or existing POS terminal you already own. No expensive proprietary hardware required.",
+      q: "Can I use my existing hardware?",
+      a: "Yes. Codeket runs on any tablet (iPad, Android) or browser. No proprietary hardware lock-in or forced expensive terminal upgrades.",
     },
     {
-      question: "Are there hidden fees?",
-      answer:
-        "$79/month per location. No setup fees, no contracts, no per-transaction fees if you use your own Stripe account. That's it.",
+      q: "How does the offline mode work?",
+      a: "Our local-first architecture stores all transaction data in your browser's persistent storage. If the internet fails, everything keeps running. Once the connection is restored, it automatically syncs with your core database.",
     },
     {
-      question: "What if I need to cancel?",
-      answer:
-        "Cancel anytime. No penalties, no questions asked. We're month-to-month because we believe you should stay because you want to, not because you're locked in.",
-    },
-    {
-      question: "What if I need help?",
-      answer:
-        "Text or call the founder directly. We respond same-day (usually within hours). No ticket systems, no offshore support, no waiting 48 hours for a canned response.",
-    },
-    {
-      question: "What happens if the internet goes down?",
-      answer:
-        "The POS works offline. Orders are saved locally and automatically sync when your connection returns. You never lose a sale.",
-    },
-    {
-      question: "Can I import my existing menu?",
-      answer:
-        "Yes. Upload a CSV or send us your current menu and we'll import it for you at no charge.",
-    },
-    {
-      question: "Do you integrate with my payment processor?",
-      answer:
-        "We support Stripe (and your existing Stripe account). Unlike competitors, we don't force you into our payment processing or charge extra fees on transactions.",
+      q: "What kind of support do I get?",
+      a: "Every pilot customer gets direct access to the founding team. You get a direct line for WhatsApp or calls. We don't do ticket waitlists.",
     },
   ];
 
   return (
-    <section
-      className="section"
-      style={{ backgroundColor: "var(--color-bg-secondary)" }}
-      ref={ref}
-    >
+    <section className="section bg-white py-24" id="faq">
       <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-          style={{ marginBottom: "var(--space-16)" }}
-        >
-          <h2 style={{ marginBottom: "var(--space-4)" }}>
-            Frequently Asked Questions
-          </h2>
-          <p
-            style={{
-              fontSize: "var(--font-size-xl)",
-              color: "var(--color-text-secondary)",
-              maxWidth: "700px",
-              margin: "0 auto",
-            }}
-          >
-            Everything you need to know before getting started.
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          style={{ maxWidth: "800px", margin: "0 auto" }}
-        >
-          {faqs.map((faq, index) => (
-            <div
-              key={index}
-              style={{
-                backgroundColor: "var(--color-bg-primary)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-lg)",
-                marginBottom: "var(--space-4)",
-                overflow: "hidden",
-                transition: "all var(--transition-base)",
-              }}
-            >
-              <button
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "var(--space-6)",
-                  backgroundColor: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  color: "var(--color-text-primary)",
-                  fontSize: "var(--font-size-lg)",
-                  fontWeight: 600,
-                }}
-              >
-                {faq.question}
-                <ChevronDown
-                  size={20}
-                  style={{
-                    transition: "transform var(--transition-base)",
-                    transform:
-                      openIndex === index ? "rotate(180deg)" : "rotate(0deg)",
-                  }}
-                />
-              </button>
-
-              <div
-                style={{
-                  maxHeight: openIndex === index ? "200px" : "0",
-                  overflow: "hidden",
-                  transition: "max-height var(--transition-base)",
-                }}
-              >
-                <div
-                  style={{
-                    padding: "0 var(--space-6) var(--space-6)",
-                    color: "var(--color-text-secondary)",
-                    lineHeight: 1.7,
-                  }}
-                >
-                  {faq.answer}
-                </div>
-              </div>
+        <div className="flex flex-col lg:flex-row gap-16">
+          <div className="lg:w-1/3">
+            <div className="mb-4">
+              <span className="badge">Knowledge Base</span>
             </div>
-          ))}
-        </motion.div>
+            <h2 className="text-4xl font-extrabold mb-6 tracking-tight text-[--color-text-primary] leading-tight">
+              Common <br className="hidden lg:block" /> Questions.
+            </h2>
+            <p className="text-lg text-gray-500 font-medium leading-relaxed">
+              Everything you need to know about the system, technology, and
+              operations.
+            </p>
+          </div>
+
+          <div className="lg:w-2/3 space-y-4">
+            {faqs.map((faq, i) => (
+              <div
+                key={i}
+                className={`border rounded-2xl transition-all duration-300 ${
+                  openIndex === i
+                    ? "border-accent bg-orange-50/10 shadow-sm"
+                    : "border-gray-100 bg-white hover:border-gray-300"
+                }`}
+              >
+                <button
+                  onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                  className="w-full p-6 text-left flex justify-between items-center group cursor-pointer"
+                >
+                  <span
+                    className={`text-lg font-extrabold tracking-tight transition-colors ${
+                      openIndex === i
+                        ? "text-[--color-text-primary]"
+                        : "text-gray-600 group-hover:text-[--color-text-primary]"
+                    }`}
+                  >
+                    {faq.q}
+                  </span>
+                  <div
+                    className={`p-2 rounded-full transition-colors ${
+                      openIndex === i
+                        ? "bg-accent text-white"
+                        : "bg-gray-50 text-gray-400 group-hover:bg-gray-100"
+                    }`}
+                  >
+                    {openIndex === i ? (
+                      <Minus size={18} strokeWidth={3} />
+                    ) : (
+                      <Plus size={18} strokeWidth={3} />
+                    )}
+                  </div>
+                </button>
+
+                <AnimatePresence>
+                  {openIndex === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-6 pt-0 text-gray-500 leading-relaxed font-medium">
+                        {faq.a}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

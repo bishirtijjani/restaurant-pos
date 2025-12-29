@@ -1,169 +1,100 @@
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
-import { ShoppingCart, Monitor, Package } from "lucide-react";
+import { motion } from "framer-motion";
+import { Server, DollarSign, Layers, Lock } from "lucide-react";
 
 export default function Features() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
-  const features = [
+  const pillars = [
     {
-      icon: ShoppingCart,
-      title: "Point of Sale",
-      description: "Take orders. Multiple payment methods. Done.",
-      highlights: [
-        "Dine-in, takeaway, delivery",
-        "Split payments, tips, change",
-        "Table management",
-        "Works offline",
-      ],
+      title: "Core Operations",
+      subtitle: "Performance",
+      desc: "Instant orders. Unified payments. KDS routing. The engine that never stops.",
+      icon: Server,
+      accent: "text-orange-500",
+      bg: "bg-orange-50",
+      borderColor: "hover:border-orange-500",
     },
     {
-      icon: Monitor,
-      title: "Kitchen Display",
-      description: "Real-time routing. No printers needed.",
-      highlights: [
-        "Multi-station routing",
-        "Order status tracking",
-        "Real-time updates",
-        "Recall & modify orders",
-      ],
+      title: "Cost Control",
+      subtitle: "Margins",
+      desc: "Live inventory deduction. Supplier tracking. Waste logs. Stop bleeding cash.",
+      icon: DollarSign,
+      accent: "text-emerald-500",
+      bg: "bg-emerald-50",
+      borderColor: "hover:border-emerald-500",
     },
     {
-      icon: Package,
-      title: "Inventory Control",
-      description:
-        "Ingredient-level tracking. Auto-deduction. Low-stock alerts.",
-      highlights: [
-        "Recipe-based deduction",
-        "Low-stock WhatsApp alerts",
-        "Supplier management",
-        "Waste tracking",
-      ],
+      title: "Compliance",
+      subtitle: "Risk MGMT",
+      desc: "Automated tax reports. Shift logs. End-of-day reconciliation. Sleep easy.",
+      icon: Lock,
+      accent: "text-blue-500",
+      bg: "bg-blue-50",
+      borderColor: "hover:border-blue-500",
+    },
+    {
+      title: "Multi-Location",
+      subtitle: "Expansion",
+      desc: "Push one menu to 50 stores. See global sales in real-time. Scale fast.",
+      icon: Layers,
+      accent: "text-violet-500",
+      bg: "bg-violet-50",
+      borderColor: "hover:border-violet-500",
     },
   ];
 
   return (
-    <section className="section" ref={ref}>
+    <section
+      className="section bg-gray-50 border-t border-b border-gray-200"
+      id="features"
+    >
       <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-          style={{ marginBottom: "var(--space-16)" }}
-        >
-          <h2 style={{ marginBottom: "var(--space-4)" }}>
-            Three Core Pillars. Nothing More.
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <div className="mb-4">
+            <span className="badge">Total Coverage</span>
+          </div>
+          <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-[--color-text-primary]">
+            Everything you need.
           </h2>
-          <p
-            style={{
-              fontSize: "var(--font-size-xl)",
-              color: "var(--color-text-secondary)",
-              maxWidth: "700px",
-              margin: "0 auto",
-            }}
-          >
-            Strong where it matters daily. Weak nowhere critical to operations.
+          <p className="mx-auto text-gray-500 max-w-[600px] text-lg leading-relaxed">
+            We give you total command over the operational variables that make
+            or break a restaurant business.
           </p>
-        </motion.div>
+        </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: "var(--space-8)",
-          }}
-        >
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={
-                  isInView
-                    ? { opacity: 1, scale: 1 }
-                    : { opacity: 0, scale: 0.95 }
-                }
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="card"
-                style={{ height: "100%" }}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {pillars.map((pillar, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className={`card flex flex-col items-start text-left group transition-all duration-300 ${pillar.borderColor}`}
+              whileHover={{
+                y: -6,
+                boxShadow:
+                  "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+              }}
+            >
+              <div
+                className={`inline-flex p-2.5 ${pillar.bg} rounded-xl ${pillar.accent} mb-6 transition-transform group-hover:scale-110`}
               >
-                <div
-                  style={{
-                    width: "64px",
-                    height: "64px",
-                    backgroundColor: "var(--color-bg-elevated)",
-                    border: "2px solid var(--color-border)",
-                    borderRadius: "var(--radius-lg)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: "var(--space-6)",
-                  }}
-                >
-                  <Icon
-                    size={32}
-                    color="var(--color-accent)"
-                    strokeWidth={1.5}
-                  />
-                </div>
+                <pillar.icon size={26} strokeWidth={2} />
+              </div>
 
-                <h3
-                  style={{
-                    fontSize: "var(--font-size-2xl)",
-                    marginBottom: "var(--space-3)",
-                  }}
-                >
-                  {feature.title}
-                </h3>
+              <div className="text-[0.7rem] uppercase tracking-widest text-gray-400 mb-1 font-extrabold">
+                {pillar.subtitle}
+              </div>
 
-                <p
-                  style={{
-                    fontSize: "var(--font-size-lg)",
-                    fontWeight: 600,
-                    color: "var(--color-text-secondary)",
-                    marginBottom: "var(--space-6)",
-                  }}
-                >
-                  {feature.description}
-                </p>
+              <h3 className="text-xl font-extrabold mb-4 text-[--color-text-primary]">
+                {pillar.title}
+              </h3>
 
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    margin: 0,
-                  }}
-                >
-                  {feature.highlights.map((item, i) => (
-                    <li
-                      key={i}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--space-3)",
-                        marginBottom: "var(--space-3)",
-                        color: "var(--color-text-muted)",
-                        fontSize: "var(--font-size-base)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "6px",
-                          height: "6px",
-                          backgroundColor: "var(--color-accent)",
-                          borderRadius: "50%",
-                        }}
-                      />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            );
-          })}
+              <p className="text-gray-500 leading-relaxed text-[0.95rem] m-0">
+                {pillar.desc}
+              </p>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

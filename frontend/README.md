@@ -48,15 +48,3 @@ System Administration:
 User management
 System configuration
 Audit logging of all changes
-
-modified: frontend/src/app/store.js
-new file: frontend/src/features/addOnGroups/addOnGroupsSlice.js
-new file: frontend/src/features/addOnGroups/components/AddAddOnGroupModalBody.jsx
-new file: frontend/src/features/addOnGroups/components/EditAddOnGroupModalBody.jsx
-new file: frontend/src/features/addOnGroups/index.jsx
-modified: frontend/src/features/menuItems/components/AddMenuItemModalBody.jsx
-modified: frontend/src/features/menuItems/components/EditMenuItemModalBody.jsx
-modified: frontend/src/features/orders/AddOrder.jsx
-new file: frontend/src/features/orders/components/AddItemToOrderModalBody.jsx
-new file: frontend/src/features/orders/components/AddOnSelectorModalBody.jsx
-new file: frontend/src/features/orders/components/ModifyOrderModalBody.jsx

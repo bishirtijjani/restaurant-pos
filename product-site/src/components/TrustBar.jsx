@@ -1,131 +1,86 @@
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
-import { Shield, Zap, Lock } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function TrustBar() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
+  const logos = [
+    { name: "GlobalBistro", style: "italic" },
+    { name: "UrbanDine", style: "normal" },
+    { name: "MetroEats", style: "normal" },
+    { name: "SavorGroup", style: "italic" },
+    { name: "CafeLux", style: "normal" },
+    { name: "PrimePlate", style: "italic" },
+    { name: "UrbanGrill", style: "normal" },
+    { name: "SkyDining", style: "italic" },
+  ];
+
+  // Quadruple logos to ensure seamless marquee on ultra-wide screens
+  const marqueeLogos = [...logos, ...logos, ...logos, ...logos];
 
   return (
-    <section
-      style={{
-        backgroundColor: "var(--color-bg-secondary)",
-        padding: "var(--space-12) 0",
-        borderTop: "1px solid var(--color-border)",
-        borderBottom: "1px solid var(--color-border)",
-      }}
-      ref={ref}
-    >
-      <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-          style={{ marginBottom: "var(--space-8)" }}
+    <div className="relative bg-black py-20 overflow-hidden border-y border-white/5">
+      {/* Background Video */}
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover opacity-60 mix-blend-multiply"
         >
-          <p
-            style={{
-              fontSize: "var(--font-size-lg)",
-              color: "var(--color-text-secondary)",
-            }}
-          >
-            Trusted by{" "}
-            <strong style={{ color: "var(--color-accent)" }}>
-              50+ restaurants
-            </strong>{" "}
-            across 12 cities
-          </p>
-        </motion.div>
-
-        {/* Restaurant Logos Placeholder */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-            gap: "var(--space-8)",
-            marginBottom: "var(--space-12)",
-            opacity: 0.6,
-          }}
-        >
-          {[
-            "Bistro One",
-            "Cafe Central",
-            "The Grill House",
-            "Pizza Express",
-            "Sushi Bar",
-            "Taco Stop",
-          ].map((name, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "var(--space-4)",
-                fontSize: "var(--font-size-sm)",
-                color: "var(--color-text-muted)",
-                fontWeight: 600,
-              }}
-            >
-              {name}
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Security Badges */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "var(--space-8)",
-            flexWrap: "wrap",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-2)",
-              color: "var(--color-text-muted)",
-              fontSize: "var(--font-size-sm)",
-            }}
-          >
-            <Shield size={18} color="var(--color-accent)" />
-            <span>Bank-level encryption</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-2)",
-              color: "var(--color-text-muted)",
-              fontSize: "var(--font-size-sm)",
-            }}
-          >
-            <Zap size={18} color="var(--color-accent)" />
-            <span>99.9% uptime</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-2)",
-              color: "var(--color-text-muted)",
-              fontSize: "var(--font-size-sm)",
-            }}
-          >
-            <Lock size={18} color="var(--color-accent)" />
-            <span>GDPR compliant</span>
-          </div>
-        </motion.div>
+          <source
+            src="/assets/brands-banner.mp4"
+            type="video/mp4"
+            autoPlay
+            audio="false"
+          />
+        </video>
+        {/* Dark Overlay for Text Legibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-950/80 via-transparent to-gray-950/80 backdrop-blur-[2px]" />
       </div>
-    </section>
+
+      <div className="relative z-10 w-full">
+        <div className="flex flex-col items-center gap-12">
+          {/* Header Text - Kept in center container */}
+          <div className="container px-8">
+            <h2 className="font-bold uppercase tracking-[0.2em] text-white text-center drop-shadow-lg">
+              Trusted by modern operators worldwide
+            </h2>
+          </div>
+
+          {/* Infinite Marquee Container - FULL WIDTH WINDOW BLEED + Faded Edges */}
+          <div
+            className="relative w-full overflow-hidden flex grayscale brightness-200 contrast-125 opacity-70 hover:opacity-100 transition-opacity duration-500"
+            style={{
+              maskImage:
+                "linear-gradient(to right, transparent, black 15%, black 85%, transparent)",
+              WebkitMaskImage:
+                "linear-gradient(to right, transparent, black 15%, black 85%, transparent)",
+            }}
+          >
+            <div className="flex animate-marquee-infinite whitespace-nowrap items-center py-2">
+              {marqueeLogos.map((logo, i) => (
+                <div
+                  key={i}
+                  className={`mx-12 text-2xl md:text-3xl font-black tracking-tighter text-white select-none ${
+                    logo.style === "italic" ? "italic" : ""
+                  }`}
+                >
+                  {logo.name}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-25%); } 
+        }
+        .animate-marquee-infinite {
+          animation: marquee 40s linear infinite;
+        }
+      `}</style>
+    </div>
   );
 }

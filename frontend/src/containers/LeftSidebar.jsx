@@ -7,10 +7,7 @@ import { jwtDecode } from "jwt-decode";
 import SessionExpired from "../features/common/components/SessionExpiredModalBody";
 import StoreSwitcher from "../features/common/components/StoreSwitcher";
 import { useDispatch } from "react-redux";
-
 import { logoutUser } from "../app/authSlice";
-
-// Helpers
 import { useState } from "react";
 import SyncStatusModal from "../features/common/components/SyncStatusModal";
 import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";

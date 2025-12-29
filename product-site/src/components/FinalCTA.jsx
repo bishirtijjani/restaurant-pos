@@ -1,88 +1,61 @@
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
-import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Check } from "lucide-react";
 
 export default function FinalCTA() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const benefits = [
+    "14-Day Free Trial",
+    "No Credit Card Required",
+    "Setup in 15 Minutes",
+    "Direct Founder Support",
+  ];
 
   return (
-    <section
-      className="section"
-      style={{
-        paddingTop: "var(--space-24)",
-        paddingBottom: "var(--space-24)",
-      }}
-      ref={ref}
-    >
+    <section className="section bg-white pb-32">
       <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6 }}
-          style={{
-            maxWidth: "800px",
-            margin: "0 auto",
-            textAlign: "center",
-            backgroundColor: "var(--color-bg-secondary)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-xl)",
-            padding: "var(--space-16)",
-          }}
-        >
-          <h2 style={{ marginBottom: "var(--space-6)" }}>Ready to Ship?</h2>
+        <div className="bg-gray-950 rounded-[40px] p-8 md:p-20 relative overflow-hidden text-center shadow-2xl">
+          {/* Ambient Glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(255,107,53,0.15)_0%,transparent_70%)] z-0" />
 
-          <p
-            style={{
-              fontSize: "var(--font-size-2xl)",
-              color: "var(--color-text-secondary)",
-              marginBottom: "var(--space-12)",
-              lineHeight: 1.6,
-            }}
-          >
-            Join operators who value reliability over endless features.
-          </p>
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tighter leading-none">
+              Start your <br className="md:hidden" />
+              <span className="text-accent underline decoration-4 underline-offset-8">
+                margin-first
+              </span>{" "}
+              era.
+            </h2>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "var(--space-4)",
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <button
-              className="btn btn-primary"
-              style={{
-                fontSize: "var(--font-size-xl)",
-                padding: "var(--space-6) var(--space-12)",
-              }}
-            >
-              Start Free Trial
-              <ArrowRight size={20} />
-            </button>
+            <p className="text-gray-400 text-xl mb-12 font-medium">
+              Join 100+ high-growth restaurants taking total command of their
+              operations.
+            </p>
 
-            <button
-              className="btn btn-secondary"
-              style={{
-                fontSize: "var(--font-size-xl)",
-                padding: "var(--space-6) var(--space-12)",
-              }}
-            >
-              Contact Sales
-            </button>
+            <div className="flex flex-wrap justify-center gap-4 mb-12">
+              <a
+                href="http://localhost:5173/register"
+                className="btn btn-primary px-12 py-5 text-xl tracking-tight"
+              >
+                Claim Your Free Trial
+                <ArrowRight size={24} className="ml-2" />
+              </a>
+              <button className="bg-transparent border-2 border-white/20 text-white rounded-full px-12 py-5 font-bold hover:bg-white/5 transition-all">
+                Talk to a Human
+              </button>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
+              {benefits.map((benefit, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 text-gray-400 text-sm font-inter font-bold uppercase tracking-widest"
+                >
+                  <Check size={16} className="text-accent stroke-[3px]" />
+                  {benefit}
+                </div>
+              ))}
+            </div>
           </div>
-
-          <p
-            style={{
-              marginTop: "var(--space-8)",
-              fontSize: "var(--font-size-sm)",
-              color: "var(--color-text-muted)",
-            }}
-          >
-            Personal support from day one • No hidden fees • Cancel anytime
-          </p>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

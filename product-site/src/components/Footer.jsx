@@ -1,220 +1,133 @@
-import { Mail, Phone, MapPin, Linkedin, Twitter } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Linkedin,
+  Twitter,
+  Youtube,
+  Facebook,
+} from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer
-      style={{
-        backgroundColor: "var(--color-bg-elevated)",
-        borderTop: "1px solid var(--color-border)",
-        padding: "var(--space-16) 0 var(--space-8)",
-      }}
-    >
+    <footer className="bg-white border-t border-gray-200 py-20 pb-10">
       <div className="container">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "var(--space-12)",
-            marginBottom: "var(--space-12)",
-          }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1.5fr] gap-12 mb-16">
           {/* Company Info */}
-          <div>
-            <div
-              style={{
-                fontSize: "var(--font-size-2xl)",
-                fontWeight: 700,
-                marginBottom: "var(--space-4)",
-              }}
-            >
-              RestaurantOS
+          <div className="max-w-[300px]">
+            <div className="flex items-center gap-2.5 mb-6">
+              <div className="w-7 h-7 bg-[--color-text-primary] rounded-md flex items-center justify-center text-white font-black text-base">
+                C
+              </div>
+              <div className="text-xl font-extrabold text-[--color-text-primary] tracking-tight">
+                Codeket<span className="text-accent">Restaurant</span>
+              </div>
             </div>
-            <p
-              style={{
-                color: "var(--color-text-secondary)",
-                lineHeight: 1.7,
-                marginBottom: "var(--space-6)",
-              }}
-            >
-              Operations-first restaurant software. No contracts. No BS.
+            <p className="text-gray-500 text-sm leading-relaxed mb-6 font-medium">
+              Complete restaurant management system for modern eateries.
+              Streamline orders, manage inventory, and delight customers.
             </p>
+            <div className="flex gap-3">
+              {[Twitter, Linkedin, Youtube, Facebook].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="text-gray-400 transition-all duration-200 p-2 border border-gray-200 rounded-lg hover:text-accent hover:border-accent"
+                >
+                  <Icon size={18} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Product Links */}
+          <div>
+            <h4 className="text-sm font-extrabold text-[--color-text-primary] uppercase tracking-widest mb-6">
+              Product
+            </h4>
+            <div className="flex flex-col gap-3">
+              {["Features", "Pricing", "Help Docs", "Mobile App"].map(
+                (item) => (
+                  <a
+                    key={item}
+                    href="#"
+                    className="text-gray-500 no-underline text-sm font-semibold transition-colors hover:text-[--color-text-primary]"
+                  >
+                    {item}
+                  </a>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Company Links */}
+          <div>
+            <h4 className="text-sm font-extrabold text-[--color-text-primary] uppercase tracking-widest mb-6">
+              Company
+            </h4>
+            <div className="flex flex-col gap-3">
+              {["About Codeket", "Our Services", "Contact Us"].map((item) => (
+                <a
+                  key={item}
+                  href="#"
+                  className="text-gray-500 no-underline text-sm font-semibold transition-colors hover:text-[--color-text-primary]"
+                >
+                  {item}
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* Contact */}
-          <div>
-            <h4
-              style={{
-                fontSize: "var(--font-size-lg)",
-                fontWeight: 600,
-                marginBottom: "var(--space-4)",
-              }}
-            >
-              Contact Us
+          <div className="min-w-fit">
+            <h4 className="text-sm font-extrabold text-[--color-text-primary] uppercase tracking-widest mb-6">
+              Get in Touch
             </h4>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--space-3)",
-              }}
-            >
+            <div className="flex flex-col gap-4">
               <a
-                href="mailto:hello@restaurantos.com"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-2)",
-                  color: "var(--color-text-secondary)",
-                  textDecoration: "none",
-                  transition: "color var(--transition-fast)",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.color = "var(--color-accent)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = "var(--color-text-secondary)")
-                }
+                href="mailto:restaurant@codeket.com"
+                className="flex items-center gap-3 text-gray-500 no-underline text-sm font-semibold transition-colors hover:text-[--color-text-primary]"
               >
-                <Mail size={16} />
-                hello@restaurantos.com
+                <Mail size={16} className="text-accent" />
+                restaurant@codeket.com
               </a>
               <a
-                href="tel:+1234567890"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-2)",
-                  color: "var(--color-text-secondary)",
-                  textDecoration: "none",
-                  transition: "color var(--transition-fast)",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.color = "var(--color-accent)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = "var(--color-text-secondary)")
-                }
+                href="tel:+2349063503232"
+                className="flex items-center gap-3 text-gray-500 no-underline text-sm font-semibold transition-colors hover:text-[--color-text-primary]"
               >
-                <Phone size={16} />
-                (555) 123-4567
+                <Phone size={16} className="text-accent" />
+                +234 906 350 3232
               </a>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "var(--space-2)",
-                  color: "var(--color-text-secondary)",
-                }}
-              >
-                <MapPin size={16} style={{ marginTop: "2px", flexShrink: 0 }} />
-                <span>
-                  123 Main St, Suite 100
+              <div className="flex items-start gap-3 text-gray-500 text-sm font-semibold">
+                <MapPin size={16} className="text-accent mt-0.5 shrink-0" />
+                <span className="leading-relaxed">
+                  New Ring Road, Kwado
                   <br />
-                  San Francisco, CA 94102
+                  Katsina, Nigeria 820101
                 </span>
               </div>
-            </div>
-          </div>
-
-          {/* Links */}
-          <div>
-            <h4
-              style={{
-                fontSize: "var(--font-size-lg)",
-                fontWeight: 600,
-                marginBottom: "var(--space-4)",
-              }}
-            >
-              Quick Links
-            </h4>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--space-3)",
-              }}
-            >
-              {[
-                "Privacy Policy",
-                "Terms of Service",
-                "Security",
-                "Documentation",
-              ].map((link) => (
-                <a
-                  key={link}
-                  href="#"
-                  style={{
-                    color: "var(--color-text-secondary)",
-                    textDecoration: "none",
-                    transition: "color var(--transition-fast)",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = "var(--color-accent)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.color =
-                      "var(--color-text-secondary)")
-                  }
-                >
-                  {link}
-                </a>
-              ))}
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingTop: "var(--space-8)",
-            borderTop: "1px solid var(--color-border)",
-            flexWrap: "wrap",
-            gap: "var(--space-4)",
-          }}
-        >
-          <div
-            style={{
-              color: "var(--color-text-muted)",
-              fontSize: "var(--font-size-sm)",
-            }}
-          >
-            © 2025 RestaurantOS. All rights reserved.
+        <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-gray-100 gap-4">
+          <div className="text-gray-400 text-[0.7rem] font-bold uppercase tracking-widest">
+            © 2025 Codeket Ltd. All rights reserved.
           </div>
 
-          <div style={{ display: "flex", gap: "var(--space-4)" }}>
-            <a
-              href="#"
-              style={{
-                color: "var(--color-text-muted)",
-                transition: "color var(--transition-fast)",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--color-accent)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--color-text-muted)")
-              }
-            >
-              <Linkedin size={20} />
-            </a>
-            <a
-              href="#"
-              style={{
-                color: "var(--color-text-muted)",
-                transition: "color var(--transition-fast)",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--color-accent)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--color-text-muted)")
-              }
-            >
-              <Twitter size={20} />
-            </a>
+          <div className="flex gap-6 text-[0.7rem] font-bold uppercase tracking-widest">
+            {["Privacy Policy", "Terms of Service", "Cookie Policy"].map(
+              (link) => (
+                <a
+                  key={link}
+                  href="#"
+                  className="text-gray-400 no-underline transition-colors hover:text-[--color-text-primary]"
+                >
+                  {link}
+                </a>
+              )
+            )}
           </div>
         </div>
       </div>

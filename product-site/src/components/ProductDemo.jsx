@@ -1,140 +1,77 @@
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
 import { Play } from "lucide-react";
 
 export default function ProductDemo() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
   return (
-    <section
-      className="section"
-      style={{ backgroundColor: "var(--color-bg-secondary)" }}
-      ref={ref}
-    >
+    <section className="section bg-white overflow-hidden py-32" id="demo">
       <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-          style={{ marginBottom: "var(--space-12)" }}
-        >
-          <h2 style={{ marginBottom: "var(--space-4)" }}>See It In Action</h2>
-          <p
-            style={{
-              fontSize: "var(--font-size-xl)",
-              color: "var(--color-text-secondary)",
-              maxWidth: "700px",
-              margin: "0 auto",
-            }}
-          >
-            Watch how real restaurants use our system daily.
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={
-            isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }
-          }
-          transition={{ duration: 0.6, delay: 0.2 }}
-          style={{
-            maxWidth: "900px",
-            margin: "0 auto",
-            aspectRatio: "16/9",
-            backgroundColor: "var(--color-bg-elevated)",
-            border: "2px solid var(--color-border)",
-            borderRadius: "var(--radius-xl)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          {/* Placeholder for actual video/screenshot */}
-          <div
-            style={{
-              textAlign: "center",
-              padding: "var(--space-8)",
-            }}
-          >
-            <div
-              style={{
-                width: "80px",
-                height: "80px",
-                backgroundColor: "rgba(255, 107, 53, 0.1)",
-                border: "3px solid var(--color-accent)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto var(--space-6)",
-                transition: "all var(--transition-base)",
-              }}
-            >
-              <Play
-                size={36}
-                color="var(--color-accent)"
-                fill="var(--color-accent)"
-              />
+        <div className="flex flex-col lg:flex-row items-center gap-16">
+          <div className="lg:w-1/2">
+            <div className="mb-4">
+              <span className="badge">Interface Insight</span>
             </div>
-            <p
-              style={{
-                fontSize: "var(--font-size-lg)",
-                color: "var(--color-text-secondary)",
-              }}
-            >
-              Watch 2-minute product tour
+            <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tight text-[--color-text-primary] leading-none">
+              Built for speed, <br /> not for training.
+            </h2>
+            <p className="text-lg text-gray-500 mb-8 leading-relaxed font-medium">
+              We ditched the complex menus. Every mission-critical action is
+              exactly one tap away. Your staff will be experts in 15 minutes.
             </p>
-            <p
-              style={{
-                fontSize: "var(--font-size-sm)",
-                color: "var(--color-text-muted)",
-                marginTop: "var(--space-2)",
-              }}
-            >
-              See actual POS, KDS, and Inventory in use
-            </p>
+            <div className="space-y-4">
+              {[
+                "Zero-lag order input",
+                "Split-second payments",
+                "Live kitchen status feedback",
+                "Instant search for 1000+ SKUs",
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 text-[--color-text-primary] font-bold"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
-        </motion.div>
 
-        {/* Screenshot Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "var(--space-6)",
-            marginTop: "var(--space-12)",
-          }}
-        >
-          {["POS Interface", "Kitchen Display", "Inventory Dashboard"].map(
-            (title, i) => (
-              <div
-                key={i}
-                style={{
-                  backgroundColor: "var(--color-bg-primary)",
-                  border: "1px solid var(--color-border)",
-                  borderRadius: "var(--radius-lg)",
-                  padding: "var(--space-4)",
-                  aspectRatio: "4/3",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <p style={{ color: "var(--color-text-muted)" }}>
-                  {title} Screenshot
+          <div className="lg:w-1/2 relative">
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-950 aspect-[16/10] bg-gray-900 group"
+            >
+              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center opacity-60 mix-blend-overlay" />
+
+              <div className="absolute inset-0 flex items-center justify-center">
+                <button className="w-20 h-20 bg-accent text-white rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110 group-hover:bg-white group-hover:text-accent">
+                  <Play size={32} fill="currentColor" />
+                </button>
+              </div>
+
+              <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent">
+                <p className="text-white text-sm font-bold uppercase tracking-widest opacity-80">
+                  Watch: The 60-Second Rush
                 </p>
               </div>
-            )
-          )}
-        </motion.div>
+            </motion.div>
+
+            {/* Float Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="absolute -bottom-6 -left-6 bg-white border border-gray-200 p-4 px-6 rounded-2xl shadow-xl hidden md:block"
+            >
+              <div className="text-2xl font-black text-accent">0.2s</div>
+              <div className="text-[0.6rem] font-bold uppercase text-gray-400 tracking-tighter">
+                Latency on order push
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   );

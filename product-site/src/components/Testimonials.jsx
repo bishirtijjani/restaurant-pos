@@ -1,151 +1,79 @@
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
-import { Quote } from "lucide-react";
+import { motion } from "framer-motion";
+import { Star, Quote } from "lucide-react";
 
 export default function Testimonials() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
-  const testimonials = [
+  const reviews = [
     {
-      quote:
-        "Toast wanted $150/month just for basic features. This has everything for $79.",
-      name: "Marco R.",
-      role: "Owner",
-      restaurant: "Bella Italia Bistro",
-      location: "Austin, TX",
+      name: "Sarah Chen",
+      role: "Founder, Lotus Garden",
+      text: "We switched from Toast. The $3,000 upfront saving was great, but the lack of 'software tax' on every sale is what's actually changing our business.",
+      rating: 5,
     },
     {
-      quote:
-        "Setup took 15 minutes. We were taking orders the same afternoon. Support actually answers when you call.",
-      name: "Sarah K.",
-      role: "Manager",
-      restaurant: "The Daily Grind Cafe",
-      location: "Portland, OR",
-    },
-    {
-      quote:
-        "No more $3,000 terminals. Works perfectly on our iPads we already had. Saved us thousands.",
-      name: "James L.",
-      role: "Owner",
-      restaurant: "Harbor Grill",
-      location: "Seattle, WA",
+      name: "Marcus Miller",
+      role: "Ops Director, Burger Lab",
+      text: "Codeket doesn't crash during the Friday rush. That's all I cared about. The fact that I can use my existing iPads was a huge bonus.",
+      rating: 5,
     },
   ];
 
   return (
-    <section className="section" ref={ref}>
+    <section className="section bg-gray-50 border-t border-b border-gray-200">
       <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-          style={{ marginBottom: "var(--space-16)" }}
-        >
-          <h2 style={{ marginBottom: "var(--space-4)" }}>
-            What Restaurant Owners Say
-          </h2>
-          <p
-            style={{
-              fontSize: "var(--font-size-xl)",
-              color: "var(--color-text-secondary)",
-              maxWidth: "700px",
-              margin: "0 auto",
-            }}
-          >
-            Real feedback from operators who switched.
-          </p>
-        </motion.div>
+        <div className="flex flex-col lg:flex-row items-start gap-16">
+          <div className="lg:w-1/3">
+            <div className="mb-4">
+              <span className="badge">Operator Proof</span>
+            </div>
+            <h2 className="text-4xl font-extrabold mb-6 tracking-tight text-[--color-text-primary] leading-tight">
+              Built for the <br className="hidden lg:block" /> Friday rush.
+            </h2>
+            <p className="text-lg text-gray-500 font-medium leading-relaxed">
+              We don't do marketing fluff. We talk to operators who need systems
+              that work under pressure.
+            </p>
+          </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-            gap: "var(--space-8)",
-          }}
-        >
-          {testimonials.map((testimonial, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="card"
-              style={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <Quote
-                size={32}
-                color="var(--color-accent)"
-                style={{ marginBottom: "var(--space-4)", opacity: 0.3 }}
-              />
-
-              <p
-                style={{
-                  fontSize: "var(--font-size-lg)",
-                  lineHeight: 1.7,
-                  marginBottom: "var(--space-6)",
-                  flex: 1,
-                }}
+          <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-8">
+            {reviews.map((review, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="card bg-white p-10 flex flex-col items-start relative overflow-hidden group hover:border-accent"
               >
-                "{testimonial.quote}"
-              </p>
+                <Quote
+                  className="absolute top-6 right-8 text-gray-50 opacity-10 group-hover:text-accent group-hover:opacity-20 transition-all"
+                  size={80}
+                />
 
-              <div
-                style={{
-                  display: "flex",
-                  gap: "var(--space-4)",
-                  alignItems: "center",
-                }}
-              >
-                {/* Avatar Placeholder */}
-                <div
-                  style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    backgroundColor: "var(--color-bg-elevated)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "var(--font-size-lg)",
-                    fontWeight: 700,
-                    color: "var(--color-accent)",
-                  }}
-                >
-                  {testimonial.name[0]}
+                <div className="flex gap-1 mb-6">
+                  {[...Array(review.rating)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={16}
+                      className="fill-accent text-accent"
+                    />
+                  ))}
                 </div>
 
-                <div>
-                  <div
-                    style={{ fontWeight: 600, marginBottom: "var(--space-1)" }}
-                  >
-                    {testimonial.name}
+                <p className="text-lg text-[--color-text-primary] font-bold leading-relaxed mb-10 relative z-10 italic">
+                  "{review.text}"
+                </p>
+
+                <div className="mt-auto">
+                  <div className="font-extrabold text-[--color-text-primary] tracking-tight">
+                    {review.name}
                   </div>
-                  <div
-                    style={{
-                      fontSize: "var(--font-size-sm)",
-                      color: "var(--color-text-muted)",
-                    }}
-                  >
-                    {testimonial.role}, {testimonial.restaurant}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "var(--font-size-xs)",
-                      color: "var(--color-text-muted)",
-                    }}
-                  >
-                    {testimonial.location}
+                  <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    {review.role}
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

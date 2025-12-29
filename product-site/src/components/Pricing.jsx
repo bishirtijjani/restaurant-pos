@@ -7,235 +7,179 @@ export default function Pricing() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   const comparison = [
-    { feature: "Hardware", them: "$799-$3,000", us: "Use your own" },
-    { feature: "Monthly Software", them: "$150+", us: "$79" },
-    { feature: "Payment Processing", them: "Locked-in", us: "Your Stripe" },
-    { feature: "Support", them: "Ticket system", us: "Direct line" },
-    { feature: "Contract", them: "12-36 months", us: "Month-to-month" },
+    {
+      feature: "Hardware",
+      them: "$799-$3,000 upfront",
+      us: "Use hardware you own",
+      usBetter: true,
+    },
+    {
+      feature: "Monthly Fee",
+      them: "$150+ / location",
+      us: "$79 flat rate",
+      usBetter: true,
+    },
+    {
+      feature: "Payments",
+      them: "Proprietary Lock-in",
+      us: "Bring your own (Stripe)",
+      usBetter: true,
+    },
+    {
+      feature: "Support",
+      them: "Ticket waitlist",
+      us: "Founder direct line",
+      usBetter: true,
+    },
+    {
+      feature: "Contract",
+      them: "1-3 Year Lock-in",
+      us: "Month-to-month",
+      usBetter: true,
+    },
+    {
+      feature: "Hidden Fees",
+      them: "Setup & Training",
+      us: "Zero hidden costs",
+      usBetter: true,
+    },
   ];
 
   return (
     <section
-      className="section"
-      style={{ backgroundColor: "var(--color-bg-secondary)" }}
+      className="section bg-gray-50 border-t border-gray-200 py-24"
+      id="pricing"
       ref={ref}
     >
       <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-          style={{ marginBottom: "var(--space-16)" }}
-        >
-          <h2 style={{ marginBottom: "var(--space-4)" }}>
-            One Price. Everything Included.
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <div className="mb-4">
+            <span className="badge">Transparent Pricing</span>
+          </div>
+          <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-[--color-text-primary]">
+            One Rate. Total Freedom.
           </h2>
-          <p
-            style={{
-              fontSize: "var(--font-size-xl)",
-              color: "var(--color-text-secondary)",
-              maxWidth: "700px",
-              margin: "0 auto",
-            }}
-          >
-            No contracts. No hardware lock-in. No hidden fees.
+          <p className="mx-auto text-xl text-gray-500 max-w-[600px] leading-relaxed">
+            We don't tax your growth. No setup fees, no contracts, no hardware
+            markup.
           </p>
+        </div>
+
+        {/* Comparison HUD - UNIFIED ALIGNED GRID */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={
+            isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.98 }
+          }
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-[900px] mx-auto mb-20 bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xl grid grid-cols-[1.2fr_1fr_1fr]"
+        >
+          {/* Column Headers */}
+          <div className="contents">
+            {["Feature", "Competitors", "Codeket"].map((header, i) => (
+              <div
+                key={header}
+                className={`p-6 px-8 bg-gray-50 border-b border-gray-200 font-mono text-[0.7rem] tracking-widest uppercase font-extrabold text-left ${
+                  i === 2 ? "text-accent" : "text-gray-400"
+                }`}
+              >
+                {header}
+              </div>
+            ))}
+          </div>
+
+          {/* Data Rows */}
+          {comparison.map((row, index) => (
+            <div key={index} className="contents group">
+              {/* 1. Feature Name */}
+              <div
+                className={`p-5 px-8 font-extrabold text-[--color-text-primary] text-[0.95rem] border-gray-100 flex items-center ${
+                  index === comparison.length - 1 ? "border-b-0" : "border-b"
+                }`}
+              >
+                {row.feature}
+              </div>
+
+              {/* 2. Competitors Data */}
+              <div
+                className={`p-5 px-8 border-gray-100 flex items-center gap-3 ${
+                  index === comparison.length - 1 ? "border-b-0" : "border-b"
+                }`}
+              >
+                <div className="w-5 flex justify-center shrink-0">
+                  <X size={16} className="text-red-500 stroke-[3px]" />
+                </div>
+                <span className="text-[0.9rem] text-gray-500 font-medium">
+                  {row.them}
+                </span>
+              </div>
+
+              {/* 3. Codeket Data - Highlight Slab */}
+              <div
+                className={`p-5 px-8 bg-orange-50/20 border-l border-orange-100/50 flex items-center gap-3 ${
+                  index === comparison.length - 1
+                    ? "border-b-0"
+                    : "border-b border-gray-100"
+                }`}
+              >
+                <div className="w-5 flex justify-center shrink-0">
+                  <Check size={18} className="text-accent stroke-[4px]" />
+                </div>
+                <span className="text-[0.95rem] font-bold text-[--color-text-primary]">
+                  {row.us}
+                </span>
+              </div>
+            </div>
+          ))}
         </motion.div>
 
-        {/* Comparison Table */}
+        {/* Pricing Card - Centered Focus */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          style={{
-            maxWidth: "800px",
-            margin: "0 auto var(--space-16)",
-            backgroundColor: "var(--color-bg-elevated)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-xl)",
-            overflow: "hidden",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ backgroundColor: "var(--color-bg-primary)" }}>
-                <th
-                  style={{
-                    padding: "var(--space-6)",
-                    textAlign: "left",
-                    fontSize: "var(--font-size-lg)",
-                  }}
-                >
-                  Feature
-                </th>
-                <th
-                  style={{
-                    padding: "var(--space-6)",
-                    textAlign: "center",
-                    fontSize: "var(--font-size-lg)",
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  Them
-                </th>
-                <th
-                  style={{
-                    padding: "var(--space-6)",
-                    textAlign: "center",
-                    fontSize: "var(--font-size-lg)",
-                    color: "var(--color-accent)",
-                  }}
-                >
-                  Us
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {comparison.map((row, index) => (
-                <tr
-                  key={index}
-                  style={{ borderTop: "1px solid var(--color-border)" }}
-                >
-                  <td style={{ padding: "var(--space-6)", fontWeight: 600 }}>
-                    {row.feature}
-                  </td>
-                  <td
-                    style={{
-                      padding: "var(--space-6)",
-                      textAlign: "center",
-                      color: "var(--color-text-muted)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "var(--space-2)",
-                      }}
-                    >
-                      <X size={16} color="#EF4444" />
-                      {row.them}
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      padding: "var(--space-6)",
-                      textAlign: "center",
-                      fontWeight: 600,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "var(--space-2)",
-                      }}
-                    >
-                      <Check size={16} color="var(--color-accent)" />
-                      {row.us}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </motion.div>
-
-        {/* Pricing Card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={
-            isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }
-          }
           transition={{ duration: 0.6, delay: 0.4 }}
-          style={{
-            maxWidth: "600px",
-            margin: "0 auto",
-            backgroundColor: "var(--color-bg-primary)",
-            border: "2px solid var(--color-accent)",
-            borderRadius: "var(--radius-xl)",
-            padding: "var(--space-12)",
-            boxShadow: "0 0 40px rgba(255, 107, 53, 0.15)",
-            textAlign: "center",
-          }}
+          className="max-w-[500px] mx-auto bg-white border-2 border-[--color-text-primary] rounded-3xl p-12 shadow-2xl text-center"
         >
-          <div style={{ marginBottom: "var(--space-8)" }}>
-            <div
-              style={{
-                fontSize: "var(--font-size-5xl)",
-                fontWeight: 700,
-                marginBottom: "var(--space-2)",
-              }}
-            >
+          <div className="mb-10">
+            <div className="text-7xl font-extrabold text-[--color-text-primary] mb-2 tracking-tighter">
               $79
-              <span
-                style={{
-                  fontSize: "var(--font-size-2xl)",
-                  fontWeight: 400,
-                  color: "var(--color-text-secondary)",
-                }}
-              >
-                /month
-              </span>
+              <span className="text-2xl font-normal text-gray-400">/mo</span>
             </div>
-            <p style={{ color: "var(--color-text-secondary)" }}>per location</p>
+            <p className="text-gray-400 font-mono text-[0.7rem] font-bold uppercase tracking-widest">
+              UNLIMITED DEVICES • PER LOCATION
+            </p>
           </div>
 
-          <ul
-            style={{
-              listStyle: "none",
-              padding: 0,
-              margin: "0 0 var(--space-8)",
-              textAlign: "left",
-            }}
-          >
+          <div className="flex flex-col gap-4 mx-auto mb-10 text-left max-w-[350px]">
             {[
-              "Unlimited POS devices (your hardware)",
-              "Kitchen Display System",
-              "Inventory management",
-              "Advanced reporting",
-              "Personal support (text/call the founder)",
-              "Bring your own payment processor",
+              "Unlimited Front-of-House POS",
+              "Unlimited Kitchen Displays (KDS)",
+              "Live Inventory & Waste Tracking",
+              "Advanced Multi-Store Reporting",
+              "Direct Founder Access (Call/Text)",
+              "Freedom to use ANY Processor",
             ].map((item, i) => (
-              <li
+              <div
                 key={i}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-3)",
-                  marginBottom: "var(--space-4)",
-                  fontSize: "var(--font-size-lg)",
-                }}
+                className="flex items-center gap-4 text-base text-gray-600 font-medium"
               >
-                <Check size={20} color="var(--color-accent)" strokeWidth={3} />
+                <Check size={18} className="text-accent stroke-[2.5px]" />
                 {item}
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
 
-          <button
-            className="btn btn-primary"
-            style={{
-              width: "100%",
-              fontSize: "var(--font-size-xl)",
-              padding: "var(--space-6)",
-            }}
+          <a
+            href="http://localhost:5173/register"
+            className="btn btn-primary w-full p-5 rounded-full font-bold"
           >
-            Start 14-Day Free Trial
-            <ArrowRight size={20} />
-          </button>
+            Start Your Free Trial
+            <ArrowRight size={20} className="ml-2" />
+          </a>
 
-          <p
-            style={{
-              marginTop: "var(--space-6)",
-              fontSize: "var(--font-size-sm)",
-              color: "var(--color-text-muted)",
-            }}
-          >
-            No credit card required • Cancel anytime
+          <p className="mt-8 text-[0.7rem] text-gray-400 font-bold uppercase tracking-widest">
+            No credit card required • Personal support
           </p>
         </motion.div>
       </div>
