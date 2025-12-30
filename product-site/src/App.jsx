@@ -2,7 +2,6 @@ import "./index.css";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import TrustBar from "./components/TrustBar";
-import ProductDemo from "./components/ProductDemo";
 import Features from "./components/Features";
 import Testimonials from "./components/Testimonials";
 import Pricing from "./components/Pricing";
@@ -21,7 +20,6 @@ function App() {
         <TrustBar />
         <OperationalFlow />
         <Features />
-        <ProductDemo />
         <Testimonials />
         <Credibility />
         <Pricing />

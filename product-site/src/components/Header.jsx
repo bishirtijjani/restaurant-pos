@@ -31,7 +31,7 @@ export default function Header() {
         <div className="flex justify-between items-center w-full gap-6">
           {/* Logo Group */}
           <a href="/" className="flex items-center gap-3 shrink-0 no-underline">
-            <div className="w-9 h-9 bg-[--color-text-primary] rounded-none flex items-center justify-center text-white font-black text-xl shadow-sm">
+            <div className="w-9 h-9 bg-accent flex items-center justify-center text-white rounded-full shadow-sm font-black text-xl">
               C
             </div>
             <div className="text-[1.2rem] font-extrabold tracking-tight text-[--color-text-primary] hidden md:block">

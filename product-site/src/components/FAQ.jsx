@@ -11,12 +11,12 @@ export default function FAQ() {
       a: "None. We believe your software should be an investment in growth, not a barrier to entry. You can be live in 15 minutes.",
     },
     {
-      q: "Can I use my existing hardware?",
+      q: "Can I use my existing Devices & hardware?",
       a: "Yes. Codeket runs on any tablet (iPad, Android) or browser. No proprietary hardware lock-in or forced expensive terminal upgrades.",
     },
     {
       q: "How does the offline mode work?",
-      a: "Our local-first architecture stores all transaction data in your browser's persistent storage. If the internet fails, everything keeps running. Once the connection is restored, it automatically syncs with your core database.",
+      a: "Our local-first architecture stores all transaction data in your Device's persistent storage. If the internet fails, everything keeps running. Once the connection is restored, it automatically syncs with your core database.",
     },
     {
       q: "What kind of support do I get?",
@@ -29,9 +29,6 @@ export default function FAQ() {
       <div className="container">
         <div className="flex flex-col lg:flex-row gap-16">
           <div className="lg:w-1/3">
-            <div className="mb-4">
-              <span className="badge">Knowledge Base</span>
-            </div>
             <h2 className="text-4xl font-extrabold mb-6 tracking-tight text-[--color-text-primary] leading-tight">
               Common <br className="hidden lg:block" /> Questions.
             </h2>

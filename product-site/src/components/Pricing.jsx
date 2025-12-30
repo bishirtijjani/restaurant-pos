@@ -155,10 +155,11 @@ export default function Pricing() {
             {[
               "Unlimited Front-of-House POS",
               "Unlimited Kitchen Displays (KDS)",
+              "Drag & Drop Floor & Table Management With Reservations",
               "Live Inventory & Waste Tracking",
               "Advanced Multi-Store Reporting",
-              "Direct Founder Access (Call/Text)",
-              "Freedom to use ANY Processor",
+              "Direct Human Support (Call/Text)",
+              "Freedom to use ANY Payment Processor",
             ].map((item, i) => (
               <div
                 key={i}

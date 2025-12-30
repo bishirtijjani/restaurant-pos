@@ -1,78 +1,210 @@
 import { motion } from "framer-motion";
-import { ClipboardList, PackageCheck, TrendingUp, Map } from "lucide-react";
+import {
+  Smartphone,
+  ChefHat,
+  RotateCcw,
+  BarChart3,
+  Zap,
+  ArrowRight,
+} from "lucide-react";
 
 export default function OperationalFlow() {
   const steps = [
     {
-      icon: ClipboardList,
-      title: "Order",
-      desc: "Waiters tap. Kitchen sees. Chaos ends.",
+      icon: Smartphone,
+      phase: "Point of Sale",
+      title: "The Floor",
+      desc: "Waiters tap. Orders sync instantly. The kitchen starts cooking before the waiter leaves the table.",
+      highlight: "High-Speed Ingestion",
     },
     {
-      icon: PackageCheck,
-      title: "Stock",
-      desc: "Recipes deduct from inventory automatically.",
+      icon: ChefHat,
+      phase: "Kitchen Sync",
+      title: "The Line",
+      desc: "Zero paper. Zero lost tickets. Every station updated in real-time with precise prep timers.",
+      highlight: "Error Elimination",
     },
     {
-      icon: TrendingUp,
-      title: "Profit",
-      desc: "Real costs. Real margins. Real time.",
+      icon: RotateCcw,
+      phase: "Inventory",
+      title: "The Vault",
+      desc: "Every sale automatically deducts ingredients down to the gram. No more manual stock counts.",
+      highlight: "Auto-Deduction",
     },
     {
-      icon: Map,
-      title: "Scale",
-      desc: "Push menu updates to 100 stores.",
+      icon: BarChart3,
+      phase: "Intelligence",
+      title: "Progress",
+      desc: "See your real margins, food waste, and staff performance on one live industrial dashboard.",
+      highlight: "Pure Visibility",
     },
   ];
 
   return (
-    <section className="section bg-white text-center py-24" id="flow">
-      <div className="container">
+    <section className="relative py-32 bg-slate-950 overflow-hidden" id="flow">
+      {/* Background Circuit Grid */}
+      <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[linear-gradient(to_right,#FFF_1px,transparent_1px),linear-gradient(to_bottom,#FFF_1px,transparent_1px)] bg-[size:50px_50px]" />
+
+      <div className="container relative z-10 px-8">
         {/* Section Header */}
-        <div className="mb-16">
-          <div className="mb-4">
-            <span className="badge">Engineered Efficiency</span>
-          </div>
-          <h2 className="mb-4 font-extrabold tracking-tight text-[--color-text-primary] text-4xl">
-            Unified Velocity.
-          </h2>
-          <p className="mx-auto text-gray-500 text-lg max-w-[500px] leading-relaxed">
-            One continuous circuit. No manual data entry.
-          </p>
+        <div className="max-w-3xl mb-24">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col items-start gap-4"
+          >
+            <div className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/30 rounded-full">
+              <Zap size={14} className="text-accent fill-accent" />
+              <span className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-accent">
+                Unified Circuit
+              </span>
+            </div>
+
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.05]">
+              One Continuous <br />
+              <span className="text-accent underline decoration-8 underline-offset-[-4px] decoration-accent/10">
+                Velocity
+              </span>{" "}
+              Track.
+            </h2>
+
+            <p className="text-xl text-slate-400 font-medium leading-relaxed max-w-xl mt-4">
+              Codeket replaces disconnected chaos with a single, glowing
+              pipeline of operational data. No manual entry. No lag. Just
+              service.
+            </p>
+          </motion.div>
         </div>
 
-        <div className="relative max-w-[1000px] mx-auto">
-          {/* The Track (Desktop only) */}
-          <div className="hidden md:block absolute top-[50px] left-[10%] right-[10%] h-px bg-gray-200 z-0" />
+        {/* The Circuit Flow */}
+        <div className="relative">
+          {/* Desktop Connection Path (SVG) */}
+          <div className="absolute top-[80px] left-[5%] right-[5%] hidden lg:block h-[2px] z-0">
+            <svg
+              width="100%"
+              height="2"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M0 1H1000"
+                stroke="url(#circuit-gradient)"
+                strokeWidth="2"
+                strokeDasharray="8 12"
+              />
+              <defs>
+                <linearGradient
+                  id="circuit-gradient"
+                  x1="0"
+                  y1="1"
+                  x2="1000"
+                  y2="1"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#FF6B35" stopOpacity="0" />
+                  <stop offset="0.2" stopColor="#FF6B35" />
+                  <stop offset="0.8" stopColor="#FF6B35" />
+                  <stop offset="1" stopColor="#FF6B35" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+            {/* Pulsing Data Packet */}
+            <motion.div
+              animate={{ left: ["0%", "100%"] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              className="absolute top-1/2 -translate-y-1/2 w-8 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent shadow-[0_0_10px_#FF6B35]"
+            />
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+          {/* Flow Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
             {steps.map((step, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="flex flex-col items-center text-center group"
+                transition={{ delay: i * 0.15, duration: 0.6 }}
+                className="flex flex-col items-start group"
               >
-                {/* Node */}
-                <motion.div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 bg-white border border-gray-200 shadow-md transition-all duration-300 group-hover:border-accent group-hover:shadow-lg group-hover:-translate-y-1">
-                  <div className="text-[--color-text-primary]">
-                    <step.icon size={30} strokeWidth={2} />
+                {/* Node Milestone */}
+                <div className="relative mb-10 self-center lg:self-start">
+                  <div className="w-20 h-20 rounded-[24px] bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-white group-hover:border-accent group-hover:bg-accent/5 transition-all duration-500 shadow-2xl group-hover:shadow-accent/20 relative z-10 overflow-hidden">
+                    <step.icon
+                      size={32}
+                      strokeWidth={1.5}
+                      className="group-hover:text-accent transition-colors"
+                    />
+                    {/* Inner Tech Accent */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-[radial-gradient(circle_at_center,#FF6B35_0%,transparent_70%)] transition-opacity" />
                   </div>
-                </motion.div>
 
-                <h3 className="text-xl mb-2 font-extrabold text-[--color-text-primary]">
-                  {step.title}
-                </h3>
+                  {/* Step Number Badge */}
+                  <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-[0.65rem] font-black text-slate-400 group-hover:text-white group-hover:border-accent transition-all z-20">
+                    0{i + 1}
+                  </div>
+                </div>
 
-                <p className="text-gray-500 text-sm leading-relaxed max-w-[180px] mx-auto font-medium">
-                  {step.desc}
-                </p>
+                {/* Content */}
+                <div className="text-center lg:text-left">
+                  <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent/60 mb-2 block">
+                    {step.phase}
+                  </span>
+                  <h3 className="text-2xl font-black text-white mb-4 tracking-tight">
+                    {step.title}
+                  </h3>
+                  <div className="h-0.5 w-12 bg-slate-800 group-hover:w-full group-hover:bg-accent/30 transition-all duration-500 mb-6 mx-auto lg:mx-0" />
+                  <p className="text-slate-400 font-medium leading-relaxed text-sm">
+                    {step.desc}
+                  </p>
+
+                  {/* Highlight Badge */}
+                  <div className="mt-8 pt-6 border-t border-slate-900 flex items-center justify-center lg:justify-start gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    <span className="text-[0.6rem] font-black uppercase tracking-widest text-slate-300">
+                      {step.highlight}
+                    </span>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
+
+        {/* CTA Link HUD */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-32 pt-12 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-8"
+        >
+          <div className="flex items-center gap-6">
+            <div className="flex -space-x-3">
+              {[1, 2, 3, 4].map((x) => (
+                <div
+                  key={x}
+                  className="w-10 h-10 rounded-full border-2 border-slate-950 bg-slate-800 flex items-center justify-center"
+                >
+                  <Smartphone size={16} className="text-slate-500" />
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-slate-500 font-medium">
+              Connecting over{" "}
+              <span className="text-white font-bold">14,200+</span> hardware
+              nodes daily.
+            </p>
+          </div>
+
+          <button className="flex items-center gap-3 text-white font-black text-xs uppercase tracking-widest group hover:text-accent transition-colors">
+            Explore System Architecture
+            <ArrowRight
+              size={16}
+              className="group-hover:translate-x-1 transition-transform"
+            />
+          </button>
+        </motion.div>
       </div>
     </section>
   );
