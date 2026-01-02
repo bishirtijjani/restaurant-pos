@@ -95,6 +95,7 @@ import PermissionMatrix from "../features/users/components/PermissionMatrix";
 // Brand modals
 import BrandMenuForm from "../features/brand/components/BrandMenuForm";
 import ImportWizardModalBody from "../features/common/components/ImportWizardModalBody";
+import SetupWizard from "../features/onboarding/components/SetupWizard";
 
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
@@ -468,6 +469,9 @@ function ModalLayout() {
                     closeModal={close}
                     extraObject={extraObject}
                   />
+                ),
+                [MODAL_BODY_TYPES.SETUP_WIZARD]: (
+                  <SetupWizard closeModal={close} />
                 ),
                 [MODAL_BODY_TYPES.DEFAULT]: <div></div>,
               }[bodyType]

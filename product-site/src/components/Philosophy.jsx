@@ -1,139 +1,156 @@
 import { motion } from "framer-motion";
-import { useInView } from "framer-motion";
-import { useRef } from "react";
-import { Smartphone, MessageCircle, Zap, Target } from "lucide-react";
+import {
+  Smartphone,
+  MessageCircle,
+  Zap,
+  Target,
+  ArrowRight,
+} from "lucide-react";
 
 export default function Philosophy() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
   const pillars = [
     {
       icon: Smartphone,
       title: "Bring Your Own Hardware",
       description:
-        "Toast charges $799 for their terminal. You already have an iPad.",
-      details: "Works on iPad, Android tablets, or existing POS hardware",
+        "Toast charges $799 for their proprietary terminal. You already have an iPad.",
+      details:
+        "Compatible with any modern tablet or browser. No hardware lock-in. Ever.",
+      tag: "Hardware Freedom",
     },
     {
       icon: MessageCircle,
       title: "Talk to Humans, Not Bots",
-      description: "Need help? Text the founder. No tickets. No wait times.",
-      details: "Personal support. Same-day response. Real relationships.",
+      description:
+        "Need help? Text the founder directly. No tickets. No offshore wait times.",
+      details:
+        "Personalized support tier for every customer. We scale with your growth.",
+      tag: "Direct Support",
     },
     {
       icon: Zap,
-      title: "Workflows That Work",
+      title: "Process Over Customization",
       description:
-        "We enforce proven processes. Your 'special way' is probably costing you money.",
-      details: "One way to do things. The right way. No customization chaos.",
+        "We enforce proven workflows. Your 'special way' is often what's costing you money.",
+      details:
+        "One way to do things—the right way. Elimination of operational chaos by design.",
+      tag: "Engineered Flow",
     },
     {
       icon: Target,
       title: "Strong Where It Matters",
       description:
-        "POS, Inventory, Taxes, Reports. We don't waste time on gimmicks.",
-      details: "Built for the 90% of daily tasks. Not the 10% edge cases.",
+        "POS, Inventory, Taxes, Reports. We don't waste time on marketing gimmicks.",
+      details:
+        "Built for the 90% of daily tasks that drive your bottom line. Industrial-grade focus.",
+      tag: "Mission Critical",
     },
   ];
 
   return (
-    <section
-      className="section"
-      style={{ backgroundColor: "var(--color-bg-secondary)" }}
-      ref={ref}
-    >
+    <section className="section bg-white" id="philosophy">
       <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-          style={{ marginBottom: "var(--space-16)" }}
-        >
-          <h2 style={{ marginBottom: "var(--space-4)" }}>
-            We're Opinionated By Design
-          </h2>
-          <p
-            style={{
-              fontSize: "var(--font-size-xl)",
-              color: "var(--color-text-secondary)",
-              maxWidth: "700px",
-              margin: "0 auto",
-            }}
+        {/* Section Header */}
+        <div className="flex flex-col lg:flex-row items-end justify-between gap-12 mb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-2xl"
           >
-            Built for serious small and mid-size restaurants that value
-            reliability over endless customization.
-          </p>
-        </motion.div>
+            <div className="badge mb-6">Our Philosophy</div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-[--color-text-primary] leading-[1.1]">
+              We're Opinionated <br /> By{" "}
+              <span className="text-accent">Design.</span>
+            </h2>
+          </motion.div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "var(--space-8)",
-          }}
-        >
-          {pillars.map((pillar, index) => {
-            const Icon = pillar.icon;
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                animate={
-                  isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
-                }
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="card"
-              >
-                <div
-                  style={{
-                    width: "56px",
-                    height: "56px",
-                    backgroundColor: "rgba(255, 107, 53, 0.1)",
-                    borderRadius: "var(--radius-lg)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: "var(--space-6)",
-                  }}
-                >
-                  <Icon size={28} color="var(--color-accent)" />
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-xl text-slate-500 font-medium leading-relaxed max-w-md lg:mb-2"
+          >
+            Built for serious restaurants that value reliability and speed over
+            endless configuration.
+          </motion.p>
+        </div>
+
+        {/* Philosophy Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+          {pillars.map((pillar, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="group relative p-10 bg-slate-50 rounded-[40px] border border-slate-100 hover:border-accent/20 hover:bg-white hover:shadow-2xl hover:shadow-accent/5 transition-all duration-500 overflow-hidden"
+            >
+              {/* Subtle Corner Accent */}
+              <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors" />
+
+              <div className="flex flex-col h-full relative z-10">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-accent shadow-sm border border-slate-100 transition-transform group-hover:scale-110">
+                    <pillar.icon size={32} strokeWidth={2} />
+                  </div>
+                  <span className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-slate-400">
+                    {pillar.tag}
+                  </span>
                 </div>
 
-                <h3
-                  style={{
-                    fontSize: "var(--font-size-2xl)",
-                    marginBottom: "var(--space-3)",
-                  }}
-                >
+                <h3 className="text-2xl font-black text-[--color-text-primary] mb-4 tracking-tight">
                   {pillar.title}
                 </h3>
 
-                <p
-                  style={{
-                    fontSize: "var(--font-size-lg)",
-                    fontWeight: 600,
-                    color: "var(--color-text-primary)",
-                    marginBottom: "var(--space-4)",
-                  }}
-                >
+                <p className="text-lg font-bold text-slate-700 leading-snug mb-4">
                   {pillar.description}
                 </p>
 
-                <p
-                  style={{
-                    fontSize: "var(--font-size-base)",
-                    color: "var(--color-text-muted)",
-                    lineHeight: 1.7,
-                  }}
-                >
+                <p className="text-slate-500 font-medium leading-relaxed text-[0.95rem]">
                   {pillar.details}
                 </p>
-              </motion.div>
-            );
-          })}
+
+                {/* Technical Indicator */}
+                <div className="mt-auto pt-10 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="w-8 h-[1px] bg-accent" />
+                  <span className="text-[0.6rem] font-black uppercase tracking-widest text-accent">
+                    Operational Standard
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
+
+        {/* Bottom Trust CTA */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="mt-20 p-1 bg-[--color-text-primary] rounded-[48px]"
+        >
+          <div className="bg-white rounded-[44px] p-12 flex flex-col md:flex-row items-center justify-between gap-8 border border-[--color-text-primary]/10">
+            <div className="max-w-xl">
+              <h4 className="text-2xl font-black text-[--color-text-primary] mb-3">
+                Does your current POS feel like a liability?
+              </h4>
+              <p className="text-slate-500 font-medium">
+                Stop negotiating with software that doesn't respect your
+                operations. Experience the Codeket standard today.
+              </p>
+            </div>
+
+            <button className="btn btn-primary group">
+              Start Your Migration
+              <ArrowRight
+                size={20}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </button>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

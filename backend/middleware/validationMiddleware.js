@@ -213,7 +213,6 @@ const schemas = {
     email: { required: true, email: true },
     password: { required: true, type: "string", minLength: 5 },
     role: {
-      required: true,
       enum: ["admin", "manager", "cashier", "waiter", "kitchen"],
     },
   },

@@ -110,13 +110,12 @@ export default function Credibility() {
         </div>
 
         {/* Bottom Proof HUD */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="mt-24 p-8 bg-white border border-slate-200 rounded-[40px] shadow-sm flex flex-col md:flex-row items-center justify-between gap-8 md:gap-16 group hover:border-accent/40 transition-all duration-700 overflow-hidden relative"
         >
-          {/* Subtle Glow */}
           <div className="absolute -right-20 -top-20 w-64 h-64 bg-accent/5 blur-[100px] pointer-events-none group-hover:bg-accent/10 transition-colors" />
 
           <div className="flex-1 flex flex-col md:flex-row items-center gap-10">
@@ -161,7 +160,7 @@ export default function Credibility() {
               />
             </button>
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
     </section>
   );

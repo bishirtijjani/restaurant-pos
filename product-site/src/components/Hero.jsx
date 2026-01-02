@@ -9,7 +9,10 @@ export default function Hero() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Email submitted:", email);
+    const appUrl = "http://localhost:5173";
+    window.location.href = `${appUrl}/register?email=${encodeURIComponent(
+      email
+    )}`;
   };
 
   return (
@@ -27,11 +30,10 @@ export default function Hero() {
               transition={{ duration: 0.6, ease: "easeOut" }}
             >
               <h1 className="text-3xl md:text-4xl xl:text-5xl font-black mb-8 tracking-tighter leading-[0.95] text-[--color-text-primary]">
-                Powerful Software
+                Run Your Restaurant
                 <div className="m-0 p-0 gap-0 text-accent underline decoration-8 underline-offset-[-2px] decoration-accent/10">
-                  Built for restaurants
+                  on One Operational System.
                 </div>
-                that take operations seriously.
               </h1>
 
               <p className="text-lg text-gray-500 mb-10 leading-relaxed font-medium">
@@ -119,28 +121,6 @@ export default function Hero() {
               <div className="absolute top-8 left-8 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl pointer-events-none hidden md:block">
                 <div className="w-12 h-1.5 bg-accent/40 rounded-full mb-2" />
                 <div className="w-20 h-1.5 bg-white/10 rounded-full" />
-              </div>
-            </motion.div>
-
-            {/* Floating Status Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="absolute -bottom-8 -right-4 bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 hidden xl:block z-20"
-            >
-              <div className="flex items-center gap-4 text-left">
-                <div className="p-3 bg-accent/10 rounded-2xl text-accent">
-                  <Play size={24} strokeWidth={2.5} />
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-[--color-text-primary]">
-                    10.2s
-                  </div>
-                  <div className="text-[0.65rem] font-bold uppercase tracking-widest text-gray-400 mt-1">
-                    Order-to-Kitchen Speed
-                  </div>
-                </div>
               </div>
             </motion.div>
           </div>

@@ -12,31 +12,31 @@ export default function OperationalFlow() {
   const steps = [
     {
       icon: Smartphone,
-      phase: "Point of Sale",
+      phase: "Orders & Service Execution",
       title: "The Floor",
-      desc: "Waiters tap. Orders sync instantly. The kitchen starts cooking before the waiter leaves the table.",
-      highlight: "High-Speed Ingestion",
+      desc: "Orders are created once and flow through tables, counters, and devices without duplication or resync.",
+      highlight: "No Duplication",
     },
     {
       icon: ChefHat,
-      phase: "Kitchen Sync",
+      phase: "Kitchen & Preparation Flow",
       title: "The Line",
-      desc: "Zero paper. Zero lost tickets. Every station updated in real-time with precise prep timers.",
-      highlight: "Error Elimination",
+      desc: "Orders route automatically to the correct stations with timing, notes, and status updates in real time.",
+      highlight: "Real-Time Sync",
     },
     {
       icon: RotateCcw,
-      phase: "Inventory",
+      phase: "Inventory & Cost Control",
       title: "The Vault",
-      desc: "Every sale automatically deducts ingredients down to the gram. No more manual stock counts.",
-      highlight: "Auto-Deduction",
+      desc: "Every item sold deducts ingredients, tracks waste, and updates cost data—without manual stock edits.",
+      highlight: "Zero Manual Edits",
     },
     {
       icon: BarChart3,
-      phase: "Intelligence",
+      phase: "Reporting & Oversight",
       title: "Progress",
-      desc: "See your real margins, food waste, and staff performance on one live industrial dashboard.",
-      highlight: "Pure Visibility",
+      desc: "Sales, margins, staff activity, and stock movement are always up to date—no end-of-day surprises.",
+      highlight: "Oversight",
     },
   ];
 
@@ -57,22 +57,19 @@ export default function OperationalFlow() {
             <div className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/30 rounded-full">
               <Zap size={14} className="text-accent fill-accent" />
               <span className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-accent">
-                Unified Circuit
+                Reliability by Design
               </span>
             </div>
 
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.05]">
               One Continuous <br />
               <span className="text-accent underline decoration-8 underline-offset-[-4px] decoration-accent/10">
-                Velocity
-              </span>{" "}
-              Track.
+                Operational Flow.
+              </span>
             </h2>
 
             <p className="text-xl text-slate-400 font-medium leading-relaxed max-w-xl mt-4">
-              Codeket replaces disconnected chaos with a single, glowing
-              pipeline of operational data. No manual entry. No lag. Just
-              service.
+              No gaps. No sync issues. No manual reconciliation.
             </p>
           </motion.div>
         </div>
@@ -172,38 +169,46 @@ export default function OperationalFlow() {
           </div>
         </div>
 
-        {/* CTA Link HUD */}
+        {/* Closing Trust Statement */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-32 pt-12 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-8"
+          className="mt-24 pt-12 border-t border-slate-900 text-center md:text-left"
         >
-          <div className="flex items-center gap-6">
-            <div className="flex -space-x-3">
-              {[1, 2, 3, 4].map((x) => (
-                <div
-                  key={x}
-                  className="w-10 h-10 rounded-full border-2 border-slate-950 bg-slate-800 flex items-center justify-center"
-                >
-                  <Smartphone size={16} className="text-slate-500" />
-                </div>
-              ))}
-            </div>
-            <p className="text-sm text-slate-500 font-medium">
-              Connecting over{" "}
-              <span className="text-white font-bold">14,200+</span> hardware
-              nodes daily.
-            </p>
-          </div>
+          <p className="text-xl md:text-2xl text-slate-300 font-black tracking-tight leading-relaxed max-w-4xl">
+            A single action in Codeket triggers every downstream effect
+            automatically—orders, kitchen flow, stock, and reporting stay in
+            sync by design.
+          </p>
 
-          <button className="flex items-center gap-3 text-white font-black text-xs uppercase tracking-widest group hover:text-accent transition-colors">
-            Explore System Architecture
-            <ArrowRight
-              size={16}
-              className="group-hover:translate-x-1 transition-transform"
-            />
-          </button>
+          <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-6">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map((x) => (
+                  <div
+                    key={x}
+                    className="w-10 h-10 rounded-full border-2 border-slate-950 bg-slate-800 flex items-center justify-center"
+                  >
+                    <Smartphone size={16} className="text-slate-500" />
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-slate-500 font-medium">
+                Built by operators for{" "}
+                <span className="text-white font-bold">mission-critical</span>{" "}
+                environments.
+              </p>
+            </div>
+
+            <button className="flex items-center gap-3 text-white font-black text-xs uppercase tracking-widest group hover:text-accent transition-colors">
+              Explore System Architecture
+              <ArrowRight
+                size={16}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </button>
+          </div>
         </motion.div>
       </div>
     </section>

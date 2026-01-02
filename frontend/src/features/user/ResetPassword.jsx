@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import ErrorText from "../../components/Typography/ErrorText";
 import InputText from "../../components/Input/InputText";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  ShieldCheckIcon,
+  ChevronRightIcon,
+  KeyIcon,
+} from "@heroicons/react/24/outline";
 
 function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -41,7 +48,6 @@ function ResetPassword() {
       setLoading(false);
 
       if (response.ok) {
-        alert("Password reset successful. You can now log in.");
         navigate("/login");
       } else {
         setErrorMessage(data.message || "Error resetting password.");
@@ -53,76 +59,115 @@ function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 flex items-center">
-      <div className="card mx-auto w-full max-w-md shadow-xl bg-base-100 rounded-xl">
-        <div className="py-12 px-10">
-          <h2 className="text-2xl font-semibold mb-4 text-center">
-            Reset Password
-          </h2>
-          <p className="mb-8 text-center font-semibold">
-            Enter your new password below.
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleResetPassword();
-            }}
+    <div className="relative min-h-screen bg-[#050505] text-white overflow-hidden font-sans selection:bg-brand/30">
+      {/* Immersive Background Engine */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-500/5 rounded-full blur-[120px]" />
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
+            backgroundSize: "50px 50px",
+          }}
+        />
+      </div>
+
+      <div className="flex min-h-screen items-center justify-center p-8 relative z-10">
+        <div className="w-full max-w-md">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[40px] p-8 md:p-12 shadow-2xl relative"
           >
-            <div className="mb-4 relative">
-              <InputText
-                type={showNewPassword ? "text" : "password"}
-                value={newPassword}
-                updateType="password"
-                containerStyle="mt-4"
-                labelTitle="New Password"
-                placeholder="Enter your new password"
-                updateFormValue={({ value }) => setNewPassword(value)}
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-10"
-                onClick={() => setShowNewPassword((prev) => !prev)}
-              >
-                {showNewPassword ? (
-                  <EyeSlashIcon className="h-5 w-5 text-gray-500" />
-                ) : (
-                  <EyeIcon className="h-5 w-5 text-gray-500" />
-                )}
-              </button>
-            </div>
-            <div className="mb-4 relative">
-              <InputText
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                updateType="confirmPassword"
-                containerStyle="mt-4"
-                labelTitle="Confirm Password"
-                placeholder="Confirm your new password"
-                updateFormValue={({ value }) => setConfirmPassword(value)}
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-10"
-                onClick={() => setShowConfirmPassword((prev) => !prev)}
-              >
-                {showConfirmPassword ? (
-                  <EyeSlashIcon className="h-5 w-5 text-gray-500" />
-                ) : (
-                  <EyeIcon className="h-5 w-5 text-gray-500" />
-                )}
-              </button>
+            <div className="mb-10 text-center">
+              <div className="w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-brand">
+                <ShieldCheckIcon className="w-8 h-8" />
+              </div>
+              <h2 className="text-3xl font-black tracking-tight text-white mb-2">
+                New Identity
+              </h2>
+              <p className="text-white/40 font-medium">
+                Establish your new secure credentials
+              </p>
             </div>
 
-            <ErrorText styleClass="mt-4">{errorMessage}</ErrorText>
-            <button
-              type="submit"
-              className={
-                "btn mt-4 w-full btn-primary" + (loading ? " loading" : "")
-              }
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleResetPassword();
+              }}
+              className="space-y-6"
             >
-              Reset Password
-            </button>
-          </form>
+              <div className="space-y-4">
+                <div className="relative">
+                  <KeyIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                  <InputText
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    updateType="password"
+                    containerStyle="mt-0"
+                    labelTitle=""
+                    placeholder="New Password"
+                    updateFormValue={({ value }) => setNewPassword(value)}
+                    className="pl-14 bg-white/5 border-white/10 focus:border-brand/50 rounded-full"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-6 top-1/2 -translate-y-1/2"
+                    onClick={() => setShowNewPassword((prev) => !prev)}
+                  >
+                    {showNewPassword ? (
+                      <EyeSlashIcon className="h-5 w-5 text-white/20" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5 text-white/20" />
+                    )}
+                  </button>
+                </div>
+                <div className="relative">
+                  <KeyIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                  <InputText
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    updateType="confirmPassword"
+                    containerStyle="mt-0"
+                    labelTitle=""
+                    placeholder="Confirm New Password"
+                    updateFormValue={({ value }) => setConfirmPassword(value)}
+                    className="pl-14 bg-white/5 border-white/10 focus:border-brand/50 rounded-full"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-6 top-1/2 -translate-y-1/2"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeSlashIcon className="h-5 w-5 text-white/20" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5 text-white/20" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-white text-black hover:bg-white/90 font-black py-4 rounded-full transition-all shadow-xl flex items-center justify-center gap-2 group"
+              >
+                {loading ? (
+                  <span className="loading loading-spinner text-black"></span>
+                ) : (
+                  <>
+                    Update Password{" "}
+                    <ChevronRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </form>
+          </motion.div>
         </div>
       </div>
     </div>

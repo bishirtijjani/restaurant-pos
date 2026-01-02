@@ -2,7 +2,7 @@ import "./index.css";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import TrustBar from "./components/TrustBar";
-import Features from "./components/Features";
+import Philosophy from "./components/Philosophy";
 import Testimonials from "./components/Testimonials";
 import Pricing from "./components/Pricing";
 import FAQ from "./components/FAQ";
@@ -19,7 +19,7 @@ function App() {
         <Hero />
         <TrustBar />
         <OperationalFlow />
-        <Features />
+        <Philosophy />
         <Testimonials />
         <Credibility />
         <Pricing />

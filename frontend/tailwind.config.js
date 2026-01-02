@@ -6,7 +6,21 @@ module.exports = {
   ],
   darkMode: ["class", '[data-theme="dark"]'],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        brand: {
+          DEFAULT: "#ff6b35",
+          dim: "#fff4ef",
+          hover: "#e85d2a",
+          dark: "#e85d2a",
+        },
+      },
+      borderRadius: {
+        xl: "1rem",
+        "2xl": "1.5rem",
+        "3xl": "2rem",
+      },
+    },
   },
   plugins: [require("@tailwindcss/typography"), require("daisyui")],
   daisyui: {

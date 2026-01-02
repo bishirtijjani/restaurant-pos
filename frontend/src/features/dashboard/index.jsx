@@ -16,6 +16,7 @@ import OperationsAlerts from "./components/OperationsAlerts";
 import QuickActionToolbar from "./components/QuickActionToolbar";
 import DashboardRecentOrders from "./components/DashboardRecentOrders";
 import HourlyTrendChart from "../analytics/dashboards/Overview/components/HourlyTrendChart";
+import FirstOrderWidget from "./components/FirstOrderWidget";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -72,9 +73,18 @@ const Dashboard = () => {
     );
   }
 
+  // Proxy for "New User/Empty State": No revenue today, no active orders, no recent history
+  const isNewStore =
+    !loading &&
+    kpis.todayRevenue === 0 &&
+    kpis.activeOrders === 0 &&
+    recentActivity.length === 0;
+
   return (
     <div className="min-h-screen pb-20">
       <LiveStatusHeader />
+
+      {isNewStore && <FirstOrderWidget />}
 
       {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

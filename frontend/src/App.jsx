@@ -24,6 +24,7 @@ const Login = lazy(() => import("./pages/Login"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Register = lazy(() => import("./pages/Register"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Home = lazy(() => import("./pages/Home"));
 
 initializeApp();
@@ -53,6 +54,7 @@ function App() {
       "/forgot-password",
       "/reset-password",
       "/home",
+      "/onboarding",
     ];
     const isPublicPage = publicPaths.some((path) =>
       window.location.pathname.includes(path)
@@ -74,6 +76,7 @@ function App() {
       "/forgot-password",
       "/reset-password",
       "/home",
+      "/onboarding",
     ];
     const isPublicPage = publicPaths.some((path) =>
       window.location.pathname.includes(path)
@@ -139,6 +142,12 @@ function App() {
             path="/home"
             element={
               authToken ? <Navigate to="/app/dashboard" replace /> : <Home />
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              authToken ? <Onboarding /> : <Navigate to="/login" replace />
             }
           />
           <Route

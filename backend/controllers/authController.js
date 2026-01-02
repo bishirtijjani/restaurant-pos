@@ -52,24 +52,27 @@ const register = async (req, res) => {
       }
     }
 
-    // Validate security questions
-    if (!securityQuestions || securityQuestions.length !== 2) {
-      return res.status(400).json({
-        message: "Two security questions are required",
-      });
-    }
-
-    // Validate that questions and answers are provided
-    for (let i = 0; i < securityQuestions.length; i++) {
-      if (!securityQuestions[i].question || !securityQuestions[i].answer) {
+    // Validate security questions - ONLY IF PROVIDED
+    if (securityQuestions && securityQuestions.length > 0) {
+      if (securityQuestions.length !== 2) {
         return res.status(400).json({
-          message: "Both security questions must have questions and answers",
+          message:
+            "Two security questions are required if you choose to set them up now",
         });
       }
-      if (securityQuestions[i].answer.trim().length < 2) {
-        return res.status(400).json({
-          message: "Security answers must be at least 2 characters long",
-        });
+
+      // Validate that questions and answers are provided
+      for (let i = 0; i < securityQuestions.length; i++) {
+        if (!securityQuestions[i].question || !securityQuestions[i].answer) {
+          return res.status(400).json({
+            message: "Both security questions must have questions and answers",
+          });
+        }
+        if (securityQuestions[i].answer.trim().length < 2) {
+          return res.status(400).json({
+            message: "Security answers must be at least 2 characters long",
+          });
+        }
       }
     }
 
@@ -79,7 +82,8 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "User Email already registered" });
     }
 
-    // --- SaaS Logic: Registration = New Tenant (User + Store) ---
+    // --- SaaS Logic: Registration = New User ---
+    // The store and organization will be created during the Onboarding Wizard on the frontend.
 
     // 1. Create the User
     const user = new User({
@@ -87,35 +91,12 @@ const register = async (req, res) => {
       email,
       password,
       pinCode: pinCode || null,
-      securityQuestions,
-      // Global role is deprecated but set to admin for the signup user
+      securityQuestions: securityQuestions || [],
+      // Global role is set to admin for the signup user
       role: "admin",
     });
 
-    // 2. Create their first Store
-    const newStore = await Store.create({
-      name: `${fullname.split(" ")[0]}'s Restaurant`,
-      ownerId: user._id,
-      status: "active",
-      settings: {
-        restaurantName: `${fullname}'s Restaurant`,
-        // Inherits default settings from Schema
-      },
-    });
-
-    // 3. Link Store to User
-    user.stores = [
-      {
-        storeId: newStore._id,
-        role: "admin",
-        isDefault: true,
-        permissions: ["all"],
-        status: "active",
-      },
-    ];
-    user.lastActiveStore = newStore._id;
-
-    // 4. Save User
+    // 2. Save User
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user);
 
@@ -136,18 +117,15 @@ const register = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Populate store info for response
-    await user.populate("stores.storeId", "name settings.restaurantName");
-
     res.status(201).json({
-      message: "Account and Store created successfully",
+      message: "Account created successfully",
       user: {
         _id: user._id,
         fullname: user.fullname,
         email: user.email,
         role: "admin",
-        stores: user.stores, // Important: Sends back the new store
-        lastActiveStore: user.lastActiveStore,
+        stores: [],
+        lastActiveStore: null,
       },
       token: accessToken,
     });
