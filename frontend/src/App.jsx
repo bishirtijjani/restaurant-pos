@@ -25,11 +25,17 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Register = lazy(() => import("./pages/Register"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Home = lazy(() => import("./pages/Home"));
 
 initializeApp();
 initializeOfflineSupport();
 setupAxiosInterceptors();
+
+const ExternalRedirect = ({ url }) => {
+  useEffect(() => {
+    window.location.href = url;
+  }, [url]);
+  return <SuspenseContent />;
+};
 
 function App() {
   const dispatch = useDispatch();
@@ -53,11 +59,12 @@ function App() {
       "/register",
       "/forgot-password",
       "/reset-password",
-      "/home",
       "/onboarding",
     ];
-    const isPublicPage = publicPaths.some((path) =>
-      window.location.pathname.includes(path)
+    const isPublicPage = publicPaths.some(
+      (path) =>
+        window.location.pathname === path ||
+        window.location.pathname.startsWith(path + "/")
     );
 
     if (isPublicPage) return;
@@ -75,11 +82,12 @@ function App() {
       "/register",
       "/forgot-password",
       "/reset-password",
-      "/home",
       "/onboarding",
     ];
-    const isPublicPage = publicPaths.some((path) =>
-      window.location.pathname.includes(path)
+    const isPublicPage = publicPaths.some(
+      (path) =>
+        window.location.pathname === path ||
+        window.location.pathname.startsWith(path + "/")
     );
 
     if (isPublicPage) {
@@ -140,10 +148,9 @@ function App() {
           />
           <Route
             path="/home"
-            element={
-              authToken ? <Navigate to="/app/dashboard" replace /> : <Home />
-            }
+            element={<ExternalRedirect url="https://restaurant.codeket.com" />}
           />
+
           <Route
             path="/onboarding"
             element={
