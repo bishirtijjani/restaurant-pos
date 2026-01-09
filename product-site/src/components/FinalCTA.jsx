@@ -32,7 +32,7 @@ export default function FinalCTA() {
 
             <div className="flex flex-wrap justify-center gap-4 mb-12">
               <a
-                href="http://localhost:5173/register"
+                href="https://app.restaurant.codeket.com/register"
                 className="btn btn-primary px-12 py-5 text-xl tracking-tight"
               >
                 Claim Your Free Trial

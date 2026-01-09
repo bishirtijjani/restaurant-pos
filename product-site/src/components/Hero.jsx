@@ -9,7 +9,8 @@ export default function Hero() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const appUrl = "http://localhost:5173";
+    const appUrl = "https://app.restaurant.codeket.com";
+
     window.location.href = `${appUrl}/register?email=${encodeURIComponent(
       email
     )}`;

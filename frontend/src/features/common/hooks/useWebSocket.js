@@ -1,10 +1,18 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 
-const WS_URL =
-  process.env.NODE_ENV === "production"
-    ? `wss://${window.location.host}/ws`
-    : "ws://localhost:5000/ws";
+const getWsUrl = () => {
+  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (baseUrl) {
+    const wsProtocol = baseUrl.startsWith("https") ? "wss" : "ws";
+    const host = baseUrl.replace(/^https?:\/\//, "");
+    return `${wsProtocol}://${host}/ws`;
+  }
+  return `ws://${window.location.host}/ws`;
+};
+
+const WS_URL = getWsUrl();
 
 const useWebSocket = (onMessage, options = {}) => {
   // Get active storeId from Redux

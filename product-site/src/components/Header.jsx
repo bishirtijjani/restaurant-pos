@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const appUrl = "http://localhost:5173";
+  const appUrl = "https://app.restaurant.codeket.com";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);

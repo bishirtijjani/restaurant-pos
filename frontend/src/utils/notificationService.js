@@ -1,7 +1,14 @@
 import { store } from "../app/store"; // Adjust the import based on your store setup
 import { addNotification } from "../features/common/rightDrawerSlice";
 
-const socket = new WebSocket("ws://localhost:5000/ws");
+const getWsUrl = () => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  const wsProtocol = baseUrl.startsWith("https") ? "wss" : "ws";
+  const host = baseUrl.replace(/^https?:\/\//, "");
+  return `${wsProtocol}://${host}/ws`;
+};
+
+const socket = new WebSocket(getWsUrl());
 
 socket.onmessage = (event) => {
   const notification = JSON.parse(event.data);

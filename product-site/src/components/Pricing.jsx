@@ -172,7 +172,7 @@ export default function Pricing() {
           </div>
 
           <a
-            href="http://localhost:5173/register"
+            href="https://app.restaurant.codeket.com/register"
             className="btn btn-primary w-full p-5 rounded-full font-bold"
           >
             Start Your Free Trial
