@@ -24,7 +24,7 @@ export default function Hero() {
       <div className="container relative z-10">
         <div className="flex flex-col lg:flex-row items-center gap-16 xl:gap-24">
           {/* Left Content Column */}
-          <div className="flex-1 text-left max-w-[640px]">
+          <div className="flex-1 w-full text-left lg:max-w-[640px]">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -47,7 +47,7 @@ export default function Hero() {
               {/* Email CTA */}
               <form
                 onSubmit={handleSubmit}
-                className="flex flex-row gap-2 p-1.5 bg-white border-2 border-gray-400 rounded-2xl shadow-lg hover:border-gray-200 transition-all mb-10 group focus-within:border-accent/30 focus-within:ring-4 focus-within:ring-accent/5 max-w-[540px]"
+                className="flex flex-col sm:flex-row gap-2 p-1.5 bg-white border-2 border-gray-400 rounded-2xl shadow-lg hover:border-gray-200 transition-all mb-10 group focus-within:border-accent/30 focus-within:ring-4 focus-within:ring-accent/5 w-full sm:max-w-[540px]"
               >
                 <input
                   type="email"
@@ -59,7 +59,7 @@ export default function Hero() {
                 />
                 <button
                   type="submit"
-                  className="bg-accent text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-accent/20 active:scale-[0.98]"
+                  className="bg-accent text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-accent/20 active:scale-[0.98] whitespace-nowrap"
                 >
                   Get Started
                   <ArrowRight size={16} strokeWidth={3} />
@@ -67,7 +67,7 @@ export default function Hero() {
               </form>
 
               {/* Trust Signal */}
-              <div className="flex items-center gap-8 text-gray-400">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 text-gray-400">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
                   <CheckCircle2 size={16} className="text-accent" />
                   No Credit Card
