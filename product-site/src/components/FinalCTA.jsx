@@ -7,6 +7,8 @@ export default function FinalCTA() {
     "No Credit Card Required",
     "Setup in 15 Minutes",
     "Direct Founder Support",
+    "Use iPad, Android, or Any Browser",
+    "No $799–$3,000 Hardware Purchase",
   ];
 
   return (
@@ -20,14 +22,14 @@ export default function FinalCTA() {
             <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tighter leading-none">
               Start your <br className="md:hidden" />
               <span className="text-accent underline decoration-4 underline-offset-8">
-                margin-first
+                operations-first
               </span>{" "}
               era.
             </h2>
 
             <p className="text-gray-400 text-xl mb-12 font-medium">
               Join 100+ high-growth restaurants taking total command of their
-              operations.
+              operations — even in unreliable internet environments.
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 mb-12">

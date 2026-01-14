@@ -12,10 +12,9 @@ export default function Philosophy() {
     {
       icon: Smartphone,
       title: "Bring Your Own Hardware",
-      description:
-        "Toast charges $799 for their proprietary terminal. You already have an iPad.",
+      description: "Your hardware should not be a business decision.",
       details:
-        "Compatible with any modern tablet or browser. No hardware lock-in. Ever.",
+        "Install Codeket on devices you already own — iPads, Android tablets, laptops, or desktops. No proprietary terminals. No forced upgrades. No hardware ransom.",
       tag: "Hardware Freedom",
     },
     {
@@ -40,7 +39,7 @@ export default function Philosophy() {
       icon: Target,
       title: "Strong Where It Matters",
       description:
-        "POS, Inventory, Taxes, Reports. We don't waste time on marketing gimmicks.",
+        "POS, Inventory, Taxes, Reports — including complex, configurable tax rules. We don't waste time on marketing gimmicks.",
       details:
         "Built for the 90% of daily tasks that drive your bottom line. Industrial-grade focus.",
       tag: "Mission Critical",
@@ -71,8 +70,8 @@ export default function Philosophy() {
             viewport={{ once: true }}
             className="text-xl text-slate-500 font-medium leading-relaxed max-w-md lg:mb-2"
           >
-            Built for serious restaurants that value reliability and speed over
-            endless configuration.
+            Built for serious restaurants that value operational continuity,
+            reliability, and speed over cosmetic customization.
           </motion.p>
         </div>
 

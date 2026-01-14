@@ -33,15 +33,17 @@ export default function Hero() {
               <h1 className="text-3xl md:text-4xl xl:text-5xl font-black mb-8 tracking-tighter leading-[0.95] text-[--color-text-primary]">
                 Run Your Restaurant
                 <div className="m-0 p-0 gap-0 text-accent underline decoration-8 underline-offset-[-2px] decoration-accent/10">
-                  on One Operational System.
+                  on One Operational System — Offline, Online, on Any Device You
+                  Already Own.
                 </div>
               </h1>
 
               <p className="text-lg text-gray-500 mb-10 leading-relaxed font-medium">
-                Codeket Restaurant is an operations-first restaurant management
-                software that replaces disconnected POS systems, spreadsheets,
-                and manual stock tracking with one reliable platform for sales,
-                inventory, and reporting.
+                Codeket Restaurant is an operations-first, offline-capable
+                restaurant management system built for real-world conditions —
+                replacing fragile POS setups, spreadsheets, and manual stock
+                tracking with one reliable operational backbone that runs on any
+                device you already own.
               </p>
 
               {/* Email CTA */}
@@ -75,6 +77,18 @@ export default function Hero() {
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
                   <CheckCircle2 size={16} className="text-accent" />
                   14-Day Free Trial
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+                  <CheckCircle2 size={16} className="text-accent" />
+                  Works With or Without Internet
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+                  <CheckCircle2 size={16} className="text-accent" />
+                  Granular Tax Control (Global & Per Item)
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+                  <CheckCircle2 size={16} className="text-accent" />
+                  Use iPad, Android, or Any Browser
                 </div>
               </div>
             </motion.div>

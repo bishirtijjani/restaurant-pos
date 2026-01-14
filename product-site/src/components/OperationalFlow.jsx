@@ -13,28 +13,28 @@ export default function OperationalFlow() {
     {
       icon: Smartphone,
       phase: "Orders & Service Execution",
-      title: "The Floor",
+      title: "From Table",
       desc: "Orders are created once and flow through tables, counters, and devices without duplication or resync.",
       highlight: "No Duplication",
     },
     {
       icon: ChefHat,
       phase: "Kitchen & Preparation Flow",
-      title: "The Line",
+      title: "To Kitchen",
       desc: "Orders route automatically to the correct stations with timing, notes, and status updates in real time.",
       highlight: "Real-Time Sync",
     },
     {
       icon: RotateCcw,
       phase: "Inventory & Cost Control",
-      title: "The Vault",
+      title: "To Inventory",
       desc: "Every item sold deducts ingredients, tracks waste, and updates cost data—without manual stock edits.",
       highlight: "Zero Manual Edits",
     },
     {
       icon: BarChart3,
       phase: "Reporting & Oversight",
-      title: "Progress",
+      title: "To Analytics",
       desc: "Sales, margins, staff activity, and stock movement are always up to date—no end-of-day surprises.",
       highlight: "Oversight",
     },
@@ -56,7 +56,7 @@ export default function OperationalFlow() {
           >
             <div className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/30 rounded-full">
               <Zap size={14} className="text-accent fill-accent" />
-              <span className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-accent">
+              <span className="text-xs md:text-sm font-black uppercase tracking-[0.2em] text-accent">
                 Reliability by Design
               </span>
             </div>
@@ -64,12 +64,12 @@ export default function OperationalFlow() {
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.05]">
               One Continuous <br />
               <span className="text-accent underline decoration-8 underline-offset-[-4px] decoration-accent/10">
-                Operational Flow.
+                Operational Flow, On Any Device, Even Without Internet.
               </span>
             </h2>
 
             <p className="text-xl text-slate-400 font-medium leading-relaxed max-w-xl mt-4">
-              No gaps. No sync issues. No manual reconciliation.
+              No gaps. No sync issues. No downtime when connectivity fails.
             </p>
           </motion.div>
         </div>

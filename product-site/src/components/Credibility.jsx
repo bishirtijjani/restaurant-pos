@@ -20,7 +20,7 @@ export default function Credibility() {
     {
       icon: WifiOff,
       title: "Offline-capable",
-      desc: "Your restaurant doesn't stop when the internet does. Syncs automatically when back online.",
+      desc: "Full offline mode — orders, payments, inventory, and reporting continue uninterrupted. Syncs automatically when back online.",
       feature: "Local-First",
     },
     {
@@ -58,7 +58,8 @@ export default function Credibility() {
 
             <p className="text-xl text-slate-500 font-medium leading-relaxed max-w-2xl">
               Codeket isn't just a POS; it's industrial-grade infrastructure
-              that protects your revenue when it matters most.
+              that protects your revenue when it matters most. Especially in
+              regions with unstable connectivity or complex tax requirements.
             </p>
           </motion.div>
         </div>

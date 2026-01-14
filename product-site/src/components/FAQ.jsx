@@ -22,6 +22,10 @@ export default function FAQ() {
       q: "What kind of support do I get?",
       a: "Every pilot customer gets direct access to the founding team. You get a direct line for WhatsApp or calls. We don't do ticket waitlists.",
     },
+    {
+      q: "How flexible is the tax system?",
+      a: "Taxes can be configured globally, per location, and per individual menu item. Inclusive or exclusive pricing is supported, making Codeket suitable for international tax environments where rigid POS systems fail.",
+    },
   ];
 
   return (

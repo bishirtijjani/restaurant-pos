@@ -10,19 +10,19 @@ export default function Pricing() {
     {
       feature: "Hardware",
       them: "$799-$3,000 upfront",
-      us: "Use hardware you own",
+      us: "Use existing iPads, tablets, laptops, desktops (no required purchases)",
       usBetter: true,
     },
     {
       feature: "Monthly Fee",
       them: "$150+ / location",
-      us: "$79 flat rate",
+      us: "$99 flat rate",
       usBetter: true,
     },
     {
       feature: "Payments",
       them: "Proprietary Lock-in",
-      us: "Bring your own (Stripe)",
+      us: "Bring your own (Stripe or Any Processor)",
       usBetter: true,
     },
     {
@@ -58,11 +58,11 @@ export default function Pricing() {
             <span className="badge">Transparent Pricing</span>
           </div>
           <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-[--color-text-primary]">
-            One Rate. Total Freedom.
+            One Rate. Operational Freedom.
           </h2>
           <p className="mx-auto text-xl text-gray-500 max-w-[600px] leading-relaxed">
             We don't tax your growth. No setup fees, no contracts, no hardware
-            markup.
+            markup. No forced processors. No internet dependency.
           </p>
         </div>
 
@@ -143,16 +143,21 @@ export default function Pricing() {
         >
           <div className="mb-10">
             <div className="text-7xl font-extrabold text-[--color-text-primary] mb-2 tracking-tighter">
-              $79
+              $99
               <span className="text-2xl font-normal text-gray-400">/mo</span>
             </div>
+            <p className="text-gray-500 text-sm font-semibold mb-3">
+              Or $999/year per location (2 months free for annual plan)
+            </p>
             <p className="text-gray-400 font-mono text-[0.7rem] font-bold uppercase tracking-widest">
-              UNLIMITED DEVICES • PER LOCATION
+              UNLIMITED DEVICES • PER LOCATION • FULL OFFLINE MODE • GRANULAR
+              TAX CONTROL
             </p>
           </div>
 
           <div className="flex flex-col gap-4 mx-auto mb-10 text-left max-w-[350px]">
             {[
+              "Zero hardware spend — save $1,000+ on day one",
               "Unlimited Front-of-House POS",
               "Unlimited Kitchen Displays (KDS)",
               "Drag & Drop Floor & Table Management With Reservations",
