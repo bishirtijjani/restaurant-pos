@@ -15,6 +15,7 @@ import {
   FileText,
   Pencil,
   Clock,
+  Plus,
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/numberFormat";
 import { useAuth } from "../../../utils/permission";
@@ -63,6 +64,13 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
         ) : (
           <div className="w-full h-full bg-base-200 flex items-center justify-center">
             <ImageIcon className="w-12 h-12 " />
+          </div>
+        )}
+        {item.addOnGroups?.length > 0 && (
+          <div className="absolute top-2 left-2">
+            <div className="badge badge-secondary gap-1 shadow-sm">
+              <Plus className="w-3 h-3" /> Add-ons
+            </div>
           </div>
         )}
         <div className="absolute top-2 right-2">

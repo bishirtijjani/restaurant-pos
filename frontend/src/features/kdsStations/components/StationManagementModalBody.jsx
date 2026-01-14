@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
-import { Monitor, Plus, X } from "lucide-react";
+import { Monitor, Plus, X, PlusCircle } from "lucide-react";
 import {
   createStation,
   updateStation,
   fetchStations,
 } from "../kdsStationsSlice";
+import { openModal } from "../../common/modalSlice";
+import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
 import { showNotification } from "../../common/headerSlice";
 import { useAuth } from "../../../utils/permission";
@@ -115,6 +117,16 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openAddNewCategory = () => {
+    dispatch(
+      openModal({
+        title: "Add New Category",
+        bodyType: MODAL_BODY_TYPES.ADD_NEW_CATEGORY,
+        size: "xl",
+      })
+    );
   };
 
   const toggleCategory = (categoryName) => {
@@ -257,7 +269,17 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
       {formData.type !== "all" && (
         <div className="card bg-base-200">
           <div className="card-body p-4">
-            <h3 className="font-semibold mb-3">Assigned Categories *</h3>
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              Assigned Categories *
+              <button
+                type="button"
+                onClick={openAddNewCategory}
+                className="btn btn-ghost btn-xs text-primary"
+                title="Add New Category"
+              >
+                <PlusCircle className="w-4 h-4" />
+              </button>
+            </h3>
             {errors.categories && (
               <div className="alert alert-error py-2 text-xs mb-2">
                 {errors.categories}
@@ -333,7 +355,10 @@ const StationManagementModalBody = ({ closeModal, extraObject }) => {
                 <span className="label-text">Columns</span>
               </label>
               <SearchableSelect
-                options={[1, 2, 3, 4, 5, 6].map(n => ({ value: n, label: n.toString() }))}
+                options={[1, 2, 3, 4, 5, 6].map((n) => ({
+                  value: n,
+                  label: n.toString(),
+                }))}
                 value={formData.displaySettings.columns}
                 onChange={(e) =>
                   setFormData({

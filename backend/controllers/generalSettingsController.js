@@ -1,6 +1,7 @@
 const Store = require("../models/Store");
 const Organization = require("../models/Organization");
 const { getEffectiveSettings } = require("../utils/settingsManager");
+const logAction = require("../utils/logAction");
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -335,6 +336,18 @@ const updateSettings = async (req, res) => {
 
     await store.save();
 
+    await logAction(
+      req.user.id,
+      req.storeId,
+      req.organizationId,
+      "Store",
+      req.storeId,
+      "update",
+      null, // could be old settings diff
+      store.settings,
+      "Updated store settings"
+    );
+
     res.json({
       success: true,
       message: "Settings updated successfully",
@@ -370,6 +383,18 @@ const resetSettings = async (req, res) => {
     };
 
     await store.save();
+
+    await logAction(
+      req.user.id,
+      req.storeId,
+      req.organizationId,
+      "Store",
+      req.storeId,
+      "update",
+      null,
+      store.settings,
+      "Reset store settings to default"
+    );
 
     res.json({
       success: true,

@@ -10,8 +10,10 @@ import ToggleInput from "../../../components/Input/ToggleInput";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { fetchAddOnGroups } from "../../addOnGroups/addOnGroupsSlice";
-import { Check } from "lucide-react";
+import { Check, PlusCircle } from "lucide-react";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
+import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
+import { openModal } from "../../common/modalSlice";
 
 const EditMenuItemModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
@@ -56,8 +58,9 @@ const EditMenuItemModalBody = ({ extraObject }) => {
   useEffect(() => {
     if (menuItem) {
       // Find category ID from category name
-      const categoryId = categories.find(cat => cat.name === menuItem.category)?._id || "";
-      
+      const categoryId =
+        categories.find((cat) => cat.name === menuItem.category)?._id || "";
+
       setFormData({
         name: menuItem.name || "",
         category: categoryId,
@@ -79,10 +82,12 @@ const EditMenuItemModalBody = ({ extraObject }) => {
       if (menuItem.image) {
         setImagePreview(menuItem.image);
       }
-      
+
       // Set add-on groups if they exist
       if (menuItem.addOnGroups) {
-        setSelectedAddOnGroups(menuItem.addOnGroups.map(g => typeof g === 'object' ? g._id : g));
+        setSelectedAddOnGroups(
+          menuItem.addOnGroups.map((g) => (typeof g === "object" ? g._id : g))
+        );
       }
     }
   }, [menuItem, categories]);
@@ -92,6 +97,16 @@ const EditMenuItemModalBody = ({ extraObject }) => {
       prev.includes(groupId)
         ? prev.filter((id) => id !== groupId)
         : [...prev, groupId]
+    );
+  };
+
+  const openAddNewCategory = () => {
+    dispatch(
+      openModal({
+        title: "Add New Category",
+        bodyType: MODAL_BODY_TYPES.ADD_NEW_CATEGORY,
+        size: "xl",
+      })
     );
   };
 
@@ -256,9 +271,19 @@ const EditMenuItemModalBody = ({ extraObject }) => {
           <div className="form-control">
             <label className="label">
               <span className="label-text">Category</span>
-              <span className="label-text-alt text-error">
-                {errors.category}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="label-text-alt text-error">
+                  {errors.category}
+                </span>
+                <button
+                  type="button"
+                  onClick={openAddNewCategory}
+                  className="btn btn-ghost btn-xs text-primary"
+                  title="Add New Category"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                </button>
+              </div>
             </label>
             <SearchableSelect
               options={categories || []}
@@ -270,7 +295,9 @@ const EditMenuItemModalBody = ({ extraObject }) => {
                 })
               }
               name="category"
-              placeholder={categoriesLoading ? "Loading categories..." : "Select category"}
+              placeholder={
+                categoriesLoading ? "Loading categories..." : "Select category"
+              }
               disabled={categoriesLoading}
               className="w-full"
               valueKey="_id"

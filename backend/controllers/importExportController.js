@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const importExportService = require("../services/ImportExportService");
+const logAction = require("../utils/logAction");
 
 /**
  * Handle data import (Preview or Execute)
@@ -40,6 +41,22 @@ const importData = asyncHandler(async (req, res) => {
       context,
       options
     );
+
+    // Initial audit log for attempt (or completion dependent on async)
+    if (!dryRun) {
+      await logAction(
+        req.user.id,
+        req.storeId,
+        req.user.organizationId,
+        "Import",
+        null,
+        "import",
+        null,
+        { type, fileName: req.file.originalname, result },
+        `Imported ${type} data`
+      );
+    }
+
     res.status(200).json(result);
   } catch (error) {
     res.status(400); // Bad Request for validation/parsing errors
@@ -60,6 +77,18 @@ const exportData = asyncHandler(async (req, res) => {
 
   try {
     const data = await importExportService.processExport(type, format, context);
+
+    await logAction(
+      req.user.id,
+      req.storeId,
+      req.user.organizationId,
+      "Export",
+      null,
+      "export",
+      null,
+      { type, format },
+      `Exported ${type} data as ${format}`
+    );
 
     if (!data) {
       return res.status(404).json({ message: "No data found to export." });

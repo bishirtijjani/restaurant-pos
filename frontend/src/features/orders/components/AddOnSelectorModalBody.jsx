@@ -21,10 +21,21 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
+    // If addOnGroups are already populated in the menuItem, we can use them immediately
+    // but we still fetch to get the freshest availability/stock info
     if (menuItem?._id) {
       dispatch(fetchAddOnGroupsForMenuItem(menuItem._id));
     }
-  }, [dispatch, menuItem]);
+  }, [dispatch, menuItem?._id]);
+
+  // Use either the fetched groups or the ones already on the menuItem if populated
+  const displayGroups =
+    menuItemGroups.length > 0
+      ? menuItemGroups
+      : Array.isArray(menuItem?.addOnGroups) &&
+        typeof menuItem.addOnGroups[0] === "object"
+      ? menuItem.addOnGroups
+      : [];
 
   const handleSelect = (groupId, itemId, group) => {
     setSelections((prev) => {
@@ -58,7 +69,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
   const calculateTotal = () => {
     let total = menuItem.price;
     Object.entries(selections).forEach(([groupId, selectedIds]) => {
-      const group = menuItemGroups.find((g) => g._id === groupId);
+      const group = displayGroups.find((g) => g._id === groupId);
       if (group) {
         selectedIds.forEach((itemId) => {
           const item = group.items.find((i) => i._id === itemId);
@@ -74,7 +85,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
   const validate = () => {
     const newErrors = {};
 
-    menuItemGroups.forEach((group) => {
+    displayGroups.forEach((group) => {
       const selected = selections[group._id] || [];
 
       if (group.isRequired && selected.length === 0) {
@@ -100,14 +111,14 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
     const addOns = Object.entries(selections)
       .filter(([_, selectedIds]) => selectedIds.length > 0)
       .map(([groupId, selectedIds]) => {
-        const group = menuItemGroups.find((g) => g._id === groupId);
-        
+        const group = displayGroups.find((g) => g._id === groupId);
+
         // Collect names for summary
         if (group) {
-            selectedIds.forEach(id => {
-                const item = group.items.find(i => i._id === id);
-                if (item) summary.push(item.name);
-            });
+          selectedIds.forEach((id) => {
+            const item = group.items.find((i) => i._id === id);
+            if (item) summary.push(item.name);
+          });
         }
 
         return {
@@ -126,7 +137,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
     dispatch(closeModal());
   };
 
-  if (loading) {
+  if (loading && displayGroups.length === 0) {
     return (
       <div className="flex justify-center items-center py-12">
         <span className="loading loading-spinner loading-lg"></span>
@@ -134,7 +145,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
     );
   }
 
-  if (!menuItemGroups || menuItemGroups.length === 0) {
+  if (!displayGroups || displayGroups.length === 0) {
     return (
       <div className="space-y-4">
         <div className="alert alert-info">
@@ -181,7 +192,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
       </div>
 
       {/* Add-On Groups */}
-      {menuItemGroups.map((group) => (
+      {displayGroups.map((group) => (
         <div key={group._id} className="space-y-3">
           <div className="flex justify-between items-start">
             <div>

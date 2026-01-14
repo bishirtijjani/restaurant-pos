@@ -1,4 +1,5 @@
 const OnboardingProgress = require("../models/OnboardingProgress");
+const logAction = require("../utils/logAction");
 
 // Get user's onboarding progress
 exports.getProgress = async (req, res) => {
@@ -131,6 +132,24 @@ exports.resetProgress = async (req, res) => {
     const { userId } = req.params;
 
     await OnboardingProgress.findOneAndDelete({ userId, storeId: req.storeId });
+
+    await logAction(
+      req.user.id,
+      req.storeId,
+      req.user.organizationId, // organizationId might be on req or req.user, assuming req.user given previous files, or req.organizationId if middleware sets it. Standard controllers use req.organizationId. Let's check middleware context usage in other files.
+      // onboardingController.js doesn't show standard req.organizationId usage in other methods, but importExport used req.user.organizationId.
+      // Let's use req.organizationId if available, fallback to req.user.organizationId.
+      // Wait, let's verify context.
+      // Most controllers use `req.organizationId`.
+      // I'll use `req.organizationId`.
+      req.organizationId || (req.user && req.user.organizationId),
+      "Onboarding",
+      userId,
+      "delete",
+      null,
+      null,
+      `Reset onboarding progress for user: ${userId}`
+    );
 
     res.json({ success: true, message: "Progress reset successfully" });
   } catch (error) {

@@ -121,6 +121,7 @@ exports.createAddOnGroup = async (req, res) => {
       name,
       description,
       storeId: req.storeId,
+      organizationId: req.organizationId,
       items: items.map((item) => ({
         name: item.name,
         price: parseFloat(item.price) || 0,
@@ -342,7 +343,7 @@ exports.getAddOnGroupsForMenuItem = async (req, res) => {
       storeId: req.storeId,
     }).populate({
       path: "addOnGroups",
-      match: { isActive: true, storeId: req.storeId },
+      match: { isActive: true }, // Removed storeId here as MenuItem is already storeId scoped
       populate: {
         path: "items.inventoryItem",
         select: "name unit currentStock",
@@ -356,11 +357,13 @@ exports.getAddOnGroupsForMenuItem = async (req, res) => {
       });
     }
 
-    // Filter out unavailable items within groups
-    const groups = menuItem.addOnGroups.map((group) => ({
-      ...group.toObject(),
-      items: group.items.filter((item) => item.isAvailable),
-    }));
+    // Filter out unavailable items within groups and handle potential nulls
+    const groups = menuItem.addOnGroups
+      .filter((g) => g && typeof g === "object")
+      .map((group) => ({
+        ...(group.toObject ? group.toObject() : group),
+        items: (group.items || []).filter((item) => item.isAvailable),
+      }));
 
     res.status(200).json({
       success: true,

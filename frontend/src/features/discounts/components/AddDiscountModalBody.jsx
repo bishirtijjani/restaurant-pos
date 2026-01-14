@@ -1,7 +1,7 @@
 // frontend/src/features/discounts/components/AddDiscountModalBody.jsx
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { closeModal } from "../../common/modalSlice";
+import { closeModal, openModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { createDiscount, updateDiscount } from "../discountsSlice";
 import { fetchAllMenuItems } from "../../menuItems/menuItemsSlice";
@@ -9,7 +9,8 @@ import { fetchAllCategories } from "../../categories/categoriesSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
-import { Percent, DollarSign, Gift, Clock } from "lucide-react";
+import { Percent, DollarSign, Gift, Clock, PlusCircle } from "lucide-react";
+import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 
 const DAYS_OF_WEEK = [
   { value: 0, label: "Sun" },
@@ -215,6 +216,16 @@ const AddDiscountModalBody = ({ extraObject, closeModal: close }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openAddNewCategory = () => {
+    dispatch(
+      openModal({
+        title: "Add New Category",
+        bodyType: MODAL_BODY_TYPES.ADD_NEW_CATEGORY,
+        size: "xl",
+      })
+    );
   };
 
   return (
@@ -472,7 +483,17 @@ const AddDiscountModalBody = ({ extraObject, closeModal: close }) => {
       {formData.scope === "category" && (
         <div className="form-control">
           <label className="label">
-            <span className="label-text text-sm">Select Categories</span>
+            <span className="label-text text-sm flex items-center gap-2">
+              Select Categories
+              <button
+                type="button"
+                onClick={openAddNewCategory}
+                className="btn btn-ghost btn-xs text-primary"
+                title="Add New Category"
+              >
+                <PlusCircle className="w-4 h-4" />
+              </button>
+            </span>
           </label>
           <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-lg">
             {categories.map((cat) => (

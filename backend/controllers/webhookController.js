@@ -1,5 +1,6 @@
 const Order = require("../models/Order");
 const { getEffectiveSettings } = require("../utils/settingsManager");
+const logAction = require("../utils/logAction");
 const Stripe = require("stripe");
 
 /**
@@ -174,6 +175,18 @@ async function handleRefundUpdated(refund, storeId) {
       }
 
       await order.save();
+
+      await logAction(
+        null, // System action - no user
+        storeId,
+        null, // organizationId - could fetch from order or store if needed
+        "Order",
+        order._id,
+        "update",
+        null,
+        { paymentStatus: order.paymentStatus, balance: order.balance },
+        `Stripe Webhook: Refund ${status} (Refund ID: ${refundId})`
+      );
 
       console.log(
         `Updated refund status for order #${order.orderNumber} in store ${storeId}: ${oldStatus} -> ${status}`

@@ -5,10 +5,12 @@ const logAction = require("../utils/logAction");
 // Get all menu items
 const getAllMenuItems = async (req, res) => {
   try {
-    const menuItems = await MenuItem.find({ storeId: req.storeId }).sort({
-      category: 1,
-      name: 1,
-    });
+    const menuItems = await MenuItem.find({ storeId: req.storeId })
+      .populate("addOnGroups")
+      .sort({
+        category: 1,
+        name: 1,
+      });
     res.status(200).json(menuItems);
   } catch (error) {
     console.error("Error fetching menu items:", error.message);
@@ -22,7 +24,10 @@ const getAllMenuItems = async (req, res) => {
 const getMenuItemById = async (req, res) => {
   const { id } = req.params;
   try {
-    const menuItem = await MenuItem.findOne({ _id: id, storeId: req.storeId });
+    const menuItem = await MenuItem.findOne({
+      _id: id,
+      storeId: req.storeId,
+    }).populate("addOnGroups");
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found." });
     }
@@ -50,6 +55,7 @@ const addNewMenuItem = async (req, res) => {
     description,
     isAvailable,
     image,
+    addOnGroups,
   } = req.body;
 
   if (!name || !category || !price) {
@@ -94,9 +100,13 @@ const addNewMenuItem = async (req, res) => {
       ...(itemCode ? { itemCode } : {}),
       // Only add image if provided
       ...(image ? { image } : {}),
+      addOnGroups: addOnGroups || [],
     });
 
     const savedMenuItem = await newMenuItem.save();
+    const populatedMenuItem = await MenuItem.findById(
+      savedMenuItem._id
+    ).populate("addOnGroups");
 
     // Log the creation action
     await logAction(
@@ -111,7 +121,7 @@ const addNewMenuItem = async (req, res) => {
       `Created new menu item: ${name}`
     );
 
-    res.status(201).json(savedMenuItem);
+    res.status(201).json(populatedMenuItem);
   } catch (error) {
     console.error("Error adding menu item:", error.message);
     res.status(500).json({
@@ -133,6 +143,7 @@ const updateMenuItem = async (req, res) => {
     description,
     isAvailable,
     image,
+    addOnGroups,
   } = req.body;
 
   try {
@@ -240,6 +251,7 @@ const updateMenuItem = async (req, res) => {
     menuItem.description = description || menuItem.description;
     menuItem.isAvailable =
       isAvailable !== undefined ? isAvailable : menuItem.isAvailable;
+    menuItem.addOnGroups = addOnGroups || menuItem.addOnGroups;
 
     // Handle image update
     if (image !== undefined) {
@@ -247,6 +259,9 @@ const updateMenuItem = async (req, res) => {
     }
 
     const updatedMenuItem = await menuItem.save();
+    const populatedMenuItem = await MenuItem.findById(
+      updatedMenuItem._id
+    ).populate("addOnGroups");
 
     // Log the update action
     await logAction(
@@ -261,7 +276,7 @@ const updateMenuItem = async (req, res) => {
       `Updated menu item: ${menuItem.name}`
     );
 
-    res.status(200).json(updatedMenuItem);
+    res.status(200).json(populatedMenuItem);
   } catch (error) {
     console.error("Error updating menu item:", error.message);
     if (error.kind === "ObjectId") {

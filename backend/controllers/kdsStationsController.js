@@ -33,13 +33,14 @@ exports.createStation = async (req, res) => {
 
     await logAction(
       req.user._id,
-      "CREATED_KDS_STATION",
+      req.storeId,
       req.organizationId,
-      {
-        stationId: station._id,
-        name: station.name,
-      },
-      req.ip
+      "KDSStation",
+      station._id,
+      "create",
+      null,
+      station,
+      "Station Created"
     );
 
     res.status(201).json({
@@ -76,14 +77,14 @@ exports.updateStation = async (req, res) => {
 
     await logAction(
       req.user._id,
-      "UPDATED_KDS_STATION",
+      req.storeId,
       req.organizationId,
-      {
-        stationId: station._id,
-        name: station.name,
-        updates: req.body,
-      },
-      req.ip
+      "KDSStation",
+      station._id,
+      "update",
+      null,
+      req.body,
+      "Station Updated"
     );
 
     res.json({
@@ -119,13 +120,14 @@ exports.deleteStation = async (req, res) => {
 
     await logAction(
       req.user._id,
-      "DELETED_KDS_STATION",
+      req.storeId,
       req.organizationId,
-      {
-        stationId: id,
-        name: station.name,
-      },
-      req.ip
+      "KDSStation",
+      id,
+      "delete",
+      station,
+      null,
+      "Station Deleted"
     );
 
     res.json({

@@ -1,5 +1,6 @@
 // backend/controllers/ultraFastPOSController.js
 const UltraFastPOSSettings = require("../models/UltraFastPOSSettings");
+const logAction = require("../utils/logAction");
 
 const DEFAULT_SHORTCUTS = {
   finalizeSale: "f9",
@@ -92,6 +93,18 @@ exports.updateKeyboardSettings = async (req, res) => {
       await userSettings.save();
     }
 
+    await logAction(
+      req.user.id,
+      req.storeId,
+      req.organizationId,
+      "UltraFastPOSSettings",
+      userSettings._id,
+      "update",
+      null,
+      settings,
+      "Updated keyboard shortcuts"
+    );
+
     res.status(200).json({
       success: true,
       data: userSettings.keyboardShortcuts,
@@ -124,6 +137,18 @@ exports.resetKeyboardSettings = async (req, res) => {
       userSettings.keyboardShortcuts = DEFAULT_SHORTCUTS;
       await userSettings.save();
     }
+
+    await logAction(
+      req.user.id,
+      req.storeId,
+      req.organizationId,
+      "UltraFastPOSSettings",
+      userSettings._id,
+      "update",
+      null,
+      DEFAULT_SHORTCUTS,
+      "Reset keyboard shortcuts to defaults"
+    );
 
     res.status(200).json({
       success: true,

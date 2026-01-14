@@ -213,6 +213,18 @@ exports.updateFloorLayout = async (req, res) => {
     // Notify via WebSocket
     notifyFloorUpdate("floor:layout_updated", floor, req.storeId);
 
+    await logAction(
+      req.user.id,
+      req.storeId,
+      req.organizationId,
+      "Floor",
+      req.params.id,
+      "update",
+      null,
+      floor,
+      `Updated floor layout for: ${floor.name}`
+    );
+
     res.status(200).json({
       success: true,
       message: "Floor layout updated",
@@ -252,6 +264,18 @@ exports.updateTablePositions = async (req, res) => {
 
     // Notify via WebSocket
     notifyFloorUpdate("tables:positions_updated", { tables }, req.storeId);
+
+    await logAction(
+      req.user.id,
+      req.storeId,
+      req.organizationId,
+      "Table",
+      tables[0].id, // logging just one ID as reference, or maybe generic
+      "update",
+      null,
+      { count: tables.length }, // logging count of moved tables
+      `Bulk updated positions for ${tables.length} tables`
+    );
 
     res.status(200).json({
       success: true,

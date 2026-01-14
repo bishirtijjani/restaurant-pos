@@ -5,9 +5,11 @@ import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { fetchAllCategories } from "../../categories/categoriesSlice";
 import { fetchAddOnGroups } from "../../addOnGroups/addOnGroupsSlice";
-import { Check } from "lucide-react";
+import { Check, PlusCircle } from "lucide-react";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
+import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
+import { openModal } from "../../common/modalSlice";
 
 const AddMenuItemModalBody = () => {
   const dispatch = useDispatch();
@@ -51,6 +53,16 @@ const AddMenuItemModalBody = () => {
       prev.includes(groupId)
         ? prev.filter((id) => id !== groupId)
         : [...prev, groupId]
+    );
+  };
+
+  const openAddNewCategory = () => {
+    dispatch(
+      openModal({
+        title: "Add New Category",
+        bodyType: MODAL_BODY_TYPES.ADD_NEW_CATEGORY,
+        size: "xl",
+      })
     );
   };
 
@@ -215,9 +227,19 @@ const AddMenuItemModalBody = () => {
           <div className="form-control">
             <label className="label">
               <span className="label-text">Category</span>
-              <span className="label-text-alt text-error">
-                {errors.category}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="label-text-alt text-error">
+                  {errors.category}
+                </span>
+                <button
+                  type="button"
+                  onClick={openAddNewCategory}
+                  className="btn btn-ghost btn-xs text-primary"
+                  title="Add New Category"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                </button>
+              </div>
             </label>
             <SearchableSelect
               options={categories || []}
@@ -229,7 +251,9 @@ const AddMenuItemModalBody = () => {
                 })
               }
               name="category"
-              placeholder={categoriesLoading ? "Loading categories..." : "Select category"}
+              placeholder={
+                categoriesLoading ? "Loading categories..." : "Select category"
+              }
               disabled={categoriesLoading}
               className="w-full"
               valueKey="_id"

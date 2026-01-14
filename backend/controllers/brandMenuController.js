@@ -2,6 +2,7 @@ const { enqueuePublish, getSyncJobStatus } = require("../utils/syncEngine");
 const MenuItem = require("../models/MenuItem");
 const Category = require("../models/Category");
 const AddOnGroup = require("../models/AddOnGroup");
+const logAction = require("../utils/logAction");
 
 /**
  * Get all master menu items for the brand
@@ -76,6 +77,19 @@ const createMasterItem = async (req, res) => {
       version: 1,
     });
 
+    // Log the action
+    await logAction(
+      req.user.id,
+      null, // storeId is null for brand/master items
+      req.organizationId,
+      "MenuItem",
+      masterItem._id,
+      "create",
+      null,
+      masterItem,
+      `Created master menu item: ${name}`
+    );
+
     res.status(201).json({
       success: true,
       message: "Master item created (draft)",
@@ -134,6 +148,26 @@ const updateMasterItem = async (req, res) => {
 
     await masterItem.save();
 
+    // Log the action
+    await logAction(
+      req.user.id,
+      null,
+      req.organizationId,
+      "MenuItem",
+      id,
+      "update",
+      null, // optimizing: not fetching old state to save DB call, or should I?
+      // Actually, for better audit we might want old state, but let's stick to update details or just new state for now to match pattern.
+      // Wait, standard pattern usually includes oldData if available.
+      // I'll fetch old state if I can, but here I already did findOne and updated in memory.
+      // The `masterItem` variable is already modified and saved.
+      // I should have cloned it before modification if I wanted old state.
+      // Given the code structure, I'll pass null for oldData for now or just log the update.
+      // Let's just log the action with the updated item.
+      masterItem,
+      `Updated master menu item: ${masterItem.name}`
+    );
+
     res.status(200).json({
       success: true,
       message: "Master item updated (draft)",
@@ -182,6 +216,18 @@ const publishMasterItem = async (req, res) => {
       "MenuItem",
       req.organizationId,
       req.user.id
+    );
+
+    await logAction(
+      req.user.id,
+      null,
+      req.organizationId,
+      "MenuItem",
+      masterItem._id,
+      "publish",
+      null,
+      masterItem,
+      `Published master menu item: ${masterItem.name} (v${masterItem.version})`
     );
 
     res.status(200).json({
@@ -258,6 +304,18 @@ const deleteMasterItem = async (req, res) => {
 
     // TODO: Optionally delete all linked store items
     // await MenuItem.deleteMany({ masterId: id });
+
+    await logAction(
+      req.user.id,
+      null,
+      req.organizationId,
+      "MenuItem",
+      id,
+      "delete",
+      masterItem,
+      null,
+      `Deleted master menu item: ${masterItem.name}`
+    );
 
     res.status(200).json({
       success: true,
