@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Smartphone,
@@ -9,6 +10,15 @@ import {
 } from "lucide-react";
 
 export default function OperationalFlow() {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % 4);
+    }, 1000); // 4s total cycle / 4 cards = 1s per card
+    return () => clearInterval(interval);
+  }, []);
+
   const steps = [
     {
       icon: Smartphone,
@@ -116,56 +126,85 @@ export default function OperationalFlow() {
 
           {/* Flow Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-            {steps.map((step, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.6 }}
-                className="flex flex-col items-start group"
-              >
-                {/* Node Milestone */}
-                <div className="relative mb-10 self-center lg:self-start">
-                  <div className="w-20 h-20 rounded-[24px] bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-white group-hover:border-accent group-hover:bg-accent/5 transition-all duration-500 shadow-2xl group-hover:shadow-accent/20 relative z-10 overflow-hidden">
-                    <step.icon
-                      size={32}
-                      strokeWidth={1.5}
-                      className="group-hover:text-accent transition-colors"
-                    />
-                    {/* Inner Tech Accent */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-[radial-gradient(circle_at_center,#FF6B35_0%,transparent_70%)] transition-opacity" />
+            {steps.map((step, i) => {
+              const isActive = activeIndex === i;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15, duration: 0.6 }}
+                  className="flex flex-col items-start group"
+                >
+                  {/* Node Milestone */}
+                  <div className="relative mb-10 self-center lg:self-start">
+                    <div
+                      className={`w-20 h-20 rounded-[24px] border-2 flex items-center justify-center transition-all duration-500 relative z-10 overflow-hidden ${
+                        isActive
+                          ? "border-accent bg-accent/5 shadow-[0_0_20px_rgba(255,107,53,0.2)] text-accent"
+                          : "bg-slate-900 border-slate-800 text-white shadow-2xl"
+                      } group-hover:border-accent group-hover:bg-accent/5 group-hover:shadow-accent/20`}
+                    >
+                      <step.icon
+                        size={32}
+                        strokeWidth={1.5}
+                        className={`${
+                          isActive ? "text-accent" : ""
+                        } group-hover:text-accent transition-colors`}
+                      />
+                      {/* Inner Tech Accent */}
+                      <div
+                        className={`absolute inset-0 bg-[radial-gradient(circle_at_center,#FF6B35_0%,transparent_70%)] transition-opacity ${
+                          isActive ? "opacity-10" : "opacity-0"
+                        } group-hover:opacity-10`}
+                      />
+                    </div>
+
+                    {/* Step Number Badge */}
+                    <div
+                      className={`absolute -top-3 -right-3 w-8 h-8 rounded-full border-2 flex items-center justify-center text-[0.65rem] font-black transition-all z-20 ${
+                        isActive
+                          ? "bg-accent border-accent text-white"
+                          : "bg-slate-800 border-slate-950 text-slate-400"
+                      } group-hover:text-white group-hover:border-accent group-hover:bg-accent transition-all`}
+                    >
+                      0{i + 1}
+                    </div>
                   </div>
 
-                  {/* Step Number Badge */}
-                  <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-[0.65rem] font-black text-slate-400 group-hover:text-white group-hover:border-accent transition-all z-20">
-                    0{i + 1}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="text-center lg:text-left">
-                  <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent/60 mb-2 block">
-                    {step.phase}
-                  </span>
-                  <h3 className="text-2xl font-black text-white mb-4 tracking-tight">
-                    {step.title}
-                  </h3>
-                  <div className="h-0.5 w-12 bg-slate-800 group-hover:w-full group-hover:bg-accent/30 transition-all duration-500 mb-6 mx-auto lg:mx-0" />
-                  <p className="text-slate-400 font-medium leading-relaxed text-sm">
-                    {step.desc}
-                  </p>
-
-                  {/* Highlight Badge */}
-                  <div className="mt-8 pt-6 border-t border-slate-900 flex items-center justify-center lg:justify-start gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                    <span className="text-[0.6rem] font-black uppercase tracking-widest text-slate-300">
-                      {step.highlight}
+                  {/* Content */}
+                  <div className="text-center lg:text-left">
+                    <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent/60 mb-2 block">
+                      {step.phase}
                     </span>
+                    <h3 className="text-2xl font-black text-white mb-4 tracking-tight">
+                      {step.title}
+                    </h3>
+                    <div
+                      className={`h-0.5 transition-all duration-500 mb-6 mx-auto lg:mx-0 ${
+                        isActive ? "w-full bg-accent/30" : "w-12 bg-slate-800"
+                      } group-hover:w-full group-hover:bg-accent/30`}
+                    />
+                    <p className="text-slate-400 font-medium leading-relaxed text-sm">
+                      {step.desc}
+                    </p>
+
+                    {/* Highlight Badge */}
+                    <div
+                      className={`mt-8 pt-6 border-t border-slate-900 flex items-center justify-center lg:justify-start gap-2 transition-opacity ${
+                        isActive ? "opacity-100" : "opacity-60"
+                      } group-hover:opacity-100`}
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                      <span className="text-[0.6rem] font-black uppercase tracking-widest text-slate-300">
+                        {step.highlight}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 

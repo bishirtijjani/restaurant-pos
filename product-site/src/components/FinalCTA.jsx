@@ -28,8 +28,8 @@ export default function FinalCTA() {
             </h2>
 
             <p className="text-gray-400 text-xl mb-12 font-medium">
-              Join 100+ high-growth restaurants taking total command of their
-              operations — even in unreliable internet environments.
+              Join restaurants taking control of their operations — even in
+              unreliable internet environments.
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 mb-12">

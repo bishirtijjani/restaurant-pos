@@ -24,8 +24,9 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed mb-6 font-medium">
-              Complete restaurant management system for modern eateries.
-              Streamline orders, manage inventory, and delight customers.
+              The operations-first backbone for serious restaurants. Built for
+              real-world conditions, offline-first reliability, and total
+              hardware freedom.
             </p>
             <div className="flex gap-3">
               {[Twitter, Linkedin, Youtube, Facebook].map((Icon, i) => (
