@@ -82,7 +82,7 @@ Item-level tracking ✅
 Automatic stock deduction ✅
 Manual stock adjustments ✅
 Stock counts ✅
-Stock variance reports ❌
+Stock variance reports ✅
 Spoilage / waste tracking ✅
 Unit conversions ❌
 Batch tracking ❌ (No batch/lot support in InventoryItem model)
@@ -160,7 +160,7 @@ Daily sales summary ✅
 Item sales reports ✅
 Category performance ✅
 Payment method breakdown ✅
-Tax reports ❌
+Tax reports ✅
 Discount reports ❌
 Refund reports ✅
 Profit estimation ✅

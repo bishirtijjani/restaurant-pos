@@ -39,4 +39,10 @@ const auditLogSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }, // When the action happened
 });
 
+// Optimize for common queries
+auditLogSchema.index({ storeId: 1, timestamp: -1 });
+auditLogSchema.index({ storeId: 1, entityType: 1, timestamp: -1 });
+auditLogSchema.index({ storeId: 1, userId: 1, timestamp: -1 });
+auditLogSchema.index({ storeId: 1, action: 1 });
+
 module.exports = mongoose.model("AuditLog", auditLogSchema);

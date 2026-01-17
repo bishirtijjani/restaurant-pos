@@ -80,7 +80,7 @@ function StoreGuard({ children }) {
   // If no store is selected, and we are trying to access a store-specific route
   // Redirect to Store Management
   const isStoreRoute = !PUBLIC_STORE_ROUTES.some((path) =>
-    location.pathname.startsWith(path)
+    location.pathname.startsWith(path),
   );
 
   useEffect(() => {
@@ -100,7 +100,7 @@ function StoreGuard({ children }) {
             title: "Select Active Store",
             bodyType: MODAL_BODY_TYPES.SELECT_STORE,
             size: "lg",
-          })
+          }),
         );
       }
       // If stores.length === 0 but userHasStores is true:

@@ -3,8 +3,8 @@ import { lazy } from "react";
 
 const Page404 = lazy(() => import("../pages/protected/404"));
 const Dashboard = lazy(() => import("../pages/protected/Dashboard"));
-const ProfileSettings = lazy(() =>
-  import("../pages/protected/ProfileSettings")
+const ProfileSettings = lazy(
+  () => import("../pages/protected/ProfileSettings"),
 );
 const MenuItems = lazy(() => import("../pages/protected/MenuItems"));
 const Categories = lazy(() => import("../pages/protected/Categories"));
@@ -14,67 +14,72 @@ const POS = lazy(() => import("../pages/protected/POS"));
 const Expenses = lazy(() => import("../pages/protected/Expenses"));
 const Users = lazy(() => import("../pages/protected/Users"));
 const Customers = lazy(() => import("../pages/protected/Customers"));
-const CustomerProfile = lazy(() =>
-  import("../features/customers/CustomerProfile")
+const CustomerProfile = lazy(
+  () => import("../features/customers/CustomerProfile"),
 );
-const GeneralSettings = lazy(() =>
-  import("../pages/protected/GeneralSettings")
+const GeneralSettings = lazy(
+  () => import("../pages/protected/GeneralSettings"),
 );
 const KDS = lazy(() => import("../pages/protected/KDS"));
 const KDSStations = lazy(() => import("../pages/protected/KDSStations"));
 const Inventory = lazy(() => import("../pages/protected/Inventory"));
-const StockAdjustments = lazy(() =>
-  import("../pages/protected/StockAdjustments")
+const StockAdjustments = lazy(
+  () => import("../pages/protected/StockAdjustments"),
 );
 const PurchaseOrders = lazy(() => import("../pages/protected/PurchaseOrders"));
-const CreatePurchaseOrder = lazy(() =>
-  import("../pages/protected/CreatePurchaseOrder")
+const CreatePurchaseOrder = lazy(
+  () => import("../pages/protected/CreatePurchaseOrder"),
 );
-const PurchaseOrderDetails = lazy(() =>
-  import("../pages/protected/PurchaseOrderDetails")
+const PurchaseOrderDetails = lazy(
+  () => import("../pages/protected/PurchaseOrderDetails"),
 );
 const UltraFastPOS = lazy(() => import("../pages/protected/UltraFastPOS"));
-const KeyboardSettings = lazy(() =>
-  import("../features/ultraFastPOS/components/KeyboardSettings")
+const KeyboardSettings = lazy(
+  () => import("../features/ultraFastPOS/components/KeyboardSettings"),
 );
 const AddOnGroups = lazy(() => import("../pages/protected/AddOnGroups"));
 const Discounts = lazy(() => import("../pages/protected/Discounts"));
 const Tables = lazy(() => import("../pages/protected/Tables"));
 const Floors = lazy(() => import("../pages/protected/Floors"));
 const Reservations = lazy(() => import("../pages/protected/Reservations"));
-const AnalyticsOverview = lazy(() =>
-  import("../features/analytics/dashboards/Overview")
+const AnalyticsOverview = lazy(
+  () => import("../features/analytics/dashboards/Overview"),
 );
-const SalesOverview = lazy(() =>
-  import("../features/analytics/dashboards/Sales")
+const SalesOverview = lazy(
+  () => import("../features/analytics/dashboards/Sales"),
 );
-const MenuIntelligence = lazy(() =>
-  import("../features/analytics/dashboards/Menu")
+const MenuIntelligence = lazy(
+  () => import("../features/analytics/dashboards/Menu"),
 );
-const StaffAnalytics = lazy(() =>
-  import("../features/analytics/dashboards/Staff")
+const StaffAnalytics = lazy(
+  () => import("../features/analytics/dashboards/Staff"),
 );
-const CustomerInsights = lazy(() =>
-  import("../features/analytics/dashboards/Customer")
+const CustomerInsights = lazy(
+  () => import("../features/analytics/dashboards/Customer"),
 );
-const AdvancedInsights = lazy(() =>
-  import("../features/analytics/dashboards/Advanced")
+const AdvancedInsights = lazy(
+  () => import("../features/analytics/dashboards/Advanced"),
 );
-const PaymentAnalytics = lazy(() =>
-  import("../features/analytics/dashboards/Payment")
+const PaymentAnalytics = lazy(
+  () => import("../features/analytics/dashboards/Payment"),
 );
-const CustomReports = lazy(() =>
-  import("../features/analytics/dashboards/Reports")
+const CustomReports = lazy(
+  () => import("../features/analytics/dashboards/Reports"),
 );
-const InventoryAnalytics = lazy(() =>
-  import("../features/analytics/dashboards/Inventory")
+const InventoryAnalytics = lazy(
+  () => import("../features/analytics/dashboards/Inventory"),
+);
+const TaxAnalytics = lazy(() => import("../features/analytics/dashboards/Tax"));
+const VarianceAnalytics = lazy(
+  () => import("../features/analytics/dashboards/Inventory/Variance"),
 );
 const StoreManagement = lazy(() => import("../pages/StoreManagement"));
 const BrandCatalog = lazy(() => import("../features/brand/BrandCatalog"));
 const BrandSettings = lazy(() => import("../features/brand/BrandSettings"));
 const SettingsHub = lazy(() => import("../features/settings/SettingsHub"));
-const PlatformHealthDashboard = lazy(() =>
-  import("../features/platformHealth/PlatformHealthDashboard")
+const AuditLogs = lazy(() => import("../features/auditLogs"));
+const PlatformHealthDashboard = lazy(
+  () => import("../features/platformHealth/PlatformHealthDashboard"),
 );
 
 const routes = [
@@ -83,6 +88,7 @@ const routes = [
   { path: "/settings", component: SettingsHub },
   { path: "/settings/profile", component: ProfileSettings },
   { path: "/settings/general", component: GeneralSettings },
+  { path: "/settings/audit-logs", component: AuditLogs },
   { path: "/categories", component: Categories },
   { path: "/menu-items", component: MenuItems },
   { path: "/add-on-groups", component: AddOnGroups },
@@ -118,6 +124,8 @@ const routes = [
   { path: "/analytics/advanced", component: AdvancedInsights },
   { path: "/analytics/payments", component: PaymentAnalytics },
   { path: "/analytics/reports", component: CustomReports },
+  { path: "/analytics/tax", component: TaxAnalytics },
+  { path: "/analytics/variance", component: VarianceAnalytics },
   { path: "/stores", component: StoreManagement },
   { path: "/brand-catalog", component: BrandCatalog },
   { path: "/brand-settings", component: BrandSettings },

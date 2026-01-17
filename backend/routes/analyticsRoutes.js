@@ -9,6 +9,8 @@ const {
   getInventoryData,
   getPaymentData,
   getAdvancedData,
+  getTaxData,
+  getVarianceData,
 } = require("../controllers/analyticsController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -21,7 +23,9 @@ router.get("/menu", getMenuData);
 router.get("/staff", getStaffData);
 router.get("/customers", getCustomerData);
 router.get("/inventory", getInventoryData);
+router.get("/inventory/variance", getVarianceData);
 router.get("/payments", getPaymentData);
 router.get("/advanced", getAdvancedData);
+router.get("/tax", getTaxData);
 
 module.exports = router;

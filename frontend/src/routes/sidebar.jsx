@@ -27,6 +27,7 @@ import {
   LightBulbIcon,
   CreditCardIcon,
   ArchiveBoxIcon,
+  CalculatorIcon,
 } from "@heroicons/react/24/outline";
 
 const iconClasses = `h-5 w-5`;
@@ -66,7 +67,12 @@ export const adminRoutes = [
       {
         path: "/app/analytics/inventory",
         icon: <ArchiveBoxIcon className={submenuIconClasses} />,
-        name: "Inventory",
+        name: "Inventory Overview",
+      },
+      {
+        path: "/app/analytics/variance",
+        icon: <ClipboardList className={submenuIconClasses} />,
+        name: "Variance Report",
       },
       {
         path: "/app/analytics/staff",
@@ -92,6 +98,11 @@ export const adminRoutes = [
         path: "/app/analytics/reports",
         icon: <FileText className={submenuIconClasses} />,
         name: "Reports",
+      },
+      {
+        path: "/app/analytics/tax",
+        icon: <CalculatorIcon className={submenuIconClasses} />,
+        name: "Tax Report",
       },
     ],
   },
@@ -242,7 +253,12 @@ export const managerRoutes = [
       {
         path: "/app/analytics/inventory",
         icon: <ArchiveBoxIcon className={submenuIconClasses} />,
-        name: "Inventory",
+        name: "Inventory Overview",
+      },
+      {
+        path: "/app/analytics/variance",
+        icon: <ClipboardList className={submenuIconClasses} />,
+        name: "Variance Report",
       },
       {
         path: "/app/analytics/staff",
@@ -268,6 +284,11 @@ export const managerRoutes = [
         path: "/app/analytics/reports",
         icon: <FileText className={submenuIconClasses} />,
         name: "Reports",
+      },
+      {
+        path: "/app/analytics/tax",
+        icon: <CalculatorIcon className={submenuIconClasses} />,
+        name: "Tax Report",
       },
     ],
   },

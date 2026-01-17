@@ -35,12 +35,15 @@ import advancedAnalyticsReducer from "../features/analytics/slices/advancedAnaly
 import paymentAnalyticsReducer from "../features/analytics/slices/paymentAnalyticsSlice";
 import customReportsReducer from "../features/analytics/slices/customReportsSlice";
 import inventoryAnalyticsReducer from "../features/analytics/slices/inventoryAnalyticsSlice";
+import taxAnalyticsReducer from "../features/analytics/slices/taxAnalyticsSlice";
+import varianceAnalyticsReducer from "../features/analytics/slices/varianceAnalyticsSlice";
 import storeReducer from "../features/common/storeSlice";
 import storesReducer from "../features/stores/storeSlice";
 import mobilePOSReducer from "../features/orders/mobilePOSSlice";
 import brandMenuReducer from "../features/brand/brandMenuSlice";
 import organizationReducer from "../features/brand/organizationSlice";
 import platformHealthReducer from "../features/platformHealth/platformHealthSlice";
+import auditLogsReducer from "../features/auditLogs/auditLogsSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -78,12 +81,15 @@ const combinedReducer = {
   paymentAnalytics: paymentAnalyticsReducer,
   customReports: customReportsReducer,
   inventoryAnalytics: inventoryAnalyticsReducer,
+  taxAnalytics: taxAnalyticsReducer,
+  varianceAnalytics: varianceAnalyticsReducer,
   commonStore: storeReducer, // New Store Slice
   stores: storesReducer, // CRUD Store List
   mobilePOS: mobilePOSReducer, // Mobile POS State
   brandMenu: brandMenuReducer, // Brand Catalog Management
   organization: organizationReducer, // Brand Settings
   platformHealth: platformHealthReducer, // Platform Health Monitoring
+  auditLogs: auditLogsReducer, // Audit Logs
 };
 
 export default configureStore({

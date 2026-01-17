@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { User, Settings, Building, Store } from "lucide-react";
+import { User, Settings, Building, Store, Activity } from "lucide-react";
 
 const SettingsHub = () => {
   const navigate = useNavigate();
@@ -42,7 +42,18 @@ const SettingsHub = () => {
       icon: <Store className="w-8 h-8" />,
       path: "/app/stores",
       color: "bg-info/10 text-info",
+      path: "/app/stores",
+      color: "bg-info/10 text-info",
       available: isAdmin,
+    },
+    {
+      id: "audit-logs",
+      title: "Audit Logs",
+      description: "View system activity and history",
+      icon: <Activity className="w-8 h-8" />,
+      path: "/app/settings/audit-logs",
+      color: "bg-warning/10 text-warning",
+      available: true, // Available to anyone who can see SettingsHub (Admins/Managers)
     },
   ];
 

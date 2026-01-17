@@ -18,7 +18,7 @@ function Layout() {
   const user = useSelector((state) => state.auth.user);
 
   const { newNotificationMessage, newNotificationStatus } = useSelector(
-    (state) => state.header
+    (state) => state.header,
   );
 
   useEffect(() => {
@@ -44,7 +44,7 @@ function Layout() {
       <RightSidebar />
 
       <ToastContainer />
-      <OnboardingTour tourId={getTourId(location.pathname)} />
+      {/* <OnboardingTour tourId={getTourId(location.pathname)} /> */}
     </>
   );
 }

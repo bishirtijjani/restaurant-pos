@@ -16,8 +16,8 @@ import {
   UserCircle2,
   ChevronDownIcon,
 } from "lucide-react";
-import { getTourId } from "../utils/Helpers";
-import TourTriggerButton from "../features/onboarding/components/TourTriggerButton";
+// import { getTourId } from "../utils/Helpers";
+// import TourTriggerButton from "../features/onboarding/components/TourTriggerButton";
 import {
   useOnlineStatus,
   useSyncQueue,
@@ -32,7 +32,7 @@ function Header() {
   const { user } = useSelector((state) => state.auth);
 
   const [currentTheme, setCurrentTheme] = useState(
-    localStorage.getItem("theme")
+    localStorage.getItem("theme"),
   );
   const isOnline = useOnlineStatus();
   const { queueStats } = useSyncQueue();
@@ -61,7 +61,7 @@ function Header() {
       openRightDrawer({
         header: "Notifications",
         bodyType: RIGHT_DRAWER_TYPES.NOTIFICATION,
-      })
+      }),
     );
   };
 
@@ -122,8 +122,8 @@ function Header() {
                       !isOnline
                         ? "text-error"
                         : queueStats.total > 0
-                        ? "text-warning"
-                        : ""
+                          ? "text-warning"
+                          : ""
                     }`}
                     onClick={() => setShowSyncManager(true)}
                   >
@@ -136,12 +136,12 @@ function Header() {
                       {!isOnline
                         ? "Offline"
                         : queueStats.total > 0
-                        ? `Sync (${queueStats.total})`
-                        : "Synced"}
+                          ? `Sync (${queueStats.total})`
+                          : "Synced"}
                     </span>
                   </button>
                 </li>
-                {getTourId(location.pathname) && (
+                {/* {getTourId(location.pathname) && (
                   <li>
                     <div className="p-0">
                       <TourTriggerButton
@@ -150,7 +150,7 @@ function Header() {
                       />
                     </div>
                   </li>
-                )}
+                )} */}
                 <div className="divider my-1"></div>
                 <li className="menu-title">Theme</li>
                 <li>
@@ -368,8 +368,8 @@ function Header() {
                 !isOnline
                   ? "btn-error"
                   : queueStats.total > 0
-                  ? "btn-warning"
-                  : "btn-ghost"
+                    ? "btn-warning"
+                    : "btn-ghost"
               }`}
               onClick={() => setShowSyncManager(true)}
             >
@@ -382,17 +382,17 @@ function Header() {
                 {!isOnline
                   ? "Offline"
                   : queueStats.total > 0
-                  ? `Sync (${queueStats.total})`
-                  : "Synced"}
+                    ? `Sync (${queueStats.total})`
+                    : "Synced"}
               </span>
             </button>
 
-            {getTourId(location.pathname) && (
+            {/* {getTourId(location.pathname) && (
               <TourTriggerButton
                 tourId={getTourId(location.pathname)}
                 className="mx-1"
               />
-            )}
+            )} */}
 
             <div className="dropdown dropdown-end">
               <div

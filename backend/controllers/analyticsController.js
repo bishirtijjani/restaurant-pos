@@ -251,7 +251,7 @@ const getMenuData = asyncHandler(async (req, res) => {
   const avgSold = totalSold / (itemPerformance.length || 1);
   const totalProfit = itemPerformance.reduce(
     (acc, item) => acc + item.profit,
-    0
+    0,
   );
   const avgProfit = totalProfit / (itemPerformance.length || 1);
 
@@ -266,8 +266,8 @@ const getMenuData = asyncHandler(async (req, res) => {
           ? "Star"
           : "Plowhorse"
         : item.profit >= avgProfit
-        ? "Puzzle"
-        : "Dog",
+          ? "Puzzle"
+          : "Dog",
   }));
 
   // 2. Category Performance
@@ -292,7 +292,7 @@ const getMenuData = asyncHandler(async (req, res) => {
 
   // 3. Top & Under Performers
   const sortedByProfit = [...itemPerformance].sort(
-    (a, b) => b.profit - a.profit
+    (a, b) => b.profit - a.profit,
   );
   const topPerformers = sortedByProfit.slice(0, 5);
   const underPerformers = sortedByProfit.slice(-5).reverse();
@@ -526,27 +526,63 @@ const getInventoryData = asyncHandler(async (req, res) => {
     }
   });
 
-  // 2. Waste Analysis from StockAdjustment model
+  // 2. Waste Analysis (Negative adjustments except returns)
   const wasteAdjustments = await StockAdjustment.aggregate([
     {
       $match: {
         storeId: new mongoose.Types.ObjectId(req.storeId),
         createdAt: { $gte: start, $lte: end },
-        adjustmentType: { $in: ["waste", "damage", "expired", "loss"] },
+        reason: {
+          $in: ["wastage", "damage", "theft", "correction", "stock_take"],
+        },
+        type: { $in: ["subtraction", "correction"] },
+      },
+    },
+    {
+      $lookup: {
+        from: "inventoryitems",
+        localField: "inventoryItem",
+        foreignField: "_id",
+        as: "item",
+      },
+    },
+    { $unwind: "$item" },
+    {
+      $project: {
+        reason: 1,
+        qty: {
+          $cond: [
+            { $eq: ["$type", "correction"] },
+            { $abs: { $subtract: ["$newStock", "$previousStock"] } },
+            "$quantity",
+          ],
+        },
+        cost: {
+          $multiply: [
+            {
+              $cond: [
+                { $eq: ["$type", "correction"] },
+                { $abs: { $subtract: ["$newStock", "$previousStock"] } },
+                "$quantity",
+              ],
+            },
+            "$item.costPrice",
+          ],
+        },
       },
     },
     {
       $group: {
-        _id: "$adjustmentType",
-        totalQuantity: { $sum: { $abs: "$quantityChange" } },
-        totalCost: { $sum: { $abs: "$costImpact" } },
+        _id: "$reason",
+        totalQuantity: { $sum: "$qty" },
+        totalCost: { $sum: "$cost" },
       },
     },
   ]);
 
   const wasteByReason = wasteAdjustments.map((w) => ({
-    name: w._id.charAt(0).toUpperCase() + w._id.slice(1),
-    value: w.totalCost || 0,
+    name: w._id.charAt(0).toUpperCase() + w._id.slice(1).replace("_", " "),
+    value: Math.round((w.totalCost || 0) * 100) / 100,
     quantity: w.totalQuantity || 0,
   }));
 
@@ -558,32 +594,57 @@ const getInventoryData = asyncHandler(async (req, res) => {
       $match: {
         storeId: new mongoose.Types.ObjectId(req.storeId),
         createdAt: { $gte: start, $lte: end },
-        adjustmentType: { $in: ["waste", "damage", "expired", "loss"] },
-      },
-    },
-    {
-      $group: {
-        _id: "$inventoryItem",
-        qty: { $sum: { $abs: "$quantityChange" } },
-        cost: { $sum: { $abs: "$costImpact" } },
-        reason: { $first: "$adjustmentType" },
+        reason: {
+          $in: ["wastage", "damage", "theft", "correction", "stock_take"],
+        },
+        type: { $in: ["subtraction", "correction"] },
       },
     },
     {
       $lookup: {
         from: "inventoryitems",
-        localField: "_id",
+        localField: "inventoryItem",
         foreignField: "_id",
-        as: "itemInfo",
+        as: "item",
       },
     },
-    { $unwind: { path: "$itemInfo", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$item" },
+    {
+      $group: {
+        _id: "$inventoryItem",
+        qty: {
+          $sum: {
+            $cond: [
+              { $eq: ["$type", "correction"] },
+              { $abs: { $subtract: ["$newStock", "$previousStock"] } },
+              "$quantity",
+            ],
+          },
+        },
+        cost: {
+          $sum: {
+            $multiply: [
+              {
+                $cond: [
+                  { $eq: ["$type", "correction"] },
+                  { $abs: { $subtract: ["$newStock", "$previousStock"] } },
+                  "$quantity",
+                ],
+              },
+              "$item.costPrice",
+            ],
+          },
+        },
+        name: { $first: "$item.name" },
+        reason: { $first: "$reason" },
+      },
+    },
     {
       $project: {
         id: "$_id",
-        name: { $ifNull: ["$itemInfo.name", "Unknown Item"] },
+        name: 1,
         qty: 1,
-        cost: 1,
+        cost: { $round: ["$cost", 2] },
         reason: 1,
       },
     },
@@ -604,15 +665,26 @@ const getInventoryData = asyncHandler(async (req, res) => {
         _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
         totalIn: {
           $sum: {
-            $cond: [{ $gt: ["$quantityChange", 0] }, "$quantityChange", 0],
+            $cond: [{ $eq: ["$type", "addition"] }, "$quantity", 0],
           },
         },
         totalOut: {
           $sum: {
             $cond: [
-              { $lt: ["$quantityChange", 0] },
-              { $abs: "$quantityChange" },
-              0,
+              { $eq: ["$type", "subtraction"] },
+              "$quantity",
+              {
+                $cond: [
+                  {
+                    $and: [
+                      { $eq: ["$type", "correction"] },
+                      { $lt: ["$newStock", "$previousStock"] },
+                    ],
+                  },
+                  { $subtract: ["$previousStock", "$newStock"] },
+                  0,
+                ],
+              },
             ],
           },
         },
@@ -734,7 +806,7 @@ const getPaymentData = asyncHandler(async (req, res) => {
   const totalRefunded = refunds.reduce((acc, r) => acc + r.amount, 0);
   const totalTransactions = formattedMethods.reduce(
     (acc, m) => acc + m.count,
-    0
+    0,
   );
   const avgTransaction =
     totalTransactions > 0 ? totalCollected / totalTransactions : 0;
@@ -841,7 +913,7 @@ const getAdvancedData = asyncHandler(async (req, res) => {
       dayTotals[h.day] += h.value;
     });
     const busiestDayIndex = Object.keys(dayTotals).reduce((a, b) =>
-      dayTotals[a] > dayTotals[b] ? a : b
+      dayTotals[a] > dayTotals[b] ? a : b,
     );
     const days = [
       "Unknown",
@@ -864,7 +936,7 @@ const getAdvancedData = asyncHandler(async (req, res) => {
       hourTotals[h.hour] += h.value;
     });
     const busiestHour = Object.keys(hourTotals).reduce((a, b) =>
-      hourTotals[a] > hourTotals[b] ? a : b
+      hourTotals[a] > hourTotals[b] ? a : b,
     );
     insights.push(`Peak hours are around ${busiestHour}:00.`);
   }
@@ -873,7 +945,7 @@ const getAdvancedData = asyncHandler(async (req, res) => {
   const nextDayForecast = forecasting[0];
   if (nextDayForecast && nextDayForecast.predicted > 0) {
     insights.push(
-      `Forecast for tomorrow: ~$${nextDayForecast.predicted.toLocaleString()} in sales.`
+      `Forecast for tomorrow: ~$${nextDayForecast.predicted.toLocaleString()} in sales.`,
     );
   }
 
@@ -901,7 +973,7 @@ const getMultiStoreOverview = asyncHandler(async (req, res) => {
 
   // Filter for stores where user has management role
   const managedStores = user.stores.filter(
-    (s) => ["admin", "manager"].includes(s.role) && s.storeId
+    (s) => ["admin", "manager"].includes(s.role) && s.storeId,
   );
 
   if (managedStores.length === 0) {
@@ -990,7 +1062,7 @@ const getMultiStoreOverview = asyncHandler(async (req, res) => {
 
     // Format hourly sales for this store (filled with 0s)
     const storeHourly = hourlySalesTrend.filter(
-      (h) => h._id.storeId.toString() === sId
+      (h) => h._id.storeId.toString() === sId,
     );
     const hourlyData = Array.from({ length: 24 }, (_, i) => {
       const found = storeHourly.find((h) => h._id.hour === i);
@@ -1050,6 +1122,333 @@ const getMultiStoreOverview = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Get Tax Analytics
+ * @route   GET /api/analytics/tax
+ * @access  Private
+ */
+const getTaxData = asyncHandler(async (req, res) => {
+  const { startDate, endDate } = req.query;
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  // Filter for realized revenue only (Completed or Paid)
+  const matchStage = {
+    storeId: new mongoose.Types.ObjectId(req.storeId),
+    createdAt: { $gte: start, $lte: end },
+    orderStatus: { $in: ["completed", "served"] },
+    paymentStatus: { $in: ["paid", "partial"] },
+  };
+
+  // 1. Overview KPIs
+  const kpiStats = await Order.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        _id: null,
+        totalGross: { $sum: "$totalAmount" },
+        totalTax: { $sum: "$taxBreakdown.totalTax" },
+        totalServiceCharge: { $sum: "$taxBreakdown.serviceCharge" },
+        totalNet: { $sum: "$taxBreakdown.subtotal" },
+        totalTips: { $sum: "$tip.amount" },
+        totalRefunds: {
+          $sum: {
+            $reduce: {
+              input: "$refunds",
+              initialValue: 0,
+              reduce: {
+                $add: [
+                  "$$value",
+                  {
+                    $cond: [
+                      { $eq: ["$$this.gatewayStatus", "succeeded"] },
+                      "$$this.amount",
+                      0,
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+        orderCount: { $count: {} },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalGross: { $round: ["$totalGross", 2] },
+        totalTax: { $round: ["$totalTax", 2] },
+        totalServiceCharge: { $round: ["$totalServiceCharge", 2] },
+        totalNet: { $round: ["$totalNet", 2] },
+        totalTips: { $round: ["$totalTips", 2] },
+        totalRefunds: { $round: ["$totalRefunds", 2] },
+        // Revenue without tips is the actual base for tax reporting
+        comparableRevenue: {
+          $round: [{ $subtract: ["$totalGross", "$totalTips"] }, 2],
+        },
+        orderCount: 1,
+      },
+    },
+  ]);
+
+  const stats = kpiStats[0] || {
+    totalGross: 0,
+    totalTax: 0,
+    totalServiceCharge: 0,
+    totalNet: 0,
+    totalTips: 0,
+    totalRefunds: 0,
+    comparableRevenue: 0,
+    orderCount: 0,
+  };
+
+  // 2. Tax Breakdown by Rate (Only successful collections)
+  const taxBreakdown = await Order.aggregate([
+    { $match: matchStage },
+    { $unwind: "$taxBreakdown.items" },
+    {
+      $group: {
+        _id: "$taxBreakdown.items.taxRate",
+        taxAmount: { $sum: "$taxBreakdown.items.taxAmount" },
+        name: { $first: "$taxBreakdown.items.name" },
+      },
+    },
+    {
+      $project: {
+        rate: "$_id",
+        amount: { $round: ["$taxAmount", 2] },
+        name: {
+          $ifNull: ["$name", { $concat: [{ $toString: "$_id" }, "% Tax"] }],
+        },
+      },
+    },
+    { $sort: { rate: -1 } },
+  ]);
+
+  // 3. Daily Tax Trends
+  const trends = await Order.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        tax: { $sum: "$taxBreakdown.totalTax" },
+        serviceCharge: { $sum: "$taxBreakdown.serviceCharge" },
+        revenue: { $sum: "$taxBreakdown.subtotal" },
+      },
+    },
+    {
+      $project: {
+        date: "$_id",
+        tax: { $round: ["$tax", 2] },
+        serviceCharge: { $round: ["$serviceCharge", 2] },
+        revenue: { $round: ["$revenue", 2] },
+      },
+    },
+    { $sort: { date: 1 } },
+  ]);
+
+  res.status(200).json({
+    overview: stats,
+    breakdown: taxBreakdown,
+    trends: trends,
+  });
+});
+
+/**
+ * @desc    Get Stock Variance Data
+ * @route   GET /api/analytics/inventory/variance
+ * @access  Private
+ */
+const getVarianceData = asyncHandler(async (req, res) => {
+  const { startDate, endDate } = req.query;
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  // Focus on adjustments that represent "Variance" (Stock Take, Theft, Wastage)
+  const matchStage = {
+    storeId: new mongoose.Types.ObjectId(req.storeId),
+    createdAt: { $gte: start, $lte: end },
+    reason: { $in: ["stock_take", "theft", "wastage", "damage", "correction"] },
+  };
+
+  const varianceStats = await StockAdjustment.aggregate([
+    { $match: matchStage },
+    {
+      $lookup: {
+        from: "inventoryitems",
+        localField: "inventoryItem",
+        foreignField: "_id",
+        as: "item",
+      },
+    },
+    { $unwind: "$item" },
+    {
+      $project: {
+        reason: 1,
+        inventoryItem: 1,
+        itemName: "$item.name",
+        category: "$item.category",
+        costPrice: "$item.costPrice",
+        unit: "$item.unit",
+        varianceQty: {
+          $cond: [
+            { $eq: ["$type", "correction"] },
+            { $subtract: ["$newStock", "$previousStock"] },
+            {
+              $cond: [
+                { $eq: ["$type", "subtraction"] },
+                { $multiply: ["$quantity", -1] },
+                "$quantity",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    {
+      $project: {
+        reason: 1,
+        inventoryItem: 1,
+        itemName: 1,
+        category: 1,
+        varianceQty: 1,
+        unit: 1,
+        costImpact: {
+          $round: [{ $multiply: ["$varianceQty", "$costPrice"] }, 2],
+        },
+      },
+    },
+  ]);
+
+  // Group by Item
+  const itemSummary = await StockAdjustment.aggregate([
+    { $match: matchStage },
+    {
+      $lookup: {
+        from: "inventoryitems",
+        localField: "inventoryItem",
+        foreignField: "_id",
+        as: "item",
+      },
+    },
+    { $unwind: "$item" },
+    {
+      $group: {
+        _id: "$inventoryItem",
+        name: { $first: "$item.name" },
+        category: { $first: "$item.category" },
+        totalVariance: {
+          $sum: {
+            $cond: [
+              { $eq: ["$type", "correction"] },
+              { $subtract: ["$newStock", "$previousStock"] },
+              {
+                $cond: [
+                  { $eq: ["$type", "subtraction"] },
+                  { $multiply: ["$quantity", -1] },
+                  "$quantity",
+                ],
+              },
+            ],
+          },
+        },
+        totalLoss: {
+          $sum: {
+            $multiply: [
+              {
+                $cond: [
+                  { $eq: ["$type", "correction"] },
+                  { $subtract: ["$newStock", "$previousStock"] },
+                  {
+                    $cond: [
+                      { $eq: ["$type", "subtraction"] },
+                      { $multiply: ["$quantity", -1] },
+                      "$quantity",
+                    ],
+                  },
+                ],
+              },
+              "$item.costPrice",
+            ],
+          },
+        },
+      },
+    },
+    { $sort: { totalLoss: 1 } }, // Most negative first
+    { $limit: 20 },
+  ]);
+
+  // Group by Reason
+  const reasonSummary = await StockAdjustment.aggregate([
+    { $match: matchStage },
+    {
+      $lookup: {
+        from: "inventoryitems",
+        localField: "inventoryItem",
+        foreignField: "_id",
+        as: "item",
+      },
+    },
+    { $unwind: "$item" },
+    {
+      $group: {
+        _id: "$reason",
+        count: { $sum: 1 },
+        totalImpact: {
+          $sum: {
+            $multiply: [
+              {
+                $cond: [
+                  { $eq: ["$type", "correction"] },
+                  { $subtract: ["$newStock", "$previousStock"] },
+                  {
+                    $cond: [
+                      { $eq: ["$type", "subtraction"] },
+                      { $multiply: ["$quantity", -1] },
+                      "$quantity",
+                    ],
+                  },
+                ],
+              },
+              "$item.costPrice",
+            ],
+          },
+        },
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    summary: {
+      totalAdjustments: varianceStats.length,
+      totalLoss: varianceStats.reduce(
+        (acc, curr) => acc + (curr.costImpact < 0 ? curr.costImpact : 0),
+        0,
+      ),
+      totalGain: varianceStats.reduce(
+        (acc, curr) => acc + (curr.costImpact > 0 ? curr.costImpact : 0),
+        0,
+      ),
+      netImpact: varianceStats.reduce((acc, curr) => acc + curr.costImpact, 0),
+    },
+    items: itemSummary.map((i) => ({
+      ...i,
+      totalLoss: Math.round(i.totalLoss * 100) / 100,
+    })),
+    reasons: reasonSummary.map((r) => ({
+      reason: r._id,
+      count: r.count,
+      impact: Math.round(r.totalImpact * 100) / 100,
+    })),
+    details: varianceStats,
+  });
+});
+
 module.exports = {
   getOverviewData,
   getSalesData,
@@ -1060,4 +1459,6 @@ module.exports = {
   getPaymentData,
   getAdvancedData,
   getMultiStoreOverview,
+  getTaxData,
+  getVarianceData,
 };
