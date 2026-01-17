@@ -429,7 +429,7 @@ export default function POS() {
           bodyType: MODAL_BODY_TYPES.ADDON_SELECTOR,
           extraObject: {
             menuItem: item,
-            onConfirm: (addOnData) => dispatch(addToCart({ item, addOnData })),
+            // onConfirm removed to fix non-serializable state error
           },
           size: "lg",
         }),
