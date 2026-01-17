@@ -24,7 +24,7 @@ const AddOnSheet = ({
   const haptic = useHaptic();
 
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
 
@@ -54,7 +54,7 @@ const AddOnSheet = ({
       menuItem.addOnGroups.forEach((group) => {
         const groupSelections = selections[group._id] || [];
 
-        group.addOnItems.forEach((item) => {
+        group.items?.forEach((item) => {
           if (groupSelections.includes(item._id)) {
             addonTotal += item.price;
           }
@@ -147,8 +147,8 @@ const AddOnSheet = ({
       menuItem.addOnGroups.forEach((group) => {
         const selectedIds = selections[group._id];
         if (selectedIds && selectedIds.length > 0) {
-          const selectedItems = group.addOnItems.filter((item) =>
-            selectedIds.includes(item._id)
+          const selectedItems = group.items.filter((item) =>
+            selectedIds.includes(item._id),
           );
           addOnsList.push({
             groupName: group.name,
@@ -235,9 +235,9 @@ const AddOnSheet = ({
                 </div>
 
                 <div className="grid grid-cols-1 gap-2">
-                  {group.addOnItems.map((item) => {
+                  {group.items?.map((item) => {
                     const isSelected = (selections[group._id] || []).includes(
-                      item._id
+                      item._id,
                     );
                     return (
                       <button
