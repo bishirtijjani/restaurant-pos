@@ -44,6 +44,12 @@ const PERMISSION_GROUPS = [
         name: "Apply Discounts",
         desc: "Can add discounts to orders",
       },
+      {
+        id: "orders:reopen",
+        name: "Reopen Orders",
+        desc: "Critical: Can reopen completed or cancelled orders",
+        critical: true,
+      },
     ],
   },
   {
@@ -145,7 +151,7 @@ function PermissionMatrix({ extraObject, closeModal }) {
     setSelectedPermissions((prev) =>
       prev.includes(permId)
         ? prev.filter((p) => p !== permId)
-        : [...prev, permId]
+        : [...prev, permId],
     );
   };
 
@@ -156,14 +162,14 @@ function PermissionMatrix({ extraObject, closeModal }) {
         updateUser({
           id: user._id,
           user: { permissions: selectedPermissions },
-        })
+        }),
       ).unwrap();
 
       dispatch(
         showNotification({
           message: `Permissions updated for ${user.fullname}`,
           status: 1,
-        })
+        }),
       );
       closeModal();
     } catch (error) {
@@ -171,7 +177,7 @@ function PermissionMatrix({ extraObject, closeModal }) {
         showNotification({
           message: "Failed to update permissions",
           status: 0,
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -209,7 +215,7 @@ function PermissionMatrix({ extraObject, closeModal }) {
                 <p className="text-[10px] opacity-60">
                   {
                     g.permissions.filter((p) =>
-                      selectedPermissions.includes(p.id)
+                      selectedPermissions.includes(p.id),
                     ).length
                   }{" "}
                   of {g.permissions.length} active

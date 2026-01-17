@@ -156,4 +156,55 @@ module.exports = {
   notifyKDS,
   notifyTableUpdate,
   notifyFloorUpdate: notifyTableUpdate, // Alias for floor controller compatibility
+
+  /**
+   * Broadcast to specific channel (for health monitoring)
+   */
+  broadcastToChannel: (channel, room, data) => {
+    if (!wss) return;
+
+    const message = JSON.stringify({
+      channel,
+      room,
+      data,
+      timestamp: new Date().toISOString(),
+    });
+
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        // For platform alerts, send to all admin clients
+        if (channel === "platform:alerts" && client.isAdmin) {
+          client.send(message);
+        }
+        // For tenant alerts, send to clients in that store
+        else if (channel === "tenant:alerts" && client.storeId) {
+          const [orgId, storeId] = room.split(":");
+          if (client.storeId === storeId) {
+            client.send(message);
+          }
+        }
+        // For metrics updates
+        else if (channel.includes("metrics")) {
+          client.send(message);
+        }
+      }
+    });
+  },
+
+  /**
+   * Get WebSocket statistics for metrics collection
+   */
+  getWebSocketStats: () => {
+    if (!wss) {
+      return {
+        activeConnections: 0,
+        totalConnections: 0,
+      };
+    }
+
+    return {
+      activeConnections: wss.clients.size,
+      totalConnections: wss.clients.size, // Simplified
+    };
+  },
 };

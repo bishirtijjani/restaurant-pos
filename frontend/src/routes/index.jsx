@@ -73,9 +73,13 @@ const StoreManagement = lazy(() => import("../pages/StoreManagement"));
 const BrandCatalog = lazy(() => import("../features/brand/BrandCatalog"));
 const BrandSettings = lazy(() => import("../features/brand/BrandSettings"));
 const SettingsHub = lazy(() => import("../features/settings/SettingsHub"));
+const PlatformHealthDashboard = lazy(() =>
+  import("../features/platformHealth/PlatformHealthDashboard")
+);
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
+  { path: "/platform/health", component: PlatformHealthDashboard },
   { path: "/settings", component: SettingsHub },
   { path: "/settings/profile", component: ProfileSettings },
   { path: "/settings/general", component: GeneralSettings },

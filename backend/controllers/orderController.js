@@ -49,7 +49,7 @@ const calculateOrderTax = (
   discountedSubtotal,
   orderItems,
   settings,
-  orderType
+  orderType,
 ) => {
   const { taxSettings, serviceCharge } = settings;
 
@@ -297,7 +297,7 @@ const createOrder = async (req, res) => {
 
       for (const invItem of linkedInventory) {
         const link = invItem.linkedMenuItems.find(
-          (l) => l.menuItemId.toString() === menuItem._id.toString()
+          (l) => l.menuItemId.toString() === menuItem._id.toString(),
         );
         if (link) {
           inventoryDeductions.push({
@@ -365,7 +365,7 @@ const createOrder = async (req, res) => {
     // Calculate subtotal
     const rawSubtotal = processedItems.reduce(
       (sum, item) => sum + item.subtotal,
-      0
+      0,
     );
 
     // Process discount
@@ -379,7 +379,7 @@ const createOrder = async (req, res) => {
         req.body.order.promoCode,
         rawSubtotal,
         orderType || "dine-in",
-        customerDetails?.customerId
+        customerDetails?.customerId,
       );
 
       if (promoValidation.valid) {
@@ -421,7 +421,7 @@ const createOrder = async (req, res) => {
       discountResult.discountedSubtotal,
       processedItems,
       settings,
-      orderType || "dine-in"
+      orderType || "dine-in",
     );
 
     // Calculate final total
@@ -432,7 +432,7 @@ const createOrder = async (req, res) => {
 
     const totalAddOnsAmount = processedItems.reduce(
       (sum, item) => sum + (item.addOnsTotal || 0),
-      0
+      0,
     );
 
     // Calculate final total (including tip if provided)
@@ -458,7 +458,7 @@ const createOrder = async (req, res) => {
       // Split payment scenario
       paidAmount = payments.reduce(
         (sum, p) => sum + (parseFloat(p.amount) || 0),
-        0
+        0,
       );
 
       // Validate: total payments must equal or exceed bill total
@@ -467,7 +467,7 @@ const createOrder = async (req, res) => {
         return res.status(400).json({
           success: false,
           message: `Insufficient payment. Total: ${finalTotal.toFixed(
-            2
+            2,
           )}, Paid: ${paidAmount.toFixed(2)}`,
         });
       }
@@ -544,7 +544,7 @@ const createOrder = async (req, res) => {
     if (payments && Array.isArray(payments)) {
       // Check for card payment with transaction ID
       const cardPayment = payments.find(
-        (p) => p.method === "card" && p.transactionId
+        (p) => p.method === "card" && p.transactionId,
       );
       if (cardPayment) {
         stripePaymentIntentId = cardPayment.transactionId;
@@ -621,7 +621,7 @@ const createOrder = async (req, res) => {
         promoCodeData.code,
         storeId,
         customerDetails?.customerId,
-        session
+        session,
       );
     }
 
@@ -635,7 +635,7 @@ const createOrder = async (req, res) => {
       null,
       newOrder,
       `Created new order #${newOrder.orderNumber}`,
-      session
+      session,
     );
 
     await session.commitTransaction();
@@ -851,7 +851,7 @@ const updateOrderStatus = async (req, res) => {
       oldOrder,
       order,
       `Updated order #${order.orderNumber} status to ${orderStatus}`,
-      session
+      session,
     );
 
     await session.commitTransaction();
@@ -972,7 +972,7 @@ const updatePayment = async (req, res) => {
       oldOrder,
       order,
       `Updated payment for order #${order.orderNumber}`,
-      session
+      session,
     );
 
     await session.commitTransaction();
@@ -1046,13 +1046,13 @@ const cancelOrder = async (req, res) => {
     const InventoryManager = require("../utils/inventoryManager");
     const inventoryRestoration = await InventoryManager.restoreOrderInventory(
       order,
-      session
+      session,
     );
 
     if (!inventoryRestoration.success) {
       console.warn(
         "Inventory restoration had errors:",
-        inventoryRestoration.errors
+        inventoryRestoration.errors,
       );
       // Continue with cancellation even if inventory restoration fails
       // Log the errors for manual review
@@ -1083,7 +1083,7 @@ const cancelOrder = async (req, res) => {
       oldOrder,
       order,
       `Cancelled order #${order.orderNumber}: ${reason}. Inventory restored: ${inventoryRestoration.totalItemsRestored} items`,
-      session
+      session,
     );
 
     await session.commitTransaction();
@@ -1180,9 +1180,9 @@ const refundOrder = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Refund amount (${refundAmount.toFixed(
-          2
+          2,
         )}) exceeds remaining refundable amount (${remainingRefundable.toFixed(
-          2
+          2,
         )})`,
       });
     }
@@ -1192,7 +1192,7 @@ const refundOrder = async (req, res) => {
       (r) =>
         r.amount === refundAmount &&
         r.reason === reason &&
-        Date.now() - new Date(r.refundedAt).getTime() < 60000
+        Date.now() - new Date(r.refundedAt).getTime() < 60000,
     );
 
     if (recentRefund) {
@@ -1212,7 +1212,7 @@ const refundOrder = async (req, res) => {
 
     // Find the original payment transaction
     const originalPayment = order.paymentHistory.find(
-      (p) => p.type === "payment" && p.method !== "cash"
+      (p) => p.type === "payment" && p.method !== "cash",
     );
 
     if (originalPayment && originalPayment.method === "card") {
@@ -1226,7 +1226,7 @@ const refundOrder = async (req, res) => {
           } = require("../utils/paymentProvider");
           const provider = PaymentProviderFactory.getProvider(
             "stripe",
-            gateways.stripe
+            gateways.stripe,
           );
 
           // Get payment intent ID from order
@@ -1246,7 +1246,7 @@ const refundOrder = async (req, res) => {
               orderNumber: order.orderNumber,
               refundedBy: req.user.id.toString(),
               category,
-            }
+            },
           );
 
           if (!gatewayRefundResult.success) {
@@ -1324,13 +1324,13 @@ const refundOrder = async (req, res) => {
       const InventoryManager = require("../utils/inventoryManager");
       const inventoryRestoration = await InventoryManager.restoreOrderInventory(
         order,
-        session
+        session,
       );
 
       if (!inventoryRestoration.success) {
         console.warn(
           "Inventory restoration had errors during refund:",
-          inventoryRestoration.errors
+          inventoryRestoration.errors,
         );
         // Continue with refund even if inventory restoration fails
       }
@@ -1338,7 +1338,7 @@ const refundOrder = async (req, res) => {
       // Log inventory restoration in order metadata (optional)
       if (inventoryRestoration.totalItemsRestored > 0) {
         console.log(
-          `Restored ${inventoryRestoration.totalItemsRestored} inventory items for refunded order #${order.orderNumber}`
+          `Restored ${inventoryRestoration.totalItemsRestored} inventory items for refunded order #${order.orderNumber}`,
         );
       }
     }
@@ -1364,7 +1364,7 @@ const refundOrder = async (req, res) => {
       `Refunded ${refundAmount.toFixed(2)} for order #${
         order.orderNumber
       }: ${reason}`,
-      session
+      session,
     );
 
     await session.commitTransaction();
@@ -1399,6 +1399,204 @@ const refundOrder = async (req, res) => {
   }
 };
 
+// Reopen a completed or cancelled order
+const reopenOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { reason, version } = req.body;
+
+    if (!reason) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Reason for reopening is required",
+      });
+    }
+
+    const order = await Order.findOne({
+      _id: req.params.id,
+      storeId: req.storeId,
+    }).session(session);
+
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Only allow reopening completed or cancelled orders
+    if (!["completed", "cancelled"].includes(order.orderStatus)) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: `Cannot reopen order with status "${order.orderStatus}". Only completed or cancelled orders can be reopened.`,
+      });
+    }
+
+    // CRITICAL: Check for refunds - prevent reopening refunded orders
+    if (order.refunds && order.refunds.length > 0) {
+      const successfulRefunds = order.refunds.filter(
+        (r) => r.gatewayStatus === "succeeded",
+      );
+      if (successfulRefunds.length > 0) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          success: false,
+          message:
+            "Cannot reopen an order that has been refunded. Please create a new order instead.",
+          refundCount: successfulRefunds.length,
+        });
+      }
+    }
+
+    // Version check for optimistic locking
+    if (version !== undefined && order.version !== version) {
+      await session.abortTransaction();
+      return res.status(409).json({
+        success: false,
+        message: "Order has been modified by another user. Please refresh.",
+      });
+    }
+
+    const oldOrder = { ...order.toObject() };
+    const wasCancelled = oldOrder.orderStatus === "cancelled";
+
+    // If order was cancelled, we need to re-deduct inventory
+    if (wasCancelled) {
+      const InventoryManager = require("../utils/inventoryManager");
+      const inventoryDeduction = await InventoryManager.deductOrderInventory(
+        order,
+        session,
+      );
+
+      if (!inventoryDeduction.success) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient inventory to reopen this order",
+          errors: inventoryDeduction.errors,
+        });
+      }
+    }
+
+    // Update table status if dine-in order
+    if (
+      order.orderType === "dine-in" &&
+      order.table &&
+      order.table !== "Takeaway"
+    ) {
+      const Table = require("../models/Table");
+      const table = await Table.findOne({
+        tableNumber: order.table,
+        storeId: req.storeId,
+      }).session(session);
+
+      if (table) {
+        // Check if table is currently available
+        if (
+          table.status !== "available" &&
+          table.currentOrder?.toString() !== order._id.toString()
+        ) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            success: false,
+            message: `Table ${order.table} is currently ${table.status}. Cannot reopen order.`,
+          });
+        }
+
+        table.status = "occupied";
+        table.currentOrder = order._id;
+        table.timing.seatedAt = new Date();
+        table.lastOccupiedAt = new Date();
+        table.lastAction = {
+          action: "state_change",
+          performedBy: req.user.id,
+          createdAt: new Date(),
+          reason: `Reopened order #${order.orderNumber}`,
+        };
+        await table.save({ session });
+      }
+    }
+
+    // Change status to pending
+    order.orderStatus = "pending";
+
+    // Reset completion timestamp if it was completed
+    if (oldOrder.orderStatus === "completed") {
+      order.completedAt = null;
+    }
+
+    // Reset item statuses
+    order.orderItems.forEach((item) => {
+      if (!item.voidInfo?.isVoided) {
+        item.itemStatus = "pending";
+      }
+    });
+
+    // Increment version for concurrency control
+    order.version += 1;
+
+    order.lastAction = {
+      action: "reopen",
+      performedBy: req.user.id,
+      createdAt: new Date(),
+      reason,
+    };
+
+    await order.save({ session });
+
+    await logAction(
+      req.user.id,
+      req.storeId,
+      req.organizationId,
+      "Order",
+      order._id,
+      "edit",
+      oldOrder,
+      order,
+      `Reopened order #${order.orderNumber}: ${reason}${
+        wasCancelled ? " (inventory re-deducted)" : ""
+      }`,
+      session,
+    );
+
+    await session.commitTransaction();
+
+    await order.populate("servedBy", "fullname");
+    await order.populate("orderItems.menuItemId", "name category");
+
+    // Notify KDS via WebSocket
+    notifyKDS("order:reopened", order, null, req.storeId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Order reopened successfully",
+      data: order,
+      inventoryRestored: wasCancelled,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Error reopening order:", error);
+    if (error.kind === "ObjectId") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reopen order. Please try again.",
+      error: error.message,
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
 module.exports = {
   createOrder,
   getAllOrders,
@@ -1407,4 +1605,5 @@ module.exports = {
   updatePayment,
   cancelOrder,
   refundOrder,
+  reopenOrder,
 };

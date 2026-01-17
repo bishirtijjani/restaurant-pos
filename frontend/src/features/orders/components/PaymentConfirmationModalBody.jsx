@@ -93,7 +93,7 @@ function PaymentConfirmationModalBody(props) {
 
   const orderTotal = extraObject.totalAmount || 0;
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
   const currencyCode = settings?.currency?.code || "USD";
@@ -115,7 +115,7 @@ function PaymentConfirmationModalBody(props) {
         if (response.data.success) {
           setProviders(response.data.providers);
           const stripeProvider = response.data.providers.find(
-            (p) => p.id === "stripe"
+            (p) => p.id === "stripe",
           );
           if (stripeProvider && stripeProvider.publishableKey) {
             setStripeConfig(stripeProvider);
@@ -187,7 +187,7 @@ function PaymentConfirmationModalBody(props) {
     } else {
       return splitPayments.reduce(
         (sum, p) => sum + (parseFloat(p.amount) || 0),
-        0
+        0,
       );
     }
   };
@@ -283,8 +283,8 @@ function PaymentConfirmationModalBody(props) {
     if (totalPaid < totalWithTip) {
       setErrorMessage(
         `Insufficient payment. Total: ${currency}${totalWithTip.toFixed(
-          2
-        )}, Paid: ${currency}${totalPaid.toFixed(2)}`
+          2,
+        )}, Paid: ${currency}${totalPaid.toFixed(2)}`,
       );
       return false;
     }
@@ -292,7 +292,7 @@ function PaymentConfirmationModalBody(props) {
     if (paymentMode === "split") {
       // Validate all split payments have amounts
       const hasEmptyPayment = splitPayments.some(
-        (p) => !p.amount || parseFloat(p.amount) <= 0
+        (p) => !p.amount || parseFloat(p.amount) <= 0,
       );
       if (hasEmptyPayment) {
         setErrorMessage("All payment entries must have valid amounts");
@@ -364,10 +364,11 @@ function PaymentConfirmationModalBody(props) {
               balance > 0 ? "partially " : ""
             }paid successfully!`,
             status: 1,
-          })
+          }),
         );
         dispatch(fetchOrders());
         dispatch(clearCart()); // Clear POS cart after successful payment
+        if (props.onSuccess) props.onSuccess(createdOrder);
         dispatch(closeModal());
         dispatch(closeRightDrawer());
         // Close second time just in case
@@ -388,7 +389,7 @@ function PaymentConfirmationModalBody(props) {
                 showNotification({
                   message: "Receipt printed successfully",
                   status: 1,
-                })
+                }),
               );
             })
             .catch((err) => {
@@ -399,7 +400,7 @@ function PaymentConfirmationModalBody(props) {
                   bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
                   extraObject: createdOrder,
                   size: "lg",
-                })
+                }),
               );
             });
         } else {
@@ -409,7 +410,7 @@ function PaymentConfirmationModalBody(props) {
               bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
               extraObject: createdOrder,
               size: "lg",
-            })
+            }),
           );
         }
       })
@@ -623,7 +624,7 @@ function PaymentConfirmationModalBody(props) {
                 </label>
                 <SearchableSelect
                   options={paymentMethodOptions.filter(
-                    (o) => o.value !== "stripe"
+                    (o) => o.value !== "stripe",
                   )} // No split stripe for now
                   value={payment.method}
                   onChange={(e) =>

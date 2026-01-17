@@ -17,6 +17,7 @@ import {
   Package,
   Zap,
   Plus,
+  Activity,
 } from "lucide-react";
 import {
   ChartBarIcon,
@@ -36,6 +37,11 @@ export const adminRoutes = [
     path: "/app/dashboard",
     icon: <LayoutDashboard className={iconClasses} />,
     name: "Dashboard",
+  },
+  {
+    path: "/app/platform/health",
+    icon: <Activity className={iconClasses} />,
+    name: "Platform Health",
   },
   {
     path: "/app/analytics",

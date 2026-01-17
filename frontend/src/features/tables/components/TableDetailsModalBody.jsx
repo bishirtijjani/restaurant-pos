@@ -9,8 +9,13 @@ import {
   Edit3,
   X,
   Link as LinkIcon,
+  Link as LinkIcon,
   Unlink,
+  Split,
+  Merge,
 } from "lucide-react";
+import SplitOrderModal from "../../orders/components/SplitOrderModal";
+import MergeTableModal from "./MergeTableModal";
 
 const TableDetailsModal = ({ table, onClose, onStatusChange, onEdit }) => {
   const settings = useSelector(
@@ -18,6 +23,8 @@ const TableDetailsModal = ({ table, onClose, onStatusChange, onEdit }) => {
   );
   const orders = useSelector((state) => state.orders.orders);
   const currency = settings?.currency?.symbol || "$";
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
 
   const currentOrder = orders.find((o) => o._id === table.currentOrder?._id);
 
@@ -112,10 +119,29 @@ const TableDetailsModal = ({ table, onClose, onStatusChange, onEdit }) => {
           {currentOrder && (
             <div className="card bg-info/10 border border-info/30">
               <div className="card-body">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <LinkIcon className="w-5 h-5 text-info" />
-                  Current Order
-                </h3>
+                <div className="flex justify-between items-start">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <LinkIcon className="w-5 h-5 text-info" />
+                    Current Order
+                  </h3>
+                  {/* Order Actions */}
+                  <div className="flex gap-2">
+                  <div className="flex gap-2">
+                    <button
+                      className="btn btn-xs btn-outline btn-info gap-1"
+                      onClick={() => setShowSplitModal(true)}
+                    >
+                      <Split className="w-3 h-3" /> Split
+                    </button>
+                    <button
+                      className="btn btn-xs btn-outline btn-warning gap-1"
+                      onClick={() => setShowMergeModal(true)}
+                    >
+                      <Merge className="w-3 h-3" /> Merge Into
+                    </button>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Order Number:</span>
@@ -199,6 +225,29 @@ const TableDetailsModal = ({ table, onClose, onStatusChange, onEdit }) => {
           </button>
         </div>
       </div>
+
+      {showSplitModal && currentOrder && (
+        <SplitOrderModal
+          sourceOrder={currentOrder}
+          onClose={() => setShowSplitModal(false)}
+          onSuccess={() => {
+            // success
+            onClose(); // Close details modal too? Or just refresh?
+          }}
+        />
+        />
+      )}
+      
+      {showMergeModal && currentOrder && (
+          <MergeTableModal
+            sourceTable={table}
+            sourceOrder={currentOrder}
+            onClose={() => setShowMergeModal(false)}
+            onSuccess={() => {
+                onClose(); // Close details
+            }}
+          />
+      )}
     </div>
   );
 };

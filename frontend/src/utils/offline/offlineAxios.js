@@ -70,7 +70,7 @@ axios.interceptors.request.use(
     console.log(
       "🔴 OFFLINE - Intercepting request:",
       config.method,
-      config.url
+      config.url,
     );
 
     const signature = getRequestSignature(config);
@@ -78,7 +78,7 @@ axios.interceptors.request.use(
     // SKIP offline queue for sync manager requests
     if (config.headers["x-sync-request"]) {
       console.log(
-        "⚠️ Sync request failed (offline) - rejecting without queueing"
+        "⚠️ Sync request failed (offline) - rejecting without queueing",
       );
       return Promise.reject(new Error("Sync blocked - offline"));
     }
@@ -267,7 +267,7 @@ axios.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor
@@ -335,7 +335,7 @@ axios.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axios;

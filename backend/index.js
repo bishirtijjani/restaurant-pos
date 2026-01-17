@@ -40,13 +40,26 @@ setupSecurity(app);
 app.use(cookieParser());
 app.use(cors(corsOptions));
 
-// Request logging middleware
+// Request logging middleware with metrics tracking
+const metricsCollector = require("./utils/metricsCollector");
+
 app.use((req, res, next) => {
   const start = Date.now();
+
+  // Increment active requests
+  metricsCollector.incrementActiveRequests();
+
   res.on("finish", () => {
     const duration = Date.now() - start;
     logger.request(req, res, duration);
+
+    // Track API metrics
+    metricsCollector.trackAPIRequest(req, res, duration);
+
+    // Decrement active requests
+    metricsCollector.decrementActiveRequests();
   });
+
   next();
 });
 
@@ -98,9 +111,39 @@ const server = http.createServer(app);
 // Initialize WebSocket
 initializeWebSocket(server);
 
+// Initialize health monitoring service
+const healthMonitor = require("./services/healthMonitor");
+
 server.listen(PORT, "0.0.0.0", () => {
   logger.info("Server started", {
     port: PORT,
     env: process.env.NODE_ENV || "development",
   });
+
+  // Start health monitoring after server is ready
+  setTimeout(() => {
+    healthMonitor.startMonitoring();
+  }, 2000); // Wait 2 seconds for database connection to stabilize
 });
+
+// Graceful shutdown
+const gracefulShutdown = () => {
+  logger.info("Received shutdown signal, closing server gracefully");
+
+  // Stop health monitoring
+  healthMonitor.stopMonitoring();
+
+  server.close(() => {
+    logger.info("Server closed");
+    process.exit(0);
+  });
+
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    logger.error("Forced shutdown after timeout");
+    process.exit(1);
+  }, 10000);
+};
+
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);

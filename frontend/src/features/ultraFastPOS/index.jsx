@@ -32,10 +32,10 @@ const UltraFastPOS = () => {
   const menuItems = useSelector((state) => state.menuItems.menuItems || []);
   const categories = useSelector((state) => state.categories.categories || []);
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const keyboardSettings = useSelector(
-    (state) => state.ultraFastPOS.keyboardSettings
+    (state) => state.ultraFastPOS.keyboardSettings,
   );
 
   const [activeCategory, setActiveCategory] = useState("All");
@@ -43,6 +43,8 @@ const UltraFastPOS = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const [calculatorValue, setCalculatorValue] = useState("");
+  const [lastOrder, setLastOrder] = useState(null);
+  const lastOrderRef = React.useRef(null);
 
   // Preload data
   useEffect(() => {
@@ -80,7 +82,7 @@ const UltraFastPOS = () => {
           (i) =>
             i._id === newItem._id &&
             (!i.addOns || i.addOns.length === 0) &&
-            !i.itemNote
+            !i.itemNote,
         );
 
         if (existingIndex !== -1) {
@@ -117,7 +119,7 @@ const UltraFastPOS = () => {
               menuItem: item,
               onConfirm: (data) => handleAddOnConfirm(item, data),
             },
-          })
+          }),
         );
       } else {
         // No add-ons, add directly
@@ -134,7 +136,7 @@ const UltraFastPOS = () => {
         });
       }
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Callback from AddOnSelectorModalBody
@@ -212,7 +214,7 @@ const UltraFastPOS = () => {
             type: CONFIRMATION_MODAL_CLOSE_TYPES.CLEAR_CART,
             onConfirm: () => setCart([]),
           },
-        })
+        }),
       );
     }
   }, [cart.length, dispatch]);
@@ -224,7 +226,7 @@ const UltraFastPOS = () => {
           showNotification({
             message: "Cart is empty!",
             status: 0,
-          })
+          }),
         );
         return;
       }
@@ -270,6 +272,10 @@ const UltraFastPOS = () => {
         const response = await axios.post("/api/orders", orderData);
         const order = response.data.data;
 
+        // Store last order for reprinting
+        setLastOrder(order);
+        lastOrderRef.current = order;
+
         // Auto-print instantly
         await printReceipt(order, cartRef.current); // Pass cartRef to ensure we have locally stored names if needed
 
@@ -280,7 +286,7 @@ const UltraFastPOS = () => {
           showNotification({
             message: `Sale completed! Order #${order.orderNumber}`,
             status: 1,
-          })
+          }),
         );
       } catch (error) {
         console.error("Order creation error:", error);
@@ -288,13 +294,13 @@ const UltraFastPOS = () => {
           showNotification({
             message: error.response?.data?.message || "Failed to complete sale",
             status: 0,
-          })
+          }),
         );
       } finally {
         setIsProcessing(false);
       }
     },
-    [total, dispatch]
+    [total, dispatch],
   );
 
   // Instant print (no delays)
@@ -313,13 +319,13 @@ const UltraFastPOS = () => {
       } catch (error) {
         console.warn(
           "WebUSB Print failed, falling back to browser print:",
-          error
+          error,
         );
         dispatch(
           showNotification({
             message: "Printer disconnected. Using fallback.",
             status: 0,
-          })
+          }),
         );
       }
     }
@@ -374,14 +380,14 @@ const UltraFastPOS = () => {
                             .map((group) =>
                               group.selectedItems
                                 .map((i) => `+ ${i.name}`)
-                                .join("<br>")
+                                .join("<br>"),
                             )
                             .join("<br>")
                         : cartItem.addOnSummary
-                        ? cartItem.addOnSummary
-                            .map((s) => `+ ${s}`)
-                            .join("<br>")
-                        : "";
+                          ? cartItem.addOnSummary
+                              .map((s) => `+ ${s}`)
+                              .join("<br>")
+                          : "";
 
                     return `
                   <tr>
@@ -469,6 +475,27 @@ const UltraFastPOS = () => {
       {
         key: keyboardSettings?.openCalculator || "ctrl+c",
         action: () => setShowCalculator((prev) => !prev),
+      },
+      {
+        key: keyboardSettings?.reprintLast || "ctrl+p",
+        action: () => {
+          if (lastOrderRef.current) {
+            dispatch(
+              showNotification({
+                message: "Reprinting last receipt...",
+                status: 1,
+              }),
+            );
+            printReceipt(lastOrderRef.current);
+          } else {
+            dispatch(
+              showNotification({
+                message: "No order available to reprint",
+                status: 0,
+              }),
+            );
+          }
+        },
       },
     ];
 

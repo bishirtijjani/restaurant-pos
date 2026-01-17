@@ -40,6 +40,7 @@ import storesReducer from "../features/stores/storeSlice";
 import mobilePOSReducer from "../features/orders/mobilePOSSlice";
 import brandMenuReducer from "../features/brand/brandMenuSlice";
 import organizationReducer from "../features/brand/organizationSlice";
+import platformHealthReducer from "../features/platformHealth/platformHealthSlice";
 
 const combinedReducer = {
   header: headerReducer,
@@ -82,6 +83,7 @@ const combinedReducer = {
   mobilePOS: mobilePOSReducer, // Mobile POS State
   brandMenu: brandMenuReducer, // Brand Catalog Management
   organization: organizationReducer, // Brand Settings
+  platformHealth: platformHealthReducer, // Platform Health Monitoring
 };
 
 export default configureStore({

@@ -14,6 +14,7 @@ import {
   StickyNote,
   Edit3,
   Tag,
+  Printer,
 } from "lucide-react";
 import { printerService } from "../../services/PrinterService";
 import {
@@ -371,7 +372,7 @@ export default function POS() {
   const { can } = useAuth();
 
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
   const menuItems = useSelector((state) => state.menuItems.menuItems);
@@ -393,6 +394,7 @@ export default function POS() {
     activeCategory,
   } = useSelector((state) => state.pos);
 
+  const [lastOrder, setLastOrder] = useState(null);
   const [showTableModal, setShowTableModal] = useState(false);
 
   // Local state for packaging/delivery fee inputs (to handle typing)
@@ -414,7 +416,7 @@ export default function POS() {
     (item) =>
       (activeCategory === "All" || item.category === activeCategory) &&
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      item.isAvailable
+      item.isAvailable,
   );
 
   const handleAddToCart = (item) => {
@@ -430,14 +432,14 @@ export default function POS() {
             onConfirm: (addOnData) => dispatch(addToCart({ item, addOnData })),
           },
           size: "lg",
-        })
+        }),
       );
     } else {
       dispatch(
         addToCart({
           item,
           addOnData: { addOns: [], itemNote: "", total: item.price },
-        })
+        }),
       );
     }
   };
@@ -458,7 +460,7 @@ export default function POS() {
     const itemsSubtotal = cart.reduce(
       (sum, item) =>
         sum + (item.price + (item.addOnsTotal || 0)) * item.quantity,
-      0
+      0,
     );
 
     // Calculate discount amount
@@ -531,7 +533,7 @@ export default function POS() {
         showNotification({
           message: "Please select a table for dine-in orders",
           status: 0,
-        })
+        }),
       );
       return;
     }
@@ -605,9 +607,10 @@ export default function POS() {
 
     dispatch(createOrder({ order: orderPayload }))
       .unwrap()
-      .then(() => {
+      .then((createdOrder) => {
+        setLastOrder(createdOrder);
         dispatch(
-          showNotification({ message: "Order sent to kitchen!", status: 1 })
+          showNotification({ message: "Order sent to kitchen!", status: 1 }),
         );
         dispatch(clearCart());
       })
@@ -616,7 +619,7 @@ export default function POS() {
           showNotification({
             message: err.message || "Failed to create order",
             status: 0,
-          })
+          }),
         );
       });
   };
@@ -630,7 +633,7 @@ export default function POS() {
         showNotification({
           message: "Please select a table for dine-in orders",
           status: 0,
-        })
+        }),
       );
       return;
     }
@@ -678,7 +681,26 @@ export default function POS() {
         header: "Payment Confirmation",
         bodyType: RIGHT_DRAWER_TYPES.CONFIRM_PAYMENT,
         extraObject: orderPayload,
-      })
+        onSuccess: (order) => {
+          setLastOrder(order);
+        },
+      }),
+    );
+  };
+
+  const handleReprintLast = () => {
+    if (!lastOrder) {
+      dispatch(
+        showNotification({ message: "No order found to reprint", status: 0 }),
+      );
+      return;
+    }
+    dispatch(
+      openModal({
+        title: `Receipt #${lastOrder.orderNumber}`,
+        bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
+        extraObject: lastOrder,
+      }),
     );
   };
 
@@ -751,7 +773,19 @@ export default function POS() {
 
       {/* Right - Cart */}
       <div className="bg-base-100 rounded-xl shadow-lg p-4 flex flex-col h-full overflow-y-auto">
-        <h2 className="text-lg font-bold mb-3">Current Order</h2>
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-lg font-bold">Current Order</h2>
+          {lastOrder && (
+            <button
+              onClick={handleReprintLast}
+              className="btn btn-xs btn-ghost gap-1"
+              title="Reprint Last Receipt"
+            >
+              <Printer size={14} />
+              Reprint Last
+            </button>
+          )}
+        </div>
 
         <OrderTypeSelector
           orderType={orderType}

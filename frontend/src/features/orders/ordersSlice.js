@@ -20,7 +20,7 @@ export const fetchOrders = createAsyncThunk(
       if (params.startDate)
         queryParams.append(
           "startDate",
-          new Date(params.startDate).toISOString()
+          new Date(params.startDate).toISOString(),
         );
       if (params.endDate)
         queryParams.append("endDate", new Date(params.endDate).toISOString());
@@ -31,7 +31,7 @@ export const fetchOrders = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const fetchOrderById = createAsyncThunk(
@@ -43,7 +43,7 @@ export const fetchOrderById = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const createOrder = createAsyncThunk(
@@ -55,7 +55,7 @@ export const createOrder = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const updateOrderStatus = createAsyncThunk(
@@ -70,7 +70,7 @@ export const updateOrderStatus = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const updatePayment = createAsyncThunk(
@@ -86,7 +86,7 @@ export const updatePayment = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const cancelOrder = createAsyncThunk(
@@ -100,7 +100,7 @@ export const cancelOrder = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 // Void order items
@@ -116,7 +116,7 @@ export const voidOrderItems = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 // Refund order
@@ -133,7 +133,7 @@ export const refundOrder = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 // Modify order
@@ -141,7 +141,7 @@ export const modifyOrder = createAsyncThunk(
   "orders/modifyOrder",
   async (
     { orderId, orderItems, orderNote, reason, expectedVersion },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const response = await axios.put(`/api/order-modifications/${orderId}`, {
@@ -154,7 +154,60 @@ export const modifyOrder = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
+);
+
+// Split order
+export const splitOrder = createAsyncThunk(
+  "orders/splitOrder",
+  async (
+    { orderId, itemsToSplit, targetTableNumber, createNewOrder, version },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await axios.post(`${API_URL}/${orderId}/split`, {
+        itemsToSplit,
+        targetTableNumber,
+        createNewOrder,
+        version,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+
+// Merge orders
+export const mergeOrders = createAsyncThunk(
+  "orders/mergeOrders",
+  async ({ sourceOrderIds, targetOrderId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/merge`, {
+        sourceOrderIds,
+        targetOrderId,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+
+// Reopen order
+export const reopenOrder = createAsyncThunk(
+  "orders/reopenOrder",
+  async ({ id, reason, version }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(`${API_URL}/${id}/reopen`, {
+        reason,
+        version,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
 );
 
 // Initial state
@@ -282,7 +335,7 @@ const ordersSlice = createSlice({
 
         // Update the order in the orders list if it exists
         const index = state.orders.findIndex(
-          (order) => order._id === action.payload.data._id
+          (order) => order._id === action.payload.data._id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload.data;
@@ -311,7 +364,7 @@ const ordersSlice = createSlice({
 
         // Update the order in the orders list if it exists
         const index = state.orders.findIndex(
-          (order) => order._id === action.payload.data._id
+          (order) => order._id === action.payload.data._id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload.data;
@@ -340,7 +393,7 @@ const ordersSlice = createSlice({
 
         // Update the order in the orders list if it exists
         const index = state.orders.findIndex(
-          (order) => order._id === action.payload.data._id
+          (order) => order._id === action.payload.data._id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload.data;
@@ -366,7 +419,7 @@ const ordersSlice = createSlice({
 
         // Update order in list
         const index = state.orders.findIndex(
-          (order) => order._id === action.payload.data._id
+          (order) => order._id === action.payload.data._id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload.data;
@@ -391,7 +444,7 @@ const ordersSlice = createSlice({
         state.message = "Refund processed successfully";
 
         const index = state.orders.findIndex(
-          (order) => order._id === action.payload.data._id
+          (order) => order._id === action.payload.data._id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload.data;
@@ -419,7 +472,7 @@ const ordersSlice = createSlice({
         state.currentOrder = action.payload.data;
 
         const index = state.orders.findIndex(
-          (order) => order._id === action.payload.data._id
+          (order) => order._id === action.payload.data._id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload.data;
@@ -429,6 +482,93 @@ const ordersSlice = createSlice({
         state.loading = false;
         state.error =
           action.payload?.message || action.payload || "Failed to modify order";
+        state.success = false;
+      })
+
+      // Split Order
+      .addCase(splitOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(splitOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.message = "Order split successfully";
+
+        // Update Source
+        const sourceIdx = state.orders.findIndex(
+          (o) => o._id === action.payload.sourceOrder._id,
+        );
+        if (sourceIdx !== -1) {
+          state.orders[sourceIdx] = action.payload.sourceOrder;
+        }
+
+        // Add Target
+        const targetIdx = state.orders.findIndex(
+          (o) => o._id === action.payload.targetOrder._id,
+        );
+        if (targetIdx !== -1) {
+          state.orders[targetIdx] = action.payload.targetOrder;
+        } else {
+          state.orders.unshift(action.payload.targetOrder);
+        }
+      })
+      .addCase(splitOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to split order";
+        state.success = false;
+      })
+
+      // Merge Orders
+      .addCase(mergeOrders.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(mergeOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.message = "Orders merged successfully";
+
+        // Update Target
+        const targetIdx = state.orders.findIndex(
+          (o) => o._id === action.payload.data._id,
+        );
+        if (targetIdx !== -1) {
+          state.orders[targetIdx] = action.payload.data;
+        }
+      })
+      .addCase(mergeOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to merge orders";
+        state.success = false;
+      })
+
+      // Reopen Order
+      .addCase(reopenOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(reopenOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.message = "Order reopened successfully";
+        state.currentOrder = action.payload.data;
+
+        // Update the order in the orders list if it exists
+        const index = state.orders.findIndex(
+          (order) => order._id === action.payload.data._id,
+        );
+        if (index !== -1) {
+          state.orders[index] = action.payload.data;
+        }
+      })
+      .addCase(reopenOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.message || action.payload || "Failed to reopen order";
         state.success = false;
       });
   },

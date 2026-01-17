@@ -15,6 +15,8 @@ import {
   Clock,
   DollarSign,
   MessageCircle,
+  RotateCcw,
+  Printer,
 } from "lucide-react";
 import Can from "../../../components/Auth/Can";
 
@@ -22,7 +24,7 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
   const dispatch = useDispatch();
   const order = extraObject;
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
 
@@ -46,7 +48,7 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
           bodyType: MODAL_BODY_TYPES.MODIFY_ORDER,
           extraObject: order,
           size: "lg",
-        })
+        }),
       );
     }, 100);
   };
@@ -60,9 +62,33 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
           bodyType: MODAL_BODY_TYPES.VOID_ORDER_ITEMS,
           extraObject: order,
           size: "lg",
-        })
+        }),
       );
     }, 100);
+  };
+
+  const handleReopenOrder = () => {
+    closeModal();
+    setTimeout(() => {
+      dispatch(
+        openModal({
+          title: `Reopen Order #${order.orderNumber}`,
+          bodyType: MODAL_BODY_TYPES.REOPEN_ORDER,
+          extraObject: order,
+          size: "md",
+        }),
+      );
+    }, 100);
+  };
+
+  const handleReprint = () => {
+    dispatch(
+      openModal({
+        title: `Receipt #${order.orderNumber}`,
+        bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
+        extraObject: order,
+      }),
+    );
   };
 
   return (
@@ -148,8 +174,8 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
                     order.paymentStatus === "paid"
                       ? "badge-success"
                       : order.paymentStatus === "partial"
-                      ? "badge-warning"
-                      : "badge-error"
+                        ? "badge-warning"
+                        : "badge-error"
                   }`}
                 >
                   {order.paymentStatus}
@@ -547,6 +573,13 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
               Modify Order
             </button>
             <button
+              onClick={handleReprint}
+              className="btn btn-outline btn-sm gap-2"
+            >
+              <Printer className="w-4 h-4" />
+              Print Receipt
+            </button>
+            <button
               onClick={handleVoidItems}
               className="btn btn-outline btn-error btn-sm gap-2"
             >
@@ -569,7 +602,7 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
                         bodyType: MODAL_BODY_TYPES.REFUND_ORDER,
                         extraObject: order,
                         size: "lg",
-                      })
+                      }),
                     );
                   }, 100);
                 }}
@@ -580,6 +613,17 @@ const OrderDetailsModalBody = ({ extraObject, closeModal }) => {
               </button>
             </Can>
           )}
+        {["completed", "cancelled"].includes(order.orderStatus) && (
+          <Can permission="orders:reopen">
+            <button
+              onClick={handleReopenOrder}
+              className="btn btn-outline btn-info btn-sm gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Reopen Order
+            </button>
+          </Can>
+        )}
         <button onClick={closeModal} className="btn btn-primary btn-sm">
           Close
         </button>

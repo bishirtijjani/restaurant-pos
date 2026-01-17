@@ -12,6 +12,7 @@ const PERMISSIONS = {
   ORDERS_CREATE: "orders:create",
   ORDERS_VOID: "orders:void", // Critical: Allows deleting/voiding paid orders
   ORDERS_DISCOUNT: "orders:discount", // Allows applying discounts to orders
+  ORDERS_REOPEN: "orders:reopen", // Critical: Allows reopening completed/cancelled orders
 
   // Inventory Management
   INVENTORY_VIEW: "inventory:view",
@@ -48,6 +49,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     PERMISSIONS.ORDERS_VIEW,
     PERMISSIONS.ORDERS_CREATE,
     PERMISSIONS.ORDERS_DISCOUNT,
+    PERMISSIONS.ORDERS_REOPEN,
     PERMISSIONS.INVENTORY_VIEW,
     PERMISSIONS.INVENTORY_EDIT,
     PERMISSIONS.REPORTS_VIEW,

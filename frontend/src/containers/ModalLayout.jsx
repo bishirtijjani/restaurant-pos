@@ -37,7 +37,10 @@ import ModifyOrderModalBody from "../features/orders/components/ModifyOrderModal
 import AddItemToOrderModalBody from "../features/orders/components/AddItemToOrderModalBody";
 import VoidOrderItemsModalBody from "../features/orders/components/VoidOrderItemsModalBody";
 import RefundModalBody from "../features/orders/components/RefundModalBody";
+import ReopenOrderModalBody from "../features/orders/components/ReopenOrderModalBody";
 import AddOnSelectorModalBody from "../features/orders/components/AddOnSelectorModalBody";
+import { reopenOrder } from "../features/orders/ordersSlice";
+import { showNotification } from "../features/common/headerSlice";
 
 // order/kds/confirmation/session components
 import PaymentConfirmationModalBody from "../features/orders/components/PaymentConfirmationModalBody";
@@ -99,7 +102,7 @@ import SetupWizard from "../features/onboarding/components/SetupWizard";
 
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector(
-    (state) => state.modal
+    (state) => state.modal,
   );
   const dispatch = useDispatch();
 
@@ -264,6 +267,28 @@ function ModalLayout() {
                   <RefundModalBody
                     closeModal={close}
                     extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.REOPEN_ORDER]: (
+                  <ReopenOrderModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                    onConfirm={async (reason) => {
+                      await dispatch(
+                        reopenOrder({
+                          id: extraObject._id,
+                          reason,
+                          version: extraObject.version,
+                        }),
+                      ).unwrap();
+
+                      dispatch(
+                        showNotification({
+                          message: `Order #${extraObject.orderNumber} has been reopened`,
+                          status: 1,
+                        }),
+                      );
+                    }}
                   />
                 ),
                 [MODAL_BODY_TYPES.ADD_ON_SELECTOR]: (

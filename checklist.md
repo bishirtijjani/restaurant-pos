@@ -7,13 +7,13 @@ Counter-based ordering ✅
 Order modification after creation ✅
 Item quantity changes ✅
 Item notes / modifiers ✅
-Split orders ❌ (Split payments is implemented, but splitting items to new order is NOT)
-Merge orders ❌ (Table merge exists, but merging order items is NOT implemented)
+Split orders ✅
+Merge orders ✅
 Hold orders ✅
-Reopen closed orders ❌
+Reopen closed orders ✅
 Void orders (with permission) ✅
 Refund orders (full / partial) ✅
-Order reprinting ❌
+Order reprinting ✅
 Order duplication ❌
 Order status tracking ✅
 

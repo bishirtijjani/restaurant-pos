@@ -156,6 +156,7 @@ const OrderCard = ({
   onModify,
   onVoid,
   onCancel,
+  onReprint,
 }) => {
   const { can } = useAuth();
   const canModify = !["completed", "cancelled"].includes(order.orderStatus);
@@ -275,6 +276,14 @@ const OrderCard = ({
             View
           </button>
 
+          <button
+            className="btn btn-sm btn-ghost btn-square"
+            onClick={() => onReprint(order)}
+            title="Reprint Receipt"
+          >
+            <Printer className="w-4 h-4" />
+          </button>
+
           {canModify && (
             <div className="dropdown dropdown-top dropdown-end">
               <label
@@ -302,6 +311,11 @@ const OrderCard = ({
                   <li>
                     <a onClick={() => onVoid(order)}>
                       <Trash2 className="w-4 h-4" /> Void Items
+                    </a>
+                  </li>
+                  <li>
+                    <a onClick={() => onReprint(order)}>
+                      <Printer className="w-4 h-4" /> Reprint Receipt
                     </a>
                   </li>
                 </Can>
@@ -386,10 +400,10 @@ const Orders = () => {
   const { can } = useAuth();
 
   const { orders, loading, error, filters } = useSelector(
-    (state) => state.orders
+    (state) => state.orders,
   );
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
 
@@ -405,7 +419,7 @@ const Orders = () => {
       order.orderNumber?.includes(searchQuery) ||
       order.customerDetails?.name
         ?.toLowerCase()
-        .includes(searchQuery.toLowerCase())
+        .includes(searchQuery.toLowerCase()),
   );
 
   const handleViewDetails = (order) => {
@@ -415,7 +429,7 @@ const Orders = () => {
         bodyType: MODAL_BODY_TYPES.ORDER_DETAILS,
         extraObject: order,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -426,7 +440,7 @@ const Orders = () => {
         bodyType: MODAL_BODY_TYPES.MODIFY_ORDER,
         extraObject: order,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -437,7 +451,7 @@ const Orders = () => {
         bodyType: MODAL_BODY_TYPES.VOID_ORDER_ITEMS,
         extraObject: order,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -447,7 +461,17 @@ const Orders = () => {
         title: "Update Payment",
         bodyType: MODAL_BODY_TYPES.UPDATE_PAYMENT,
         extraObject: order,
-      })
+      }),
+    );
+  };
+
+  const handleReprint = (order) => {
+    dispatch(
+      openModal({
+        title: `Receipt #${order.orderNumber}`,
+        bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
+        extraObject: order,
+      }),
     );
   };
 
@@ -461,7 +485,7 @@ const Orders = () => {
           type: CONFIRMATION_MODAL_CLOSE_TYPES.CANCEL_ORDER,
           id: order._id,
         },
-      })
+      }),
     );
   };
 
@@ -548,6 +572,7 @@ const Orders = () => {
               onModify={handleModify}
               onVoid={handleVoid}
               onCancel={handleCancelOrder}
+              onReprint={handleReprint}
             />
           ))}
         </div>

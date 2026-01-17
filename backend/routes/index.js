@@ -7,6 +7,9 @@ router.use("/auth", require("./authRoutes"));
 // Webhook routes (must be before JSON parser middleware)
 router.use("/webhooks", require("./webhookRoutes"));
 
+// Platform health routes (some endpoints are public for health checks)
+router.use("/platform", require("./platformHealthRoutes"));
+
 // Global Middleware for Protected Routes
 const authMiddleware = require("../middleware/authMiddleware");
 const storeMiddleware = require("../middleware/storeMiddleware");
@@ -21,6 +24,9 @@ router.get("/analytics/multi-store-overview", getMultiStoreOverview);
 router.use("/brand", require("./brandRoutes"));
 
 router.use(storeMiddleware);
+
+// Tenant health routes (requires store context)
+router.use("/health", require("./tenantHealthRoutes"));
 
 router.use("/users", require("./userRoutes"));
 router.use("/general-settings", require("./generalSettingsRoutes"));

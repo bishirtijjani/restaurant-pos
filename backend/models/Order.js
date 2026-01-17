@@ -45,7 +45,7 @@ const selectedAddOnSchema = new mongoose.Schema(
       default: 0,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const orderItemSchema = new mongoose.Schema({
@@ -379,6 +379,7 @@ const OrderSchema = new mongoose.Schema(
           "recall",
           "modify",
           "void_item",
+          "reopen",
         ],
         default: null,
       },
@@ -391,7 +392,7 @@ const OrderSchema = new mongoose.Schema(
       reason: { type: String, default: null },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Generate a unique order number before saving - RETRY LOGIC for Race Conditions
@@ -453,7 +454,7 @@ OrderSchema.pre("save", async function (next) {
       ...this.orderItems
         .filter((item) => !item.voidInfo?.isVoided)
         .map((item) => item.preparationTime || 15),
-      15
+      15,
     );
     this.estimatedReadyTime = new Date(Date.now() + maxPrepTime * 60 * 1000);
   }
@@ -463,5 +464,6 @@ OrderSchema.pre("save", async function (next) {
 // Compound index for unique order numbers within a store
 OrderSchema.index({ storeId: 1, orderNumber: 1 }, { unique: true });
 OrderSchema.index({ storeId: 1, createdAt: -1 }); // Optimize list queries
+OrderSchema.index({ storeId: 1, table: 1, orderStatus: 1 }); // Optimize active order lookups by table
 
 module.exports = mongoose.models.Order || mongoose.model("Order", OrderSchema);
