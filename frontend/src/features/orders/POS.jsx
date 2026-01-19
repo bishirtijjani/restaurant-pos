@@ -426,10 +426,10 @@ export default function POS() {
       dispatch(
         openModal({
           title: `Customize ${item.name}`,
-          bodyType: MODAL_BODY_TYPES.ADDON_SELECTOR,
+          bodyType: MODAL_BODY_TYPES.ADD_ON_SELECTOR,
           extraObject: {
             menuItem: item,
-            // onConfirm removed to fix non-serializable state error
+            onConfirm: (addOnData) => dispatch(addToCart({ item, addOnData })),
           },
           size: "lg",
         }),

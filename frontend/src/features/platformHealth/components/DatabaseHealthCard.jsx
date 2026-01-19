@@ -98,7 +98,7 @@ const DatabaseHealthCard = ({ metrics }) => {
                   slowQueries > 0 ? "text-warning" : "text-base-content/30"
                 }`}
               />
-              <span>Slow Queries (>100ms)</span>
+              <span>Slow Queries (&gt;100ms)</span>
             </div>
             <span
               className={`font-bold ${

@@ -7,14 +7,12 @@ import { fetchAddOnGroupsForMenuItem } from "../../addOnGroups/addOnGroupsSlice"
 import ErrorText from "../../../components/Typography/ErrorText";
 import { Check, X } from "lucide-react";
 
-import { addToCart } from "../../orders/posSlice";
-
 const AddOnSelectorModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
   const { menuItem, onConfirm } = extraObject;
   const { menuItemGroups, loading } = useSelector((state) => state.addOnGroups);
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings,
+    (state) => state.generalSettings.generalSettings
   );
   const currency = settings?.currency?.symbol || "$";
 
@@ -35,9 +33,9 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
     menuItemGroups.length > 0
       ? menuItemGroups
       : Array.isArray(menuItem?.addOnGroups) &&
-          typeof menuItem.addOnGroups[0] === "object"
-        ? menuItem.addOnGroups
-        : [];
+        typeof menuItem.addOnGroups[0] === "object"
+      ? menuItem.addOnGroups
+      : [];
 
   const handleSelect = (groupId, itemId, group) => {
     setSelections((prev) => {
@@ -54,7 +52,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
               showNotification({
                 message: `Maximum ${group.maxSelections} selections allowed for ${group.name}`,
                 status: 0,
-              }),
+              })
             );
             return prev;
           }
@@ -74,8 +72,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
       const group = displayGroups.find((g) => g._id === groupId);
       if (group) {
         selectedIds.forEach((itemId) => {
-          const itemsV = group.items || group.addOnItems || [];
-          const item = itemsV.find((i) => i._id === itemId);
+          const item = group.items.find((i) => i._id === itemId);
           if (item) {
             total += item.price;
           }
@@ -96,8 +93,9 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
       }
 
       if (group.minSelections && selected.length < group.minSelections) {
-        newErrors[group._id] =
-          `Please select at least ${group.minSelections} option(s)`;
+        newErrors[
+          group._id
+        ] = `Please select at least ${group.minSelections} option(s)`;
       }
     });
 
@@ -118,8 +116,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
         // Collect names for summary
         if (group) {
           selectedIds.forEach((id) => {
-            const itemsV = group.items || group.addOnItems || [];
-            const item = itemsV.find((i) => i._id === id);
+            const item = group.items.find((i) => i._id === id);
             if (item) summary.push(item.name);
           });
         }
@@ -130,24 +127,12 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
         };
       });
 
-    const payload = {
+    onConfirm({
       addOns,
       itemNote: itemNote.trim(),
       total: calculateTotal(),
-      addOnSummary: summary,
-    };
-
-    if (onConfirm) {
-      onConfirm(payload);
-    } else {
-      // Legacy support or direct dispatch
-      dispatch(
-        addToCart({
-          item: menuItem,
-          addOnData: payload,
-        }),
-      );
-    }
+      addOnSummary: summary, // NEW: Pass back names for display
+    });
 
     dispatch(closeModal());
   };
@@ -231,8 +216,8 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
                             group.maxSelections || "many"
                           }`
                         : group.maxSelections
-                          ? `up to ${group.maxSelections}`
-                          : "any"
+                        ? `up to ${group.maxSelections}`
+                        : "any"
                     }`}
               </p>
             </div>
@@ -241,7 +226,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
           {errors[group._id] && <ErrorText>{errors[group._id]}</ErrorText>}
 
           <div className="grid grid-cols-1 gap-2">
-            {(group.items || group.addOnItems || []).map((item) => {
+            {group.items.map((item) => {
               const selected = (selections[group._id] || []).includes(item._id);
               return (
                 <button

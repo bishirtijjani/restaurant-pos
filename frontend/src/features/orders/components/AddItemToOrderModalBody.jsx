@@ -38,7 +38,7 @@ const AddItemToOrderModalBody = ({ extraObject }) => {
       dispatch(
         openModal({
           title: `Customize ${item.name}`,
-          bodyType: MODAL_BODY_TYPES.ADDON_SELECTOR,
+          bodyType: MODAL_BODY_TYPES.ADD_ON_SELECTOR,
           extraObject: {
             menuItem: item,
             onConfirm: (addOnData) => {
@@ -56,7 +56,7 @@ const AddItemToOrderModalBody = ({ extraObject }) => {
             },
           },
           size: "lg",
-        })
+        }),
       );
     } else {
       onConfirm({

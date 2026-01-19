@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchVarianceData } from "../../slices/varianceAnalyticsSlice";
-import { selectDateRange } from "../../slices/analyticsGlobalSlice";
-import AnalyticsHeader from "../../components/AnalyticsHeader";
-import FilterBar from "../../components/FilterBar";
-import KPICard from "../../components/KPICard";
+import { fetchVarianceData } from "../../../slices/varianceAnalyticsSlice";
+import { selectDateRange } from "../../../slices/analyticsGlobalSlice";
+import AnalyticsHeader from "../../../components/common/AnalyticsHeader";
+import FilterBar from "../../../components/common/FilterBar";
+import KPICard from "../../../components/cards/KPICard";
 import {
   TrendingDownIcon,
   TrendingUpIcon,
@@ -23,7 +23,7 @@ import {
   PieChart,
   Pie,
 } from "recharts";
-import TitleCard from "../../../../components/Cards/TitleCard";
+import TitleCard from "../../../../../components/Cards/TitleCard";
 
 const COLORS = [
   "#FF6384",

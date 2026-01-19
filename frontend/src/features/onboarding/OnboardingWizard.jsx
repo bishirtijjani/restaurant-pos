@@ -54,7 +54,7 @@ const OnboardingWizard = () => {
         createStore({
           name: data.storeName,
           settings: { restaurantName: data.storeName },
-        })
+        }),
       ).unwrap();
 
       const storeId = storeRes._id;
@@ -68,7 +68,7 @@ const OnboardingWizard = () => {
           name: data.categoryName,
           description: `Primary category for ${data.storeName}`,
         },
-        { headers: { "x-store-id": storeId } }
+        { headers: { "x-store-id": storeId } },
       );
       const categoryId = catRes.data._id;
 
@@ -81,7 +81,7 @@ const OnboardingWizard = () => {
           category: categoryId,
           isAvailable: true,
         },
-        { headers: { "x-store-id": storeId } }
+        { headers: { "x-store-id": storeId } },
       );
       const menuItemId = itemRes.data._id;
 
@@ -103,14 +103,14 @@ const OnboardingWizard = () => {
             amountPaid: parseFloat(data.itemPrice),
           },
         },
-        { headers: { "x-store-id": storeId } }
+        { headers: { "x-store-id": storeId } },
       );
 
       dispatch(
         showNotification({
           message: "Experience initialized successfully.",
           status: 1,
-        })
+        }),
       );
 
       // Delay to show the "Success" state then move into the app
@@ -123,7 +123,7 @@ const OnboardingWizard = () => {
         showNotification({
           message: "Configuration failed. Please try again.",
           status: 0,
-        })
+        }),
       );
       setLoading(false);
       setCurrentStep(STEPS.BRAND); // Reset to first step on error
@@ -415,7 +415,7 @@ const OnboardingWizard = () => {
 
               <div className="space-y-4">
                 <h2 className="text-5xl font-black tracking-tight text-white">
-                  Initializing.
+                  Initializing...
                 </h2>
                 <p className="text-white/30 text-xl font-medium max-w-sm mx-auto">
                   Creating your store, configuring the menu, and calibrating

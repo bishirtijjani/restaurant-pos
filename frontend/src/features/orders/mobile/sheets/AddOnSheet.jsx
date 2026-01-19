@@ -54,11 +54,14 @@ const AddOnSheet = ({
       menuItem.addOnGroups.forEach((group) => {
         const groupSelections = selections[group._id] || [];
 
-        group.items?.forEach((item) => {
-          if (groupSelections.includes(item._id)) {
-            addonTotal += item.price;
-          }
-        });
+        // Check if group.items exists to avoid crash
+        if (group.items) {
+          group.items.forEach((item) => {
+            if (groupSelections.includes(item._id)) {
+              addonTotal += item.price;
+            }
+          });
+        }
       });
     }
 
@@ -146,7 +149,7 @@ const AddOnSheet = ({
       const addOnsList = [];
       menuItem.addOnGroups.forEach((group) => {
         const selectedIds = selections[group._id];
-        if (selectedIds && selectedIds.length > 0) {
+        if (selectedIds && selectedIds.length > 0 && group.items) {
           const selectedItems = group.items.filter((item) =>
             selectedIds.includes(item._id),
           );
@@ -235,17 +238,18 @@ const AddOnSheet = ({
                 </div>
 
                 <div className="grid grid-cols-1 gap-2">
-                  {group.items?.map((item) => {
-                    const isSelected = (selections[group._id] || []).includes(
-                      item._id,
-                    );
-                    return (
-                      <button
-                        key={item._id}
-                        onClick={() =>
-                          handleSelection(group._id, item._id, group)
-                        }
-                        className={`
+                  {group.items &&
+                    group.items.map((item) => {
+                      const isSelected = (selections[group._id] || []).includes(
+                        item._id,
+                      );
+                      return (
+                        <button
+                          key={item._id}
+                          onClick={() =>
+                            handleSelection(group._id, item._id, group)
+                          }
+                          className={`
                           flex items-center justify-between p-3 rounded-xl border transition-all text-left
                           ${
                             isSelected
@@ -253,10 +257,10 @@ const AddOnSheet = ({
                               : "border-base-200 bg-base-100 hover:border-base-300"
                           }
                         `}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`
                             w-5 h-5 rounded-full border flex items-center justify-center transition-colors
                             ${
                               isSelected
@@ -264,28 +268,28 @@ const AddOnSheet = ({
                                 : "border-base-300"
                             }
                           `}
-                          >
-                            {isSelected && (
-                              <Check
-                                size={12}
-                                className="text-primary-content"
-                              />
-                            )}
+                            >
+                              {isSelected && (
+                                <Check
+                                  size={12}
+                                  className="text-primary-content"
+                                />
+                              )}
+                            </div>
+                            <span
+                              className={`${isSelected ? "font-medium" : ""}`}
+                            >
+                              {item.name}
+                            </span>
                           </div>
-                          <span
-                            className={`${isSelected ? "font-medium" : ""}`}
-                          >
-                            {item.name}
+                          <span className="text-sm font-medium opacity-80">
+                            {item.price > 0
+                              ? `+${currency}${item.price.toFixed(2)}`
+                              : "Free"}
                           </span>
-                        </div>
-                        <span className="text-sm font-medium opacity-80">
-                          {item.price > 0
-                            ? `+${currency}${item.price.toFixed(2)}`
-                            : "Free"}
-                        </span>
-                      </button>
-                    );
-                  })}
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
             ))}

@@ -51,7 +51,7 @@ exports.getKDSOrders = async (req, res) => {
       .map((order) => {
         if (station && station.categories && station.categories.length > 0) {
           const filteredItems = order.orderItems.filter((item) =>
-            station.categories.includes(item.menuItemId?.category)
+            station.categories.includes(item.menuItemId?.category),
           );
 
           if (filteredItems.length === 0) return null;
@@ -118,7 +118,7 @@ exports.updateKDSOrderStatus = async (req, res) => {
 
     await order.populate(
       "orderItems.menuItemId",
-      "name category preparationTime"
+      "name category preparationTime",
     );
     await order.populate("servedBy", "fullname");
 
@@ -126,15 +126,17 @@ exports.updateKDSOrderStatus = async (req, res) => {
     notifyKDS("order:statusChanged", order, null, req.storeId);
 
     await logAction(
-      req.user._id,
-      "UPDATED_KDS_ORDER_STATUS",
+      req.user.id,
+      req.storeId,
       req.organizationId,
-      {
-        orderId: order._id,
-        action,
-        status: order.orderStatus,
-      },
-      req.ip
+      "Order",
+      order._id,
+      action === "complete" ? "bump" : "update",
+      null,
+      order,
+      action === "start"
+        ? "Order started in kitchen"
+        : "Order completed in kitchen",
     );
 
     res.json({
@@ -191,7 +193,7 @@ exports.recallOrder = async (req, res) => {
 
     await order.populate(
       "orderItems.menuItemId",
-      "name category preparationTime"
+      "name category preparationTime",
     );
     await order.populate("servedBy", "fullname");
 
@@ -199,15 +201,15 @@ exports.recallOrder = async (req, res) => {
     notifyKDS("order:recalled", order, null, req.storeId);
 
     await logAction(
-      req.user._id,
-      "RECALLED_KDS_ORDER",
+      req.user.id,
+      req.storeId,
       req.organizationId,
-      {
-        orderId: order._id,
-        reason,
-        status: order.orderStatus,
-      },
-      req.ip
+      "Order",
+      order._id,
+      "recall",
+      null,
+      order,
+      reason || "Order recalled from ready",
     );
 
     res.json({

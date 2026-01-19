@@ -116,6 +116,9 @@ export const CAN = {
     ROLES.WAITER,
   ],
   manageKDS: [ROLES.ADMIN, ROLES.MANAGER],
+  updateKDSOrders: [ROLES.ADMIN, ROLES.MANAGER, ROLES.KITCHEN],
+  recallKDSOrders: [ROLES.ADMIN, ROLES.MANAGER, ROLES.KITCHEN],
+  editKDSSettings: [ROLES.ADMIN, ROLES.MANAGER],
 
   // KDS Stations Management
   viewKDSStations: [ROLES.ADMIN, ROLES.MANAGER, ROLES.KITCHEN],

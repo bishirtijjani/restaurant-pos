@@ -9,7 +9,6 @@ import {
   Edit3,
   X,
   Link as LinkIcon,
-  Link as LinkIcon,
   Unlink,
   Split,
   Merge,
@@ -19,7 +18,7 @@ import MergeTableModal from "./MergeTableModal";
 
 const TableDetailsModal = ({ table, onClose, onStatusChange, onEdit }) => {
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const orders = useSelector((state) => state.orders.orders);
   const currency = settings?.currency?.symbol || "$";
@@ -126,7 +125,6 @@ const TableDetailsModal = ({ table, onClose, onStatusChange, onEdit }) => {
                   </h3>
                   {/* Order Actions */}
                   <div className="flex gap-2">
-                  <div className="flex gap-2">
                     <button
                       className="btn btn-xs btn-outline btn-info gap-1"
                       onClick={() => setShowSplitModal(true)}
@@ -140,33 +138,33 @@ const TableDetailsModal = ({ table, onClose, onStatusChange, onEdit }) => {
                       <Merge className="w-3 h-3" /> Merge Into
                     </button>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Order Number:</span>
-                    <span className="font-medium">
-                      #{currentOrder.orderNumber}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Status:</span>
-                    <span className="badge badge-sm badge-primary">
-                      {currentOrder.orderStatus}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total:</span>
-                    <span className="font-bold text-primary">
-                      {currency}
-                      {currentOrder.totalAmount?.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Customer:</span>
-                    <span className="font-medium">
-                      {currentOrder.customerDetails?.name || "Walk-in"}
-                    </span>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Order Number:</span>
+                      <span className="font-medium">
+                        #{currentOrder.orderNumber}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Status:</span>
+                      <span className="badge badge-sm badge-primary">
+                        {currentOrder.orderStatus}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Total:</span>
+                      <span className="font-bold text-primary">
+                        {currency}
+                        {currentOrder.totalAmount?.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Customer:</span>
+                      <span className="font-medium">
+                        {currentOrder.customerDetails?.name || "Walk-in"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -235,18 +233,17 @@ const TableDetailsModal = ({ table, onClose, onStatusChange, onEdit }) => {
             onClose(); // Close details modal too? Or just refresh?
           }}
         />
-        />
       )}
-      
+
       {showMergeModal && currentOrder && (
-          <MergeTableModal
-            sourceTable={table}
-            sourceOrder={currentOrder}
-            onClose={() => setShowMergeModal(false)}
-            onSuccess={() => {
-                onClose(); // Close details
-            }}
-          />
+        <MergeTableModal
+          sourceTable={table}
+          sourceOrder={currentOrder}
+          onClose={() => setShowMergeModal(false)}
+          onSuccess={() => {
+            onClose(); // Close details
+          }}
+        />
       )}
     </div>
   );
