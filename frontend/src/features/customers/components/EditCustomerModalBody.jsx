@@ -18,7 +18,7 @@ function EditCustomerModalBody({ closeModal, extraObject }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings.currency.symbol || "$";
 
@@ -50,14 +50,20 @@ function EditCustomerModalBody({ closeModal, extraObject }) {
           showNotification({
             message: "Customer updated successfully!",
             status: 1,
-          })
+          }),
         );
         fetchAllCustomers();
         closeModal();
       })
       .catch((error) => {
-        setErrorMessage(
-          error?.message || "Failed to update customer. Please try again."
+        const msg =
+          error?.message || "Failed to update customer. Please try again.";
+        setErrorMessage(msg);
+        dispatch(
+          showNotification({
+            message: msg,
+            status: 0,
+          }),
         );
       })
       .finally(() => {

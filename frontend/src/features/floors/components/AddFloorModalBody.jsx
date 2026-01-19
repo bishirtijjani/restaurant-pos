@@ -11,11 +11,12 @@ function AddFloorModalBody({ closeModal }) {
   const { floors } = useSelector((state) => state.floors);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  
+
   // Smart default for floor number
-  const suggestedFloorNumber = floors.length > 0 
-    ? Math.max(...floors.map(f => f.floorNumber || 0)) + 1 
-    : 1;
+  const suggestedFloorNumber =
+    floors.length > 0
+      ? Math.max(...floors.map((f) => f.floorNumber || 0)) + 1
+      : 1;
 
   const [floor, setFloor] = useState({
     name: "",
@@ -51,13 +52,20 @@ function AddFloorModalBody({ closeModal }) {
           showNotification({
             message: "Floor Created Successfully!",
             status: 1,
-          })
+          }),
         );
         dispatch(fetchFloors());
         closeModal();
       })
       .catch((error) => {
-        setErrorMessage(`${error.message || "Failed to create floor"}`);
+        const msg = error.message || "Failed to create floor";
+        setErrorMessage(msg);
+        dispatch(
+          showNotification({
+            message: msg,
+            status: 0,
+          }),
+        );
       })
       .finally(() => {
         setLoading(false);
@@ -67,7 +75,7 @@ function AddFloorModalBody({ closeModal }) {
   const handleInputChange = (e) => {
     setErrorMessage("");
     const { name, value, type, checked } = e.target;
-    
+
     if (name.startsWith("layout.")) {
       const layoutField = name.split(".")[1];
       setFloor({
@@ -80,7 +88,12 @@ function AddFloorModalBody({ closeModal }) {
     } else {
       setFloor({
         ...floor,
-        [name]: type === "checkbox" ? checked : type === "number" ? Number(value) : value,
+        [name]:
+          type === "checkbox"
+            ? checked
+            : type === "number"
+              ? Number(value)
+              : value,
       });
     }
   };
@@ -144,7 +157,9 @@ function AddFloorModalBody({ closeModal }) {
         <div className="md:col-span-2">
           <label htmlFor="description" className="label">
             <span className="label-text font-medium">Description</span>
-            <span className="label-text-alt text-base-content/50">Optional</span>
+            <span className="label-text-alt text-base-content/50">
+              Optional
+            </span>
           </label>
           <textarea
             id="description"
@@ -160,7 +175,7 @@ function AddFloorModalBody({ closeModal }) {
 
       {/* Layout Settings */}
       <div className="divider mt-6 mb-4">Canvas Settings</div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Canvas Width */}
         <div>
@@ -222,16 +237,27 @@ function AddFloorModalBody({ closeModal }) {
 
       {/* Info Alert */}
       <div className="alert alert-info mt-4">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          className="stroke-current shrink-0 w-6 h-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
         </svg>
-        <span className="text-sm">Default canvas size is 2000×2000px with a 20px grid. You can adjust these later in edit mode.</span>
+        <span className="text-sm">
+          Default canvas size is 2000×2000px with a 20px grid. You can adjust
+          these later in edit mode.
+        </span>
       </div>
 
       {/* Error Message */}
-      {errorMessage && (
-        <ErrorText styleClass="mt-4">{errorMessage}</ErrorText>
-      )}
+      {errorMessage && <ErrorText styleClass="mt-4">{errorMessage}</ErrorText>}
 
       {/* Modal Actions */}
       <div className="modal-action">

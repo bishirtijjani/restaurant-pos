@@ -37,12 +37,21 @@ function AddSupplierModalBody({ closeModal }) {
           showNotification({
             message: "Supplier added successfully!",
             status: 1, // Success status
-          })
+          }),
         );
         closeModal(); // Close the modal after adding the supplier
       })
-      .catch(() => {
-        setErrorMessage("Failed to add supplier. Please try again.");
+      .catch((error) => {
+        setErrorMessage(
+          error.message || "Failed to add supplier. Please try again.",
+        );
+        dispatch(
+          showNotification({
+            message:
+              error.message || "Failed to add supplier. Please try again.",
+            status: 0,
+          }),
+        );
       })
       .finally(() => {
         setLoading(false);

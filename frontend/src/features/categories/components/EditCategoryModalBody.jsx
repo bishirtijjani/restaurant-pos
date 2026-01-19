@@ -37,13 +37,19 @@ function EditCategoryModalBody({ extraObject, closeModal }) {
           showNotification({
             message: "Category Updated Successfully!",
             status: 1,
-          })
+          }),
         );
         dispatch(fetchAllCategories());
         closeModal();
       })
-      .catch(() => {
-        setErrorMessage("Failed to update category. Please try again.");
+      .catch((error) => {
+        setErrorMessage(error.message || "Failed to update category");
+        dispatch(
+          showNotification({
+            message: error.message || "Failed to update category",
+            status: 0,
+          }),
+        );
       })
       .finally(() => {
         setLoading(false);

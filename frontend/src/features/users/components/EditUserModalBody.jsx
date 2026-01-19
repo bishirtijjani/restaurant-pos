@@ -82,12 +82,21 @@ function EditUserModalBody({ closeModal, extraObject }) {
           showNotification({
             message: "User updated successfully!",
             status: 1,
-          })
+          }),
         );
         closeModal();
       })
-      .catch(() => {
-        setErrorMessage("Failed to update user. Please try again.");
+      .catch((error) => {
+        setErrorMessage(
+          error.message || "Failed to update user. Please try again.",
+        );
+        dispatch(
+          showNotification({
+            message:
+              error.message || "Failed to update user. Please try again.",
+            status: 0,
+          }),
+        );
       })
       .finally(() => {
         setLoading(false);

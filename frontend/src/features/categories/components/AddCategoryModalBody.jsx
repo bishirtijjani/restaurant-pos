@@ -25,13 +25,19 @@ function AddCategoryModalBody({ closeModal }) {
           showNotification({
             message: "Category Created Successfully!",
             status: 1,
-          })
+          }),
         );
         dispatch(fetchAllCategories());
         closeModal();
       })
       .catch((error) => {
-        setErrorMessage(`${error.message} `);
+        setErrorMessage(error.message || "Failed to create category");
+        dispatch(
+          showNotification({
+            message: error.message || "Failed to create category",
+            status: 0,
+          }),
+        );
       })
       .finally(() => {
         setLoading(false);

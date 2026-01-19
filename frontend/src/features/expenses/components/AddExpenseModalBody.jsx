@@ -10,7 +10,7 @@ function AddExpenseModalBody({ closeModal }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
   const [expense, setExpense] = useState({
@@ -59,13 +59,22 @@ function AddExpenseModalBody({ closeModal }) {
           showNotification({
             message: "Expense Created Successfully!",
             status: 1,
-          })
+          }),
         );
         dispatch(fetchAllExpenses());
         closeModal();
       })
-      .catch(() => {
-        setErrorMessage("Failed to create expense. Please try again.");
+      .catch((error) => {
+        setErrorMessage(
+          error.message || "Failed to create expense. Please try again.",
+        );
+        dispatch(
+          showNotification({
+            message:
+              error.message || "Failed to create expense. Please try again.",
+            status: 0,
+          }),
+        );
       })
       .finally(() => {
         setLoading(false);

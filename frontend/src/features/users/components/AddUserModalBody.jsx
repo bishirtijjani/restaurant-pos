@@ -61,12 +61,20 @@ function AddUserModalBody({ closeModal }) {
           showNotification({
             message: "User added successfully!",
             status: 1,
-          })
+          }),
         );
         closeModal();
       })
-      .catch(() => {
-        setErrorMessage("Failed to add user. Please try again.");
+      .catch((error) => {
+        setErrorMessage(
+          error.message || "Failed to add user. Please try again.",
+        );
+        dispatch(
+          showNotification({
+            message: error.message || "Failed to add user. Please try again.",
+            status: 0,
+          }),
+        );
       })
       .finally(() => {
         setLoading(false);

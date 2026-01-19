@@ -12,7 +12,7 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
   const [expense, setExpense] = useState({
@@ -72,13 +72,22 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
           showNotification({
             message: "Expense Updated Successfully!",
             status: 1,
-          })
+          }),
         );
         dispatch(fetchAllExpenses());
         closeModal();
       })
-      .catch(() => {
-        setErrorMessage("Failed to update expense. Please try again.");
+      .catch((error) => {
+        setErrorMessage(
+          error.message || "Failed to update expense. Please try again.",
+        );
+        dispatch(
+          showNotification({
+            message:
+              error.message || "Failed to update expense. Please try again.",
+            status: 0,
+          }),
+        );
       })
       .finally(() => {
         setLoading(false);

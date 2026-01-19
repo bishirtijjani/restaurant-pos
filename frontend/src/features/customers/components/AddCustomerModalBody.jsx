@@ -18,7 +18,7 @@ function AddCustomerModalBody({ closeModal }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
 
@@ -41,7 +41,7 @@ function AddCustomerModalBody({ closeModal }) {
       addCustomer({
         ...customer,
         debtLimit: debtLimitNum,
-      })
+      }),
     )
       .unwrap()
       .then(() => {
@@ -49,14 +49,20 @@ function AddCustomerModalBody({ closeModal }) {
           showNotification({
             message: "Customer added successfully!",
             status: 1,
-          })
+          }),
         );
         dispatch(fetchAllCustomers());
         closeModal();
       })
       .catch((error) => {
-        setErrorMessage(
-          error?.message || "Failed to add customer. Please try again."
+        const msg =
+          error?.message || "Failed to add customer. Please try again.";
+        setErrorMessage(msg);
+        dispatch(
+          showNotification({
+            message: msg,
+            status: 0,
+          }),
         );
       })
       .finally(() => {

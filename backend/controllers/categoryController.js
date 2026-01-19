@@ -59,11 +59,14 @@ exports.createCategory = async (req, res) => {
       "create",
       null,
       savedCategory,
-      `Created new category: ${name}`
+      `Created new category: ${name}`,
     );
 
     res.status(201).json(savedCategory);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "This category already exists" });
+    }
     res.status(400).json({ message: error.message });
   }
 };
@@ -82,10 +85,23 @@ exports.updateCategory = async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
 
+    if (name && name !== oldCategory.name) {
+      const duplicateCategory = await Category.findOne({
+        name,
+        storeId: req.storeId,
+        _id: { $ne: req.params.id },
+      });
+      if (duplicateCategory) {
+        return res
+          .status(400)
+          .json({ message: "This category already exists" });
+      }
+    }
+
     const updatedCategory = await Category.findOneAndUpdate(
       { _id: req.params.id, storeId: req.storeId },
       { name, description },
-      { new: true }
+      { new: true },
     );
 
     // Log the category update
@@ -98,11 +114,14 @@ exports.updateCategory = async (req, res) => {
       "edit",
       oldCategory,
       updatedCategory,
-      `Updated category: ${oldCategory.name} to ${name}`
+      `Updated category: ${oldCategory.name} to ${name}`,
     );
 
     res.status(200).json(updatedCategory);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "This category already exists" });
+    }
     res.status(400).json({ message: error.message });
   }
 };
@@ -129,7 +148,7 @@ exports.deleteCategory = async (req, res) => {
     // Update menuItems to disassociate from the deleted category (scoped to store)
     await MenuItem.updateMany(
       { category: categoryId, storeId: req.storeId },
-      { $set: { category: null } }
+      { $set: { category: null } },
     );
 
     // Delete the category
@@ -145,7 +164,7 @@ exports.deleteCategory = async (req, res) => {
       "delete",
       categoryToDelete,
       null,
-      `Deleted category: ${categoryToDelete.name}. ${affectedMenuItems.length} menuItems disassociated`
+      `Deleted category: ${categoryToDelete.name}. ${affectedMenuItems.length} menuItems disassociated`,
     );
 
     res.status(200).json({
