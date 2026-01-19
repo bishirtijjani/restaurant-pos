@@ -32,7 +32,7 @@ function StoreGuard({ children }) {
     loading: storesLoading,
     error: storesError,
   } = useSelector((state) => state.stores);
-  const { user } = useSelector((state) => state.auth);
+  const { user, loading: authLoading } = useSelector((state) => state.auth);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -84,7 +84,7 @@ function StoreGuard({ children }) {
   );
 
   useEffect(() => {
-    if (!activeStoreId && isStoreRoute && !storesLoading) {
+    if (!activeStoreId && isStoreRoute && !storesLoading && !authLoading) {
       // Fallback check: Does the user profile imply they have stores?
       // This protects against the race condition where logging in populates user.stores
       // but Redux stores slice hasn't been fetched yet.
@@ -114,6 +114,7 @@ function StoreGuard({ children }) {
     stores.length,
     storesLoading,
     user,
+    authLoading,
   ]);
 
   if (!activeStoreId && isStoreRoute) {
