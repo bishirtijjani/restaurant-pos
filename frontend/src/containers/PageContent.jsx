@@ -27,7 +27,7 @@ function PageContent() {
 
       {/* Main content area */}
       <main
-        className="flex-1 overflow-y-auto md:pt-4 pt-4 px-6 bg-base-200"
+        className="flex-1 overflow-y-auto px-4 py-4 md:px-8 md:py-8 bg-base-200/50"
         ref={mainContentRef} // Attach the ref for scrolling logic
       >
         {/* Suspense provides a fallback while loading components lazily */}
@@ -51,7 +51,7 @@ function PageContent() {
         </Suspense>
 
         {/* Bottom spacing to prevent content from being cut off */}
-        <div className="h-16"></div>
+        <div className="h-24"></div>
       </main>
     </div>
   );

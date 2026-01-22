@@ -113,20 +113,27 @@ function ModalLayout() {
   return (
     <>
       {/* The button to open modal */}
-      <div className={`modal h-full ${isOpen ? "modal-open" : ""} `}>
+      <div
+        className={`modal h-full backdrop-blur-sm transition-all duration-300 ${isOpen ? "modal-open" : ""} `}
+      >
         <div
-          className={`modal-box flex flex-col p-0 border border-primary/10 ${
-            size === "xl" ? "max-w-full h-full" : ""
+          className={`modal-box flex flex-col p-0 border border-base-200 shadow-2xl rounded-2xl ${
+            size === "xl"
+              ? "max-w-full h-full rounded-none md:rounded-2xl md:m-4 md:h-[calc(100vh-2rem)]"
+              : ""
           }`}
         >
           {/* Modal Header */}
-          <div className="bg-base-200 py-3 px-4 rounded-t-lg flex items-center justify-between border-b border-base-300 sticky top-0 z-10">
-            <h3 className="font-bold text-xl">{title}</h3>
+          <div className="bg-base-100/95 backdrop-blur-md py-4 px-6 rounded-t-2xl flex items-center justify-between border-b border-base-200 sticky top-0 z-10">
+            <h3 className="font-bold text-xl text-base-content">{title}</h3>
             <button
-              className="btn btn-sm btn-circle btn-error btn-outline"
+              className="btn btn-sm btn-circle btn-ghost hover:bg-base-200 transition-colors"
               onClick={() => close()}
             >
-              <X size={20} />
+              <X
+                size={20}
+                className="text-base-content/70 hover:text-base-content"
+              />
             </button>
           </div>
           {/* Modal Body */}

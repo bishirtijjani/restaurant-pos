@@ -80,14 +80,14 @@ function Header() {
 
   return (
     <>
-      <div className="navbar sticky top-0 bg-base-100  z-50 shadow-md flex justify-between">
+      <div className="navbar sticky top-0 bg-base-100/80 backdrop-blur-md z-50 shadow-lg transition-all duration-300 flex justify-between">
         {/* Menu toogle for mobile view or small screen */}
         <div className="">
           <label
             htmlFor="left-sidebar-drawer"
-            className="btn btn-primary drawer-button lg:hidden"
+            className="btn btn-ghost btn-circle lg:hidden hover:bg-base-200 transition-colors"
           >
-            <Bars3Icon className="h-5 inline-block w-5" />
+            <Bars3Icon className="h-6 w-6" />
           </label>
           <h1 className="text-2xl font-semibold ml-2 hidden lg:block">
             {pageTitle}
@@ -356,20 +356,20 @@ function Header() {
           {/* Desktop View Utils */}
           <div className="hidden lg:flex items-center">
             <button
-              className="btn btn-sm btn-ghost rounded-box mx-1"
+              className="btn btn-sm btn-ghost rounded-full mx-1 hover:bg-base-200 transition-all duration-200"
               onClick={() => window.location.reload()}
             >
               <RefreshCw className="h-5 w-5" />
-              <span className="hidden xl:inline ml-2">Refresh</span>
+              <span className="hidden xl:inline ml-2 font-medium">Refresh</span>
             </button>
 
             <button
-              className={`btn btn-sm rounded-box mx-1 gap-2 ${
+              className={`btn btn-sm rounded-full mx-1 gap-2 transition-all duration-200 ${
                 !isOnline
-                  ? "btn-error"
+                  ? "btn-error text-white shadow-sm"
                   : queueStats.total > 0
-                    ? "btn-warning"
-                    : "btn-ghost"
+                    ? "btn-warning text-white shadow-sm"
+                    : "btn-ghost hover:bg-base-200"
               }`}
               onClick={() => setShowSyncManager(true)}
             >
@@ -378,7 +378,7 @@ function Header() {
               ) : (
                 <Database className="w-4 h-4" />
               )}
-              <span className="hidden xl:inline">
+              <span className="hidden xl:inline font-medium">
                 {!isOnline
                   ? "Offline"
                   : queueStats.total > 0
@@ -398,10 +398,10 @@ function Header() {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-sm btn-ghost rounded-box shadow-sm mx-1"
+                className="btn btn-sm btn-ghost rounded-full shadow-none hover:bg-base-200 mx-1 transition-all duration-200"
               >
                 <PaletteIcon className="h-5 w-5" />
-                <span className="hidden xl:inline ml-2">Theme</span>
+                <span className="hidden xl:inline ml-2 font-medium">Theme</span>
                 <ChevronDownIcon className="h-4 w-4 ml-1" />
               </div>
               <ul
@@ -707,9 +707,9 @@ function Header() {
           >
             <label
               tabIndex={0}
-              className="btn btn-ghost btn-circle avatar btn-sm md:btn-md"
+              className="btn btn-ghost btn-circle avatar btn-sm md:btn-md hover:bg-base-200 transition-all duration-200 ring-2 ring-transparent hover:ring-primary/20"
             >
-              <UserCircle2 className="size-full" />
+              <UserCircle2 className="size-full text-base-content/80" />
             </label>
             <ul
               tabIndex={0}

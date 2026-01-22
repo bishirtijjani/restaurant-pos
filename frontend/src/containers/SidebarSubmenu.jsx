@@ -20,33 +20,43 @@ function SidebarSubmenu({ submenu, name, icon }) {
     <div className="flex flex-col">
       {/** Route header */}
       <div
-        className="w-full block items-center gap-2 py-2 rounded-lg transition-all duration-200"
+        className={`w-full flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-300 cursor-pointer group ${
+          isExpanded
+            ? "bg-base-200 text-base-content font-semibold"
+            : "hover:bg-base-200 text-base-content/70 hover:text-base-content"
+        }`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <span className="bg-base-300 rounded-lg p-2">{icon}</span> {name}
+        <span className="transition-colors duration-300">{icon}</span>
+        <span className="flex-1">{name}</span>
         <ChevronDownIcon
           className={
-            "w-5 h-5 mt-1 float-right delay-400 duration-500 transition-all  " +
+            "w-4 h-4 transition-transform duration-300 " +
             (isExpanded ? "rotate-180" : "")
           }
         />
       </div>
 
       {/** Submenu list */}
-      <div className={` w-full ` + (isExpanded ? "" : "hidden")}>
-        <ul className={`menu menu-compact`}>
+      <div
+        className={`w-full overflow-hidden transition-all duration-300 ${isExpanded ? "max-h-96 opacity-100 mt-1" : "max-h-0 opacity-0"}`}
+      >
+        <ul className="menu menu-compact p-0 px-2 space-y-1">
           {submenu.map((m, k) => {
+            const isActive = location.pathname === m.path;
             return (
               <li key={k}>
-                <Link to={m.path}>
-                  <span className="bg-base-300 rounded-lg p-1">{m.icon}</span>{" "}
+                <Link
+                  to={m.path}
+                  className={`flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-primary text-primary-content shadow-md shadow-primary/20 font-medium"
+                      : "hover:bg-base-200 text-base-content/60 hover:text-base-content"
+                  }`}
+                >
+                  {m.icon}
                   {m.name}
-                  {location.pathname == m.path ? (
-                    <span
-                      className="absolute mt-1 mb-1 inset-y-0 left-0 w-1 rounded-tr-md rounded-br-md bg-primary "
-                      aria-hidden="true"
-                    ></span>
-                  ) : null}
+                  {/* Active Indicator Removal: functionality is now in the main class */}
                 </Link>
               </li>
             );
