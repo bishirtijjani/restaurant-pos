@@ -6,7 +6,7 @@ function SidebarSubmenu({ submenu, name, icon }) {
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  /** Open Submenu list if path found in routes, this is for directly loading submenu routes  first time */
+  /** Open Submenu list if path found in routes, this is for directly loading submenu routes first time */
   useEffect(() => {
     if (
       submenu.filter((m) => {
@@ -14,56 +14,64 @@ function SidebarSubmenu({ submenu, name, icon }) {
       })[0]
     )
       setIsExpanded(true);
-  }, []);
+  }, [location.pathname, submenu]);
 
   return (
-    <div className="flex flex-col">
+    <>
       {/** Route header */}
-      <div
-        className={`w-full flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-300 cursor-pointer group ${
+      <a
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 soft-lift group w-full ${
           isExpanded
-            ? "bg-base-200 text-base-content font-semibold"
-            : "hover:bg-base-200 text-base-content/70 hover:text-base-content"
+            ? "glass-pill font-bold"
+            : "hover:bg-base-200/50 text-base-content/60 hover:text-base-content font-medium"
         }`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <span className="transition-colors duration-300">{icon}</span>
-        <span className="flex-1">{name}</span>
+        <div className="p-1.5 rounded-lg transition-all duration-300 group-hover:bg-base-300/50 group-hover:scale-110">
+          {icon}
+        </div>
+        <span className="flex-1 tracking-wide text-[14px]">{name}</span>
         <ChevronDownIcon
           className={
-            "w-4 h-4 transition-transform duration-300 " +
+            "w-4 h-4 transition-transform duration-300 opacity-40 group-hover:opacity-100 " +
             (isExpanded ? "rotate-180" : "")
           }
         />
-      </div>
+      </a>
 
-      {/** Submenu list */}
+      {/** Submenu list container */}
       <div
-        className={`w-full overflow-hidden transition-all duration-300 ${isExpanded ? "max-h-96 opacity-100 mt-1" : "max-h-0 opacity-0"}`}
+        className={`w-full overflow-hidden transition-all duration-500 ease-in-out ${
+          isExpanded ? "max-h-96 opacity-100 mt-1 pb-2" : "max-h-0 opacity-0"
+        }`}
       >
-        <ul className="menu menu-compact p-0 px-2 space-y-1">
+        <ul className="menu menu-compact pl-4 flex flex-col gap-0.5">
           {submenu.map((m, k) => {
             const isActive = location.pathname === m.path;
             return (
-              <li key={k}>
+              <li key={k} className="list-none">
                 <Link
                   to={m.path}
-                  className={`flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 group ${
                     isActive
-                      ? "bg-primary text-primary-content shadow-md shadow-primary/20 font-medium"
-                      : "hover:bg-base-200 text-base-content/60 hover:text-base-content"
+                      ? "glass-pill font-bold"
+                      : "hover:bg-base-200/50 text-base-content/50 hover:text-base-content font-medium"
                   }`}
                 >
-                  {m.icon}
-                  {m.name}
-                  {/* Active Indicator Removal: functionality is now in the main class */}
+                  <div
+                    className={`p-1 rounded-lg transition-all duration-300 ${isActive ? "" : "group-hover:bg-base-300/50 group-hover:scale-110"}`}
+                  >
+                    {m.icon}
+                  </div>
+                  <span className="flex-1 tracking-wide text-sm">{m.name}</span>
+                  {isActive && <div className="active-indicator-dot" />}
                 </Link>
               </li>
             );
           })}
         </ul>
       </div>
-    </div>
+    </>
   );
 }
 

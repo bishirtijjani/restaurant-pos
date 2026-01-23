@@ -6,7 +6,7 @@ import ArrowLeftStartOnRectangleIcon from "@heroicons/react/24/outline/ArrowLeft
 import { jwtDecode } from "jwt-decode";
 import SessionExpired from "../features/common/components/SessionExpiredModalBody";
 import StoreSwitcher from "../features/common/components/StoreSwitcher";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../app/authSlice";
 import { useState } from "react";
 import SyncStatusModal from "../features/common/components/SyncStatusModal";
@@ -17,37 +17,43 @@ const token = localStorage.getItem("token");
 function ActiveIndicator({ path }) {
   const location = useLocation();
   return location.pathname === path ? (
-    <span
-      className="absolute inset-y-0 left-0 w-1 bg-primary rounded-r-full"
+    <div
+      className="absolute right-2 w-1.5 h-1.5 active-indicator-dot"
       aria-hidden="true"
-    />
+    ></div>
   ) : null;
 }
 
 function renderSidebarRoutes(routes) {
-  return routes.map((route, index) => (
-    <li key={index} className="mx-2 my-1 relative">
-      {route.submenu ? (
-        <SidebarSubmenu {...route} />
-      ) : (
-        <NavLink
-          end
-          to={route.path}
-          className={({ isActive }) =>
-            `flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-300 group ${
-              isActive
-                ? "bg-primary text-primary-content font-semibold"
-                : "hover:bg-base-200 text-base-content hover:text-base-content"
-            }`
-          }
-        >
-          <span className="transition-colors duration-300">{route.icon}</span>
-          {route.name}
-          <ActiveIndicator path={route.path} />
-        </NavLink>
-      )}
-    </li>
-  ));
+  return routes.map((route, k) => {
+    return (
+      <li className="mx-2 my-0.5 list-none" key={k}>
+        {route.submenu ? (
+          <SidebarSubmenu {...route} />
+        ) : (
+          <NavLink
+            end
+            to={route.path}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 soft-lift group ${
+                isActive
+                  ? "glass-pill font-bold"
+                  : "hover:bg-base-200/50 text-base-content/60 hover:text-base-content font-medium"
+              }`
+            }
+          >
+            <div className="p-1.5 rounded-lg transition-all duration-300 group-hover:bg-base-300/50 group-hover:scale-110">
+              {route.icon}
+            </div>
+            <span className="flex-1 tracking-wide text-[14px]">
+              {route.name}
+            </span>
+            <ActiveIndicator path={route.path} />
+          </NavLink>
+        )}
+      </li>
+    );
+  });
 }
 
 const SidebarContent = (() => {
@@ -82,57 +88,65 @@ function LeftSidebar() {
         htmlFor="left-sidebar-drawer"
         className="drawer-overlay backdrop-blur-sm"
       ></label>
-      <ul className="menu w-80 min-h-full bg-base-100/95 backdrop-blur-md text-base-content p-0 border-r border-base-200 shadow-2xl">
+      <ul className="menu w-72 min-h-full glass-premium text-base-content p-0 border-r border-base-content/5 shadow-2xl overflow-hidden flex flex-col gap-0.5">
         {/* Logo Section */}
-        <li className="sticky flex flex-row justify-between top-0 bg-base-100/95 backdrop-blur-md py-4 z-40 border-b border-base-200/50">
-          <Link to="/dashboard" className="">
-            <img
-              src="/icon.svg"
-              className="w-8 h-8 m-0 p-0 text-white"
-              alt="Codeket Restaurant Logo"
-            />
-            <span className="text-xl m-0 p-0 font-bold tracking-wide text-base-content">
-              Restaurant
-            </span>
+        <li className="sticky top-0 glass-premium py-6 px-6 z-40 border-b border-base-content/5 flex flex-row items-center justify-between mb-2">
+          <Link to="/dashboard" className="flex items-center gap-3 soft-lift">
+            <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+              <div className="flex items-center justify-center w-6 h-6 text-primary-content font-black text-xl">
+                R
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-black tracking-tighter text-base-content uppercase leading-none">
+                Resto<span className="text-primary">.</span>
+              </span>
+              <span className="text-[9px] uppercase tracking-[0.2em] font-bold opacity-40">
+                Pro System
+              </span>
+            </div>
           </Link>
-          {/* Mobile Close Button */}
           <button
-            className="btn btn-ghost btn-circle bg-base-200 mx-3  lg:hidden shadow-md"
+            className="btn btn-ghost btn-circle btn-sm lg:hidden bg-base-200/50"
             onClick={closeSidebar}
           >
-            <XMarkIcon className="w-5 h-5 text-error" />
+            <XMarkIcon className="w-4 h-4" />
           </button>
         </li>
 
-        {/* Sidebar Items */}
-        {/* Store Switcher */}
-        <div className="mt-4 px-2">
+        {/* Store Switcher wrapped in li to maintain rhythm */}
+        <li className="mx-2 mb-4 list-none">
           <StoreSwitcher />
-        </div>
-        <div className="mt-2 space-y-2 px-2">{SidebarContent}</div>
+        </li>
+
+        {SidebarContent}
 
         {/* Sync Button */}
-        <li className="mt-auto px-2 pb-2">
+        <li className="mt-auto px-2 pb-2 list-none">
           <button
-            className="w-full btn btn-ghost justify-start gap-2 border border-base-200 rounded-xl hover:bg-base-200 hover:border-base-300 transition-all duration-200"
+            className="w-full btn btn-ghost justify-start gap-3 px-4 py-3 border border-base-content/5 rounded-xl hover:bg-base-200/50 transition-all duration-300 soft-lift"
             onClick={() => setIsSyncModalOpen(true)}
           >
-            <ArrowPathIcon className="h-5 w-5 text-base-content/60" />
-            <span className="font-medium text-base-content/80">
+            <div className="p-1.5 bg-base-300/30 rounded-lg">
+              <ArrowPathIcon className="h-4 w-4 text-base-content/60" />
+            </div>
+            <span className="font-bold tracking-tight text-xs uppercase opacity-70">
               Sync Status
             </span>
           </button>
         </li>
 
         {/* Logout Button */}
-        <li className="px-2 py-6 pt-2">
-          <a
-            className="w-full btn btn-error text-white hover:bg-error/90 shadow-lg hover:shadow-xl rounded-xl flex items-center justify-center gap-2 transition-all duration-200"
+        <li className="px-4 py-8 list-none">
+          <button
+            className="btn btn-error btn-outline border-2 text-base-content font-bold w-full rounded-2xl hover:bg-error hover:text-white hover:border-error soft-lift flex items-center justify-center gap-3 transition-all duration-300"
             onClick={logoutUserHandler}
           >
-            <ArrowLeftStartOnRectangleIcon className="h-5 w-5" />
-            <span className="font-bold">Logout</span>
-          </a>
+            <ArrowLeftStartOnRectangleIcon className="h-4 w-4" />
+            <span className="tracking-widest uppercase text-[10px] font-black">
+              Sign Out
+            </span>
+          </button>
         </li>
       </ul>
       <SyncStatusModal
