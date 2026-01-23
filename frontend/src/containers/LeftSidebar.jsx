@@ -83,14 +83,14 @@ function LeftSidebar() {
   }
 
   return (
-    <div className="drawer-side z-50">
+    <div className="drawer-side z-50" style={{ backdropFilter: "none" }}>
       <label
         htmlFor="left-sidebar-drawer"
-        className="drawer-overlay backdrop-blur-sm"
+        className="drawer-overlay backdrop-blur-sm lg:hidden"
       ></label>
-      <ul className="menu w-72 min-h-full glass-premium text-base-content p-0 border-r border-base-content/5 shadow-2xl overflow-y-auto overflow-x-hidden flex flex-col gap-0.5">
+      <ul className="menu w-72 min-h-full glass-premium-sidebar text-base-content p-0 border-r border-base-content/5 shadow-2xl overflow-y-auto overflow-x-hidden flex flex-col gap-0.5">
         {/* Logo Section */}
-        <li className="sticky top-0 glass-premium py-6 px-6 z-40 border-b border-base-content/5 flex flex-row items-center justify-between mb-2">
+        <li className="sticky top-0 glass-premium-sidebar py-6 px-6 z-40 border-b border-base-content/5 flex flex-row items-center justify-between mb-2">
           <Link to="/dashboard" className="flex items-center gap-3 soft-lift">
             <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20 rotate-3 group-hover:rotate-0 transition-transform duration-500">
               <div className="flex items-center justify-center w-6 h-6 text-primary-content font-black text-xl">

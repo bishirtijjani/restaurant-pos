@@ -10,6 +10,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   RefreshCw,
   Paintbrush,
+  PanelTopOpen,
   PaletteIcon,
   Database,
   WifiOff,
@@ -110,7 +111,7 @@ function Header() {
           {/* Mobile View Utils Dropdown */}
           <div className="dropdown dropdown-end lg:hidden">
             <label tabIndex={0} className="btn btn-ghost btn-circle">
-              <Bars3Icon className="h-6 w-6" />
+              <PanelTopOpen className="h-6 w-6" />
             </label>
             <ul
               tabIndex={0}
@@ -140,35 +141,35 @@ function Header() {
                 </button>
               </li>
               <li>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
+                <details>
+                  <summary className="flex items-center gap-2">
                     <PaletteIcon className="h-4 w-4" />
                     Theme
-                  </span>
-                </div>
-                <ul className="p-2">
-                  <li>
-                    <a data-set-theme="light">☀️ Light</a>
-                  </li>
-                  <li>
-                    <a data-set-theme="dark">🌙 Dark</a>
-                  </li>
-                  <li>
-                    <a data-set-theme="cupcake">🧁 Cupcake</a>
-                  </li>
-                  <li>
-                    <a data-set-theme="winter">❄️ Winter</a>
-                  </li>
-                  <li>
-                    <a data-set-theme="dim">🔅 Dim</a>
-                  </li>
-                  <li>
-                    <a data-set-theme="nord">🏔️ Nord</a>
-                  </li>
-                  <li>
-                    <a data-set-theme="sunset">🌅 Sunset</a>
-                  </li>
-                </ul>
+                  </summary>
+                  <ul className="p-2 bg-base-100 rounded-t-none">
+                    <li>
+                      <a data-set-theme="light">☀️ Light</a>
+                    </li>
+                    <li>
+                      <a data-set-theme="dark">🌙 Dark</a>
+                    </li>
+                    <li>
+                      <a data-set-theme="cupcake">🧁 Cupcake</a>
+                    </li>
+                    <li>
+                      <a data-set-theme="winter">❄️ Winter</a>
+                    </li>
+                    <li>
+                      <a data-set-theme="dim">🔅 Dim</a>
+                    </li>
+                    <li>
+                      <a data-set-theme="nord">🏔️ Nord</a>
+                    </li>
+                    <li>
+                      <a data-set-theme="sunset">🌅 Sunset</a>
+                    </li>
+                  </ul>
+                </details>
               </li>
             </ul>
           </div>
@@ -176,7 +177,7 @@ function Header() {
           {/* Desktop View Utils */}
           <div className="hidden lg:flex items-center gap-2">
             <button
-              className="btn btn-ghost btn-sm gap-2"
+              className="btn btn-ghost rounded-full btn-outline btn-sm gap-2"
               onClick={() => window.location.reload()}
             >
               <RefreshCw className="h-4 w-4" />
@@ -184,7 +185,7 @@ function Header() {
             </button>
 
             <button
-              className={`btn btn-sm gap-2 ${
+              className={`btn rounded-full btn-outline btn-sm gap-2 ${
                 !isOnline || queueStats.total > 0
                   ? "bg-warning/10 text-warning border-warning/20"
                   : "btn-ghost hover:bg-base-200/50 hover:border-base-content/5"
@@ -204,7 +205,10 @@ function Header() {
             </button>
 
             <div className="dropdown dropdown-end">
-              <label tabIndex={0} className="btn btn-ghost btn-sm gap-2">
+              <label
+                tabIndex={0}
+                className="btn rounded-full btn-outline btn-sm gap-2"
+              >
                 <PaletteIcon className="h-4 w-4" />
                 Theme
               </label>

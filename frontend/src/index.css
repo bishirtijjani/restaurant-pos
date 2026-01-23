@@ -41,6 +41,11 @@
     @apply backdrop-blur-xl bg-base-100/70 border border-white/10 dark:border-white/5;
   }
 
+  .glass-premium-sidebar {
+    @apply bg-base-100 border border-white/10 dark:border-white/5;
+    backdrop-filter: none !important;
+  }
+
   .architectural-thread {
     @apply relative before:absolute before:left-[19px] before:top-0 before:h-full before:w-[1px] before:bg-gradient-to-b before:from-base-300 before:to-transparent;
   }
@@ -48,6 +53,13 @@
   .soft-lift {
     @apply transition-all duration-300 ease-out hover:-translate-y-[1px] active:scale-[0.98];
   }
+}
+
+/* Force remove all backdrop blur from drawer elements */
+.drawer-side,
+.drawer-side * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Mobile POS Styles */

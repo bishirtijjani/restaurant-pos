@@ -11,6 +11,7 @@ import OnboardingTour from "../features/onboarding/OnboardingTour";
 import { useLocation } from "react-router-dom";
 import { getTourId } from "../utils/Helpers";
 import { getCurrentUser, setUserFromToken } from "../app/authSlice";
+import "./drawer-fix.css";
 
 function Layout() {
   const dispatch = useDispatch();
