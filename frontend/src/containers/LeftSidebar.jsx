@@ -27,7 +27,7 @@ function ActiveIndicator({ path }) {
 function renderSidebarRoutes(routes) {
   return routes.map((route, k) => {
     return (
-      <li className="mx-2 my-0.5 list-none" key={k}>
+      <li className="mx-2 my-0.5 list-none " key={k}>
         {route.submenu ? (
           <SidebarSubmenu {...route} />
         ) : (
@@ -35,7 +35,7 @@ function renderSidebarRoutes(routes) {
             end
             to={route.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 soft-lift group ${
+              `flex items-center gap-3 px-4 py-3 rounded-xl group hover:border-l-2 hover:border-primary ${
                 isActive
                   ? "glass-pill font-bold"
                   : "hover:bg-base-200/50 text-base-content/60 hover:text-base-content font-medium"
@@ -88,7 +88,7 @@ function LeftSidebar() {
         htmlFor="left-sidebar-drawer"
         className="drawer-overlay backdrop-blur-sm"
       ></label>
-      <ul className="menu w-72 min-h-full glass-premium text-base-content p-0 border-r border-base-content/5 shadow-2xl overflow-hidden flex flex-col gap-0.5">
+      <ul className="menu w-72 min-h-full glass-premium text-base-content p-0 border-r border-base-content/5 shadow-2xl overflow-y-auto overflow-x-hidden flex flex-col gap-0.5">
         {/* Logo Section */}
         <li className="sticky top-0 glass-premium py-6 px-6 z-40 border-b border-base-content/5 flex flex-row items-center justify-between mb-2">
           <Link to="/dashboard" className="flex items-center gap-3 soft-lift">

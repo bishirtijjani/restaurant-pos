@@ -42,7 +42,9 @@ function SidebarSubmenu({ submenu, name, icon }) {
       {/** Submenu list container */}
       <div
         className={`w-full overflow-hidden transition-all duration-500 ease-in-out ${
-          isExpanded ? "max-h-96 opacity-100 mt-1 pb-2" : "max-h-0 opacity-0"
+          isExpanded
+            ? "max-h-[2000px] opacity-100 mt-1 pb-2"
+            : "max-h-0 opacity-0"
         }`}
       >
         <ul className="menu menu-compact pl-4 flex flex-col gap-0.5">

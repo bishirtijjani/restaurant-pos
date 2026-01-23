@@ -31,7 +31,7 @@ function Layout() {
 
   return (
     <>
-      <div className="drawer lg:drawer-open">
+      <div className="drawer lg:drawer-open min-w-full w-full min-h-screen">
         <input
           id="left-sidebar-drawer"
           type="checkbox"

@@ -21,7 +21,7 @@ function PageContent() {
   }, [pageTitle]); // Dependency array ensures this runs only when `pageTitle` changes
 
   return (
-    <div className="drawer-content flex flex-col h-screen">
+    <div className="drawer-content flex flex-col h-screen min-w-full w-full">
       {/* Header always visible at the top */}
       <Header />
 
