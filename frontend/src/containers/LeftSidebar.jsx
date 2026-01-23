@@ -37,8 +37,8 @@ function renderSidebarRoutes(routes) {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-xl group hover:border-l-2 hover:border-primary ${
                 isActive
-                  ? "glass-pill font-bold"
-                  : "hover:bg-base-200/50 text-base-content/60 hover:text-base-content font-medium"
+                  ? "glass-pill font-bold border-l-2 border-accent bg-primary text-primary-content"
+                  : "hover:bg-base-200/50 text-base-content hover:text-base-content font-medium"
               }`
             }
           >

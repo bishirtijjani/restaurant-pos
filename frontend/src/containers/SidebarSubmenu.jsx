@@ -20,7 +20,7 @@ function SidebarSubmenu({ submenu, name, icon }) {
     <>
       {/** Route header */}
       <a
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 soft-lift group w-full ${
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer group w-full  hover:border-l-2 hover:border-primary ${
           isExpanded
             ? "glass-pill font-bold"
             : "hover:bg-base-200/50 text-base-content/60 hover:text-base-content font-medium"
@@ -54,14 +54,14 @@ function SidebarSubmenu({ submenu, name, icon }) {
               <li key={k} className="list-none">
                 <Link
                   to={m.path}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 group ${
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl group ${
                     isActive
-                      ? "glass-pill font-bold"
-                      : "hover:bg-base-200/50 text-base-content/50 hover:text-base-content font-medium"
+                      ? "glass-pill font-bold border-l-2 bg-primary text-primary-content"
+                      : "hover:bg-base-200/50 hover:shadow-lg text-base-content/90 hover:text-base-content font-medium  hover:border-l-2 hover:border-primary"
                   }`}
                 >
                   <div
-                    className={`p-1 rounded-lg transition-all duration-300 ${isActive ? "" : "group-hover:bg-base-300/50 group-hover:scale-110"}`}
+                    className={`p-1 rounded-lg ${isActive ? "" : "group-hover:bg-base-300/50 group-hover:scale-110"}`}
                   >
                     {m.icon}
                   </div>
