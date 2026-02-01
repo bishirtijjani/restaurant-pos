@@ -34,8 +34,8 @@ const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
       openModal({
         title: "Add New Category",
         bodyType: MODAL_BODY_TYPES.ADD_NEW_CATEGORY,
-        size: "xl",
-      })
+        size: "lg",
+      }),
     );
   };
 
@@ -49,7 +49,7 @@ const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
           type: "category",
           title: "Category",
         },
-      })
+      }),
     );
   };
 
@@ -64,11 +64,11 @@ const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
         showNotification({
           message: "Export downloaded successfully!",
           status: 1,
-        })
+        }),
       );
     } catch (err) {
       dispatch(
-        showNotification({ message: "Export failed: " + err, status: 0 })
+        showNotification({ message: "Export failed: " + err, status: 0 }),
       );
     }
   };
@@ -190,8 +190,8 @@ const Categories = () => {
 
   const filteredCategories = categories.filter((product) =>
     Object.values(product).some((value) =>
-      String(value).toLowerCase().includes(searchQuery.toLowerCase())
-    )
+      String(value).toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
   );
 
   const CategoryCard = ({ categoryItem }) => (
@@ -213,7 +213,8 @@ const Categories = () => {
                       title: "Edit Category",
                       bodyType: MODAL_BODY_TYPES.EDIT_CATEGORY,
                       extraObject: categoryItem,
-                    })
+                      size: "lg",
+                    }),
                   )
                 }
               >
@@ -235,7 +236,7 @@ const Categories = () => {
                         type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_CATEGORY,
                         id: categoryItem._id,
                       },
-                    })
+                    }),
                   )
                 }
               >

@@ -36,7 +36,6 @@ function Register() {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
 
@@ -108,7 +107,7 @@ function Register() {
           fullname: formData.fullname,
           email: formData.email,
           password: formData.password,
-        })
+        }),
       ).unwrap();
 
       setCurrentStep(STEPS.FINISHING);
@@ -214,73 +213,19 @@ function Register() {
                   className="space-y-8"
                 >
                   <div className="space-y-4">
-                    <div
-                      className={`flex items-center justify-between p-4 bg-white/5 rounded-3xl border transition-all hover:bg-white/[0.08] ${
-                        error && error.toLowerCase().includes("email")
-                          ? "border-red-500/50"
-                          : "border-white/10"
-                      }`}
-                    >
-                      <div className="flex flex-col w-full">
-                        <span
-                          className={`text-[10px] font-black uppercase tracking-widest ${
-                            error && error.toLowerCase().includes("email")
-                              ? "text-red-400"
-                              : "text-brand/60"
-                          }`}
-                        >
-                          Account Email
-                        </span>
-                        {isEditingEmail ? (
-                          <input
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                email: e.target.value,
-                              });
-                              if (error) setError("");
-                              dispatch(clearAuthError());
-                            }}
-                            autoFocus
-                            onBlur={() => setIsEditingEmail(false)}
-                            onKeyPress={(e) =>
-                              e.key === "Enter" && setIsEditingEmail(false)
-                            }
-                            className="bg-transparent border-none focus:outline-none focus:ring-0 text-white font-medium p-0 h-auto w-full"
-                          />
-                        ) : (
-                          <span
-                            onClick={() => setIsEditingEmail(true)}
-                            className="font-medium text-white/80 cursor-pointer"
-                          >
-                            {formData.email || "Enter your email"}
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => setIsEditingEmail(!isEditingEmail)}
-                        className="text-xs font-black uppercase tracking-widest text-brand hover:text-brand-hover transition-colors ml-4"
-                      >
-                        {isEditingEmail ? "Save" : "Edit"}
-                      </button>
-                    </div>
-
-                    <div>
-                      <span className="text-xs font-black uppercase tracking-[0.3em] text-brand mb-4 block">
-                        Step 1 of 2
-                      </span>
-                      <h2 className="text-4xl font-black tracking-tight mb-2">
-                        Getting Started
-                      </h2>
-                      <p className="text-white/40 font-medium">
-                        Please enter your full name to begin.
-                      </p>
-                    </div>
+                    <span className="text-xs font-black uppercase tracking-[0.3em] text-brand mb-4 block">
+                      Step 1 of 2
+                    </span>
+                    <h2 className="text-4xl font-black tracking-tight mb-2">
+                      Getting Started
+                    </h2>
+                    <p className="text-white/40 font-medium">
+                      Tell us a bit about yourself to create your account.
+                    </p>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-5">
+                    {/* Full Name Input */}
                     <div className="relative">
                       <UserIcon className="absolute left-6 top-[1.125rem] w-5 h-5 text-white/20" />
                       <input
@@ -298,28 +243,53 @@ function Register() {
                         placeholder="Your Full Name"
                         autoFocus
                         className={`w-full bg-white/5 border rounded-full py-4 pl-14 pr-6 focus:outline-none focus:bg-white/[0.08] transition-all text-lg font-medium placeholder:text-white/10 ${
-                          error &&
-                          !error.toLowerCase().includes("email") &&
-                          !formData.fullname
+                          error && error.toLowerCase().includes("name")
                             ? "border-red-500/50 focus:border-red-500"
                             : "border-white/10 focus:border-brand/50"
                         }`}
                       />
                     </div>
+
+                    {/* Email Input */}
+                    <div className="relative">
+                      <EnvelopeIcon className="absolute left-6 top-[1.125rem] w-5 h-5 text-white/20" />
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => {
+                          setFormData({
+                            ...formData,
+                            email: e.target.value,
+                          });
+                          if (error) setError("");
+                          dispatch(clearAuthError());
+                        }}
+                        onKeyPress={(e) => e.key === "Enter" && handleNext()}
+                        placeholder="Work Email Address"
+                        className={`w-full bg-white/5 border rounded-full py-4 pl-14 pr-6 focus:outline-none focus:bg-white/[0.08] transition-all text-lg font-medium placeholder:text-white/10 ${
+                          error &&
+                          (error.toLowerCase().includes("email") ||
+                            error.toLowerCase().includes("already registered"))
+                            ? "border-red-500/50 focus:border-red-500"
+                            : "border-white/10 focus:border-brand/50"
+                        }`}
+                      />
+                    </div>
+
                     {error && (
                       <div className="flex items-center gap-2 text-red-400 bg-red-400/10 px-4 py-3 rounded-2xl">
                         <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
                         <span className="text-sm font-bold">{error}</span>
                       </div>
                     )}
-                    <button
-                      onClick={handleNext}
-                      className="w-full bg-brand hover:bg-brand-hover text-white font-black py-4 rounded-full shadow-xl shadow-brand/20 transition-all flex items-center justify-center gap-2"
-                    >
-                      Next Step
-                      <ChevronRightIcon className="w-5 h-5" />
-                    </button>
                   </div>
+                  <button
+                    onClick={handleNext}
+                    className="w-full bg-brand hover:bg-brand-hover text-white font-black py-4 rounded-full shadow-xl shadow-brand/20 transition-all flex items-center justify-center gap-2"
+                  >
+                    Next Step
+                    <ChevronRightIcon className="w-5 h-5" />
+                  </button>
                 </motion.div>
               )}
 

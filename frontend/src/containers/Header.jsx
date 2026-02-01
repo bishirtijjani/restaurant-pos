@@ -14,7 +14,7 @@ import {
   PaletteIcon,
   Database,
   WifiOff,
-  UserCircle2,
+  User,
   ChevronDownIcon,
 } from "lucide-react";
 // import { getTourId } from "../utils/Helpers";
@@ -243,10 +243,11 @@ function Header() {
 
           {/* Profile icon, opening menu on click */}
           <div className="dropdown dropdown-end ml-4">
-            <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 rounded-full">
-                <UserCircle2 className="h-10 w-10" />
-              </div>
+            <label
+              tabIndex={0}
+              className="btn btn-ghost btn-circle border border-base-content/10 bg-base-200 flex items-center justify-center"
+            >
+              <User className="h-5 w-5 text-base-content" strokeWidth={2} />
             </label>
             <ul
               tabIndex={0}

@@ -36,7 +36,7 @@ function Login() {
     const { email, password } = loginObj;
     if (!email || !password) {
       dispatch(
-        showNotification({ message: "Please fill in all fields", status: 0 })
+        showNotification({ message: "Please fill in all fields", status: 0 }),
       );
       return;
     }
@@ -51,7 +51,7 @@ function Login() {
           showNotification({
             message: result.payload || "Invalid email or password",
             status: 0,
-          })
+          }),
         );
       }
     } catch (error) {
@@ -59,7 +59,7 @@ function Login() {
         showNotification({
           message: "An unexpected error occurred!",
           status: 0,
-        })
+        }),
       );
     }
   };
@@ -71,7 +71,7 @@ function Login() {
         showNotification({
           message: "Please enter your email first to use PIN login",
           status: 0,
-        })
+        }),
       );
       return;
     }
@@ -86,7 +86,7 @@ function Login() {
           showNotification({
             message: result.payload || "Invalid PIN",
             status: 0,
-          })
+          }),
         );
       }
     } catch (error) {
@@ -94,7 +94,7 @@ function Login() {
         showNotification({
           message: "An unexpected error occurred!",
           status: 0,
-        })
+        }),
       );
     }
   };
@@ -176,17 +176,13 @@ function Login() {
               transition={{ duration: 0.5 }}
               className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[40px] p-8 md:p-12 shadow-2xl relative"
             >
-              <div className="mb-10 text-center lg:text-left">
-                <h2 className="text-3xl font-black tracking-tight text-white mb-2">
-                  {loginMode === "password" ? "Sign In" : "Quick Access"}
-                </h2>
-                <p className="text-white/40 font-medium">
-                  {loginMode === "password"
-                    ? "Enter your credentials to continue"
-                    : "Use your security PIN for fast entry"}
-                </p>
-              </div>
-
+              {loginMode === "password" && (
+                <div className="mb-10 text-center lg:text-left">
+                  <h2 className="text-3xl font-black tracking-tight text-white mb-2">
+                    Sign In
+                  </h2>
+                </div>
+              )}
               {loginMode === "password" ? (
                 <form onSubmit={submitForm} className="space-y-6">
                   <div className="space-y-4">
@@ -210,7 +206,6 @@ function Login() {
                         updateType="password"
                         labelTitle=""
                         updateFormValue={updateFormValue}
-                        placeholder="Password"
                         placeholder="Password"
                         className="pl-14 bg-white/5 border-white/10 focus:border-brand/50 rounded-full"
                       />

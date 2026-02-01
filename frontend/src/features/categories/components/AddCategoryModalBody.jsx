@@ -79,7 +79,7 @@ function AddCategoryModalBody({ closeModal }) {
           onChange={handleInputChange}
           className="input input-bordered w-full mt-2"
           placeholder="Enter Category Description"
-          rows="6"
+          rows="4"
         />
       </div>
 
