@@ -23,7 +23,7 @@ function SidebarSubmenu({ submenu, name, icon }) {
         className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer group w-full  hover:border-l-2 hover:border-primary ${
           isExpanded
             ? "glass-pill font-bold"
-            : "hover:bg-base-200/50 text-base-content/60 hover:text-base-content font-medium"
+            : "hover:bg-base-200/50 text-base-content font-medium"
         }`}
         onClick={() => setIsExpanded(!isExpanded)}
       >

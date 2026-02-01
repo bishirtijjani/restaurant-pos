@@ -10,6 +10,8 @@ function InputText({
   placeholder,
   updateFormValue,
   updateType,
+  className,
+  ...rest
 }) {
   const [value, setValue] = useState(defaultValue);
   const inputId = labelTitle.toLowerCase().replace(/\s+/g, "-");
@@ -21,11 +23,13 @@ function InputText({
 
   return (
     <div className={`form-control w-full ${containerStyle}`}>
-      <label className="label" htmlFor={inputId}>
-        <span className={"label-text text-base-content " + labelStyle}>
-          {labelTitle}
-        </span>
-      </label>
+      {labelTitle && (
+        <label className="label" htmlFor={inputId}>
+          <span className={"label-text text-base-content " + labelStyle}>
+            {labelTitle}
+          </span>
+        </label>
+      )}
       <input
         id={inputId}
         type={type || "text"}
@@ -33,7 +37,8 @@ function InputText({
         value={value}
         placeholder={placeholder || ""}
         onChange={(e) => updateInputValue(e.target.value)}
-        className="input input-bordered w-full"
+        className={`input input-bordered w-full ${className}`}
+        {...rest}
       />
     </div>
   );

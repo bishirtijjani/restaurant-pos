@@ -26,8 +26,6 @@ function EditCategoryModalBody({ extraObject, closeModal }) {
   const saveCategory = () => {
     if (category.name.trim() === "")
       return setErrorMessage("Category name is required!");
-    if (category.description.trim() === "")
-      return setErrorMessage("Category description is required!");
 
     setLoading(true);
     dispatch(updateCategory({ id: categoryItem._id, category }))

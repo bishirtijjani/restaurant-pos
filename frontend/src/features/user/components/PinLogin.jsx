@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Delete, X } from "lucide-react";
+import { EnvelopeIcon } from "@heroicons/react/24/outline";
 import ErrorText from "../../../components/Typography/ErrorText";
+import InputText from "../../../components/Input/InputText";
 
 const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
   const [pin, setPin] = useState("");
@@ -34,7 +36,7 @@ const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [pin, loading]); // Added pin and loading as dependencies to ensure updated state in handlers
+  }, [pin, loading]);
 
   const handleNumberClick = (num) => {
     if (pin.length < 6) {
@@ -56,6 +58,11 @@ const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
     }
   };
 
+  // Update email via the InputText callback
+  const updateEmailValue = ({ value }) => {
+    if (onEmailChange) onEmailChange(value);
+  };
+
   // If no email, show email input first
   if (!email && onEmailChange) {
     return (
@@ -64,12 +71,16 @@ const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
           Enter your email for PIN login
         </h3>
 
-        <div className="w-full mb-6">
-          <input
-            type="email"
-            placeholder="Email address"
-            autoComplete="email"
-            className="input input-bordered w-full"
+        <div className="w-full mb-6 relative">
+          <EnvelopeIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 z-10" />
+          <InputText
+            defaultValue=""
+            updateType="email"
+            containerStyle="mt-0"
+            labelTitle=""
+            updateFormValue={updateEmailValue}
+            placeholder="Email Address"
+            className="pl-14 bg-white/5 border-white/10 focus:border-brand/50 rounded-full text-white"
             autoFocus
             onKeyDown={(e) => {
               if (e.key === "Enter" && e.target.value) {
@@ -84,12 +95,12 @@ const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
         <div className="flex flex-col w-full gap-2">
           <button
             onClick={(e) => {
-              const input = e.target
-                .closest("div")
-                .previousElementSibling.querySelector("input");
-              if (input && input.value) {
-                onEmailChange(input.value);
-              }
+              // Note: With InputText component, it's safer to rely on the updateFormValue state
+              // but we keep this as a fallback for the physical button click
+              if (onEmailChange)
+                onEmailChange(
+                  document.querySelector('input[type="email"]').value,
+                );
             }}
             className="btn btn-primary w-full"
           >
