@@ -9,20 +9,20 @@ export default function Pricing() {
   const comparison = [
     {
       feature: "Hardware",
-      them: "$799-$3,000 upfront",
+      them: "£799-£3,000 upfront",
       us: "Use existing iPads, tablets, laptops, desktops (no required purchases)",
       usBetter: true,
     },
     {
       feature: "Monthly Fee",
-      them: "$150+ / location",
-      us: "$99 flat rate",
+      them: "£150+ / location",
+      us: "£129 flat for all locations",
       usBetter: true,
     },
     {
       feature: "Payments",
       them: "Proprietary Lock-in",
-      us: "Bring your own (Stripe or Any Processor)",
+      us: "Integrated Stripe Payments",
       usBetter: true,
     },
     {
@@ -55,14 +55,17 @@ export default function Pricing() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <div className="mb-4">
-            <span className="badge">Transparent Pricing</span>
+            <span className="badge">
+              Early Access Pricing (Founding Partners)
+            </span>
           </div>
           <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-[--color-text-primary]">
             One Rate. Operational Freedom.
           </h2>
           <p className="mx-auto text-xl text-gray-500 max-w-[600px] leading-relaxed">
-            We don't tax your growth. No setup fees, no contracts, no hardware
-            markup. No forced processors. No internet dependency.
+            Pricing applies during the Early Access phase and is permanently
+            locked for Founding Partners. We don't tax your growth. No setup
+            fees, no contracts, no hardware markup.
           </p>
         </div>
 
@@ -143,11 +146,11 @@ export default function Pricing() {
         >
           <div className="mb-10">
             <div className="text-7xl font-extrabold text-[--color-text-primary] mb-2 tracking-tighter">
-              $99
+              £129
               <span className="text-2xl font-normal text-gray-400">/mo</span>
             </div>
             <p className="text-gray-500 text-sm font-semibold mb-3">
-              Or $999/year per location (2 months free for annual plan)
+              Or £1290/year per location (2 months free for annual plan)
             </p>
             <p className="text-gray-400 font-mono text-[0.7rem] font-bold uppercase tracking-widest">
               UNLIMITED DEVICES • PER LOCATION • FULL OFFLINE MODE • GRANULAR
@@ -164,7 +167,7 @@ export default function Pricing() {
               "Live Inventory & Waste Tracking",
               "Advanced Multi-Store Reporting",
               "Direct Human Support (Call/Text)",
-              "Freedom to use ANY Payment Processor",
+              "Freedom to use Integrated Stripe Payments",
             ].map((item, i) => (
               <div
                 key={i}

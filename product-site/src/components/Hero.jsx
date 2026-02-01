@@ -12,7 +12,7 @@ export default function Hero() {
     const appUrl = "https://app.restaurant.codeket.com";
 
     window.location.href = `${appUrl}/register?email=${encodeURIComponent(
-      email
+      email,
     )}`;
   };
 
@@ -38,13 +38,21 @@ export default function Hero() {
                 </div>
               </h1>
 
-              <p className="text-lg text-gray-500 mb-10 leading-relaxed font-medium">
+              <p className="text-lg text-gray-500 mb-6 leading-relaxed font-medium">
                 Codeket Restaurant is an operations-first, offline-capable
                 restaurant management system built for real-world conditions —
                 replacing fragile POS setups, spreadsheets, and manual stock
                 tracking with one reliable operational backbone that runs on any
                 device you already own.
               </p>
+
+              <div className="flex items-center gap-3 py-2 px-4 bg-orange-50 border border-orange-100 rounded-xl mb-10 w-fit">
+                <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                <span className="text-[0.7rem] font-black uppercase tracking-widest text-orange-900">
+                  Now onboarding our first UK restaurants through a limited
+                  Early Access program.
+                </span>
+              </div>
 
               {/* Email CTA */}
               <form

@@ -141,13 +141,16 @@ export default function Philosophy() {
               </p>
             </div>
 
-            <button className="btn btn-primary group">
+            <a
+              href="https://app.restaurant.codeket.com/register"
+              className="btn btn-primary group no-underline"
+            >
               Start Your Migration
               <ArrowRight
                 size={20}
                 className="group-hover:translate-x-1 transition-transform"
               />
-            </button>
+            </a>
           </div>
         </motion.div>
       </div>

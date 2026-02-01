@@ -15,7 +15,7 @@ export default function Header() {
 
   const navLinks = [
     { name: "Pricing", href: "#pricing" },
-    { name: "Help Docs", href: "#" },
+    { name: "Philosophy", href: "#philosophy" },
   ];
 
   return (

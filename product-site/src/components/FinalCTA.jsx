@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 
-export default function FinalCTA() {
+export default function FinalCTA({ onContactClick }) {
   const benefits = [
     "14-Day Free Trial",
     "No Credit Card Required",
     "Setup in 15 Minutes",
     "Direct Founder Support",
     "Use iPad, Android, or Any Browser",
-    "No $799–$3,000 Hardware Purchase",
+    "No £799–£3,000 Hardware Purchase",
   ];
 
   return (
@@ -40,7 +40,10 @@ export default function FinalCTA() {
                 Claim Your Free Trial
                 <ArrowRight size={24} className="ml-2" />
               </a>
-              <button className="bg-transparent border-2 border-white/20 text-white rounded-full px-12 py-5 font-bold hover:bg-white/5 transition-all">
+              <button
+                onClick={onContactClick}
+                className="bg-transparent border-2 border-white/20 text-white rounded-full px-12 py-5 font-bold hover:bg-white/5 transition-all no-underline inline-block cursor-pointer"
+              >
                 Talk to a Human
               </button>
             </div>

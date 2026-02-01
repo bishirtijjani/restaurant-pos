@@ -3,7 +3,7 @@ import {
   ShieldCheck,
   Zap,
   WifiOff,
-  Clock,
+  ReceiptText,
   Server,
   MonitorCheck,
   ArrowRight,
@@ -24,10 +24,10 @@ export default function Credibility() {
       feature: "Local-First",
     },
     {
-      icon: Clock,
-      title: "Reliable Uptime",
-      desc: "99.99% infrastructure uptime with redundant failover systems across multiple regions.",
-      feature: "High Availability",
+      icon: ReceiptText,
+      title: "UK Tax & VAT Ready",
+      desc: "Handle UK VAT, service charges, and per-item tax requirements natively and accurately without fighting US-centric defaults.",
+      feature: "Compliance First",
     },
     {
       icon: Zap,
@@ -52,8 +52,9 @@ export default function Credibility() {
             className="flex flex-col items-start gap-6"
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.05]">
-              Designed for high-volume, <br />
-              <span className="text-accent">mission-critical</span> service.
+              Designed for mission-critical service — <br />
+              <span className="text-accent">now entering</span> real-world UK
+              operations.
             </h2>
 
             <p className="text-xl text-slate-500 font-medium leading-relaxed max-w-2xl">
@@ -111,7 +112,7 @@ export default function Credibility() {
         </div>
 
         {/* Bottom Proof HUD */}
-        {/* <motion.div
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -122,10 +123,10 @@ export default function Credibility() {
           <div className="flex-1 flex flex-col md:flex-row items-center gap-10">
             <div className="text-center md:text-left">
               <div className="text-4xl font-black text-slate-900 tracking-tighter">
-                99.99%
+                100%
               </div>
               <div className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                Global Infra Uptime
+                Operational Readiness
               </div>
             </div>
 
@@ -133,10 +134,10 @@ export default function Credibility() {
 
             <div className="text-center md:text-left">
               <div className="text-4xl font-black text-slate-900 tracking-tighter">
-                &lt; 50ms
+                Instant
               </div>
               <div className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                API Latency
+                Local Sync
               </div>
             </div>
 
@@ -144,24 +145,29 @@ export default function Credibility() {
 
             <div className="text-center md:text-left">
               <div className="text-4xl font-black text-slate-900 tracking-tighter">
-                256-bit
+                VAT Native
               </div>
               <div className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                End-to-End Encryption
+                UK Compliant
               </div>
             </div>
           </div>
 
           <div className="w-full md:w-auto">
-            <button className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-3 group/btn">
-              View Security Whitepaper
+            <a
+              href="https://wa.me/2349063503232"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="no-underline w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-3 group/btn"
+            >
+              Talk to the Founder
               <ArrowRight
                 size={16}
                 className="group-hover/btn:translate-x-1 transition-transform"
               />
-            </button>
+            </a>
           </div>
-        </motion.div> */}
+        </motion.div>
       </div>
     </section>
   );

@@ -240,13 +240,16 @@ export default function OperationalFlow() {
               </p>
             </div>
 
-            <button className="flex items-center gap-3 text-white font-black text-xs uppercase tracking-widest group hover:text-accent transition-colors">
+            <a
+              href="#flow"
+              className="flex items-center gap-3 text-white font-black text-xs uppercase tracking-widest group hover:text-accent transition-colors no-underline"
+            >
               Explore System Architecture
               <ArrowRight
                 size={16}
                 className="group-hover:translate-x-1 transition-transform"
               />
-            </button>
+            </a>
           </div>
         </motion.div>
       </div>
