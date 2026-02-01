@@ -106,7 +106,7 @@ const TopSideButtons = ({ searchQuery, setSearchQuery }) => {
             className="btn btn-primary btn-sm gap-2"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Add Category</span>
+            <span>New Category</span>
           </button>
         </Can>
       </div>

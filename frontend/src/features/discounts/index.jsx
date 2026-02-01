@@ -249,7 +249,7 @@ const PromoCodeCard = ({ promo, onEdit, onDelete, onCopy, currency }) => {
                     style={{
                       width: `${Math.min(
                         (promo.usageCount / promo.usageLimit) * 100,
-                        100
+                        100,
                       )}%`,
                     }}
                   ></div>
@@ -305,7 +305,7 @@ const TopSideButtons = ({
           className="btn btn-primary btn-sm gap-2"
         >
           <PlusCircle className="w-4 h-4" />
-          <span>Add Discount</span>
+          <span>New Discount</span>
         </button>
         <button
           onClick={onAddPromoCode}
@@ -359,10 +359,10 @@ const TopSideButtons = ({
 const DiscountsManagement = () => {
   const dispatch = useDispatch();
   const { discounts, promoCodes, loading, promoLoading } = useSelector(
-    (state) => state.discounts
+    (state) => state.discounts,
   );
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
 
@@ -381,7 +381,7 @@ const DiscountsManagement = () => {
         title: "Create Discount",
         bodyType: MODAL_BODY_TYPES.ADD_DISCOUNT,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -391,7 +391,7 @@ const DiscountsManagement = () => {
         title: "Create Promo Code",
         bodyType: MODAL_BODY_TYPES.ADD_PROMO_CODE,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -402,7 +402,7 @@ const DiscountsManagement = () => {
         bodyType: MODAL_BODY_TYPES.EDIT_DISCOUNT,
         extraObject: discount,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -413,7 +413,7 @@ const DiscountsManagement = () => {
         bodyType: MODAL_BODY_TYPES.EDIT_PROMO_CODE,
         extraObject: promo,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -427,7 +427,7 @@ const DiscountsManagement = () => {
           type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_DISCOUNT,
           id: discount._id,
         },
-      })
+      }),
     );
   };
 
@@ -441,7 +441,7 @@ const DiscountsManagement = () => {
           type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_PROMO_CODE,
           id: promo._id,
         },
-      })
+      }),
     );
   };
 
@@ -456,7 +456,7 @@ const DiscountsManagement = () => {
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code);
     dispatch(
-      showNotification({ message: "Code copied to clipboard", status: 1 })
+      showNotification({ message: "Code copied to clipboard", status: 1 }),
     );
   };
 
@@ -475,7 +475,7 @@ const DiscountsManagement = () => {
   const filteredPromoCodes = promoCodes.filter(
     (p) =>
       p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (

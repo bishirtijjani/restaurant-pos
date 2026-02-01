@@ -7,6 +7,8 @@ import InputText from "../../../components/Input/InputText";
 
 const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
   const [pin, setPin] = useState("");
+  const [localEmail, setLocalEmail] = useState("");
+  const [localError, setLocalError] = useState("");
   const { error } = useSelector((state) => state.auth);
 
   // Clear PIN when error occurs
@@ -60,31 +62,56 @@ const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
 
   // Update email via the InputText callback
   const updateEmailValue = ({ value }) => {
-    if (onEmailChange) onEmailChange(value);
+    setLocalEmail(value);
+    if (localError) setLocalError("");
+  };
+
+  const handleEmailContinue = () => {
+    if (!localEmail.trim()) {
+      setLocalError("Please enter your email address");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(localEmail)) {
+      setLocalError("Please enter a valid email address");
+      return;
+    }
+
+    setLocalError("");
+    if (onEmailChange) onEmailChange(localEmail);
   };
 
   // If no email, show email input first
   if (!email && onEmailChange) {
     return (
-      <div className="flex flex-col items-center">
-        <h3 className="text-xl font-semibold mb-4">
-          Enter your email for PIN login
-        </h3>
+      <div className="flex flex-col items-center w-full">
+        <div className="text-center mb-10 w-full">
+          <h2 className="text-3xl font-black tracking-tight text-white mb-2">
+            Quick Access
+          </h2>
+          <p className="text-white/40 font-medium text-sm">
+            Enter your email to continue with PIN login
+          </p>
+        </div>
 
         <div className="w-full mb-6 relative">
           <EnvelopeIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 z-10" />
           <InputText
-            defaultValue=""
+            defaultValue={localEmail}
             updateType="email"
+            type="email"
             containerStyle="mt-0"
             labelTitle=""
             updateFormValue={updateEmailValue}
-            placeholder="Email Address"
-            className="pl-14 bg-white/5 border-white/10 focus:border-brand/50 rounded-full text-white"
+            placeholder="Work Email Address"
+            className={`pl-14 bg-white/5 border-white/10 focus:border-brand/50 rounded-full text-white py-4 transition-all ${
+              localError ? "border-red-500/50" : ""
+            }`}
             autoFocus
             onKeyDown={(e) => {
-              if (e.key === "Enter" && e.target.value) {
-                onEmailChange(e.target.value);
+              if (e.key === "Enter") {
+                handleEmailContinue();
               } else if (e.key === "Escape") {
                 onCancel();
               }
@@ -92,21 +119,24 @@ const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
           />
         </div>
 
-        <div className="flex flex-col w-full gap-2">
+        {localError && (
+          <div className="w-full mb-6 py-3 px-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-500 transition-all">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-sm font-bold">{localError}</span>
+          </div>
+        )}
+
+        <div className="flex flex-col w-full gap-4">
           <button
-            onClick={(e) => {
-              // Note: With InputText component, it's safer to rely on the updateFormValue state
-              // but we keep this as a fallback for the physical button click
-              if (onEmailChange)
-                onEmailChange(
-                  document.querySelector('input[type="email"]').value,
-                );
-            }}
-            className="btn btn-primary w-full"
+            onClick={handleEmailContinue}
+            className="w-full bg-brand text-white hover:bg-brand-hover font-black py-4 rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-brand/20 active:scale-[0.98]"
           >
-            Continue
+            Continue to PIN
           </button>
-          <button onClick={onCancel} className="btn btn-ghost w-full">
+          <button
+            onClick={onCancel}
+            className="text-white/30 hover:text-white font-bold uppercase tracking-widest text-xs py-2 transition-colors"
+          >
             Use Password Instead
           </button>
         </div>
@@ -115,45 +145,55 @@ const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <h3 className="text-xl font-semibold mb-4">Enter PIN for {email}</h3>
+    <div className="flex flex-col items-center w-full">
+      <div className="text-center mb-8 w-full">
+        <h2 className="text-2xl font-black tracking-tight text-white mb-2">
+          Verify Identity
+        </h2>
+        <div className="flex items-center justify-center gap-2 text-white/40 font-medium text-sm">
+          <span>PIN for</span>
+          <span className="text-brand font-bold">{email}</span>
+        </div>
+      </div>
 
-      <div className="flex gap-4 mb-8">
+      <div className="flex gap-4 mb-10">
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className={`w-4 h-4 rounded-full border-2 border-primary ${
-              pin.length > i ? "bg-primary" : "bg-transparent"
+            className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${
+              pin.length > i
+                ? "bg-brand border-brand shadow-[0_0_15px_rgba(255,107,53,0.4)]"
+                : "border-white/10 bg-white/5"
             }`}
           />
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-6 mb-8">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
           <button
             key={num}
             onClick={() => handleNumberClick(num.toString())}
-            className="btn btn-circle btn-lg btn-outline"
+            className="w-16 h-16 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-xl font-black hover:bg-white/10 hover:border-brand/50 transition-all active:scale-95"
           >
             {num}
           </button>
         ))}
         <button
           onClick={handleClear}
-          className="btn btn-circle btn-lg btn-ghost text-error"
+          className="w-16 h-16 rounded-full flex items-center justify-center text-red-400 hover:bg-red-400/10 transition-all active:scale-95"
         >
           <X size={24} />
         </button>
         <button
           onClick={() => handleNumberClick("0")}
-          className="btn btn-circle btn-lg btn-outline"
+          className="w-16 h-16 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-xl font-black hover:bg-white/10 hover:border-brand/50 transition-all active:scale-95"
         >
           0
         </button>
         <button
           onClick={handleDelete}
-          className="btn btn-circle btn-lg btn-ghost"
+          className="w-16 h-16 rounded-full flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all active:scale-95"
         >
           <Delete size={24} />
         </button>
@@ -161,17 +201,21 @@ const PinLogin = ({ onLogin, onCancel, loading, email, onEmailChange }) => {
 
       {error && <ErrorText styleClass="mt-4">{error}</ErrorText>}
 
-      <div className="flex flex-col w-full gap-2 mt-4">
+      <div className="flex flex-col w-full gap-4">
         <button
           onClick={handleSubmit}
-          className={`btn btn-primary w-full ${loading ? "loading" : ""}`}
+          className="w-full bg-brand text-white hover:bg-brand-hover disabled:opacity-50 font-black py-4 rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-brand/20 active:scale-[0.98]"
           disabled={pin.length < 4 || loading}
         >
-          {loading ? "Verifying..." : "Login"}
+          {loading ? (
+            <span className="loading loading-spinner text-white"></span>
+          ) : (
+            "Login System"
+          )}
         </button>
         <button
           onClick={onCancel}
-          className="btn btn-ghost w-full"
+          className="text-white/30 hover:text-white font-bold uppercase tracking-widest text-xs py-2 transition-colors"
           disabled={loading}
         >
           Use Password Instead
