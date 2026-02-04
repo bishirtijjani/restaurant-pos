@@ -1,4 +1,5 @@
 // frontend/src/containers/ModalLayout.jsx
+import { useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { closeModal } from "../features/common/modalSlice";
 import { MODAL_BODY_TYPES } from "../utils/globalConstantUtil";
@@ -110,6 +111,14 @@ function ModalLayout() {
     dispatch(closeModal(e));
   };
 
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      modalRef.current.focus();
+    }
+  }, [isOpen]);
+
   return (
     <>
       {/* The button to open modal */}
@@ -117,11 +126,12 @@ function ModalLayout() {
         className={`modal h-full backdrop-blur-sm transition-all duration-300 ${isOpen ? "modal-open" : ""} `}
       >
         <div
-          className={`modal-box flex flex-col p-0 border border-base-200 shadow-2xl rounded-2xl ${
-            size === "xl"
+          ref={modalRef}
+          tabIndex="-1"
+          className={`modal-box flex flex-col p-0 border border-base-200 shadow-2xl rounded-2xl outline-none ${size === "xl"
               ? "max-w-full h-full rounded-none md:rounded-2xl md:m-4 md:h-[calc(100vh-2rem)]"
               : ""
-          }`}
+            }`}
         >
           {/* Modal Header */}
           <div className="bg-base-100/95 backdrop-blur-md py-4 px-6 rounded-t-2xl flex items-center justify-between border-b border-base-200 sticky top-0 z-10">
