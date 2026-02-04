@@ -101,7 +101,9 @@ const categoriesSlice = createSlice({
       })
       .addCase(fetchAllCategories.fulfilled, (state, action) => {
         state.status = "succeeded";
-        const serverData = action.payload;
+        const serverData = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
         const tempItems = state.categories.filter((cat) => cat._tempId);
         state.categories = [...serverData, ...tempItems];
       })
@@ -124,12 +126,12 @@ const categoriesSlice = createSlice({
           (category) => category._id === updatedCategory._id
         );
         if (index >= 0) {
-          // MERGE instead of replace
           state.categories[index] = {
             ...state.categories[index],
             ...updatedCategory,
           };
         }
+        state.status = "succeeded";
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
         state.categories = state.categories.filter(

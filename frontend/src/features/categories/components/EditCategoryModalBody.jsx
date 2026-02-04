@@ -37,7 +37,6 @@ function EditCategoryModalBody({ extraObject, closeModal }) {
             status: 1,
           }),
         );
-        dispatch(fetchAllCategories());
         closeModal();
       })
       .catch((error) => {

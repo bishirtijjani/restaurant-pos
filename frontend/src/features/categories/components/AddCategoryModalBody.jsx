@@ -27,7 +27,6 @@ function AddCategoryModalBody({ closeModal }) {
             status: 1,
           }),
         );
-        dispatch(fetchAllCategories());
         closeModal();
       })
       .catch((error) => {
