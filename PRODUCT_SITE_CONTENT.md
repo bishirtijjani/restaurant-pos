@@ -128,7 +128,7 @@ Codeket Restaurant is entering live restaurant environments in the UK for the fi
 ### The Offer
 
 - **Wanted:** 6 UK Founding Partners
-- **Incentive:** Lifetime Price Lock (£99/mo instead of £129)
+- **Incentive:** Lifetime Price Lock (£129/mo)
 - **Access:** Direct Access to the Founder (Personal Cell)
 - **Scarcity:** Only 6 spots available
 - **CTA:** "Claim a Spot" -> Links to WhatsApp: `2349063503232`

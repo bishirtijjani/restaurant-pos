@@ -55,7 +55,7 @@ export default function FoundingPartners() {
             <div className="flex flex-col gap-4 text-gray-300 font-medium hover:text-white transition-colors">
               {[
                 "Direct Access to the Founder (Personal Cell)",
-                "Lifetime Price Lock (£99/mo instead of £129)",
+                "Lifetime Price Lock (£129/mo)",
                 "Feature Priority (You ask, we build)",
                 "Zero Setup Fees (£500 value)",
               ].map((item, i) => (

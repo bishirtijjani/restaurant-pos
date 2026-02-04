@@ -160,7 +160,7 @@ export default function Pricing() {
 
           <div className="flex flex-col gap-4 mx-auto mb-10 text-left max-w-[350px]">
             {[
-              "Zero hardware spend — save $1,000+ on day one",
+              "Zero hardware spend — save £1,000+ on day one",
               "Unlimited Front-of-House POS",
               "Unlimited Kitchen Displays (KDS)",
               "Drag & Drop Floor & Table Management With Reservations",
