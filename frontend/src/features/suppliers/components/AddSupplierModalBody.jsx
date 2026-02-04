@@ -24,8 +24,6 @@ function AddSupplierModalBody({ closeModal }) {
     // Validate form fields
     if (!supplier.name.trim())
       return setErrorMessage("Supplier name is required!");
-    if (!supplier.phone.trim()) return setErrorMessage("Phone is required!");
-    if (!supplier.email.trim()) return setErrorMessage("Email is required!");
     if (!supplier.address.trim())
       return setErrorMessage("Address is required!");
 

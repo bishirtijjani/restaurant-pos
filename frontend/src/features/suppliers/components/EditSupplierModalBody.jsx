@@ -36,8 +36,6 @@ function EditSupplierModalBody({ extraObject, closeModal }) {
     // Validate form fields
     if (!supplier.name.trim())
       return setErrorMessage("Supplier name is required!");
-    if (!supplier.phone.trim()) return setErrorMessage("Contact is required!");
-    if (!supplier.email.trim()) return setErrorMessage("Email is required!");
 
     setLoading(true);
     dispatch(updateSupplier({ id: supplierItem._id, supplier }))
