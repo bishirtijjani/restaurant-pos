@@ -235,7 +235,7 @@ const incrementActiveRequests = () => {
 const decrementActiveRequests = () => {
   apiMetricsStore.activeRequests = Math.max(
     0,
-    apiMetricsStore.activeRequests - 1
+    apiMetricsStore.activeRequests - 1,
   );
 };
 
@@ -476,7 +476,15 @@ const getLatestMetrics = async () => {
     };
   } catch (error) {
     logger.error("Error getting latest metrics", { error: error.message });
-    return null;
+    return {
+      system: {},
+      database: {},
+      api: {},
+      websocket: {},
+      queue: {},
+      tenants: {},
+      timestamp: new Date(),
+    };
   }
 };
 

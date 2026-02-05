@@ -23,6 +23,7 @@ import {
 import {
   useOnlineStatus,
   useSyncQueue,
+  useSyncStatus,
 } from "../features/common/hooks/useOffline";
 import SyncManager from "../components/SyncManager";
 
@@ -38,6 +39,7 @@ function Header() {
   );
   const isOnline = useOnlineStatus();
   const { queueStats } = useSyncQueue();
+  const { syncing, error } = useSyncStatus();
   const [showSyncManager, setShowSyncManager] = useState(false);
 
   const location = useLocation();
@@ -122,19 +124,25 @@ function Header() {
               </li>
               <li>
                 <button
-                  className={`${!isOnline || queueStats.total > 0 ? "text-warning" : ""}`}
+                  className={`${!isOnline || queueStats.total > 0 ? "text-warning" : ""} ${error ? "text-error" : ""}`}
                   onClick={() => setShowSyncManager(true)}
                 >
                   {!isOnline ? (
+                    <WifiOff className="h-4 w-4" />
+                  ) : syncing ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : error ? (
                     <WifiOff className="h-4 w-4" />
                   ) : (
                     <Database className="h-4 w-4" />
                   )}
                   {!isOnline
                     ? "Offline"
-                    : queueStats.total > 0
-                      ? `Sync (${queueStats.total})`
-                      : "Synced"}
+                    : syncing
+                      ? "Syncing..."
+                      : queueStats.total > 0
+                        ? `Sync (${queueStats.total})`
+                        : "Synced"}
                 </button>
               </li>
               <li>
@@ -182,22 +190,31 @@ function Header() {
             </button>
 
             <button
-              className={`btn rounded-full btn-outline btn-sm gap-2 ${!isOnline || queueStats.total > 0
-                ? "bg-warning/10 text-warning border-warning/20"
-                : "btn-ghost hover:bg-base-200/50 hover:border-base-content/5"
-                }`}
+              className={`btn rounded-full btn-outline btn-sm gap-2 ${
+                !isOnline || queueStats.total > 0
+                  ? "bg-warning/10 text-warning border-warning/20"
+                  : error
+                    ? "bg-error/10 text-error border-error/20"
+                    : "btn-ghost hover:bg-base-200/50 hover:border-base-content/5"
+              }`}
               onClick={() => setShowSyncManager(true)}
             >
               {!isOnline ? (
+                <WifiOff className="h-4 w-4" />
+              ) : syncing ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : error ? (
                 <WifiOff className="h-4 w-4" />
               ) : (
                 <Database className="h-4 w-4" />
               )}
               {!isOnline
                 ? "Offline"
-                : queueStats.total > 0
-                  ? `Sync (${queueStats.total})`
-                  : "Synced"}
+                : syncing
+                  ? "Syncing..."
+                  : queueStats.total > 0
+                    ? `Sync (${queueStats.total})`
+                    : "Synced"}
             </button>
 
             <div className="dropdown dropdown-end">

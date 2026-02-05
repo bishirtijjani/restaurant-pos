@@ -82,10 +82,13 @@ const PlatformHealthDashboard = lazy(
   () => import("../features/platformHealth/PlatformHealthDashboard"),
 );
 const MockDashboard = lazy(() => import("../pages/protected/MockDashboard"));
+const MockSidebar = lazy(() => import("../pages/protected/MockDashboard")); // Reuse for now, Layout will hide content
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
   { path: "/mock-dashboard", component: MockDashboard },
+  { path: "/mock-sidebar", component: MockSidebar },
+
   { path: "/platform/health", component: PlatformHealthDashboard },
   { path: "/settings", component: SettingsHub },
   { path: "/settings/profile", component: ProfileSettings },

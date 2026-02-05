@@ -18,6 +18,7 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import PinLogin from "./components/PinLogin";
+import SupportLink from "../../components/Support/SupportLink";
 
 function Login() {
   const dispatch = useDispatch();
@@ -284,6 +285,7 @@ function Login() {
           </div>
         </div>
       </div>
+      <SupportLink />
     </div>
   );
 }

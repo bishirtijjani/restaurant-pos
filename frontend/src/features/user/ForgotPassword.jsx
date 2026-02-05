@@ -12,6 +12,7 @@ import {
   ChevronRightIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
+import SupportLink from "../../components/Support/SupportLink";
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ function ForgotPassword() {
       }
     } catch (error) {
       setErrorMessage(
-        error.response?.data?.message || "Error retrieving security questions."
+        error.response?.data?.message || "Error retrieving security questions.",
       );
     } finally {
       setLoading(false);
@@ -84,7 +85,7 @@ function ForgotPassword() {
       }
     } catch (error) {
       setErrorMessage(
-        error.response?.data?.message || "Error resetting password."
+        error.response?.data?.message || "Error resetting password.",
       );
     } finally {
       setLoading(false);
@@ -317,6 +318,7 @@ function ForgotPassword() {
           </div>
         </div>
       </div>
+      <SupportLink />
     </div>
   );
 }

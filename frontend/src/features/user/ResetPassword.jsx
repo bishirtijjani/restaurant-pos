@@ -10,6 +10,7 @@ import {
   ChevronRightIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
+import SupportLink from "../../components/Support/SupportLink";
 
 function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -170,6 +171,7 @@ function ResetPassword() {
           </motion.div>
         </div>
       </div>
+      <SupportLink />
     </div>
   );
 }

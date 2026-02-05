@@ -4,6 +4,7 @@ import ErrorText from "../../../components/Typography/ErrorText";
 import { showNotification } from "../../common/headerSlice";
 import { addExpense, fetchAllExpenses } from "../expensesSlice";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
+import SearchableSelect from "../../../components/Input/SearchableSelect";
 
 function AddExpenseModalBody({ closeModal }) {
   const dispatch = useDispatch();

@@ -89,6 +89,7 @@ import ConfirmationModalBody from "../features/common/components/ConfirmationMod
 import InputModalBody from "../features/common/components/InputModalBody";
 import EditItemNoteModalBody from "../features/common/components/EditItemNoteModalBody";
 import Receipt from "../features/common/components/Receipt";
+import SupportModalBody from "../features/common/components/SupportModalBody";
 
 // Store modals
 import AddStoreModalBody from "../features/stores/components/AddStoreModalBody";
@@ -128,10 +129,11 @@ function ModalLayout() {
         <div
           ref={modalRef}
           tabIndex="-1"
-          className={`modal-box flex flex-col p-0 border border-base-200 shadow-2xl rounded-2xl outline-none ${size === "xl"
+          className={`modal-box flex flex-col p-0 border border-base-200 shadow-2xl rounded-2xl outline-none ${
+            size === "xl"
               ? "max-w-full h-full rounded-none md:rounded-2xl md:m-4 md:h-[calc(100vh-2rem)]"
               : ""
-            }`}
+          }`}
         >
           {/* Modal Header */}
           <div className="bg-base-100/95 backdrop-blur-md py-4 px-6 rounded-t-2xl flex items-center justify-between border-b border-base-200 sticky top-0 z-10">
@@ -514,6 +516,9 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.SETUP_WIZARD]: (
                   <SetupWizard closeModal={close} />
+                ),
+                [MODAL_BODY_TYPES.SUPPORT_MODAL]: (
+                  <SupportModalBody closeModal={close} />
                 ),
                 [MODAL_BODY_TYPES.DEFAULT]: <div></div>,
               }[bodyType]

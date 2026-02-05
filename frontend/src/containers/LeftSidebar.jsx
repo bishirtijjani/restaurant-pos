@@ -3,11 +3,14 @@ import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import SidebarSubmenu from "./SidebarSubmenu";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowLeftStartOnRectangleIcon from "@heroicons/react/24/outline/ArrowLeftStartOnRectangleIcon";
+import QuestionMarkCircleIcon from "@heroicons/react/24/outline/QuestionMarkCircleIcon";
 import { jwtDecode } from "jwt-decode";
 import SessionExpired from "../features/common/components/SessionExpiredModalBody";
 import StoreSwitcher from "../features/common/components/StoreSwitcher";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../app/authSlice";
+import { openModal } from "../features/common/modalSlice";
+import { MODAL_BODY_TYPES } from "../utils/globalConstantUtil";
 import { useState } from "react";
 import SyncStatusModal from "../features/common/components/SyncStatusModal";
 import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
@@ -36,9 +39,10 @@ function renderSidebarRoutes(routes) {
             end
             to={route.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl group hover:border-l-2 hover:border-primary ${isActive
-                ? "glass-pill font-bold border-l-2 border-accent bg-primary text-primary-content"
-                : "hover:bg-base-200/50 text-base-content hover:text-base-content font-medium"
+              `flex items-center gap-3 px-4 py-3 rounded-xl group hover:border-l-2 hover:border-primary ${
+                isActive
+                  ? "glass-pill font-bold border-l-2 border-accent bg-primary text-primary-content"
+                  : "hover:bg-base-200/50 text-base-content hover:text-base-content font-medium"
               }`
             }
           >
@@ -133,6 +137,27 @@ function LeftSidebar() {
             </div>
             <span className="font-bold tracking-tight text-xs uppercase opacity-70">
               Sync Status
+            </span>
+          </button>
+        </li>
+
+        {/* Help & Support Button */}
+        <li className="px-4 pt-4 list-none">
+          <button
+            className="btn btn-success btn-outline border-2 text-base-content font-bold w-full rounded-2xl hover:bg-success hover:text-white hover:border-success soft-lift flex items-center justify-center gap-3 transition-all duration-300"
+            onClick={() => {
+              dispatch(
+                openModal({
+                  title: "Get Help",
+                  bodyType: MODAL_BODY_TYPES.SUPPORT_MODAL,
+                  size: "lg",
+                }),
+              );
+            }}
+          >
+            <QuestionMarkCircleIcon className="h-4 w-4" />
+            <span className="tracking-widest uppercase text-[10px] font-black">
+              Help & Support
             </span>
           </button>
         </li>

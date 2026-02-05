@@ -30,19 +30,24 @@ function Layout() {
     }
   }, [newNotificationMessage, newNotificationStatus, dispatch]);
 
+  const isMockDashboard = location.pathname === "/app/mock-dashboard";
+  const isMockSidebar = location.pathname === "/app/mock-sidebar";
+
   return (
     <>
-      <div className="drawer lg:drawer-open min-w-full w-full min-h-screen">
+      <div
+        className={`drawer ${(!isMockDashboard && !isMockSidebar) || isMockSidebar ? "lg:drawer-open" : ""} min-w-full w-full min-h-screen`}
+      >
         <input
           id="left-sidebar-drawer"
           type="checkbox"
           className="drawer-toggle"
         />
-        <PageContent />
-        <LeftSidebar />
+        {!isMockSidebar && <PageContent />}
+        {(!isMockDashboard || isMockSidebar) && <LeftSidebar />}
       </div>
 
-      <RightSidebar />
+      {!isMockSidebar && <RightSidebar />}
 
       <ToastContainer />
       {/* <OnboardingTour tourId={getTourId(location.pathname)} /> */}

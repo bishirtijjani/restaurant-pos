@@ -16,6 +16,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import ErrorText from "../../components/Typography/ErrorText";
+import SupportLink from "../../components/Support/SupportLink";
 
 const STEPS = {
   IDENTITY: 0,
@@ -459,6 +460,7 @@ function Register() {
           </div>
         </div>
       </div>
+      <SupportLink />
     </div>
   );
 }

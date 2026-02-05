@@ -14,7 +14,6 @@ import initializeApp from "./app/init";
 import { initializeOfflineSupport } from "./app/initOffline";
 import { fetchSettings } from "./features/settings/generalSettings/generalSettingsSlice";
 import { getCurrentUser, setUserFromToken } from "./app/authSlice";
-import OfflineIndicator from "./components/OfflineIndicator";
 import SuspenseContent from "./containers/SuspenseContent";
 import StoreGuard from "./containers/StoreGuard";
 import ModalLayout from "./containers/ModalLayout";
@@ -64,7 +63,7 @@ function App() {
     const isPublicPage = publicPaths.some(
       (path) =>
         window.location.pathname === path ||
-        window.location.pathname.startsWith(path + "/")
+        window.location.pathname.startsWith(path + "/"),
     );
 
     if (isPublicPage) return;
@@ -87,7 +86,7 @@ function App() {
     const isPublicPage = publicPaths.some(
       (path) =>
         window.location.pathname === path ||
-        window.location.pathname.startsWith(path + "/")
+        window.location.pathname.startsWith(path + "/"),
     );
 
     if (isPublicPage) {
@@ -174,7 +173,6 @@ function App() {
         </Routes>
       </Router>
       <ModalLayout />
-      <OfflineIndicator />
     </>
   );
 }
