@@ -95,20 +95,20 @@ function LeftSidebar() {
           <Link to="/dashboard" className="flex items-center gap-3 soft-lift">
             <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20 rotate-3 group-hover:rotate-0 transition-transform duration-500">
               <div className="flex items-center justify-center w-6 h-6 text-primary-content font-black text-xl">
-                R
+                C
               </div>
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-black tracking-tighter text-base-content uppercase leading-none">
-                Resto<span className="text-primary">.</span>
+                Codeket<span className="text-primary">.</span>
               </span>
               <span className="text-[9px] uppercase tracking-[0.2em] font-bold opacity-40">
-                Pro System
+                Restaurant
               </span>
             </div>
           </Link>
           <button
-            className="btn btn-ghost btn-circle btn-sm lg:hidden bg-base-200/50"
+            className="btn btn-ghost btn-circle btn-sm lg:hidden bg-base-200"
             onClick={closeSidebar}
           >
             <XMarkIcon className="w-4 h-4" />

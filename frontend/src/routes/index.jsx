@@ -81,9 +81,11 @@ const AuditLogs = lazy(() => import("../features/auditLogs"));
 const PlatformHealthDashboard = lazy(
   () => import("../features/platformHealth/PlatformHealthDashboard"),
 );
+const MockDashboard = lazy(() => import("../pages/protected/MockDashboard"));
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
+  { path: "/mock-dashboard", component: MockDashboard },
   { path: "/platform/health", component: PlatformHealthDashboard },
   { path: "/settings", component: SettingsHub },
   { path: "/settings/profile", component: ProfileSettings },
