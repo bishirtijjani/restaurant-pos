@@ -11,6 +11,7 @@ import { logoutUser } from "../app/authSlice";
 import { useState } from "react";
 import SyncStatusModal from "../features/common/components/SyncStatusModal";
 import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
+import { clearActiveStore } from "../features/common/storeSlice";
 
 const token = localStorage.getItem("token");
 
@@ -35,10 +36,9 @@ function renderSidebarRoutes(routes) {
             end
             to={route.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl group hover:border-l-2 hover:border-primary ${
-                isActive
-                  ? "glass-pill font-bold border-l-2 border-accent bg-primary text-primary-content"
-                  : "hover:bg-base-200/50 text-base-content hover:text-base-content font-medium"
+              `flex items-center gap-3 px-4 py-3 rounded-xl group hover:border-l-2 hover:border-primary ${isActive
+                ? "glass-pill font-bold border-l-2 border-accent bg-primary text-primary-content"
+                : "hover:bg-base-200/50 text-base-content hover:text-base-content font-medium"
               }`
             }
           >
@@ -77,8 +77,9 @@ function LeftSidebar() {
     if (sidebarToggle) sidebarToggle.click();
   };
 
-  function logoutUserHandler() {
-    dispatch(logoutUser());
+  async function logoutUserHandler() {
+    await dispatch(logoutUser());
+    dispatch(clearActiveStore());
     navigate("/login");
   }
 

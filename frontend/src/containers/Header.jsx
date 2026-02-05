@@ -2,6 +2,7 @@ import { themeChange } from "theme-change";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../app/authSlice";
+import { clearActiveStore } from "../features/common/storeSlice";
 
 import Bars3Icon from "@heroicons/react/24/outline/Bars3Icon";
 import { openRightDrawer } from "../features/common/rightDrawerSlice";
@@ -68,11 +69,7 @@ function Header() {
 
   async function logoutUserHandler() {
     await dispatch(logoutUser());
-
-    // Clear other session-related storage
-    localStorage.removeItem("activeStoreId");
-    dispatch({ type: "store/clearActiveStore" });
-
+    dispatch(clearActiveStore());
     navigate("/login");
   }
 
@@ -185,11 +182,10 @@ function Header() {
             </button>
 
             <button
-              className={`btn rounded-full btn-outline btn-sm gap-2 ${
-                !isOnline || queueStats.total > 0
-                  ? "bg-warning/10 text-warning border-warning/20"
-                  : "btn-ghost hover:bg-base-200/50 hover:border-base-content/5"
-              }`}
+              className={`btn rounded-full btn-outline btn-sm gap-2 ${!isOnline || queueStats.total > 0
+                ? "bg-warning/10 text-warning border-warning/20"
+                : "btn-ghost hover:bg-base-200/50 hover:border-base-content/5"
+                }`}
               onClick={() => setShowSyncManager(true)}
             >
               {!isOnline ? (

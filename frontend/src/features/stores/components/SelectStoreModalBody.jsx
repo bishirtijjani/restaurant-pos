@@ -10,9 +10,13 @@ import {
 import { clearCart } from "../../orders/posSlice";
 import { clearCurrentOrder, clearFilters } from "../../orders/ordersSlice";
 import { clearCurrentItem } from "../../inventory/inventorySlice";
+import { useNavigate } from "react-router-dom";
+import { logoutUser } from "../../../app/authSlice";
+import { clearActiveStore } from "../../common/storeSlice";
 
 function SelectStoreModalBody({ closeModal }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { items: stores, loading } = useSelector((state) => state.stores);
   const { activeStoreId } = useSelector((state) => state.commonStore);
 
@@ -38,6 +42,13 @@ function SelectStoreModalBody({ closeModal }) {
     // Force reload to ensure clean state and triggered effects
     closeModal();
     window.location.reload();
+  };
+
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    dispatch(clearActiveStore());
+    closeModal();
+    navigate("/login");
   };
 
   return (
@@ -71,19 +82,17 @@ function SelectStoreModalBody({ closeModal }) {
               <button
                 key={k}
                 onClick={() => handleSelectStore(sData._id)}
-                className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all group ${
-                  isCurrent
+                className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all group ${isCurrent
                     ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                     : "border-base-200 bg-base-100 hover:border-primary/30 hover:bg-base-200"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-4 text-left">
                   <div
-                    className={`p-3 rounded-lg ${
-                      isCurrent
+                    className={`p-3 rounded-lg ${isCurrent
                         ? "bg-primary text-primary-content"
                         : "bg-base-200 text-primary group-hover:bg-primary/10"
-                    }`}
+                      }`}
                   >
                     <BuildingStorefrontIcon className="w-6 h-6" />
                   </div>
@@ -104,9 +113,8 @@ function SelectStoreModalBody({ closeModal }) {
                     </span>
                   )}
                   <ChevronRightIcon
-                    className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${
-                      isCurrent ? "text-primary" : "opacity-20"
-                    }`}
+                    className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${isCurrent ? "text-primary" : "opacity-20"
+                      }`}
                   />
                 </div>
               </button>
@@ -114,6 +122,15 @@ function SelectStoreModalBody({ closeModal }) {
           })}
         </div>
       )}
+
+      <div className="mt-4 text-center">
+        <button
+          onClick={handleLogout}
+          className="text-sm font-medium opacity-40 hover:opacity-100 hover:text-error transition-all"
+        >
+          Logout and try another account
+        </button>
+      </div>
     </div>
   );
 }

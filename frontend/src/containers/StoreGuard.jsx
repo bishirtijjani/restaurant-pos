@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation, Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { setActiveStore } from "../features/common/storeSlice";
+import { setActiveStore, clearActiveStore } from "../features/common/storeSlice";
+import { logoutUser } from "../app/authSlice";
 import { clearCart } from "../features/orders/posSlice";
 import {
   clearCurrentOrder,
@@ -55,6 +56,12 @@ function StoreGuard({ children }) {
 
     // Force reload to ensure clean state and triggered effects
     window.location.reload();
+  };
+
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    dispatch(clearActiveStore());
+    navigate("/login");
   };
 
   // Fetch stores if not already loaded and no store is active
@@ -185,7 +192,7 @@ function StoreGuard({ children }) {
 
             <div className="mt-8 text-center">
               <button
-                onClick={() => (window.location.href = "/login")}
+                onClick={handleLogout}
                 className="text-sm font-medium opacity-40 hover:opacity-100 hover:text-error transition-all"
               >
                 Logout and try another account
