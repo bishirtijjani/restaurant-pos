@@ -2,7 +2,10 @@ import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation, Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { setActiveStore, clearActiveStore } from "../features/common/storeSlice";
+import {
+  setActiveStore,
+  clearActiveStore,
+} from "../features/common/storeSlice";
 import { logoutUser } from "../app/authSlice";
 import { clearCart } from "../features/orders/posSlice";
 import {

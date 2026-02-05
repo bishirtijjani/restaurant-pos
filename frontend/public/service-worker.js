@@ -3,7 +3,7 @@ const CACHE_NAME = "restaurant-app-v1";
 const RUNTIME_CACHE = "runtime-cache-v1";
 
 // Assets to cache on install
-const PRECACHE_URLS = ["/", "/index.html", "/manifest.json", "/icon.svg"];
+const PRECACHE_URLS = ["/", "/index.html", "/manifest.json", "/favicon.png"];
 
 // Install event - cache essential assets
 self.addEventListener("install", (event) => {
@@ -11,7 +11,7 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -24,10 +24,10 @@ self.addEventListener("activate", (event) => {
         return Promise.all(
           cacheNames
             .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE)
-            .map((name) => caches.delete(name))
+            .map((name) => caches.delete(name)),
         );
       })
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -87,7 +87,7 @@ async function networkFirst(request) {
       {
         status: 503,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }
