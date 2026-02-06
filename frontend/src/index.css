@@ -175,9 +175,12 @@
   @apply bg-error/20 border-error;
 }
 
-/* Smooth transitions */
+/* Smooth transitions - Optimized to avoid layout thrashing */
 .transition-all-smooth {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-property:
+    transform, box-shadow, background-color, border-color, opacity;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Card hover effects */
