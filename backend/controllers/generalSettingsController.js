@@ -204,10 +204,17 @@ const updateSettings = async (req, res) => {
       // This ensures the store switcher and login flow display the updated name
       store.name = restaurantName;
     }
-    if (restaurantAddress !== undefined)
+    if (restaurantAddress !== undefined) {
       store.settings.restaurantAddress = restaurantAddress;
-    if (restaurantPhone !== undefined)
+      // CRITICAL: Also update the top-level store.location to keep them in sync
+      // This ensures store management and other views display the updated address
+      store.location = restaurantAddress;
+    }
+    if (restaurantPhone !== undefined) {
       store.settings.restaurantPhone = restaurantPhone;
+      // CRITICAL: Also update the top-level store.contactPhone to keep them in sync
+      store.contactPhone = restaurantPhone;
+    }
     if (restaurantEmail !== undefined)
       store.settings.restaurantEmail = restaurantEmail;
     if (restaurantMotto !== undefined)
