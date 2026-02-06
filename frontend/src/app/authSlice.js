@@ -351,6 +351,31 @@ const authSlice = createSlice({
             localStorage.setItem("user", JSON.stringify(state.user));
           }
         }
+      })
+      // Listen for settings updates to sync restaurantName changes
+      .addCase("generalSettings/updateSettings/fulfilled", (state, action) => {
+        if (state.user && state.user.stores && action.payload.restaurantName) {
+          // Find the current active store and update its name
+          const activeStoreId = localStorage.getItem("activeStoreId");
+          if (activeStoreId) {
+            const index = state.user.stores.findIndex(
+              (s) => (s.storeId?._id || s._id) === activeStoreId,
+            );
+
+            if (index !== -1) {
+              // Update the store name in the user object
+              if (state.user.stores[index].storeId) {
+                state.user.stores[index].storeId.name =
+                  action.payload.restaurantName;
+              } else {
+                state.user.stores[index].name = action.payload.restaurantName;
+              }
+
+              // Persist updated user to localStorage
+              localStorage.setItem("user", JSON.stringify(state.user));
+            }
+          }
+        }
       });
   },
 });
