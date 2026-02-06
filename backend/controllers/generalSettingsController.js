@@ -198,8 +198,12 @@ const updateSettings = async (req, res) => {
     if (!store.settings) store.settings = {};
 
     // Only update fields that are provided
-    if (restaurantName !== undefined)
+    if (restaurantName !== undefined) {
       store.settings.restaurantName = restaurantName;
+      // CRITICAL: Also update the top-level store.name to keep them in sync
+      // This ensures the store switcher and login flow display the updated name
+      store.name = restaurantName;
+    }
     if (restaurantAddress !== undefined)
       store.settings.restaurantAddress = restaurantAddress;
     if (restaurantPhone !== undefined)
@@ -345,7 +349,7 @@ const updateSettings = async (req, res) => {
       "update",
       null, // could be old settings diff
       store.settings,
-      "Updated store settings"
+      "Updated store settings",
     );
 
     res.json({
@@ -393,7 +397,7 @@ const resetSettings = async (req, res) => {
       "update",
       null,
       store.settings,
-      "Reset store settings to default"
+      "Reset store settings to default",
     );
 
     res.json({

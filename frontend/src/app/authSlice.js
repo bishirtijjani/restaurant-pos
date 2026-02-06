@@ -323,6 +323,34 @@ const authSlice = createSlice({
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Listen for store updates to keep user object in sync
+      .addCase("stores/updateStore/fulfilled", (state, action) => {
+        if (state.user && state.user.stores) {
+          const updatedStore = action.payload;
+          const index = state.user.stores.findIndex(
+            (s) => (s.storeId?._id || s._id) === updatedStore._id,
+          );
+
+          if (index !== -1) {
+            // Update the store in the user object
+            // Handle both structure types (populated or flat)
+            if (state.user.stores[index].storeId) {
+              state.user.stores[index].storeId = {
+                ...state.user.stores[index].storeId,
+                ...updatedStore,
+              };
+            } else {
+              state.user.stores[index] = {
+                ...state.user.stores[index],
+                ...updatedStore,
+              };
+            }
+
+            // Persist updated user to localStorage
+            localStorage.setItem("user", JSON.stringify(state.user));
+          }
+        }
       });
   },
 });
