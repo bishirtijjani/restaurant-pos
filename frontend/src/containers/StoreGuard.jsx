@@ -43,6 +43,9 @@ function StoreGuard({ children }) {
   } = useSelector((state) => state.stores);
   const { user, loading: authLoading } = useSelector((state) => state.auth);
 
+  // Fallback to user.stores if redux stores are empty (e.g. offline with no cache)
+  const displayStores = stores.length > 0 ? stores : user?.stores || [];
+
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -144,7 +147,7 @@ function StoreGuard({ children }) {
 
   if (!activeStoreId && isStoreRoute) {
     // If we have stores but none selected, show selection UI (MANDATORY)
-    if (stores.length > 1) {
+    if (displayStores.length > 1) {
       return (
         <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
           <motion.div
@@ -165,7 +168,7 @@ function StoreGuard({ children }) {
             </div>
 
             <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
-              {stores.map((store) => {
+              {displayStores.map((store) => {
                 const sData = store.storeId || store;
                 return (
                   <button

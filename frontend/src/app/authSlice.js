@@ -9,6 +9,12 @@ const getUserFromToken = () => {
   try {
     const token = localStorage.getItem("token");
     if (token && !isTokenExpired(token)) {
+      // First check if we have the full user object persisted
+      const persistedUser = localStorage.getItem("user");
+      if (persistedUser) {
+        return JSON.parse(persistedUser);
+      }
+      // Fallback to token decoding if no persisted user found
       const decoded = jwtDecode(token);
       return decoded;
     }
@@ -32,6 +38,7 @@ export const loginUser = createAsyncThunk(
       const response = await axios.post("/api/auth/login", userCredentials);
       const { token, user } = response.data;
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
       if (token) {
         axios.defaults.headers.common["authorization"] = `Bearer ${token}`;
       }
@@ -39,10 +46,10 @@ export const loginUser = createAsyncThunk(
     } catch (error) {
       console.log(error);
       return rejectWithValue(
-        error.response?.data?.message || "Login failed, Try again later"
+        error.response?.data?.message || "Login failed, Try again later",
       );
     }
-  }
+  },
 );
 
 // Async thunk for logging in with PIN
@@ -53,6 +60,7 @@ export const loginUserWithPin = createAsyncThunk(
       const response = await axios.post("/api/auth/pin-login", credentials);
       const { token, user } = response.data;
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
       if (token) {
         axios.defaults.headers.common["authorization"] = `Bearer ${token}`;
       }
@@ -60,10 +68,10 @@ export const loginUserWithPin = createAsyncThunk(
     } catch (error) {
       console.log(error);
       return rejectWithValue(
-        error.response?.data?.message || "PIN Login failed, Try again later"
+        error.response?.data?.message || "PIN Login failed, Try again later",
       );
     }
-  }
+  },
 );
 
 // Async thunk for registering a new user
@@ -74,14 +82,15 @@ export const registerUser = createAsyncThunk(
       const response = await axios.post("/api/auth/register", userCredentials);
       const { token, user } = response.data;
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
       return { token, user };
     } catch (error) {
       console.log(error);
       return rejectWithValue(
-        error.response?.data?.message || "Registration failed"
+        error.response?.data?.message || "Registration failed",
       );
     }
-  }
+  },
 );
 
 // Async thunk for logging out
@@ -92,6 +101,7 @@ export const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
     console.error("Logout failed", error);
   }
   localStorage.removeItem("token");
+  localStorage.removeItem("user"); // Clear persisted user
   return null;
 });
 
@@ -103,6 +113,13 @@ export const refreshSession = createAsyncThunk(
       const response = await axios.post("/api/auth/refresh");
       const { token } = response.data;
       localStorage.setItem("token", token);
+      // Determine user to save - merge with existing if needed
+      // Note: Backend might not return full user on refresh, so be careful.
+      // If backend only returns token, we rely on existing cache or calls to /me.
+      // But typically refresh endpoint returns new token.
+      // If we decode token here, it's still partial.
+      // Ideally we should fetch /me after refresh if online, or keep existing local user.
+
       axios.defaults.headers.common["authorization"] = `Bearer ${token}`;
 
       // Decode user from token
@@ -112,7 +129,7 @@ export const refreshSession = createAsyncThunk(
       localStorage.removeItem("token");
       return rejectWithValue("Session expired");
     }
-  }
+  },
 );
 
 // Async thunk for getting current user
@@ -161,13 +178,14 @@ export const getCurrentUser = createAsyncThunk(
 
       // If no token data, must fetch from server
       const response = await axios.get("/api/auth/me");
+      localStorage.setItem("user", JSON.stringify(response.data.user)); // Update local storage with fresh data
       return response.data.user;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch user data"
+        error.response?.data?.message || "Failed to fetch user data",
       );
     }
-  }
+  },
 );
 
 // Async thunk for updating user profile
@@ -179,14 +197,14 @@ export const updateUserProfile = createAsyncThunk(
       if (!token) throw new Error("No token available");
 
       const response = await axios.put("/api/auth/me", formData);
-
+      localStorage.setItem("user", JSON.stringify(response.data.user));
       return response.data.user;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update profile"
+        error.response?.data?.message || "Failed to update profile",
       );
     }
-  }
+  },
 );
 
 // Create the auth slice
