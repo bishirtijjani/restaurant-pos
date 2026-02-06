@@ -42,8 +42,6 @@ const SettingsHub = () => {
       icon: <Store className="w-8 h-8" />,
       path: "/app/stores",
       color: "bg-info/10 text-info",
-      path: "/app/stores",
-      color: "bg-info/10 text-info",
       available: isAdmin,
     },
     {

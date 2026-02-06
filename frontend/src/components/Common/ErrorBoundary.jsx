@@ -50,19 +50,52 @@ class ErrorBoundary extends React.Component {
                 </button>
               </div>
 
-              {import.meta.env.DEV && (
-                <div className="mt-8 collapse collapse-arrow bg-base-200 rounded-xl text-left border border-base-content/5 w-full">
-                  <input type="checkbox" />
-                  <div className="collapse-title font-medium text-xs uppercase tracking-wider opacity-50">
-                    View Error Details (Dev Mode)
-                  </div>
-                  <div className="collapse-content">
-                    <pre className="text-xs font-mono text-error/80 overflow-x-auto p-2">
-                      {this.state.error?.stack || this.state.error?.toString()}
-                    </pre>
-                  </div>
+              {/* Error Details Section for Support (Always visible in simplified form, expandable in Dev) */}
+              <div className="mt-8 collapse collapse-arrow bg-base-200 rounded-xl text-left border border-base-content/5 w-full group">
+                <input type="checkbox" />
+                <div className="collapse-title font-medium text-xs uppercase tracking-wider opacity-50 flex justify-between items-center pr-12">
+                  <span>View Error Details (For Support)</span>
                 </div>
-              )}
+                <div className="collapse-content">
+                  <div className="flex justify-end mb-2">
+                    <button
+                      className="btn btn-xs btn-outline gap-1"
+                      onClick={() => {
+                        const errorText = `Error: ${this.state.error?.toString()}\n\nStack:\n${this.state.error?.stack}`;
+                        navigator.clipboard.writeText(errorText);
+                        // Optional: You could add a temporary "Copied!" state here if converted to functional component or adding more state
+                        alert("Error details copied to clipboard!");
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect
+                          width="14"
+                          height="14"
+                          x="8"
+                          y="8"
+                          rx="2"
+                          ry="2"
+                        />
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                      </svg>
+                      Copy Error
+                    </button>
+                  </div>
+                  <pre className="text-xs font-mono text-error/80 overflow-x-auto p-2 bg-base-100 rounded-lg border border-base-content/5">
+                    {this.state.error?.stack || this.state.error?.toString()}
+                  </pre>
+                </div>
+              </div>
             </div>
           </div>
         </div>
