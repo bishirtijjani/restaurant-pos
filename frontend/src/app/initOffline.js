@@ -3,6 +3,7 @@ import { syncManager } from "../utils/offline/syncManager";
 import { connectionMonitor } from "../utils/offline/connectionMonitor";
 import store from "./store";
 import { isTokenExpired } from "../utils/Helpers";
+import { showNotification } from "../features/common/headerSlice";
 
 export const initializeOfflineSupport = () => {
   console.log("Initializing offline support...");
@@ -24,6 +25,12 @@ export const initializeOfflineSupport = () => {
             ) {
               // New service worker available
               console.log("New service worker available. Please refresh.");
+              store.dispatch(
+                showNotification({
+                  message: "New Version Available! 🚀 Refresh to update.",
+                  status: 1,
+                }),
+              );
             }
           });
         });
