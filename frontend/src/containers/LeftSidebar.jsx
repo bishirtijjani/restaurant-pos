@@ -35,18 +35,19 @@ function renderSidebarRoutes(routes) {
         {route.submenu ? (
           <SidebarSubmenu {...route} />
         ) : (
+          // LeftSidebar.jsx fixes
           <NavLink
             end
             to={route.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl group hover:border-l-2 hover:border-primary ${
+              `flex items-center gap-3 px-4 py-3 rounded-xl group border-l-2 border-transparent hover:border-primary ${
                 isActive
-                  ? "glass-pill font-bold border-l-2 border-accent bg-primary text-primary-content"
+                  ? "glass-pill font-bold border-accent bg-primary text-primary-content"
                   : "hover:bg-base-200/50 text-base-content hover:text-base-content font-medium"
               }`
             }
           >
-            <div className="p-1.5 rounded-lg transition-all bg-accent/20 duration-300 group-hover:bg-base-300/50 group-hover:scale-110">
+            <div className="p-1.5 rounded-lg transition-colors bg-accent/30 duration-200 group-hover:bg-accent/50">
               {route.icon}
             </div>
             <span className="flex-1 tracking-wide text-[14px]">
@@ -96,8 +97,8 @@ function LeftSidebar() {
       <ul className="menu w-72 min-h-full glass-premium-sidebar text-base-content p-0 border-r border-base-content/5 shadow-2xl overflow-y-auto overflow-x-hidden flex flex-col gap-0.5">
         {/* Logo Section */}
         <li className="sticky top-0 glass-premium-sidebar py-2 px-6 z-40 border-b border-base-content/5 flex flex-row items-center justify-between mb-2">
-          <Link to="/dashboard" className="flex items-center gap-3 soft-lift">
-            <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+          <Link to="/dashboard" className="flex items-center gap-3">
+            <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20">
               <div className="flex items-center justify-center w-6 h-6 text-primary-content font-black text-xl">
                 C
               </div>
@@ -129,7 +130,7 @@ function LeftSidebar() {
         {/* Sync Button */}
         <li className="mt-auto px-2 pb-2 list-none">
           <button
-            className="w-full btn btn-ghost justify-start gap-3 px-4 py-3 border border-base-content/5 rounded-xl hover:bg-base-200/50 transition-all duration-300 soft-lift"
+            className="w-full btn btn-ghost justify-start gap-3 px-4 py-3 border border-base-content/5 rounded-xl hover:bg-base-200/50 transition-colors duration-200"
             onClick={() => setIsSyncModalOpen(true)}
           >
             <div className="p-1.5 bg-base-300/30 rounded-lg">
@@ -144,7 +145,7 @@ function LeftSidebar() {
         {/* Help & Support Button */}
         <li className="px-4 pt-4 list-none">
           <button
-            className="btn btn-success btn-outline border-2 text-base-content font-bold w-full rounded-2xl hover:bg-success hover:text-white hover:border-success soft-lift flex items-center justify-center gap-3 transition-all duration-300"
+            className="btn btn-success btn-outline border-2 text-base-content font-bold w-full rounded-2xl hover:bg-success hover:text-white hover:border-success flex items-center justify-center gap-3 transition-colors duration-200"
             onClick={() => {
               dispatch(
                 openModal({
@@ -165,7 +166,7 @@ function LeftSidebar() {
         {/* Logout Button */}
         <li className="px-4 py-8 list-none">
           <button
-            className="btn btn-error btn-outline border-2 text-base-content font-bold w-full rounded-2xl hover:bg-error hover:text-white hover:border-error soft-lift flex items-center justify-center gap-3 transition-all duration-300"
+            className="btn btn-error btn-outline border-2 text-base-content font-bold w-full rounded-2xl hover:bg-error hover:text-white hover:border-error flex items-center justify-center gap-3 transition-colors duration-200"
             onClick={logoutUserHandler}
           >
             <ArrowLeftStartOnRectangleIcon className="h-4 w-4" />

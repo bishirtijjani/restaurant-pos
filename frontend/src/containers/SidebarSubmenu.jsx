@@ -20,14 +20,14 @@ function SidebarSubmenu({ submenu, name, icon }) {
     <>
       {/** Route header */}
       <a
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer group w-full  hover:border-l-2 hover:border-primary ${
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer group w-full border-l-2 border-transparent hover:border-primary ${
           isExpanded
             ? "glass-pill font-bold"
             : "hover:bg-base-200/50 text-base-content font-medium"
         }`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="p-1.5 rounded-lg bg-accent transition-all duration-300 group-hover:bg-base-300/50 group-hover:scale-110">
+        <div className="p-1.5 rounded-lg bg-accent/30 transition-colors duration-200 group-hover:bg-accent/50">
           {icon}
         </div>
         <span className="flex-1 tracking-wide text-[14px]">{name}</span>
@@ -54,14 +54,14 @@ function SidebarSubmenu({ submenu, name, icon }) {
               <li key={k} className="list-none">
                 <Link
                   to={m.path}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl group ${
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl group border-l-2 border-transparent hover:border-primary ${
                     isActive
-                      ? "glass-pill font-bold border-l-2 bg-primary text-primary-content"
-                      : "hover:bg-base-200/50 hover:shadow-lg text-base-content/90 hover:text-base-content font-medium  hover:border-l-2 hover:border-primary"
+                      ? "glass-pill font-bold bg-primary text-primary-content border-accent"
+                      : "hover:bg-base-200/50 hover:shadow-lg text-base-content/90 hover:text-base-content font-medium"
                   }`}
                 >
                   <div
-                    className={`p-1 bg-accent rounded-lg ${isActive ? "" : "group-hover:bg-base-300/50 group-hover:scale-110"}`}
+                    className={`p-1 bg-accent/30 rounded-lg ${isActive ? "" : "group-hover:bg-accent/50"}`}
                   >
                     {m.icon}
                   </div>
