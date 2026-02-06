@@ -20,7 +20,7 @@ const generateTokens = (user) => {
       fullname: user.fullname,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "15m" }
+    { expiresIn: "7d" },
   );
 
   const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -141,7 +141,7 @@ const login = async (req, res) => {
     // Populate stores to return to frontend
     const user = await User.findOne({ email, deletedAt: null }).populate(
       "stores.storeId",
-      "name settings.restaurantName settings.restaurantLogo"
+      "name settings.restaurantName settings.restaurantLogo",
     );
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
@@ -155,7 +155,7 @@ const login = async (req, res) => {
 
     // Remove old refresh tokens
     user.refreshTokens = user.refreshTokens.filter(
-      (rt) => rt.expiresAt > Date.now()
+      (rt) => rt.expiresAt > Date.now(),
     );
 
     // Save new refresh token
@@ -204,7 +204,7 @@ const pinLogin = async (req, res) => {
     // Populate stores to return to frontend
     const user = await User.findOne({ email, deletedAt: null }).populate(
       "stores.storeId",
-      "name settings.restaurantName settings.restaurantLogo"
+      "name settings.restaurantName settings.restaurantLogo",
     );
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
@@ -222,7 +222,7 @@ const pinLogin = async (req, res) => {
 
     // Remove old refresh tokens
     user.refreshTokens = user.refreshTokens.filter(
-      (rt) => rt.expiresAt > Date.now()
+      (rt) => rt.expiresAt > Date.now(),
     );
 
     // Save new refresh token
@@ -342,7 +342,7 @@ const logout = async (req, res) => {
             for (let i = 0; i < user.refreshTokens.length; i++) {
               const isMatch = await bcrypt.compare(
                 refreshToken,
-                user.refreshTokens[i].token
+                user.refreshTokens[i].token,
               );
               if (isMatch) {
                 tokenIndex = i;
@@ -431,7 +431,7 @@ const verifySecurityAnswers = async (req, res) => {
       const answerLower = answers[i].trim().toLowerCase();
       const isMatch = await bcrypt.compare(
         answerLower,
-        user.securityQuestions[i].answer
+        user.securityQuestions[i].answer,
       );
       if (!isMatch) {
         allAnswersCorrect = false;
@@ -468,7 +468,7 @@ const getCurrentUser = async (req, res) => {
       .select("-password")
       .populate(
         "stores.storeId",
-        "name settings.restaurantName settings.restaurantLogo"
+        "name settings.restaurantName settings.restaurantLogo",
       );
 
     if (!user)
@@ -488,7 +488,7 @@ const getCurrentUser = async (req, res) => {
         (sq) => ({
           question: sq.question,
           // Don't send the answer
-        })
+        }),
       );
     }
 
