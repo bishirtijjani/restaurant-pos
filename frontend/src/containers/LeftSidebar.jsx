@@ -46,7 +46,7 @@ function renderSidebarRoutes(routes) {
               }`
             }
           >
-            <div className="p-1.5 rounded-lg transition-all duration-300 group-hover:bg-base-300/50 group-hover:scale-110">
+            <div className="p-1.5 rounded-lg transition-all bg-accent/20 duration-300 group-hover:bg-base-300/50 group-hover:scale-110">
               {route.icon}
             </div>
             <span className="flex-1 tracking-wide text-[14px]">
@@ -95,7 +95,7 @@ function LeftSidebar() {
       ></label>
       <ul className="menu w-72 min-h-full glass-premium-sidebar text-base-content p-0 border-r border-base-content/5 shadow-2xl overflow-y-auto overflow-x-hidden flex flex-col gap-0.5">
         {/* Logo Section */}
-        <li className="sticky top-0 glass-premium-sidebar py-6 px-6 z-40 border-b border-base-content/5 flex flex-row items-center justify-between mb-2">
+        <li className="sticky top-0 glass-premium-sidebar py-2 px-6 z-40 border-b border-base-content/5 flex flex-row items-center justify-between mb-2">
           <Link to="/dashboard" className="flex items-center gap-3 soft-lift">
             <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20 rotate-3 group-hover:rotate-0 transition-transform duration-500">
               <div className="flex items-center justify-center w-6 h-6 text-primary-content font-black text-xl">

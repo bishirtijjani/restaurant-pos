@@ -35,8 +35,8 @@ const SupportLink = () => {
 
         {/* Label (Desktop) */}
         <div className="absolute right-full mr-4 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none">
-          <div className="bg-white/10 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl whitespace-nowrap shadow-2xl">
-            <span className="text-sm font-bold text-white tracking-wide">
+          <div className="bg-base-300/80 backdrop-blur-md border border-base-content/10 px-4 py-2 rounded-2xl whitespace-nowrap shadow-2xl">
+            <span className="text-sm font-bold text-base-content tracking-wide">
               Get Help
             </span>
           </div>
