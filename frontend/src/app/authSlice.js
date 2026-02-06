@@ -223,6 +223,27 @@ const authSlice = createSlice({
     clearAuthError: (state) => {
       state.error = null;
     },
+    // Sync store name when updated via settings
+    syncStoreName: (state, action) => {
+      const { storeId, newName } = action.payload;
+      if (state.user && state.user.stores) {
+        const index = state.user.stores.findIndex(
+          (s) => (s.storeId?._id || s._id) === storeId,
+        );
+
+        if (index !== -1) {
+          // Update the store name in the user object
+          if (state.user.stores[index].storeId) {
+            state.user.stores[index].storeId.name = newName;
+          } else {
+            state.user.stores[index].name = newName;
+          }
+
+          // Persist updated user to localStorage
+          localStorage.setItem("user", JSON.stringify(state.user));
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -323,62 +344,10 @@ const authSlice = createSlice({
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
-      // Listen for store updates to keep user object in sync
-      .addCase("stores/updateStore/fulfilled", (state, action) => {
-        if (state.user && state.user.stores) {
-          const updatedStore = action.payload;
-          const index = state.user.stores.findIndex(
-            (s) => (s.storeId?._id || s._id) === updatedStore._id,
-          );
-
-          if (index !== -1) {
-            // Update the store in the user object
-            // Handle both structure types (populated or flat)
-            if (state.user.stores[index].storeId) {
-              state.user.stores[index].storeId = {
-                ...state.user.stores[index].storeId,
-                ...updatedStore,
-              };
-            } else {
-              state.user.stores[index] = {
-                ...state.user.stores[index],
-                ...updatedStore,
-              };
-            }
-
-            // Persist updated user to localStorage
-            localStorage.setItem("user", JSON.stringify(state.user));
-          }
-        }
-      })
-      // Listen for settings updates to sync restaurantName changes
-      .addCase("generalSettings/updateSettings/fulfilled", (state, action) => {
-        if (state.user && state.user.stores && action.payload.restaurantName) {
-          // Find the current active store and update its name
-          const activeStoreId = localStorage.getItem("activeStoreId");
-          if (activeStoreId) {
-            const index = state.user.stores.findIndex(
-              (s) => (s.storeId?._id || s._id) === activeStoreId,
-            );
-
-            if (index !== -1) {
-              // Update the store name in the user object
-              if (state.user.stores[index].storeId) {
-                state.user.stores[index].storeId.name =
-                  action.payload.restaurantName;
-              } else {
-                state.user.stores[index].name = action.payload.restaurantName;
-              }
-
-              // Persist updated user to localStorage
-              localStorage.setItem("user", JSON.stringify(state.user));
-            }
-          }
-        }
       });
   },
 });
 
-export const { setUserFromToken, clearAuthError } = authSlice.actions;
+export const { setUserFromToken, clearAuthError, syncStoreName } =
+  authSlice.actions;
 export default authSlice.reducer;

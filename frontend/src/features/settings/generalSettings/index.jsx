@@ -92,12 +92,27 @@ const GeneralSettings = () => {
   // Handle Submit
   const handleSubmit = async () => {
     try {
-      await dispatch(updateSettings(formData)).unwrap();
+      const result = await dispatch(updateSettings(formData)).unwrap();
+
+      // If restaurant name was updated, sync it to the user's store list
+      if (formData.restaurantName && result.restaurantName) {
+        const activeStoreId = localStorage.getItem("activeStoreId");
+        if (activeStoreId) {
+          const { syncStoreName } = await import("../../../app/authSlice");
+          dispatch(
+            syncStoreName({
+              storeId: activeStoreId,
+              newName: result.restaurantName,
+            }),
+          );
+        }
+      }
+
       dispatch(
         showNotification({
           message: "Settings updated successfully",
           status: 1,
-        })
+        }),
       );
       setHasChanges(false);
     } catch (error) {
@@ -105,7 +120,7 @@ const GeneralSettings = () => {
         showNotification({
           message: error || "Failed to update settings",
           status: 0,
-        })
+        }),
       );
     }
   };
@@ -136,7 +151,10 @@ const GeneralSettings = () => {
       try {
         await dispatch(resetSettings()).unwrap();
         dispatch(
-          showNotification({ message: "Settings reset to defaults", status: 1 })
+          showNotification({
+            message: "Settings reset to defaults",
+            status: 1,
+          }),
         );
         setHasChanges(false);
       } catch (error) {
@@ -144,7 +162,7 @@ const GeneralSettings = () => {
           showNotification({
             message: error || "Failed to reset settings",
             status: 0,
-          })
+          }),
         );
       }
     }
@@ -175,7 +193,7 @@ const GeneralSettings = () => {
                     showNotification({
                       message: "Organization Management coming soon!",
                       status: 1,
-                    })
+                    }),
                   )
                 }
               >
@@ -465,9 +483,8 @@ const GeneralSettings = () => {
                           className="btn btn-primary btn-sm"
                           onClick={async () => {
                             try {
-                              const { printerService } = await import(
-                                "../../../services/PrinterService"
-                              );
+                              const { printerService } =
+                                await import("../../../services/PrinterService");
                               const device = await printerService.connect();
 
                               setFormData((prev) => ({
