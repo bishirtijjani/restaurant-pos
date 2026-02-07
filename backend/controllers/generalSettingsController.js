@@ -41,9 +41,7 @@ const getSettings = async (req, res) => {
 const updateSettings = async (req, res) => {
   try {
     const {
-      restaurantName,
-      restaurantAddress,
-      restaurantPhone,
+      // Store identity fields (name, address, phone) removed - use Store model directly
       restaurantEmail,
       restaurantMotto,
       currency,
@@ -62,35 +60,8 @@ const updateSettings = async (req, res) => {
     } = req.body;
 
     // Validate required fields only if they are being updated
-    if (
-      restaurantName !== undefined &&
-      (!restaurantName || restaurantName.trim() === "")
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Restaurant name is required",
-      });
-    }
-
-    if (
-      restaurantAddress !== undefined &&
-      (!restaurantAddress || restaurantAddress.trim() === "")
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Restaurant address is required",
-      });
-    }
-
-    if (
-      restaurantPhone !== undefined &&
-      (!restaurantPhone || restaurantPhone.trim() === "")
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Restaurant phone number is required",
-      });
-    }
+    // Removed: restaurantName, restaurantAddress, restaurantPhone validations
+    // These are now top-level Store fields, not settings
 
     if (
       restaurantEmail !== undefined &&
@@ -198,23 +169,8 @@ const updateSettings = async (req, res) => {
     if (!store.settings) store.settings = {};
 
     // Only update fields that are provided
-    if (restaurantName !== undefined) {
-      store.settings.restaurantName = restaurantName;
-      // CRITICAL: Also update the top-level store.name to keep them in sync
-      // This ensures the store switcher and login flow display the updated name
-      store.name = restaurantName;
-    }
-    if (restaurantAddress !== undefined) {
-      store.settings.restaurantAddress = restaurantAddress;
-      // CRITICAL: Also update the top-level store.location to keep them in sync
-      // This ensures store management and other views display the updated address
-      store.location = restaurantAddress;
-    }
-    if (restaurantPhone !== undefined) {
-      store.settings.restaurantPhone = restaurantPhone;
-      // CRITICAL: Also update the top-level store.contactPhone to keep them in sync
-      store.contactPhone = restaurantPhone;
-    }
+    // Removed: restaurantName, restaurantAddress, restaurantPhone updates
+    // These are now top-level Store fields and should be updated via Store CRUD endpoints
     if (restaurantEmail !== undefined)
       store.settings.restaurantEmail = restaurantEmail;
     if (restaurantMotto !== undefined)
@@ -388,10 +344,7 @@ const resetSettings = async (req, res) => {
     }
 
     // Reset logic: Simply clear the settings object to enable full brand inheritance
-    // We only preserve the restaurantName which is usually store-specific
-    store.settings = {
-      restaurantName: store.name,
-    };
+    store.settings = {};
 
     await store.save();
 

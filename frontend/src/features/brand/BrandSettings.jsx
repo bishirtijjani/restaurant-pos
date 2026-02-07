@@ -73,22 +73,22 @@ const BrandSettings = () => {
         brandSettings: {
           ...formData,
           branding: {
-            restaurantName: formData.restaurantName,
             restaurantLogo: formData.restaurantLogo,
             restaurantMotto: formData.restaurantMotto,
-            restaurantPhone: formData.restaurantPhone,
             restaurantEmail: formData.restaurantEmail,
-            restaurantAddress: formData.restaurantAddress,
             website: formData.website,
           },
         },
       };
 
       await dispatch(
-        updateOrganization({ id: user.currentOrganizationId, data: updateData })
+        updateOrganization({
+          id: user.currentOrganizationId,
+          data: updateData,
+        }),
       ).unwrap();
       dispatch(
-        showNotification({ message: "Brand settings updated", status: 1 })
+        showNotification({ message: "Brand settings updated", status: 1 }),
       );
       setHasChanges(false);
     } catch (error) {
@@ -96,7 +96,7 @@ const BrandSettings = () => {
         showNotification({
           message: error || "Failed to update brand settings",
           status: 0,
-        })
+        }),
       );
     }
   };
@@ -148,35 +148,6 @@ const BrandSettings = () => {
                   placeholder="e.g. Gourmet Kitchen"
                   autoComplete="off"
                 />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">Global Phone</span>
-                </label>
-                <input
-                  type="text"
-                  name="restaurantPhone"
-                  value={formData.restaurantPhone || ""}
-                  onChange={handleInputChange}
-                  className="input input-bordered focus:input-primary transition-all"
-                  placeholder="+1 234 567 890"
-                  autoComplete="off"
-                />
-              </div>
-              <div className="form-control md:col-span-2">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    Global Address
-                  </span>
-                </label>
-                <textarea
-                  name="restaurantAddress"
-                  value={formData.restaurantAddress || ""}
-                  onChange={handleInputChange}
-                  className="textarea textarea-bordered h-24 focus:textarea-primary transition-all"
-                  placeholder="123 Culinary St, Food City"
-                  autoComplete="off"
-                ></textarea>
               </div>
               <div className="form-control">
                 <label className="label">

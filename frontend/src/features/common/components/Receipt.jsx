@@ -18,22 +18,24 @@ import {
   Tag,
 } from "lucide-react";
 import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
+import { selectStoreInfo } from "../../settings/storeIdentity/storeIdentitySlice";
 
 const Receipt = ({ extraObject, closeModal }) => {
   const dispatch = useDispatch();
   const orderData = extraObject;
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
+  const storeInfo = useSelector(selectStoreInfo);
 
   useEffect(() => {
     if (!settings) dispatch(fetchSettings());
   }, [dispatch, settings]);
 
   const receipt = {
-    restaurantName: settings?.restaurantName?.toUpperCase() || "RESTAURANT",
-    restaurantAddress: settings?.restaurantAddress,
-    restaurantPhone: settings?.restaurantPhone,
+    restaurantName: storeInfo?.name?.toUpperCase() || "RESTAURANT",
+    restaurantAddress: storeInfo?.location,
+    restaurantPhone: storeInfo?.contactPhone,
     restaurantEmail: settings?.restaurantEmail,
     motto: settings?.restaurantMotto,
     date: new Date().toLocaleString(),
@@ -182,7 +184,7 @@ const Receipt = ({ extraObject, closeModal }) => {
                               ).toFixed(2)}`}
                           </td>
                         </tr>
-                      ))
+                      )),
                     )}
                     {/* Item Note */}
                     {item.itemNote && (
@@ -226,14 +228,14 @@ const Receipt = ({ extraObject, closeModal }) => {
                             {discount.amount?.toFixed(2)}
                           </td>
                         </tr>
-                      )
+                      ),
                     )}
                     <tr className="font-medium">
                       <td>After Discount:</td>
                       <td className="text-right">
                         {currency}
                         {receipt.discountBreakdown.discountedSubtotal?.toFixed(
-                          2
+                          2,
                         )}
                       </td>
                     </tr>
@@ -285,7 +287,7 @@ const Receipt = ({ extraObject, closeModal }) => {
                       {currency}
                       {receipt.packagingFee.toFixed(2)}
                     </td>
-                </tr>
+                  </tr>
                 )}
                 {receipt.deliveryFee > 0 && (
                   <tr>

@@ -13,6 +13,7 @@ import ordersReducer from "../features/orders/ordersSlice";
 import posReducer from "../features/orders/posSlice";
 import expensesReducer from "../features/expenses/expensesSlice";
 import generalSettingsReducer from "../features/settings/generalSettings/generalSettingsSlice";
+import storeIdentityReducer from "../features/settings/storeIdentity/storeIdentitySlice";
 import kdsReducer from "../features/kds/kdsSlice";
 import kdsStationsReducer from "../features/kdsStations/kdsStationsSlice";
 import onboardingReducer from "../features/onboarding/onboardingSlice";
@@ -60,6 +61,7 @@ const combinedReducer = {
   pos: posReducer,
   expenses: expensesReducer,
   generalSettings: generalSettingsReducer,
+  storeIdentity: storeIdentityReducer, // Store Identity (name, location, phone)
   kds: kdsReducer,
   kdsStations: kdsStationsReducer,
   onboarding: onboardingReducer,

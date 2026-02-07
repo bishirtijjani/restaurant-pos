@@ -47,7 +47,7 @@ function renderSidebarRoutes(routes) {
               }`
             }
           >
-            <div className="p-1.5 rounded-lg transition-colors bg-accent/30 duration-200 group-hover:bg-accent/50">
+            <div className="p-1.5 rounded-lg transition-colors bg-primary/20 duration-200 group-hover:bg-primary/30">
               {route.icon}
             </div>
             <span className="flex-1 tracking-wide text-[14px]">

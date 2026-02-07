@@ -8,7 +8,7 @@ const createFakeToken = () => {
       id: "u1",
       role: "admin",
       exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour in future
-    })
+    }),
   );
   return `${header}.${payload}.signature`;
 };
@@ -32,7 +32,7 @@ test.describe("POS Flow - Diagnostic", () => {
         localStorage.setItem("activeStoreId", "s1");
         localStorage.setItem("token", token);
       },
-      { token }
+      { token },
     );
 
     // Mock API for current user
@@ -50,7 +50,7 @@ test.describe("POS Flow - Diagnostic", () => {
             stores: [{ storeId: "s1", role: "admin" }],
           },
         }),
-      })
+      }),
     );
 
     await page.route("**/api/auth/refresh", (route) =>
@@ -58,7 +58,7 @@ test.describe("POS Flow - Diagnostic", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({ success: true, token: token }),
-      })
+      }),
     );
 
     await page.route("**/api/stores", (route) =>
@@ -69,7 +69,7 @@ test.describe("POS Flow - Diagnostic", () => {
           success: true,
           data: [{ _id: "s1", name: "Test Store" }],
         }),
-      })
+      }),
     );
 
     await page.route("**/api/general-settings", (route) =>
@@ -78,9 +78,9 @@ test.describe("POS Flow - Diagnostic", () => {
         contentType: "application/json",
         body: JSON.stringify({
           success: true,
-          data: { restaurantName: "Test", currency: { symbol: "$" } },
+          data: { currency: { symbol: "$" } },
         }),
-      })
+      }),
     );
 
     await page.route("**/api/menu-items", (route) => {
@@ -105,7 +105,7 @@ test.describe("POS Flow - Diagnostic", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify([{ _id: "c1", name: "Food" }]),
-      })
+      }),
     );
 
     await page.route("**/api/tables*", (route) =>
@@ -113,7 +113,7 @@ test.describe("POS Flow - Diagnostic", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({ success: true, data: [] }),
-      })
+      }),
     );
 
     // Navigate
@@ -134,7 +134,7 @@ test.describe("POS Flow - Diagnostic", () => {
       // Try to find ANY text that might be an error
       console.log(
         "No Burger. Requests seen:",
-        requests.filter((r) => r.includes("api"))
+        requests.filter((r) => r.includes("api")),
       );
       const textContent = await page.textContent("body");
       console.log("Body text snippet:", textContent.substring(0, 500));

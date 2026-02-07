@@ -21,18 +21,18 @@ app.get(
   "/api/orders",
   authMiddleware,
   storeMiddleware,
-  orderController.getAllOrders
+  orderController.getAllOrders,
 );
 app.get(
   "/api/orders/:id",
   authMiddleware,
   storeMiddleware,
-  orderController.getOrderById
+  orderController.getOrderById,
 );
 app.get("/api/menu-items", authMiddleware, storeMiddleware, (req, res) => {
   // Mocking a simple controller for menu items list to test store scoping
   MenuItem.find({ storeId: req.storeId }).then((items) =>
-    res.json({ success: true, data: items })
+    res.json({ success: true, data: items }),
   );
 });
 
@@ -50,7 +50,7 @@ describe("Multi-Store Data Isolation", () => {
     // Create Store 1 & User 1
     store1 = await Store.create({
       name: "Store One",
-      settings: { restaurantName: "R1" },
+      settings: {},
     });
     user1 = await User.create({
       fullname: "User One",
@@ -63,7 +63,7 @@ describe("Multi-Store Data Isolation", () => {
     // Create Store 2 & User 2
     store2 = await Store.create({
       name: "Store Two",
-      settings: { restaurantName: "R2" },
+      settings: {},
     });
     user2 = await User.create({
       fullname: "User Two",

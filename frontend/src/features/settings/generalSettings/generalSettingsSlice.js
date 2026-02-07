@@ -13,10 +13,10 @@ export const fetchSettings = createAsyncThunk(
       return response.data; // Now returns { success, data, overrides }
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch settings"
+        error.response?.data?.message || "Failed to fetch settings",
       );
     }
-  }
+  },
 );
 
 // Async thunk for updating settings
@@ -28,10 +28,10 @@ export const updateSettings = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update settings"
+        error.response?.data?.message || "Failed to update settings",
       );
     }
-  }
+  },
 );
 
 // Async thunk for resetting settings
@@ -43,17 +43,16 @@ export const resetSettings = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to reset settings"
+        error.response?.data?.message || "Failed to reset settings",
       );
     }
-  }
+  },
 );
 
 const initialState = {
   generalSettings: {
-    restaurantName: "",
-    restaurantAddress: "",
-    restaurantPhone: "",
+    // Store identity fields removed (name, address, phone)
+    // These are now top-level Store fields, not settings
     restaurantEmail: "",
     restaurantMotto: "",
     currency: {

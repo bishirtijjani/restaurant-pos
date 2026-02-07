@@ -53,7 +53,7 @@ const OnboardingWizard = () => {
       const storeRes = await dispatch(
         createStore({
           name: data.storeName,
-          settings: { restaurantName: data.storeName },
+          settings: {},
         }),
       ).unwrap();
 

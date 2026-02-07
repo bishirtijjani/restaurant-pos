@@ -50,8 +50,8 @@ function SetupWizard({ closeModal }) {
       const storeResult = await dispatch(
         createStore({
           name: formData.storeName,
-          settings: { restaurantName: formData.storeName },
-        })
+          settings: {},
+        }),
       ).unwrap();
 
       // 2. Set Active Store
@@ -64,7 +64,7 @@ function SetupWizard({ closeModal }) {
         showNotification({
           message: "Account and store setup completed.",
           status: 1,
-        })
+        }),
       );
       closeModal();
       window.location.reload();
@@ -73,7 +73,7 @@ function SetupWizard({ closeModal }) {
         showNotification({
           message: err || "Failed to complete setup",
           status: 0,
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -90,8 +90,8 @@ function SetupWizard({ closeModal }) {
             isActive
               ? "bg-primary text-primary-content scale-110 shadow-lg shadow-primary/20"
               : isCompleted
-              ? "bg-success text-success-content"
-              : "bg-base-200 text-base-content/30"
+                ? "bg-success text-success-content"
+                : "bg-base-200 text-base-content/30"
           }`}
         >
           {isCompleted ? (

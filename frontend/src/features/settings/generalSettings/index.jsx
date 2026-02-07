@@ -9,6 +9,7 @@ import {
   Printer as PrinterIcon,
   Save,
   RotateCcw,
+  Store as StoreIcon,
 } from "lucide-react";
 import {
   fetchSettings,
@@ -19,6 +20,13 @@ import {
   selectSettingsLoading,
   updateLocalSettings,
 } from "./generalSettingsSlice";
+import {
+  fetchStoreIdentity,
+  updateStoreIdentity,
+  setStoreInfo,
+  selectStoreInfo,
+  selectStoreIdentityLoading,
+} from "../storeIdentity/storeIdentitySlice";
 import { showNotification } from "../../common/headerSlice";
 import PaymentSettings from "../components/PaymentSettings";
 import CommunicationSettings from "./components/CommunicationSettings";
@@ -46,15 +54,25 @@ const GeneralSettings = () => {
   const settings = useSelector(selectSettings);
   const overrides = useSelector(selectSettingsOverrides) || {};
   const loading = useSelector(selectSettingsLoading);
+  const storeInfo = useSelector(selectStoreInfo);
+  const storeLoading = useSelector(selectStoreIdentityLoading);
+
   const [formData, setFormData] = useState({});
+  const [storeData, setStoreData] = useState({
+    name: "",
+    location: "",
+    contactPhone: "",
+  });
   const [hasChanges, setHasChanges] = useState(false);
+  const [hasStoreChanges, setHasStoreChanges] = useState(false);
 
   // Fetch settings on mount
   useEffect(() => {
     dispatch(fetchSettings());
+    dispatch(fetchStoreIdentity());
   }, [dispatch]);
 
-  // Sync state with Redux store
+  // Sync settings state with Redux store
   useEffect(() => {
     if (settings) {
       setFormData({
@@ -76,9 +94,19 @@ const GeneralSettings = () => {
     }
   }, [settings]);
 
-  // Handle Input Change
+  // Sync store identity state with Redux store
+  useEffect(() => {
+    if (storeInfo) {
+      setStoreData({
+        name: storeInfo.name || "",
+        location: storeInfo.location || "",
+        contactPhone: storeInfo.contactPhone || "",
+      });
+    }
+  }, [storeInfo]);
+
+  // Handle Settings Input Change
   const handleInputChange = (e) => {
-    // Handle both native events and custom objects from SearchableSelect/FormattedNumberInput
     const target = e.target || e;
     const { name, value, type, checked } = target;
 
@@ -89,25 +117,20 @@ const GeneralSettings = () => {
     setHasChanges(true);
   };
 
-  // Handle Submit
+  // Handle Store Identity Input Change
+  const handleStoreInputChange = (e) => {
+    const { name, value } = e.target;
+    setStoreData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setHasStoreChanges(true);
+  };
+
+  // Handle Settings Submit
   const handleSubmit = async () => {
     try {
-      const result = await dispatch(updateSettings(formData)).unwrap();
-
-      // If restaurant name was updated, sync it to the user's store list
-      if (formData.restaurantName && result.restaurantName) {
-        const activeStoreId = localStorage.getItem("activeStoreId");
-        if (activeStoreId) {
-          const { syncStoreName } = await import("../../../app/authSlice");
-          dispatch(
-            syncStoreName({
-              storeId: activeStoreId,
-              newName: result.restaurantName,
-            }),
-          );
-        }
-      }
-
+      await dispatch(updateSettings(formData)).unwrap();
       dispatch(
         showNotification({
           message: "Settings updated successfully",
@@ -119,6 +142,57 @@ const GeneralSettings = () => {
       dispatch(
         showNotification({
           message: error || "Failed to update settings",
+          status: 0,
+        }),
+      );
+    }
+  };
+
+  // Handle Store Identity Submit
+  const handleStoreSubmit = async () => {
+    try {
+      const activeStoreId = localStorage.getItem("activeStoreId");
+      if (!activeStoreId) {
+        throw new Error("No active store selected");
+      }
+
+      await dispatch(
+        updateStoreIdentity({
+          storeId: activeStoreId,
+          data: storeData,
+        }),
+      ).unwrap();
+
+      // Update user's cached store list in localStorage
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (user.stores) {
+        const storeIndex = user.stores.findIndex(
+          (s) => (s.storeId?._id || s._id) === activeStoreId,
+        );
+        if (storeIndex !== -1) {
+          if (user.stores[storeIndex].storeId) {
+            user.stores[storeIndex].storeId.name = storeData.name;
+          } else {
+            user.stores[storeIndex].name = storeData.name;
+          }
+          localStorage.setItem("user", JSON.stringify(user));
+        }
+      }
+
+      dispatch(
+        showNotification({
+          message: "Store information updated successfully",
+          status: 1,
+        }),
+      );
+      setHasStoreChanges(false);
+
+      // Refresh the page to update store switcher
+      window.location.reload();
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error || "Failed to update store information",
           status: 0,
         }),
       );
@@ -172,6 +246,8 @@ const GeneralSettings = () => {
     return <div className="p-4">Loading settings...</div>;
   }
 
+  const anyChanges = hasChanges || hasStoreChanges;
+
   return (
     <div className="flex flex-col gap-6 animate-fadeIn pb-32">
       {settings.brandName && (
@@ -205,56 +281,109 @@ const GeneralSettings = () => {
         </div>
       )}
 
-      <TitleCard title="Store-Specific Settings" topMargin="mt-0">
+      {/* Store Identity Section - Separate from inheritable settings */}
+      <TitleCard
+        title={
+          <div className="flex items-center gap-2">
+            <StoreIcon className="w-5 h-5" />
+            Store Identity
+          </div>
+        }
+        topMargin="mt-0"
+      >
+        <div className="alert alert-info mb-4">
+          <div>
+            <div className="text-sm font-medium">
+              Store-Specific Information
+            </div>
+            <div className="text-xs opacity-80">
+              These fields are unique to this store and cannot be inherited from
+              the brand.
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">
-                Restaurant Name{" "}
-                {!overrides.restaurantName && <InheritedBadge />}
-              </span>
+              <span className="label-text font-medium">Store Name</span>
             </label>
             <input
               type="text"
-              name="restaurantName"
-              value={formData.restaurantName || ""}
-              onChange={handleInputChange}
+              name="name"
+              value={storeData.name}
+              onChange={handleStoreInputChange}
               className="input input-bordered w-full"
               autoComplete="off"
+              placeholder="e.g., Downtown Location"
             />
           </div>
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">
-                Phone Number {!overrides.restaurantPhone && <InheritedBadge />}
-              </span>
+              <span className="label-text font-medium">Contact Phone</span>
             </label>
             <input
               type="text"
-              name="restaurantPhone"
-              value={formData.restaurantPhone || ""}
-              onChange={handleInputChange}
+              name="contactPhone"
+              value={storeData.contactPhone}
+              onChange={handleStoreInputChange}
               className="input input-bordered w-full"
               autoComplete="off"
+              placeholder="e.g., +1 (555) 123-4567"
             />
           </div>
 
           <div className="form-control md:col-span-2">
             <label className="label">
-              <span className="label-text font-medium">
-                Address {!overrides.restaurantAddress && <InheritedBadge />}
-              </span>
+              <span className="label-text font-medium">Store Address</span>
             </label>
             <textarea
-              name="restaurantAddress"
-              value={formData.restaurantAddress || ""}
-              onChange={handleInputChange}
+              name="location"
+              value={storeData.location}
+              onChange={handleStoreInputChange}
               className="textarea textarea-bordered h-24"
               autoComplete="off"
+              placeholder="e.g., 123 Main St, City, State, ZIP"
             ></textarea>
           </div>
+        </div>
 
+        {hasStoreChanges && (
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={handleStoreSubmit}
+              className={`btn btn-primary gap-2 ${storeLoading ? "loading" : ""}`}
+              disabled={storeLoading}
+            >
+              {!storeLoading && <Save className="w-4 h-4" />}
+              {storeLoading ? "Saving..." : "Save Store Information"}
+            </button>
+          </div>
+        )}
+      </TitleCard>
+
+      {/* Operational Settings - Inheritable from Brand */}
+      <TitleCard
+        title={
+          <div className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Operational Settings
+          </div>
+        }
+      >
+        <div className="alert alert-warning mb-4">
+          <div>
+            <div className="text-sm font-medium">Inheritable Settings</div>
+            <div className="text-xs opacity-80">
+              These settings can be inherited from your brand or customized per
+              store. Fields marked with <InheritedBadge /> are using brand
+              defaults.
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="form-control">
             <label className="label">
               <span className="label-text font-medium">
@@ -427,7 +556,7 @@ const GeneralSettings = () => {
                         mode: e.target.value,
                       },
                     }));
-                    setHasChanges(true); // Ensure save button enables
+                    setHasChanges(true);
                   }}
                 >
                   <option value="browser">Universal (Browser Popup)</option>
@@ -496,7 +625,7 @@ const GeneralSettings = () => {
                                   deviceName: device.productName,
                                 },
                               }));
-                              setHasChanges(true); // Ensure save button enables
+                              setHasChanges(true);
                             } catch (e) {
                               alert("Connection failed: " + e.message);
                             }
@@ -532,35 +661,40 @@ const GeneralSettings = () => {
 
       {/* Persistent Floating Save Bar */}
       <div className="fixed bottom-6 left-6 right-6 lg:left-80 z-40">
-        <div
-          className={`flex items-center justify-between bg-base-100/80 backdrop-blur-xl border border-base-300 p-4 rounded-2xl shadow-2xl transition-all duration-300 transform ${
-            hasChanges
-              ? "translate-y-0 opacity-100"
-              : "translate-y-10 opacity-0 pointer-events-none"
-          }`}
-        >
+        <div className="flex items-center justify-between bg-base-100/80 backdrop-blur-xl border border-base-300 p-4 rounded-2xl shadow-2xl transition-all duration-300">
           <div className="flex items-center gap-2 text-sm ml-2">
-            <div className="w-2 h-2 rounded-full bg-warning animate-pulse"></div>
-            <span className="font-medium">You have unsaved changes</span>
+            {anyChanges ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-warning animate-pulse"></div>
+                <span className="font-medium">You have unsaved changes</span>
+              </>
+            ) : (
+              <>
+                <div className="w-2 h-2 rounded-full bg-success"></div>
+                <span className="font-medium text-success">
+                  All changes saved
+                </span>
+              </>
+            )}
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={handleReset}
               className="btn btn-ghost btn-sm px-6 text-error hover:bg-error/10"
-              disabled={loading}
+              disabled={loading || !hasChanges}
             >
               Reset to Defaults
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={hasStoreChanges ? handleStoreSubmit : handleSubmit}
               className={`btn btn-primary btn-sm px-8 shadow-lg shadow-primary/20 ${
-                loading ? "loading" : ""
+                loading || storeLoading ? "loading" : ""
               }`}
-              disabled={loading}
+              disabled={loading || storeLoading || !anyChanges}
             >
-              {!loading && <Save className="w-4 h-4 mr-2" />}
-              {loading ? "Saving..." : "Save Changes"}
+              {!(loading || storeLoading) && <Save className="w-4 h-4 mr-2" />}
+              {loading || storeLoading ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </div>

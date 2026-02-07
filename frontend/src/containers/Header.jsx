@@ -100,9 +100,6 @@ function Header() {
               </span>
             )}
           </span>
-          <span className="text-sm text-base-content/60 ml-2 hidden sm:inline">
-            Management System
-          </span>
         </div>
 
         {/* Right side utility buttons and profile */}

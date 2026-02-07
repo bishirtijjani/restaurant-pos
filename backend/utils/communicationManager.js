@@ -28,6 +28,11 @@ class CommunicationManager {
    */
   async _send(storeId, channel, options) {
     try {
+      // Get store for name and settings
+      const Store = require("../models/Store");
+      const store = await Store.findById(storeId);
+      if (!store) throw new Error(`Store not found: ${storeId}`);
+
       // Get Effective settings including secrets (Provider Configs)
       const settings = await getEffectiveSettings(storeId, {
         includeSecrets: true,
@@ -63,11 +68,11 @@ class CommunicationManager {
       if (options.action) {
         const defaultTpl = TemplateProcessor.getDefaultTemplate(
           options.action,
-          channel
+          channel,
         );
         const tplData = {
           ...options.data,
-          restaurantName: store.settings.restaurantName || store.name,
+          restaurantName: store.name,
           currency: store.settings.currency?.symbol || "$",
         };
 
@@ -109,7 +114,7 @@ class CommunicationManager {
     } catch (error) {
       console.error(
         `[CommManager] Internal error in _send (${channel}):`,
-        error
+        error,
       );
       return { success: false, error: error.message };
     }

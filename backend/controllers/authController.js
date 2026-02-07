@@ -141,7 +141,7 @@ const login = async (req, res) => {
     // Populate stores to return to frontend
     const user = await User.findOne({ email, deletedAt: null }).populate(
       "stores.storeId",
-      "name settings.restaurantName settings.restaurantLogo",
+      "name settings.restaurantLogo",
     );
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
@@ -204,7 +204,7 @@ const pinLogin = async (req, res) => {
     // Populate stores to return to frontend
     const user = await User.findOne({ email, deletedAt: null }).populate(
       "stores.storeId",
-      "name settings.restaurantName settings.restaurantLogo",
+      "name settings.restaurantLogo",
     );
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
@@ -466,10 +466,7 @@ const getCurrentUser = async (req, res) => {
     // Populate stores
     const user = await User.findById(userId)
       .select("-password")
-      .populate(
-        "stores.storeId",
-        "name settings.restaurantName settings.restaurantLogo",
-      );
+      .populate("stores.storeId", "name settings.restaurantLogo");
 
     if (!user)
       return res

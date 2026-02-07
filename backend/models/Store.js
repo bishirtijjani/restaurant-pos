@@ -34,10 +34,10 @@ const storeSchema = new mongoose.Schema(
 
     // Store-Specific Settings (Inherits from Brand if not set)
     settings: {
-      restaurantName: { type: String, trim: true },
+      // Removed: restaurantName (use top-level 'name' instead)
+      // Removed: restaurantAddress (use top-level 'location' instead)
+      // Removed: restaurantPhone (use top-level 'contactPhone' instead)
       restaurantLogo: { type: String, trim: true },
-      restaurantAddress: { type: String, trim: true },
-      restaurantPhone: { type: String, trim: true },
       restaurantEmail: {
         type: String,
         trim: true,
@@ -164,7 +164,7 @@ const storeSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.models.Store || mongoose.model("Store", storeSchema);

@@ -223,27 +223,8 @@ const authSlice = createSlice({
     clearAuthError: (state) => {
       state.error = null;
     },
-    // Sync store name when updated via settings
-    syncStoreName: (state, action) => {
-      const { storeId, newName } = action.payload;
-      if (state.user && state.user.stores) {
-        const index = state.user.stores.findIndex(
-          (s) => (s.storeId?._id || s._id) === storeId,
-        );
-
-        if (index !== -1) {
-          // Update the store name in the user object
-          if (state.user.stores[index].storeId) {
-            state.user.stores[index].storeId.name = newName;
-          } else {
-            state.user.stores[index].name = newName;
-          }
-
-          // Persist updated user to localStorage
-          localStorage.setItem("user", JSON.stringify(state.user));
-        }
-      }
-    },
+    // Removed: syncStoreName reducer (obsolete after schema refactor)
+    // Store identity updates are now handled by storeIdentitySlice
   },
   extraReducers: (builder) => {
     builder
@@ -348,6 +329,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUserFromToken, clearAuthError, syncStoreName } =
-  authSlice.actions;
+export const { setUserFromToken, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;

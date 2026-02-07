@@ -30,13 +30,19 @@ function Layout() {
     }
   }, [newNotificationMessage, newNotificationStatus, dispatch]);
 
-  const isMockDashboard = location.pathname === "/app/mock-dashboard";
+  const isMockContent = [
+    "/app/mock-dashboard",
+    "/app/mock-pos",
+    "/app/mock-kds",
+    "/app/mock-inventory",
+    "/app/mock-analytics",
+  ].includes(location.pathname);
   const isMockSidebar = location.pathname === "/app/mock-sidebar";
 
   return (
     <>
       <div
-        className={`drawer ${(!isMockDashboard && !isMockSidebar) || isMockSidebar ? "lg:drawer-open" : ""} min-w-full w-full min-h-screen`}
+        className={`drawer ${(!isMockContent && !isMockSidebar) || isMockSidebar ? "lg:drawer-open" : ""} min-w-full w-full min-h-screen`}
       >
         <input
           id="left-sidebar-drawer"
@@ -44,7 +50,7 @@ function Layout() {
           className="drawer-toggle"
         />
         {!isMockSidebar && <PageContent />}
-        {(!isMockDashboard || isMockSidebar) && <LeftSidebar />}
+        {(!isMockContent || isMockSidebar) && <LeftSidebar />}
       </div>
 
       {!isMockSidebar && <RightSidebar />}

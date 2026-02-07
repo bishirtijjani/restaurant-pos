@@ -376,33 +376,38 @@ function PaymentConfirmationModalBody(props) {
 
         // Check Printer Mode
         if (settings?.printerSettings?.mode === "webusb") {
-          printerService
-            .printReceipt(createdOrder, {
-              currencySymbol: settings?.currency?.symbol || "₦",
-              restaurantName: settings?.restaurantName,
-              restaurantAddress: settings?.restaurantAddress,
-              restaurantPhone: settings?.restaurantPhone,
-              paperWidth: settings?.printerSettings?.paperWidth || "80mm",
-            })
-            .then(() => {
-              dispatch(
-                showNotification({
-                  message: "Receipt printed successfully",
-                  status: 1,
-                }),
-              );
-            })
-            .catch((err) => {
-              console.error("USB Print Failed", err);
-              dispatch(
-                openModal({
-                  title: "Order Receipt",
-                  bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
-                  extraObject: createdOrder,
-                  size: "lg",
-                }),
-              );
-            });
+          // Fetch store data for receipt
+          axios.get("/api/stores/current").then((storeResponse) => {
+            const store = storeResponse.data.data;
+            printerService
+              .printReceipt(
+                createdOrder,
+                {
+                  currencySymbol: settings?.currency?.symbol || "₦",
+                  paperWidth: settings?.printerSettings?.paperWidth || "80mm",
+                },
+                store,
+              )
+              .then(() => {
+                dispatch(
+                  showNotification({
+                    message: "Receipt printed successfully",
+                    status: 1,
+                  }),
+                );
+              })
+              .catch((err) => {
+                console.error("USB Print Failed", err);
+                dispatch(
+                  openModal({
+                    title: "Order Receipt",
+                    bodyType: MODAL_BODY_TYPES.RECEIPT_MODAL,
+                    extraObject: createdOrder,
+                    size: "lg",
+                  }),
+                );
+              });
+          });
         } else {
           dispatch(
             openModal({

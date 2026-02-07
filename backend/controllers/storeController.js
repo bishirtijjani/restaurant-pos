@@ -31,9 +31,8 @@ const createStore = asyncHandler(async (req, res) => {
         ownerId: req.user.id,
         brandSettings: {
           branding: {
-            restaurantName: settings?.brandName || name,
-            restaurantPhone: contactPhone || "",
-            restaurantAddress: location || "",
+            // Brand-level branding (logo, email, motto, etc.)
+            // Store identity fields (name, phone, address) are store-specific
           },
           currency: {
             code: settings?.currency || "NGN",
@@ -60,8 +59,7 @@ const createStore = asyncHandler(async (req, res) => {
     contactPhone,
     ownerId: req.user.id,
     settings: {
-      // For the first store, we can keep settings minimal to use inheritance
-      restaurantName: name,
+      // Settings will inherit from brand by default
     },
     status: "active",
   });
@@ -88,7 +86,7 @@ const createStore = asyncHandler(async (req, res) => {
     "create",
     null,
     newStore,
-    `Created new store: ${name}`
+    `Created new store: ${name}`,
   );
 
   res.status(201).json({
@@ -142,7 +140,7 @@ const getStoreById = asyncHandler(async (req, res) => {
   // For CRUD management, we allow fetching any store the user has access to.
 
   const hasAccess = req.user.stores.some(
-    (s) => s.storeId.toString() === req.params.id
+    (s) => s.storeId.toString() === req.params.id,
   );
 
   if (!hasAccess) {
@@ -187,7 +185,7 @@ const updateStore = asyncHandler(async (req, res) => {
 
   // Check authorization
   const userStoreLink = user.stores.find(
-    (s) => s.storeId.toString() === storeId.toString()
+    (s) => s.storeId.toString() === storeId.toString(),
   );
 
   if (!userStoreLink || userStoreLink.role !== "admin") {
@@ -211,11 +209,6 @@ const updateStore = asyncHandler(async (req, res) => {
   if (contactPhone) store.contactPhone = contactPhone;
   if (status) store.status = status;
 
-  // Sync with settings if name changed?
-  if (name && store.settings) {
-    store.settings.restaurantName = name;
-  }
-
   const updatedStore = await store.save();
 
   await logAction(
@@ -227,7 +220,7 @@ const updateStore = asyncHandler(async (req, res) => {
     "update",
     oldData,
     updatedStore,
-    `Updated store details: ${name || store.name}`
+    `Updated store details: ${name || store.name}`,
   );
 
   res.status(200).json({

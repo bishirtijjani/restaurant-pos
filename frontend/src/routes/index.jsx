@@ -83,11 +83,24 @@ const PlatformHealthDashboard = lazy(
 );
 const MockDashboard = lazy(() => import("../pages/protected/MockDashboard"));
 const MockSidebar = lazy(() => import("../pages/protected/MockDashboard")); // Reuse for now, Layout will hide content
+const MockPOSPage = lazy(() => import("../pages/protected/MockPOSPage"));
+const MockKDSPage = lazy(() => import("../pages/protected/MockKDSPage"));
+const MockInventoryPage = lazy(
+  () => import("../pages/protected/MockInventoryPage"),
+);
+const MockAnalyticsPage = lazy(
+  () => import("../pages/protected/MockAnalyticsPage"),
+);
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
   { path: "/mock-dashboard", component: MockDashboard },
+  { path: "/mock-dashboard", component: MockDashboard },
   { path: "/mock-sidebar", component: MockSidebar },
+  { path: "/mock-pos", component: MockPOSPage },
+  { path: "/mock-kds", component: MockKDSPage },
+  { path: "/mock-inventory", component: MockInventoryPage },
+  { path: "/mock-analytics", component: MockAnalyticsPage },
 
   { path: "/platform/health", component: PlatformHealthDashboard },
   { path: "/settings", component: SettingsHub },

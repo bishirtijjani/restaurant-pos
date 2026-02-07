@@ -96,7 +96,7 @@ class PrinterService {
     this.endpointOut = endpoint ? endpoint.endpointNumber : 1; // Default to 1
   }
 
-  async printReceipt(order, settings = {}) {
+  async printReceipt(order, settings = {}, store = {}) {
     if (!this.device) {
       throw new Error("Printer not connected");
     }
@@ -111,10 +111,10 @@ class PrinterService {
       buffer += COMMANDS.INIT;
       buffer += COMMANDS.ALIGN.CENTER;
       buffer += COMMANDS.TEXT_FORMAT.BOLD;
-      buffer += (settings.restaurantName || "Restaurant") + LF;
+      buffer += (store.name || "Restaurant") + LF;
       buffer += COMMANDS.TEXT_FORMAT.NORMAL;
-      buffer += (settings.restaurantAddress || "") + LF;
-      buffer += (settings.restaurantPhone || "") + LF;
+      buffer += (store.location || "") + LF;
+      buffer += (store.contactPhone || "") + LF;
       buffer += "--------------------------------" + LF;
 
       // Order Info

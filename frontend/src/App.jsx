@@ -29,6 +29,21 @@ initializeApp();
 initializeOfflineSupport();
 setupAxiosInterceptors();
 
+const PUBLIC_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/onboarding",
+];
+
+const checkIsPublicPage = () => {
+  const currentPath = window.location.pathname;
+  return PUBLIC_PATHS.some(
+    (path) => currentPath === path || currentPath.startsWith(path + "/"),
+  );
+};
+
 const ExternalRedirect = ({ url }) => {
   useEffect(() => {
     window.location.href = url;
@@ -53,20 +68,7 @@ function App() {
 
   useEffect(() => {
     // Don't fetch settings if we're on a public page to save quota
-    const publicPaths = [
-      "/login",
-      "/register",
-      "/forgot-password",
-      "/reset-password",
-      "/onboarding",
-    ];
-    const isPublicPage = publicPaths.some(
-      (path) =>
-        window.location.pathname === path ||
-        window.location.pathname.startsWith(path + "/"),
-    );
-
-    if (isPublicPage) return;
+    if (checkIsPublicPage()) return;
 
     dispatch(fetchSettings());
   }, [dispatch]);
@@ -76,20 +78,7 @@ function App() {
     if (hasFetchedUser.current) return;
 
     // Don't fetch user if we're on a public page
-    const publicPaths = [
-      "/login",
-      "/register",
-      "/forgot-password",
-      "/reset-password",
-      "/onboarding",
-    ];
-    const isPublicPage = publicPaths.some(
-      (path) =>
-        window.location.pathname === path ||
-        window.location.pathname.startsWith(path + "/"),
-    );
-
-    if (isPublicPage) {
+    if (checkIsPublicPage()) {
       hasFetchedUser.current = true;
       return;
     }
@@ -101,7 +90,7 @@ function App() {
     hasFetchedUser.current = true;
   }, [dispatch, authToken]);
 
-  if (loading && !authToken) {
+  if (loading && !authToken && !checkIsPublicPage()) {
     return <SuspenseContent />;
   }
 

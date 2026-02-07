@@ -349,6 +349,8 @@ const createOrder = async (req, res) => {
 
         // Trigger low stock alert if needed
         if (inventoryItem.currentStock <= inventoryItem.minStockLevel) {
+          // Fetch store for contact phone
+          const store = await Store.findById(storeId).session(session);
           CommManager.sendWhatsApp(storeId, {
             action: "low_stock",
             data: {
@@ -356,7 +358,7 @@ const createOrder = async (req, res) => {
               currentStock: inventoryItem.currentStock,
               unit: inventoryItem.unit,
             },
-            to: settings.restaurantPhone || "", // Configurable recipient
+            to: store?.contactPhone || "", // Use store's contact phone
           });
         }
       }

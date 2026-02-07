@@ -305,16 +305,21 @@ const UltraFastPOS = () => {
 
   // Instant print (no delays)
   const printReceipt = async (order, cartItems = []) => {
+    // Fetch store data for receipt
+    const storeResponse = await axios.get("/api/stores/current");
+    const store = storeResponse.data.data;
+
     // Check for Hybrid Printing Mode
     if (settings?.printerSettings?.mode === "webusb") {
       try {
-        await printerService.printReceipt(order, {
-          currencySymbol: settings?.currency?.symbol || "₦",
-          restaurantName: settings?.restaurantName,
-          restaurantAddress: settings?.restaurantAddress,
-          restaurantPhone: settings?.restaurantPhone,
-          paperWidth: settings?.printerSettings?.paperWidth || "80mm",
-        });
+        await printerService.printReceipt(
+          order,
+          {
+            currencySymbol: settings?.currency?.symbol || "₦",
+            paperWidth: settings?.printerSettings?.paperWidth || "80mm",
+          },
+          store,
+        );
         return;
       } catch (error) {
         console.warn(

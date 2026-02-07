@@ -23,12 +23,12 @@ const organizationSchema = new mongoose.Schema(
     brandSettings: {
       // Branding Defaults
       branding: {
-        restaurantName: { type: String, default: "" },
+        // Removed: restaurantName (use Organization.name instead)
+        // Removed: restaurantPhone (stores have unique phones)
+        // Removed: restaurantAddress (stores have unique addresses)
         restaurantLogo: { type: String, default: "" },
         restaurantMotto: { type: String, default: "" },
-        restaurantPhone: { type: String, default: "" },
         restaurantEmail: { type: String, default: "" },
-        restaurantAddress: { type: String, default: "" },
         website: { type: String, default: "" },
       },
 
@@ -153,7 +153,7 @@ const organizationSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Prevent the model from being re-compiled if it already exists

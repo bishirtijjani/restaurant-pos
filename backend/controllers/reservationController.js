@@ -167,11 +167,11 @@ exports.createReservation = async (req, res) => {
     const reservationStartUtc = fromZonedTime(timeString, timezone);
     const durationMinutes = duration || 120;
     const reservationEndUtc = new Date(
-      reservationStartUtc.getTime() + durationMinutes * 60000
+      reservationStartUtc.getTime() + durationMinutes * 60000,
     );
     const bufferMinutes = 15;
     const bufferedEndUtc = new Date(
-      reservationEndUtc.getTime() + bufferMinutes * 60000
+      reservationEndUtc.getTime() + bufferMinutes * 60000,
     );
 
     // 4. Check for Conflicts (scoped to transaction)
@@ -183,10 +183,10 @@ exports.createReservation = async (req, res) => {
       // Get all active reservations for this table around the target time
       // Expanding search window slightly to be safe
       const searchStart = new Date(
-        reservationStartUtc.getTime() - 24 * 60 * 60 * 1000
+        reservationStartUtc.getTime() - 24 * 60 * 60 * 1000,
       );
       const searchEnd = new Date(
-        reservationEndUtc.getTime() + 24 * 60 * 60 * 1000
+        reservationEndUtc.getTime() + 24 * 60 * 60 * 1000,
       );
 
       const existingReservations = await Reservation.find({
@@ -219,10 +219,10 @@ exports.createReservation = async (req, res) => {
 
         const existingDuration = existing.duration || 120;
         const existingEndUtc = new Date(
-          existingStartUtc.getTime() + existingDuration * 60000
+          existingStartUtc.getTime() + existingDuration * 60000,
         );
         const existingBufferedEndUtc = new Date(
-          existingEndUtc.getTime() + bufferMinutes * 60000
+          existingEndUtc.getTime() + bufferMinutes * 60000,
         );
 
         // Check Overlap:
@@ -247,7 +247,7 @@ exports.createReservation = async (req, res) => {
           return res.status(400).json({
             success: false,
             message: `Time conflict: Table is reserved from ${formatTime(
-              existingStartUtc
+              existingStartUtc,
             )} to ${formatTime(existingBufferedEndUtc)} (incl. buffer) for "${
               existing.customerName
             }"`,
@@ -293,7 +293,7 @@ exports.createReservation = async (req, res) => {
           storeId: req.storeId,
         },
       ],
-      { session }
+      { session },
     );
 
     await logAction(
@@ -308,7 +308,7 @@ exports.createReservation = async (req, res) => {
       `Created reservation for ${customerName}${
         table ? ` at table ${table.tableNumber}` : ""
       }`,
-      session
+      session,
     );
 
     await session.commitTransaction();
@@ -331,7 +331,7 @@ exports.createReservation = async (req, res) => {
         reservationDate: displayDate,
         reservationTime,
         partySize,
-        restaurantName: store.settings?.restaurantName || "Our Restaurant",
+        restaurantName: store.name || "Our Restaurant",
       };
 
       if (customerEmail) {
@@ -410,7 +410,7 @@ exports.updateReservation = async (req, res) => {
     const updatedReservation = await Reservation.findOneAndUpdate(
       { _id: req.params.id, storeId: req.storeId },
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     )
       .populate("tableId", "tableNumber floorId")
       .populate("createdBy", "fullname");
@@ -425,7 +425,7 @@ exports.updateReservation = async (req, res) => {
       oldReservation,
       updatedReservation,
       req.body.reason ||
-        `Updated reservation for ${updatedReservation.customerName}`
+        `Updated reservation for ${updatedReservation.customerName}`,
     );
 
     res.status(200).json({
@@ -491,7 +491,7 @@ exports.updateReservationStatus = async (req, res) => {
       "update",
       { status: oldStatus },
       { status },
-      reason || `Changed reservation status from ${oldStatus} to ${status}`
+      reason || `Changed reservation status from ${oldStatus} to ${status}`,
     );
 
     const populatedReservation = await Reservation.findById(reservation._id)
@@ -541,7 +541,7 @@ exports.deleteReservation = async (req, res) => {
       "delete",
       reservation,
       null,
-      `Deleted reservation for ${reservation.customerName}`
+      `Deleted reservation for ${reservation.customerName}`,
     );
 
     res.status(200).json({
@@ -669,7 +669,7 @@ exports.checkInReservation = async (req, res) => {
         { status: "confirmed" },
         { status: "seated", orderId: newOrder._id },
         `Checked in reservation for ${reservation.customerName}, created order #${orderNumber}`,
-        session
+        session,
       );
 
       await session.commitTransaction();

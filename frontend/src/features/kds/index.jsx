@@ -35,10 +35,10 @@ const KDS = () => {
   const { can, role } = useAuth();
 
   const { orders, settings, loading, error, lastUpdate } = useSelector(
-    (state) => state.kds
+    (state) => state.kds,
   );
   const { stations, currentStation } = useSelector(
-    (state) => state.kdsStations
+    (state) => state.kdsStations,
   );
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -102,7 +102,13 @@ const KDS = () => {
           break;
       }
     },
-    [currentStation, showCompleted, settings.soundEnabled, dispatch, canViewKDS]
+    [
+      currentStation,
+      showCompleted,
+      settings.soundEnabled,
+      dispatch,
+      canViewKDS,
+    ],
   );
 
   // WebSocket connection (only if has permission and station is set)
@@ -257,7 +263,7 @@ const KDS = () => {
   // Audio Context Unlock Overlay
   if (!isAudioUnlocked && canViewKDS) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-base-100 bg-opacity-95 backdrop-blur-sm">
+      <div className="fixed inset-0 z-20 flex items-center justify-center bg-base-100 bg-opacity-95 backdrop-blur-sm">
         <div className="text-center max-w-lg p-8">
           <div className="mb-6 flex justify-center">
             <Volume2 size={64} className="text-primary animate-pulse" />
@@ -288,7 +294,7 @@ const KDS = () => {
       className="min-h-screen bg-base-200 flex flex-col"
     >
       {/* Header */}
-      <div className="navbar bg-base-100 shadow-lg sticky top-0 z-50 px-2 lg:px-4">
+      <div className="navbar bg-base-100 shadow-lg sticky top-0 z-20 px-2 lg:px-4">
         <div className="flex-1 overflow-hidden">
           <h1 className="text-lg md:text-2xl font-bold truncate">
             Kitchen Display
@@ -332,8 +338,8 @@ const KDS = () => {
               {showCompleted
                 ? "Completed"
                 : orders.length === 1
-                ? "Order"
-                : "Orders"}
+                  ? "Order"
+                  : "Orders"}
             </span>
           </div>
 
@@ -360,7 +366,7 @@ const KDS = () => {
                       title: "KDS Settings",
                       bodyType: MODAL_BODY_TYPES.KDS_SETTINGS,
                       size: "lg",
-                    })
+                    }),
                   );
                 }}
               >
@@ -420,7 +426,7 @@ const KDS = () => {
                           title: "KDS Settings",
                           bodyType: MODAL_BODY_TYPES.KDS_SETTINGS,
                           size: "lg",
-                        })
+                        }),
                       );
                     }}
                   >

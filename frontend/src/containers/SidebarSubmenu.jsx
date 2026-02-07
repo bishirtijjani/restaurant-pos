@@ -27,7 +27,7 @@ function SidebarSubmenu({ submenu, name, icon }) {
         }`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="p-1.5 rounded-lg bg-accent/30 transition-colors duration-200 group-hover:bg-accent/50">
+        <div className="p-1.5 rounded-lg bg-primary/20 transition-colors duration-200 group-hover:bg-primary/30">
           {icon}
         </div>
         <span className="flex-1 tracking-wide text-[14px]">{name}</span>
@@ -61,7 +61,7 @@ function SidebarSubmenu({ submenu, name, icon }) {
                   }`}
                 >
                   <div
-                    className={`p-1 bg-accent/30 rounded-lg ${isActive ? "" : "group-hover:bg-accent/50"}`}
+                    className={`p-1 bg-primary/20 rounded-lg ${isActive ? "" : "group-hover:bg-primary/30"}`}
                   >
                     {m.icon}
                   </div>

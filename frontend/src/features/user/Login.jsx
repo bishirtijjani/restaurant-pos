@@ -9,7 +9,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ErrorText from "../../components/Typography/ErrorText";
 import InputText from "../../components/Input/InputText";
-import { showNotification } from "../common/headerSlice";
+import {
+  showNotification,
+  removeNotificationMessage,
+} from "../common/headerSlice";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   EyeIcon,
   EyeSlashIcon,
@@ -24,6 +29,9 @@ function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
+  const { newNotificationMessage, newNotificationStatus } = useSelector(
+    (state) => state.header,
+  );
 
   const [loginObj, setLoginObj] = useState({
     email: localStorage.getItem("lastEmail") || "",
@@ -31,11 +39,33 @@ function Login() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loginMode, setLoginMode] = useState("pin");
+  const [fieldErrors, setFieldErrors] = useState({
+    email: false,
+    password: false,
+  });
+
+  // Handle toast notifications
+  useEffect(() => {
+    if (newNotificationMessage !== "") {
+      if (newNotificationStatus === 1) toast.success(newNotificationMessage);
+      if (newNotificationStatus === 0) toast.error(newNotificationMessage);
+      dispatch(removeNotificationMessage());
+    }
+  }, [newNotificationMessage, newNotificationStatus, dispatch]);
 
   const submitForm = async (e) => {
     e.preventDefault();
     const { email, password } = loginObj;
+
+    // Reset field errors
+    setFieldErrors({ email: false, password: false });
+
+    // Validate fields
     if (!email || !password) {
+      setFieldErrors({
+        email: !email,
+        password: !password,
+      });
       dispatch(
         showNotification({ message: "Please fill in all fields", status: 0 }),
       );
@@ -188,27 +218,45 @@ function Login() {
                 <form onSubmit={submitForm} className="space-y-6">
                   <div className="space-y-4">
                     <div className="relative">
-                      <EnvelopeIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                      <EnvelopeIcon
+                        className={`absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.email ? "text-error" : "text-white/20"}`}
+                      />
                       <InputText
                         defaultValue={loginObj.email}
                         updateType="email"
                         containerStyle="mt-0"
                         labelTitle=""
-                        updateFormValue={updateFormValue}
+                        updateFormValue={(update) => {
+                          updateFormValue(update);
+                          if (fieldErrors.email)
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              email: false,
+                            }));
+                        }}
                         placeholder="Email Address"
-                        className="pl-14 bg-white/5 border-white/10 focus:border-brand/50 rounded-full"
+                        className={`pl-14 bg-white/5 focus:border-brand/50 rounded-full ${fieldErrors.email ? "border-error" : "border-white/10"}`}
                       />
                     </div>
                     <div className="relative">
-                      <KeyIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                      <KeyIcon
+                        className={`absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.password ? "text-error" : "text-white/20"}`}
+                      />
                       <InputText
                         defaultValue={loginObj.password}
                         type={showPassword ? "text" : "password"}
                         updateType="password"
                         labelTitle=""
-                        updateFormValue={updateFormValue}
+                        updateFormValue={(update) => {
+                          updateFormValue(update);
+                          if (fieldErrors.password)
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              password: false,
+                            }));
+                        }}
                         placeholder="Password"
-                        className="pl-14 bg-white/5 border-white/10 focus:border-brand/50 rounded-full"
+                        className={`pl-14 bg-white/5 focus:border-brand/50 rounded-full ${fieldErrors.password ? "border-error" : "border-white/10"}`}
                       />
                       <button
                         type="button"
@@ -286,6 +334,18 @@ function Login() {
         </div>
       </div>
       <SupportLink />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }
