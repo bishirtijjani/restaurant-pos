@@ -91,7 +91,7 @@ class ErrorBoundary extends React.Component {
                       Copy Error
                     </button>
                   </div>
-                  <pre className="text-xs font-mono text-error/80 overflow-x-auto p-2 bg-base-100 rounded-lg border border-base-content/5">
+                  <pre className="text-xs font-mono text-error/80 whitespace-pre-wrap break-words p-2 bg-base-100 rounded-lg border border-base-content/5 overflow-hidden">
                     {this.state.error?.stack || this.state.error?.toString()}
                   </pre>
                 </div>

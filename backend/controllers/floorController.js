@@ -93,6 +93,7 @@ exports.createFloor = async (req, res) => {
       description: description || "",
       order: order || 0,
       storeId: req.storeId,
+      organizationId: req.organizationId,
     });
 
     await logAction(
@@ -104,7 +105,7 @@ exports.createFloor = async (req, res) => {
       "create",
       null,
       floor,
-      `Created floor: ${floor.name}`
+      `Created floor: ${floor.name}`,
     );
 
     res.status(201).json({
@@ -163,7 +164,7 @@ exports.updateFloor = async (req, res) => {
     const updatedFloor = await Floor.findOneAndUpdate(
       { _id: req.params.id, storeId: req.storeId },
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     await logAction(
@@ -175,7 +176,7 @@ exports.updateFloor = async (req, res) => {
       "update",
       oldFloor,
       updatedFloor,
-      req.body.reason || `Updated floor: ${updatedFloor.name}`
+      req.body.reason || `Updated floor: ${updatedFloor.name}`,
     );
 
     res.status(200).json({
@@ -200,7 +201,7 @@ exports.updateFloorLayout = async (req, res) => {
     const floor = await Floor.findOneAndUpdate(
       { _id: req.params.id, storeId: req.storeId },
       { layout },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!floor) {
@@ -222,7 +223,7 @@ exports.updateFloorLayout = async (req, res) => {
       "update",
       null,
       floor,
-      `Updated floor layout for: ${floor.name}`
+      `Updated floor layout for: ${floor.name}`,
     );
 
     res.status(200).json({
@@ -256,8 +257,8 @@ exports.updateTablePositions = async (req, res) => {
       Table.findOneAndUpdate(
         { _id: table.id, storeId: req.storeId },
         { position: table.position },
-        { new: true }
-      )
+        { new: true },
+      ),
     );
 
     await Promise.all(updatePromises);
@@ -274,7 +275,7 @@ exports.updateTablePositions = async (req, res) => {
       "update",
       null,
       { count: tables.length }, // logging count of moved tables
-      `Bulk updated positions for ${tables.length} tables`
+      `Bulk updated positions for ${tables.length} tables`,
     );
 
     res.status(200).json({
@@ -324,7 +325,7 @@ exports.deleteFloor = async (req, res) => {
         "update",
         { ...floor.toObject(), isActive: true },
         floor,
-        `Deactivated floor: ${floor.name} (${tablesCount} tables)`
+        `Deactivated floor: ${floor.name} (${tablesCount} tables)`,
       );
 
       return res.status(200).json({
@@ -345,7 +346,7 @@ exports.deleteFloor = async (req, res) => {
       "delete",
       floor,
       null,
-      `Deleted floor: ${floor.name}`
+      `Deleted floor: ${floor.name}`,
     );
 
     res.status(200).json({

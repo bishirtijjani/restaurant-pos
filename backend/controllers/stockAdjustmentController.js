@@ -122,13 +122,14 @@ exports.createStockAdjustment = async (req, res) => {
       type,
       reason,
       quantity: Math.abs(
-        type === "correction" ? newStock - previousStock : quantity
+        type === "correction" ? newStock - previousStock : quantity,
       ),
       previousStock,
       newStock,
       notes,
       performedBy: req.user.id,
       storeId: req.storeId,
+      organizationId: req.organizationId,
     });
 
     item.currentStock = newStock;

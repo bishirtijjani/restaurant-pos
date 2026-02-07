@@ -14,6 +14,12 @@ const voidLogSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
     orderNumber: {
       type: String,
       required: true,
@@ -69,7 +75,7 @@ const voidLogSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes for efficient queries

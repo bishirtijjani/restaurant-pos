@@ -37,7 +37,7 @@ const ExpenseSchema = new mongoose.Schema(
     },
     invoice: {
       type: String, // Invoice number or ID
-      required: true,
+      required: false,
     },
     storeId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -71,10 +71,16 @@ const ExpenseSchema = new mongoose.Schema(
       reason: { type: String, default: null },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Scoped uniqueness
-ExpenseSchema.index({ storeId: 1, invoice: 1 }, { unique: true });
+ExpenseSchema.index(
+  { storeId: 1, invoice: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { invoice: { $exists: true, $ne: "" } },
+  },
+);
 
 module.exports = mongoose.model("Expense", ExpenseSchema);

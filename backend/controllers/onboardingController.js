@@ -13,6 +13,7 @@ exports.getProgress = async (req, res) => {
       progress = await OnboardingProgress.create({
         userId: req.user.id,
         storeId: req.storeId,
+        organizationId: req.organizationId,
         completedSteps: [],
         completedTours: [],
         skippedTours: [],
@@ -40,12 +41,13 @@ exports.updateStepProgress = async (req, res) => {
       progress = await OnboardingProgress.create({
         userId: req.user.id,
         storeId: req.storeId,
+        organizationId: req.organizationId,
       });
     }
 
     // Check if step already completed
     const stepExists = progress.completedSteps.find(
-      (s) => s.tourId === tourId && s.stepId === stepId
+      (s) => s.tourId === tourId && s.stepId === stepId,
     );
 
     if (!stepExists) {
@@ -73,6 +75,7 @@ exports.completeTour = async (req, res) => {
       progress = await OnboardingProgress.create({
         userId: req.user.id,
         storeId: req.storeId,
+        organizationId: req.organizationId,
       });
     }
 
@@ -110,6 +113,7 @@ exports.skipTour = async (req, res) => {
       progress = await OnboardingProgress.create({
         userId: req.user.id,
         storeId: req.storeId,
+        organizationId: req.organizationId,
       });
     }
 
@@ -148,7 +152,7 @@ exports.resetProgress = async (req, res) => {
       "delete",
       null,
       null,
-      `Reset onboarding progress for user: ${userId}`
+      `Reset onboarding progress for user: ${userId}`,
     );
 
     res.json({ success: true, message: "Progress reset successfully" });

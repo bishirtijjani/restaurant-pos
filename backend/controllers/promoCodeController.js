@@ -37,6 +37,7 @@ const createPromoCode = async (req, res) => {
     const promoCode = new PromoCode({
       ...promoData,
       storeId: req.storeId,
+      organizationId: req.organizationId,
       lastAction: {
         action: "create",
         performedBy: req.user.id,
@@ -55,7 +56,7 @@ const createPromoCode = async (req, res) => {
       "create",
       null,
       promoCode,
-      `Created promo code: ${promoCode.code}`
+      `Created promo code: ${promoCode.code}`,
     );
 
     res.status(201).json({
@@ -96,12 +97,12 @@ const getAllPromoCodes = async (req, res) => {
         status: !code.isActive
           ? "inactive"
           : isExpired
-          ? "expired"
-          : isNotStarted
-          ? "scheduled"
-          : usageLimitReached
-          ? "exhausted"
-          : "active",
+            ? "expired"
+            : isNotStarted
+              ? "scheduled"
+              : usageLimitReached
+                ? "exhausted"
+                : "active",
       };
     });
 
@@ -165,7 +166,7 @@ const validateCode = async (req, res) => {
       code,
       orderAmount || 0,
       orderType || "dine-in",
-      customerId
+      customerId,
     );
 
     if (!result.valid) {
@@ -243,7 +244,7 @@ const updatePromoCode = async (req, res) => {
           createdAt: new Date(),
         },
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     await logAction(
@@ -255,7 +256,7 @@ const updatePromoCode = async (req, res) => {
       "edit",
       oldPromoCode,
       promoCode,
-      `Updated promo code: ${promoCode.code}`
+      `Updated promo code: ${promoCode.code}`,
     );
 
     res.status(200).json({
@@ -300,7 +301,7 @@ const deletePromoCode = async (req, res) => {
       "delete",
       promoCode,
       null,
-      `Deleted promo code: ${promoCode.code}`
+      `Deleted promo code: ${promoCode.code}`,
     );
 
     res.status(200).json({

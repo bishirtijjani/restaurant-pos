@@ -15,7 +15,7 @@ function AddExpenseModalBody({ closeModal }) {
   );
   const currency = settings?.currency?.symbol || "$";
   const [expense, setExpense] = useState({
-    date: "",
+    date: new Date().toISOString().split("T")[0],
     category: "",
     amount: "",
     description: "",
@@ -43,14 +43,13 @@ function AddExpenseModalBody({ closeModal }) {
   ];
 
   const saveExpense = () => {
+    if (expense.date.trim() === "") return setErrorMessage("Date is required!");
     if (expense.amount.trim() === "")
       return setErrorMessage("Amount is required!");
     if (expense.category.trim() === "")
       return setErrorMessage("Category is required!");
     if (expense.description.trim() === "")
       return setErrorMessage("Description is required!");
-    if (expense.invoice.trim() === "")
-      return setErrorMessage("Invoice is required!");
 
     setLoading(true);
     dispatch(addExpense(expense))

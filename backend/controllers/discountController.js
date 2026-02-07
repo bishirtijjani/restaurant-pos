@@ -22,6 +22,7 @@ const createDiscount = async (req, res) => {
     const discount = new Discount({
       ...discountData,
       storeId: req.storeId,
+      organizationId: req.organizationId,
       lastAction: {
         action: "create",
         performedBy: req.user.id,
@@ -40,7 +41,7 @@ const createDiscount = async (req, res) => {
       "create",
       null,
       discount,
-      `Created discount: ${discount.name}`
+      `Created discount: ${discount.name}`,
     );
 
     res.status(201).json({
@@ -163,7 +164,7 @@ const updateDiscount = async (req, res) => {
           createdAt: new Date(),
         },
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     await logAction(
@@ -175,7 +176,7 @@ const updateDiscount = async (req, res) => {
       "edit",
       oldDiscount,
       discount,
-      `Updated discount: ${discount.name}`
+      `Updated discount: ${discount.name}`,
     );
 
     res.status(200).json({
@@ -217,7 +218,7 @@ const deleteDiscount = async (req, res) => {
       "delete",
       discount,
       null,
-      `Deleted discount: ${discount.name}`
+      `Deleted discount: ${discount.name}`,
     );
 
     res.status(200).json({

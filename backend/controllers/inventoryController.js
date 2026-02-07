@@ -120,6 +120,7 @@ exports.createInventoryItem = async (req, res) => {
       notes,
       lastRestockDate: currentStock > 0 ? new Date() : null,
       storeId: req.storeId,
+      organizationId: req.organizationId,
     });
 
     // Log the action
@@ -132,7 +133,7 @@ exports.createInventoryItem = async (req, res) => {
       "create",
       null,
       inventoryItem,
-      `Created inventory item: ${name}`
+      `Created inventory item: ${name}`,
     );
 
     const populatedItem = await InventoryItem.findById(inventoryItem._id)
@@ -191,7 +192,7 @@ exports.updateInventoryItem = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     )
       .populate("supplier", "name phone email")
       .populate("linkedMenuItems.menuItemId", "name");
@@ -206,7 +207,7 @@ exports.updateInventoryItem = async (req, res) => {
       "update",
       oldItem,
       updatedItem,
-      req.body.reason || `Updated inventory item: ${updatedItem.name}`
+      req.body.reason || `Updated inventory item: ${updatedItem.name}`,
     );
 
     // Check for low stock alert
@@ -266,7 +267,7 @@ exports.deleteInventoryItem = async (req, res) => {
       "delete",
       item,
       null,
-      `Deleted inventory item: ${item.name}`
+      `Deleted inventory item: ${item.name}`,
     );
 
     res.status(200).json({
@@ -340,7 +341,7 @@ exports.linkToMenuItem = async (req, res) => {
 
     // Check if already linked
     const existingLink = inventoryItem.linkedMenuItems.find(
-      (link) => link.menuItemId.toString() === menuItemId
+      (link) => link.menuItemId.toString() === menuItemId,
     );
 
     if (existingLink) {
@@ -371,7 +372,7 @@ exports.linkToMenuItem = async (req, res) => {
       oldItem,
       inventoryItem,
       `Linked to menu item ${menuItemId} (Qty: ${quantityUsed})`,
-      session
+      session,
     );
 
     await session.commitTransaction();
@@ -417,7 +418,7 @@ exports.unlinkMenuItem = async (req, res) => {
     const oldItem = { ...inventoryItem.toObject() };
 
     inventoryItem.linkedMenuItems = inventoryItem.linkedMenuItems.filter(
-      (link) => link.menuItemId.toString() !== menuItemId
+      (link) => link.menuItemId.toString() !== menuItemId,
     );
 
     await inventoryItem.save({ session });
@@ -432,7 +433,7 @@ exports.unlinkMenuItem = async (req, res) => {
       oldItem,
       inventoryItem,
       `Unlinked menu item ${menuItemId}`,
-      session
+      session,
     );
 
     await session.commitTransaction();

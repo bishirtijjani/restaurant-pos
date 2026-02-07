@@ -13,6 +13,12 @@ const onboardingProgressSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
     completedSteps: [
       {
         tourId: { type: String, required: true },
@@ -45,7 +51,7 @@ const onboardingProgressSchema = new mongoose.Schema(
       stepIndex: Number,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Compound index to ensure one progress document per user per store

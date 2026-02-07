@@ -120,7 +120,7 @@ exports.updateTable = async (req, res) => {
     const updatedTable = await Table.findOneAndUpdate(
       { _id: req.params.id, storeId: req.storeId },
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     )
       .populate("floorId", "name")
       .populate("assignedStaff", "fullname")
@@ -136,7 +136,7 @@ exports.updateTable = async (req, res) => {
       "update",
       oldTable,
       updatedTable,
-      req.body.reason || `Updated table: ${updatedTable.tableNumber}`
+      req.body.reason || `Updated table: ${updatedTable.tableNumber}`,
     );
 
     // Update floor capacity
@@ -345,6 +345,7 @@ exports.createTable = async (req, res) => {
       assignedStaff: assignedStaff || null,
       status: "available",
       storeId: req.storeId,
+      organizationId: req.organizationId,
     });
 
     await logAction(
@@ -356,7 +357,7 @@ exports.createTable = async (req, res) => {
       "create",
       null,
       table,
-      `Created table: ${tableNumber} on ${floor.name}`
+      `Created table: ${tableNumber} on ${floor.name}`,
     );
 
     const populatedTable = await Table.findById(table._id)
@@ -424,7 +425,7 @@ exports.updateTableStatus = async (req, res) => {
       "state_change",
       { status: oldStatus },
       { status },
-      reason || `Changed status from ${oldStatus} to ${status}`
+      reason || `Changed status from ${oldStatus} to ${status}`,
     );
 
     const populatedTable = await Table.findById(table._id)
@@ -504,7 +505,7 @@ exports.linkTableToOrder = async (req, res) => {
       "update",
       { currentOrder: null },
       { currentOrder: orderId },
-      `Linked table ${table.tableNumber} to order #${order.orderNumber}`
+      `Linked table ${table.tableNumber} to order #${order.orderNumber}`,
     );
 
     const populatedTable = await Table.findById(table._id)
@@ -557,7 +558,7 @@ exports.unlinkTableFromOrder = async (req, res) => {
       "update",
       { currentOrder: oldOrderId },
       { currentOrder: null },
-      `Unlinked table ${table.tableNumber} from order`
+      `Unlinked table ${table.tableNumber} from order`,
     );
 
     const populatedTable = await Table.findById(table._id)
@@ -615,7 +616,7 @@ exports.mergeTables = async (req, res) => {
     }
 
     const busyTables = tables.filter(
-      (t) => t.currentOrder || t.status === "reserved"
+      (t) => t.currentOrder || t.status === "reserved",
     );
     if (busyTables.length > 0) {
       return res.status(400).json({
@@ -641,7 +642,7 @@ exports.mergeTables = async (req, res) => {
         { mergedWith: [] },
         { mergedWith: mergedTableIds },
         reason ||
-          `Merged tables: ${tables.map((t) => t.tableNumber).join(", ")}`
+          `Merged tables: ${tables.map((t) => t.tableNumber).join(", ")}`,
       );
     }
 
@@ -698,7 +699,7 @@ exports.splitTables = async (req, res) => {
 
     await Table.updateMany(
       { _id: { $in: allMergedIds } },
-      { $set: { mergedWith: [], status: "available" } }
+      { $set: { mergedWith: [], status: "available" } },
     );
 
     for (const tableId of allMergedIds) {
@@ -711,7 +712,7 @@ exports.splitTables = async (req, res) => {
         "split",
         { mergedWith: oldMergedWith },
         { mergedWith: [] },
-        reason || "Tables split"
+        reason || "Tables split",
       );
     }
 
@@ -814,7 +815,7 @@ exports.deleteTable = async (req, res) => {
       "delete",
       table,
       { isActive: false },
-      `Deleted table: ${table.tableNumber}`
+      `Deleted table: ${table.tableNumber}`,
     );
 
     res.status(200).json({

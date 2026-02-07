@@ -55,13 +55,12 @@ function EditExpenseModalBody({ closeModal, extraObject }) {
   }, [expenseData]);
 
   const saveExpense = () => {
+    if (expense.date.trim() === "") return setErrorMessage("Date is required!");
     if (expense.amount < 1) return setErrorMessage("Amount is required!");
     if (expense.category.trim() === "")
       return setErrorMessage("Category is required!");
     if (expense.description.trim() === "")
       return setErrorMessage("Description is required!");
-    if (expense.invoice.trim() === "")
-      return setErrorMessage("Invoice is required!");
 
     setLoading(true);
     console.log(expense);

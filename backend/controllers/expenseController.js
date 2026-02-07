@@ -27,6 +27,7 @@ const createExpense = async (req, res) => {
       invoice,
       createdBy,
       storeId: req.storeId,
+      organizationId: req.organizationId,
     });
     const savedExpense = await expense.save();
 
@@ -40,7 +41,7 @@ const createExpense = async (req, res) => {
       "create",
       null,
       savedExpense,
-      `Created new ${category} expense of ${amount}`
+      `Created new ${category} expense of ${amount}`,
     );
 
     res.status(201).json(savedExpense);
@@ -96,7 +97,7 @@ const updateExpense = async (req, res) => {
     const updatedExpense = await Expense.findOneAndUpdate(
       { _id: id, storeId: req.storeId },
       updatedData,
-      { new: true }
+      { new: true },
     );
 
     // Log the expense update
@@ -109,7 +110,7 @@ const updateExpense = async (req, res) => {
       "update",
       oldExpense,
       updatedExpense,
-      `Updated ${updatedExpense.category} expense`
+      `Updated ${updatedExpense.category} expense`,
     );
 
     res.status(200).json(updatedExpense);
@@ -144,7 +145,7 @@ const deleteExpense = async (req, res) => {
       "delete",
       expenseToDelete,
       null,
-      `Deleted ${expenseToDelete.category} expense of ${expenseToDelete.amount}`
+      `Deleted ${expenseToDelete.category} expense of ${expenseToDelete.amount}`,
     );
 
     res.status(200).json({ message: "Expense deleted successfully" });

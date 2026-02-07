@@ -141,15 +141,15 @@ exports.voidOrderItems = async (req, res) => {
 
     // Recalculate order total (excluding voided items)
     const activeItems = order.orderItems.filter(
-      (item) => !item.voidInfo?.isVoided
+      (item) => !item.voidInfo?.isVoided,
     );
     const newSubtotal = activeItems.reduce(
       (sum, item) => sum + item.subtotal,
-      0
+      0,
     );
     const newAddOnsTotal = activeItems.reduce(
       (sum, item) => sum + (item.addOnsTotal || 0),
-      0
+      0,
     );
 
     // Recalculate tax on new subtotal
@@ -200,6 +200,7 @@ exports.voidOrderItems = async (req, res) => {
       inventoryRestored: restoredInventoryItems.length > 0,
       restoredItems: restoredInventoryItems,
       storeId: req.storeId,
+      organizationId: req.organizationId,
     });
     await voidLog.save({ session });
 
@@ -214,7 +215,7 @@ exports.voidOrderItems = async (req, res) => {
       oldOrder,
       order,
       `Voided ${voidedItems.length} items from order #${order.orderNumber}: ${reason}`,
-      session
+      session,
     );
 
     await session.commitTransaction();
@@ -293,11 +294,11 @@ exports.getAllVoidLogs = async (req, res) => {
     // Calculate summary
     const totalVoidedAmount = voidLogs.reduce(
       (sum, log) => sum + log.totalVoidedAmount,
-      0
+      0,
     );
     const totalVoidedItems = voidLogs.reduce(
       (sum, log) => sum + log.voidedItems.length,
-      0
+      0,
     );
 
     res.status(200).json({
