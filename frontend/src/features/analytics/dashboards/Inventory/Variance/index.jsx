@@ -69,29 +69,29 @@ const VarianceDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
           title="Potential Gain"
-          value={`$${summary.totalGain.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-          icon={<TrendingUpIcon className="h-6 w-6" />}
+          value={`$${(summary.totalGain || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={TrendingUpIcon}
           color="success"
           loading={isLoading}
         />
         <KPICard
           title="Total Shrinkage"
-          value={`$${Math.abs(summary.totalLoss).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-          icon={<TrendingDownIcon className="h-6 w-6" />}
+          value={`$${Math.abs(summary.totalLoss || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={TrendingDownIcon}
           color="error"
           loading={isLoading}
         />
         <KPICard
           title="Net Financial Impact"
-          value={`${summary.netImpact < 0 ? "-" : ""}$${Math.abs(summary.netImpact).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-          icon={<BarChartIcon className="h-6 w-6" />}
-          color={summary.netImpact >= 0 ? "primary" : "warning"}
+          value={`${(summary.netImpact || 0) < 0 ? "-" : ""}$${Math.abs(summary.netImpact || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={BarChartIcon}
+          color={(summary.netImpact || 0) >= 0 ? "primary" : "warning"}
           loading={isLoading}
         />
         <KPICard
           title="Total Discrepancies"
-          value={summary.totalAdjustments}
-          icon={<AlertTriangleIcon className="h-6 w-6" />}
+          value={summary.totalAdjustments || 0}
+          icon={AlertTriangleIcon}
           color="accent"
           loading={isLoading}
         />
@@ -166,7 +166,7 @@ const VarianceDashboard = () => {
                       className={`text-right font-bold ${item.totalLoss < 0 ? "text-error" : "text-success"}`}
                     >
                       {item.totalLoss < 0 ? "-" : ""}$
-                      {Math.abs(item.totalLoss).toLocaleString()}
+                      {Math.abs(item.totalLoss || 0).toLocaleString()}
                     </td>
                   </tr>
                 ))}
