@@ -17,6 +17,7 @@ import { getCurrentUser, setUserFromToken } from "./app/authSlice";
 import SuspenseContent from "./containers/SuspenseContent";
 import StoreGuard from "./containers/StoreGuard";
 import ModalLayout from "./containers/ModalLayout";
+import { useOfflinePrefetch } from "./features/common/hooks/useOfflinePrefetch";
 
 const Layout = lazy(() => import("./containers/Layout"));
 const Login = lazy(() => import("./pages/Login"));
@@ -52,6 +53,9 @@ const ExternalRedirect = ({ url }) => {
 };
 
 function App() {
+  // Trigger proactive offline caching (only runs if online & authenticated)
+  useOfflinePrefetch();
+
   const dispatch = useDispatch();
   const {
     user,

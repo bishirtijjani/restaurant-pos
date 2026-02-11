@@ -168,8 +168,8 @@ function Login() {
             transition={{ duration: 0.8 }}
           >
             <div className="flex items-center gap-3 mb-12">
-              <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center font-black text-2xl shadow-lg shadow-brand/20">
-                P
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-2xl shadow-lg shadow-brand/20">
+                <img src="/favicon.png" alt="" />
               </div>
               <span className="text-2xl font-black tracking-tighter uppercase">
                 CODEKET

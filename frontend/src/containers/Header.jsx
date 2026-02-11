@@ -16,7 +16,7 @@ import {
   Database,
   WifiOff,
   User,
-  ChevronDownIcon,
+  ChevronDown,
 } from "lucide-react";
 // import { getTourId } from "../utils/Helpers";
 // import TourTriggerButton from "../features/onboarding/components/TourTriggerButton";
@@ -104,10 +104,39 @@ function Header() {
 
         {/* Right side utility buttons and profile */}
         <div className="flex-none">
+          {/* Mobile Sync Indicator (Always Visible) */}
+          <div className="lg:hidden mr-2">
+            <button
+              className={`btn btn-circle btn-ghost btn-sm ${
+                !isOnline || queueStats.total > 0
+                  ? "text-warning bg-warning/10"
+                  : error
+                    ? "text-error bg-error/10"
+                    : "text-base-content"
+              }`}
+              onClick={() => setShowSyncManager(true)}
+            >
+              {!isOnline ? (
+                <WifiOff className="h-5 w-5" />
+              ) : syncing ? (
+                <RefreshCw className="h-5 w-5 animate-spin" />
+              ) : error ? (
+                <WifiOff className="h-5 w-5" />
+              ) : (
+                <div className="indicator">
+                  <Database className="h-5 w-5" />
+                  {queueStats.total > 0 && (
+                    <span className="badge badge-xs badge-warning indicator-item"></span>
+                  )}
+                </div>
+              )}
+            </button>
+          </div>
+
           {/* Mobile View Utils Dropdown */}
           <div className="dropdown dropdown-end lg:hidden">
             <label tabIndex={0} className="btn btn-ghost btn-circle">
-              <PanelTopOpen className="h-6 w-6" />
+              <ChevronDown className="h-6 w-6" />
             </label>
             <ul
               tabIndex={0}
@@ -117,29 +146,6 @@ function Header() {
                 <button onClick={() => window.location.reload()}>
                   <RefreshCw className="h-4 w-4" />
                   Refresh
-                </button>
-              </li>
-              <li>
-                <button
-                  className={`${!isOnline || queueStats.total > 0 ? "text-warning" : ""} ${error ? "text-error" : ""}`}
-                  onClick={() => setShowSyncManager(true)}
-                >
-                  {!isOnline ? (
-                    <WifiOff className="h-4 w-4" />
-                  ) : syncing ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : error ? (
-                    <WifiOff className="h-4 w-4" />
-                  ) : (
-                    <Database className="h-4 w-4" />
-                  )}
-                  {!isOnline
-                    ? "Offline"
-                    : syncing
-                      ? "Syncing..."
-                      : queueStats.total > 0
-                        ? `Sync (${queueStats.total})`
-                        : "Synced"}
                 </button>
               </li>
               <li>
