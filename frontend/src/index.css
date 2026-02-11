@@ -17,12 +17,13 @@
     width: 100%;
     overflow-x: hidden;
     position: relative;
+    overscroll-behavior-y: none;
   }
 
   #root {
     min-width: 100%;
     width: 100%;
-    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   h1,

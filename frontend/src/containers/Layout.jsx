@@ -42,7 +42,7 @@ function Layout() {
   return (
     <>
       <div
-        className={`drawer ${(!isMockContent && !isMockSidebar) || isMockSidebar ? "lg:drawer-open" : ""} min-w-full w-full min-h-screen`}
+        className={`drawer ${(!isMockContent && !isMockSidebar) || isMockSidebar ? "lg:drawer-open" : ""} min-w-full w-full min-h-[100dvh]`}
       >
         <input
           id="left-sidebar-drawer"
