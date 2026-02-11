@@ -150,6 +150,9 @@ function Header() {
                   </summary>
                   <ul className="p-2 bg-base-100 rounded-t-none">
                     <li>
+                      <a data-set-theme="codeket-rms">🍽️ Codeket RMS</a>
+                    </li>
+                    <li>
                       <a data-set-theme="light">☀️ Light</a>
                     </li>
                     <li>
@@ -226,6 +229,9 @@ function Header() {
                 tabIndex={0}
                 className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-4"
               >
+                <li>
+                  <a data-set-theme="codeket-rms">🍽️ Codeket RMS</a>
+                </li>
                 <li>
                   <a data-set-theme="light">☀️ Light</a>
                 </li>

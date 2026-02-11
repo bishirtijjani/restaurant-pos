@@ -15,6 +15,11 @@ export default defineConfig({
         short_name: "RMS",
         description: "Comprehensive Restaurant Management System",
         theme_color: "#ffffff",
+        background_color: "#ffffff",
+        display: "standalone",
+        start_url: "/",
+        scope: "/",
+        orientation: "portrait",
         icons: [
           {
             src: "pwa-192x192.png",
@@ -25,6 +30,13 @@ export default defineConfig({
             src: "pwa-512x512.png",
             sizes: "512x512",
             type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "masked-icon.svg",
+            sizes: "512x512",
+            type: "image/svg+xml",
+            purpose: "maskable",
           },
         ],
       },
