@@ -20,7 +20,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
           <div className="card w-full max-w-lg bg-base-100 shadow-2xl border border-base-content/5">
-            <div className="card-body items-center text-center p-8 sm:p-12">
+            <div className="card-body items-center text-center p-4 sm:p-12">
               <div className="mb-6 p-4 rounded-full bg-error/10 text-error animate-pulse">
                 <AlertTriangle className="w-12 h-12" />
               </div>
@@ -51,15 +51,15 @@ class ErrorBoundary extends React.Component {
               </div>
 
               {/* Error Details Section for Support (Always visible in simplified form, expandable in Dev) */}
-              <div className="mt-8 collapse collapse-arrow bg-base-200 rounded-xl text-left border border-base-content/5 w-full group">
+              <div className="mt-8 collapse collapse-arrow bg-base-200 rounded-xl text-left border border-base-content/5 w-full group overflow-hidden">
                 <input type="checkbox" />
                 <div className="collapse-title font-medium text-xs uppercase tracking-wider opacity-50 flex justify-between items-center pr-12">
                   <span>View Error Details (For Support)</span>
                 </div>
-                <div className="collapse-content">
-                  <div className="flex justify-end mb-2">
+                <div className="collapse-content px-4 pb-4">
+                  <div className="flex justify-end mb-2 sticky top-0 bg-base-200 py-2 z-10">
                     <button
-                      className="btn btn-xs btn-outline gap-1"
+                      className="btn btn-xs btn-outline gap-1 bg-base-100"
                       onClick={() => {
                         const errorText = `Error: ${this.state.error?.toString()}\n\nStack:\n${this.state.error?.stack}`;
                         navigator.clipboard.writeText(errorText);
@@ -91,7 +91,7 @@ class ErrorBoundary extends React.Component {
                       Copy Error
                     </button>
                   </div>
-                  <pre className="text-xs font-mono text-error/80 whitespace-pre-wrap break-words p-2 bg-base-100 rounded-lg border border-base-content/5 overflow-hidden">
+                  <pre className="text-xs font-mono text-error/80 whitespace-pre-wrap break-all p-2 bg-base-100 rounded-lg border border-base-content/5 overflow-y-auto max-h-60">
                     {this.state.error?.stack || this.state.error?.toString()}
                   </pre>
                 </div>
