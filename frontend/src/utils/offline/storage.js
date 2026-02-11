@@ -82,6 +82,143 @@ export const createOfflineStorage = (storeId) => {
       name: "restaurant-app",
       storeName: `settings_${storeId}`,
     }),
+
+    // Restaurant Operations
+    dashboard: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `dashboard_${storeId}`,
+    }),
+
+    tables: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `tables_${storeId}`,
+    }),
+
+    floors: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `floors_${storeId}`,
+    }),
+
+    reservations: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `reservations_${storeId}`,
+    }),
+
+    promoCodes: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `promoCodes_${storeId}`,
+    }),
+
+    discounts: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `discounts_${storeId}`,
+    }),
+
+    addOnGroups: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `addOnGroups_${storeId}`,
+    }),
+
+    stockAdjustments: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `stockAdjustments_${storeId}`,
+    }),
+
+    kds: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `kds_${storeId}`,
+    }),
+
+    kdsStations: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `kdsStations_${storeId}`,
+    }),
+
+    storeIdentity: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `storeIdentity_${storeId}`,
+    }),
+
+    stores: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `stores_${storeId}`,
+    }),
+
+    organization: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `organization_${storeId}`,
+    }),
+
+    brandMenu: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `brandMenu_${storeId}`,
+    }),
+
+    onboarding: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `onboarding_${storeId}`,
+    }),
+
+    ultraFastPOS: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `ultraFastPOS_${storeId}`,
+    }),
+
+    // Analytics (read-only cached reports)
+    analyticsMultiStore: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsMultiStore_${storeId}`,
+    }),
+
+    analyticsOverview: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsOverview_${storeId}`,
+    }),
+
+    analyticsSales: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsSales_${storeId}`,
+    }),
+
+    analyticsCustomers: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsCustomers_${storeId}`,
+    }),
+
+    analyticsMenu: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsMenu_${storeId}`,
+    }),
+
+    analyticsStaff: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsStaff_${storeId}`,
+    }),
+
+    analyticsInventory: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsInventory_${storeId}`,
+    }),
+
+    analyticsPayments: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsPayments_${storeId}`,
+    }),
+
+    analyticsTax: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsTax_${storeId}`,
+    }),
+
+    analyticsVariance: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsVariance_${storeId}`,
+    }),
+
+    analyticsAdvanced: localforage.createInstance({
+      name: "restaurant-app",
+      storeName: `analyticsAdvanced_${storeId}`,
+    }),
   };
 };
 
@@ -156,7 +293,7 @@ export const offlineStorage = {
 
     if (count >= limit) {
       console.warn(
-        `Storage limit reached for ${storeName}. Only returning first ${limit} items.`
+        `Storage limit reached for ${storeName}. Only returning first ${limit} items.`,
       );
     }
 
@@ -202,7 +339,7 @@ export const offlineStorage = {
     if (!store) throw new Error(`Store ${storeName} not found`);
 
     const promises = items.map((item) =>
-      this.set(storeName, item._id || item.id, item)
+      this.set(storeName, item._id || item.id, item),
     );
     return await Promise.all(promises);
   },

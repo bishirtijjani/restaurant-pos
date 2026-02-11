@@ -21,6 +21,19 @@ export class SyncManager {
       "purchaseOrders",
       "users",
       "settings",
+      "tables",
+      "floors",
+      "reservations",
+      "discounts",
+      "promoCodes",
+      "addOnGroups",
+      "stockAdjustments",
+      "kds",
+      "kdsStations",
+      "stores",
+      "organization",
+      "brandMenu",
+      "ultraFastPOS",
     ];
   }
 
@@ -135,7 +148,7 @@ export class SyncManager {
 
       // Serialize dates for Redux (Redux Toolkit warns about non-serializable data)
       const serializedItems = items.map((item) =>
-        JSON.parse(JSON.stringify(item))
+        JSON.parse(JSON.stringify(item)),
       );
 
       // Dispatch to Redux
@@ -184,11 +197,29 @@ export class SyncManager {
           continue;
         }
 
-        console.error("Operation failed:", operation, error);
+        // LOGIC ERRORS (4xx) - Fail immediately (except 409 handled above)
+        // e.g. 400 Bad Request, 422 Validation Error
+        if (
+          error.response &&
+          error.response.status >= 400 &&
+          error.response.status < 500
+        ) {
+          console.error("Logic error (no retry):", operation, error);
+          await syncQueue.markFailed(operation.id, error, "logic_error");
+          this.notifyListeners({
+            type: "push:error",
+            operation: operation.type,
+            error: error.message || "Logic Error",
+          });
+          continue;
+        }
+
+        // NETWORK / SERVER ERRORS (5xx, or no response) - Retry
+        console.error("Transient error (retrying):", operation, error);
         operation.attempts += 1;
 
         if (operation.attempts >= 3) {
-          await syncQueue.markFailed(operation.id, error);
+          await syncQueue.markFailed(operation.id, error, "max_retries");
         }
 
         this.notifyListeners({

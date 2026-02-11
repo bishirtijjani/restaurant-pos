@@ -35,7 +35,7 @@ export class ConnectionMonitor {
       this.online = isConnected;
       console.log(
         "🔍 Initial connectivity check:",
-        isConnected ? "ONLINE" : "OFFLINE"
+        isConnected ? "ONLINE" : "OFFLINE",
       );
     });
   }
@@ -75,7 +75,7 @@ export class ConnectionMonitor {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const response = await fetch("/api/categories?limit=1", {
+      const response = await fetch("/favicon.png", {
         method: "HEAD",
         cache: "no-cache",
         signal: controller.signal,

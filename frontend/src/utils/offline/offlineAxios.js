@@ -22,16 +22,48 @@ function getStoreNameFromUrl(url) {
   if (!url) return null;
 
   const urlMap = {
+    // Core features
     "/api/menu-items": "menuItems",
     "/api/categories": "categories",
+    "/api/order-modifications": "orders", // sub-route of orders
+    "/api/void": "orders", // sub-route of orders
     "/api/orders": "orders",
     "/api/customers": "customers",
     "/api/suppliers": "suppliers",
     "/api/expenses": "expenses",
-    "/api/inventory": "inventory",
     "/api/purchase-orders": "purchaseOrders",
     "/api/users": "users",
     "/api/general-settings": "settings",
+    // Restaurant Operations
+    "/api/dashboard": "dashboard",
+    "/api/tables": "tables",
+    "/api/floors": "floors",
+    "/api/reservations": "reservations",
+    "/api/promo-codes": "promoCodes",
+    "/api/discounts": "discounts",
+    "/api/add-on-groups": "addOnGroups",
+    "/api/stock-adjustments": "stockAdjustments",
+    "/api/kds": "kds",
+    "/api/stations": "kdsStations",
+    "/api/stores/current": "storeIdentity", // must be before /api/stores
+    "/api/stores": "stores",
+    "/api/organizations": "organization",
+    "/api/brand/menu": "brandMenu",
+    "/api/onboarding": "onboarding",
+    "/api/ultra-fast-pos": "ultraFastPOS",
+    "/api/inventory": "inventory",
+    // Analytics (read-only cache) — order matters: longer paths first
+    "/api/analytics/multi-store-overview": "analyticsMultiStore",
+    "/analytics/inventory/variance": "analyticsVariance",
+    "/analytics/inventory": "analyticsInventory",
+    "/analytics/overview": "analyticsOverview",
+    "/analytics/sales": "analyticsSales",
+    "/analytics/customers": "analyticsCustomers",
+    "/analytics/menu": "analyticsMenu",
+    "/analytics/staff": "analyticsStaff",
+    "/analytics/payments": "analyticsPayments",
+    "/analytics/tax": "analyticsTax",
+    "/analytics/advanced": "analyticsAdvanced",
   };
 
   for (const [path, storeName] of Object.entries(urlMap)) {
@@ -98,7 +130,16 @@ axios.interceptors.request.use(
           if (isIdRequest) {
             cachedData = await offlineStorage.get(storeName, lastPart);
           } else {
-            cachedData = await offlineStorage.getAll(storeName);
+            // Try snapshot first (dashboard, analytics, settings objects)
+            const snapshot = await offlineStorage.get(
+              storeName,
+              "__snapshot__",
+            );
+            if (snapshot) {
+              cachedData = { data: snapshot };
+            } else {
+              cachedData = await offlineStorage.getAll(storeName);
+            }
           }
 
           if (cachedData) {
@@ -291,6 +332,10 @@ axios.interceptors.response.use(
             const id = data._id || data.id;
             if (id) {
               await offlineStorage.set(storeName, id, data);
+            } else {
+              // Single-object responses without _id (dashboard, analytics, settings)
+              // Cache as a single entry with a predictable key
+              await offlineStorage.set(storeName, "__snapshot__", data);
             }
           }
         } catch (error) {
@@ -315,7 +360,17 @@ axios.interceptors.response.use(
         const storeName = getStoreNameFromUrl(error.config.url);
         if (storeName) {
           try {
-            const cachedData = await offlineStorage.getAll(storeName);
+            // Try snapshot first (dashboard, analytics)
+            const snapshot = await offlineStorage.get(
+              storeName,
+              "__snapshot__",
+            );
+            let cachedData;
+            if (snapshot) {
+              cachedData = { data: snapshot };
+            } else {
+              cachedData = await offlineStorage.getAll(storeName);
+            }
             return Promise.resolve({
               data: cachedData,
               status: 200,

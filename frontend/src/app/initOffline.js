@@ -1,4 +1,5 @@
 // frontend/src/app/initOffline.js
+import { registerSW } from "virtual:pwa-register";
 import { syncManager } from "../utils/offline/syncManager";
 import { connectionMonitor } from "../utils/offline/connectionMonitor";
 import store from "./store";
@@ -8,38 +9,34 @@ import { showNotification } from "../features/common/headerSlice";
 export const initializeOfflineSupport = () => {
   console.log("Initializing offline support...");
 
-  // Register service worker
+  // Register service worker via vite-plugin-pwa
+  const updateSW = registerSW({
+    onNeedRefresh() {
+      console.log("New content available, click on reload button to update.");
+      store.dispatch(
+        showNotification({
+          message: "New Version Available! 🚀 Refresh to update.",
+          status: 1,
+          action: () => updateSW(true), // Trigger update
+        }),
+      );
+    },
+    onOfflineReady() {
+      console.log("App is ready to work offline.");
+      store.dispatch(
+        showNotification({
+          message: "App is ready for offline use 📶",
+          status: 1,
+        }),
+      );
+    },
+    onRegisterError(error) {
+      console.error("SW registration error", error);
+    },
+  });
+
+  // Listen for service worker messages (if supported by plugin or custom logic)
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .register("/service-worker.js")
-      .then((registration) => {
-        console.log("Service Worker registered:", registration);
-
-        // Listen for updates
-        registration.addEventListener("updatefound", () => {
-          const newWorker = registration.installing;
-          newWorker.addEventListener("statechange", () => {
-            if (
-              newWorker.state === "installed" &&
-              navigator.serviceWorker.controller
-            ) {
-              // New service worker available
-              console.log("New service worker available. Please refresh.");
-              store.dispatch(
-                showNotification({
-                  message: "New Version Available! 🚀 Refresh to update.",
-                  status: 1,
-                }),
-              );
-            }
-          });
-        });
-      })
-      .catch((error) => {
-        console.error("Service Worker registration failed:", error);
-      });
-
-    // Listen for service worker messages
     navigator.serviceWorker.addEventListener("message", (event) => {
       if (event.data.type === "BACKGROUND_SYNC") {
         console.log("Background sync triggered");
@@ -65,6 +62,8 @@ export const initializeOfflineSupport = () => {
 
     if (currentToken && !previousToken) {
       console.log("User logged in, starting sync...");
+      // Retry any operations that failed due to auth/network issues
+      syncManager.retryFailedOperations();
       syncManager.startAutoSync(30000);
     } else if (!currentToken && previousToken) {
       console.log("User logged out, stopping sync...");
