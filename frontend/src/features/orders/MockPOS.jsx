@@ -9,9 +9,12 @@ import {
   Search,
   User,
   StickyNote,
+  Tag,
+  Printer,
+  Edit3,
 } from "lucide-react";
 
-// --- Local Components (Copied from POS.jsx for isolation) ---
+// --- Local Components (Copied/Mocked from POS.jsx for isolation) ---
 
 const OrderTypeSelector = ({ orderType, setOrderType }) => (
   <div className="join mb-4 join-vertical lg:join-horizontal w-full">
@@ -90,7 +93,7 @@ const MenuItem = ({ item, onAdd, currency }) => {
 
 const CartItem = ({ item, updateQuantity, removeItem, currency }) => {
   return (
-    <div className="border-b border-base-300 pb-3 mb-3 last:border-b-0 animate-in slide-in-from-left-2 duration-300">
+    <div className="border-b border-base-300 pb-3 mb-3 last:border-b-0">
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <h4 className="font-medium text-sm">{item.name}</h4>
@@ -140,6 +143,51 @@ const CartItem = ({ item, updateQuantity, removeItem, currency }) => {
   );
 };
 
+const CustomerDetailsForm = ({ orderType }) => {
+  return (
+    <div className="bg-base-200 rounded-lg p-3 mb-4 space-y-2">
+      <h3 className="font-medium text-sm mb-2 flex items-center gap-1">
+        <User size={14} /> Customer Details
+      </h3>
+      <input
+        type="text"
+        className="input input-sm input-bordered w-full"
+        defaultValue="Sarah Johnson"
+        placeholder="Customer name"
+      />
+      <input
+        type="tel"
+        className="input input-sm input-bordered w-full"
+        defaultValue="+1 555-0123"
+        placeholder="Phone number"
+      />
+      {orderType === "delivery" && (
+        <textarea
+          className="textarea textarea-sm textarea-bordered w-full"
+          placeholder="Delivery address"
+          defaultValue="123 Park Avenue, New York, NY"
+          rows="2"
+        />
+      )}
+    </div>
+  );
+};
+
+const DiscountSection = ({ currency }) => (
+  <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 mb-4">
+    <div className="flex justify-between items-center mb-2">
+      <span className="text-sm font-semibold flex items-center gap-1">
+        <Tag className="w-3 h-3" /> Discount Applied
+      </span>
+      <button className="btn btn-xs btn-ghost text-error">Remove</button>
+    </div>
+    <div className="flex justify-between text-xs">
+      <span className="opacity-70">Loyalty Member (10%)</span>
+      <span className="font-bold">- {currency}4.05</span>
+    </div>
+  </div>
+);
+
 // --- Mock Data ---
 
 const MOCK_CATEGORIES = [
@@ -156,7 +204,7 @@ const MOCK_ITEMS = [
     price: 7.5,
     category: "Starters",
     image: "/menu-items/Prawn Cocktail.jpeg",
-    emoji: "�",
+    emoji: "🍤",
   },
   {
     _id: "102",
@@ -172,7 +220,7 @@ const MOCK_ITEMS = [
     price: 15.5,
     category: "Pub Classics",
     image: "/menu-items/Fish & Chips.jpeg",
-    emoji: "�",
+    emoji: "🐟",
   },
   {
     _id: "202",
@@ -180,7 +228,7 @@ const MOCK_ITEMS = [
     price: 14.5,
     category: "Pub Classics",
     image: "/menu-items/Steak & Kidney Pie.jpeg",
-    emoji: "�",
+    emoji: "🥧",
   },
   {
     _id: "301",
@@ -198,7 +246,7 @@ const MOCK_ITEMS = [
     category: "Mains",
     image:
       "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&h=300&q=80",
-    emoji: "",
+    emoji: "🍔",
   },
   {
     _id: "401",
@@ -215,14 +263,6 @@ const MOCK_ITEMS = [
     category: "Drinks",
     image: "/menu-items/Sparkling Water.jpeg",
     emoji: "💧",
-  },
-  {
-    _id: "403",
-    name: "Flat White",
-    price: 3.2,
-    category: "Drinks",
-    image: "/menu-items/flat white.jpeg",
-    emoji: "☕",
   },
 ];
 
@@ -245,13 +285,13 @@ const INITIAL_CART = [
     _id: "402",
     name: "Sparkling Water (330ml)",
     price: 2.5,
-    quantity: 3,
+    quantity: 2,
     itemNote: "Chilled with lemon",
   },
 ];
 
 export default function MockPOS() {
-  const [activeCategory, setActiveCategory] = useState("Premium Steaks");
+  const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [orderType, setOrderType] = useState("dine-in");
   const [cart, setCart] = useState(INITIAL_CART);
@@ -297,13 +337,19 @@ export default function MockPOS() {
     { subtotal: 0, itemCount: 0 },
   );
 
-  const tax = totals.subtotal * 0.2;
-  const total = totals.subtotal + tax;
+  const discount = totals.subtotal * 0.1;
+  const taxableSubtotal = totals.subtotal - discount;
+  const tax = taxableSubtotal * 0.2;
+  const serviceCharge = taxableSubtotal * 0.125;
+  const packagingFee = orderType === "dine-in" ? 0 : 1.5;
+  const deliveryFee = orderType === "delivery" ? 3.5 : 0;
+  const grandTotal =
+    taxableSubtotal + tax + serviceCharge + packagingFee + deliveryFee;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_24rem] h-[calc(100vh-2rem)] overflow-hidden bg-base-200 gap-4 p-2">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_26rem] bg-base-200 gap-4 p-2">
       {/* Left - Menu */}
-      <div className="bg-base-100 rounded-xl shadow-lg p-4 flex flex-col h-full overflow-hidden">
+      <div className="bg-base-100 rounded-xl shadow-lg p-4 flex flex-col h-full overflow-hidden border border-base-300">
         <div className="relative mb-4">
           <Search
             className="absolute left-3 top-3 text-base-content/50"
@@ -311,7 +357,7 @@ export default function MockPOS() {
           />
           <input
             type="text"
-            placeholder="Search premium items..."
+            placeholder="Search premium menu..."
             className="input input-bordered w-full pl-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -324,7 +370,7 @@ export default function MockPOS() {
           categories={MOCK_CATEGORIES}
         />
 
-        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 overflow-y-auto flex-1 pr-2 content-start">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 overflow-y-auto flex-1 pr-2 content-start">
           {filteredItems.map((item) => (
             <MenuItem
               key={item._id}
@@ -336,54 +382,156 @@ export default function MockPOS() {
         </div>
       </div>
 
-      {/* Right - Cart */}
-      <div className="bg-base-100 rounded-xl shadow-lg p-4 flex flex-col h-full overflow-y-auto">
+      {/* Right - Cart / Summary */}
+      <div className="bg-base-100 rounded-xl shadow-lg p-4 flex flex-col h-full overflow-hidden border border-base-300">
         <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-bold">Current Order</h2>
-          <div className="badge badge-accent font-bold">Table 12 (VIP)</div>
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <ShoppingBag className="text-primary" size={20} />
+            Current Order
+          </h2>
+          <button className="btn btn-xs btn-ghost gap-1 opacity-70 hover:opacity-100">
+            <Printer size={14} /> Reprint Last
+          </button>
         </div>
 
         <OrderTypeSelector orderType={orderType} setOrderType={setOrderType} />
 
-        <div className="flex-1 overflow-y-auto pr-1">
-          {cart.map((item) => (
-            <CartItem
-              key={item._id}
-              item={item}
-              updateQuantity={handleUpdateQuantity}
-              removeItem={handleRemoveItem}
-              currency={currency}
+        {/* Scrollable Summary Panel */}
+        <div className="flex-1 overflow-y-auto pr-1 space-y-4 pt-2">
+          {/* Detailed Table Card (Dine-in Only) */}
+          {orderType === "dine-in" && (
+            <div className="bg-base-200 p-3 rounded-xl border border-primary/20 flex justify-between items-center">
+              <div>
+                <p className="text-xs uppercase opacity-50 font-black tracking-wider">
+                  Table
+                </p>
+                <h3 className="text-xl font-black">
+                  Table 12 <span className="text-accent">(VIP)</span>
+                </h3>
+                <p className="text-xs opacity-70">4 seats • Server: Mark A.</p>
+              </div>
+              <button className="btn btn-xs btn-circle btn-ghost">
+                <Edit3 size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* Customer Details Form (Takeaway/Delivery) */}
+          {(orderType === "takeaway" || orderType === "delivery") && (
+            <CustomerDetailsForm orderType={orderType} />
+          )}
+
+          {/* Cart Items */}
+          <div className="space-y-1">
+            <h3 className="text-xs uppercase opacity-50 font-black tracking-wider mb-2">
+              Order Items
+            </h3>
+            {cart.map((item) => (
+              <CartItem
+                key={item._id}
+                item={item}
+                updateQuantity={handleUpdateQuantity}
+                removeItem={handleRemoveItem}
+                currency={currency}
+              />
+            ))}
+          </div>
+
+          {/* Order Note */}
+          <div className="pt-2">
+            <h3 className="text-xs uppercase opacity-50 font-black tracking-wider mb-2">
+              Order Note
+            </h3>
+            <textarea
+              className="textarea textarea-bordered w-full textarea-sm leading-tight"
+              placeholder="Allergies, door codes, etc..."
+              rows="2"
+              defaultValue="Customer requested extra napkins and no ice in the water."
             />
-          ))}
+          </div>
+
+          <div className="divider my-1"></div>
+
+          {/* Discounts & Fees */}
+          <DiscountSection currency={currency} />
+
+          {orderType !== "dine-in" && (
+            <div className="flex items-center justify-between text-sm px-1">
+              <span className="opacity-70">Packaging Fee</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">
+                  {currency}
+                  {packagingFee.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
+          {orderType === "delivery" && (
+            <div className="flex items-center justify-between text-sm px-1">
+              <span className="opacity-70">Delivery Fee</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">
+                  {currency}
+                  {deliveryFee.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-base-300 space-y-2">
+        {/* Detailed Financial Summary */}
+        <div className="mt-4 pt-4 border-t-2 border-dashed border-base-300 space-y-1.5">
           <div className="flex justify-between text-sm">
-            <span className="text-base-content/70">Subtotal</span>
-            <span className="font-medium">
+            <span className="opacity-60">
+              Subtotal ({totals.itemCount} items)
+            </span>
+            <span className="font-medium line-through opacity-40">
               {currency}
               {totals.subtotal.toFixed(2)}
             </span>
           </div>
+          <div className="flex justify-between text-sm text-success font-semibold">
+            <span>Discount (10%)</span>
+            <span>
+              - {currency}
+              {discount.toFixed(2)}
+            </span>
+          </div>
           <div className="flex justify-between text-sm">
-            <span className="text-base-content/70">VAT (20%)</span>
+            <span className="opacity-60">VAT (20%)</span>
             <span className="font-medium">
               {currency}
               {tax.toFixed(2)}
             </span>
           </div>
-          <div className="flex justify-between text-xl font-bold text-primary mt-2">
-            <span>Total</span>
-            <span>
+          <div className="flex justify-between text-sm">
+            <span className="opacity-60">Service Charge (12.5%)</span>
+            <span className="font-medium">
               {currency}
-              {total.toFixed(2)}
+              {serviceCharge.toFixed(2)}
             </span>
           </div>
 
-          <button className="btn btn-primary w-full mt-4 btn-lg shadow-lg shadow-primary/20">
-            Confirm Order ({currency}
-            {total.toFixed(2)})
-          </button>
+          <div className="flex justify-between text-xl font-black text-primary mt-3 py-2 border-y border-base-200">
+            <span>TOTAL</span>
+            <span>
+              {currency}
+              {grandTotal.toFixed(2)}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            {orderType === "dine-in" && (
+              <button className="btn btn-outline btn-secondary font-bold">
+                Send to Kitchen
+              </button>
+            )}
+            <button
+              className={`btn btn-primary font-black shadow-lg shadow-primary/20 ${orderType === "dine-in" ? "" : "col-span-2"}`}
+            >
+              Proceed to Payment
+            </button>
+          </div>
         </div>
       </div>
     </div>

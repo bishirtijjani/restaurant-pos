@@ -145,9 +145,9 @@ function Login() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#050505] text-white overflow-hidden font-sans selection:bg-brand/30">
+    <div className="relative min-h-screen bg-[#050505] text-white font-sans selection:bg-brand/30">
       {/* Immersive Background Engine */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-500/5 rounded-full blur-[120px]" />
         <div
@@ -190,7 +190,7 @@ function Login() {
         </div>
 
         {/* Right Side: Authentication Portal */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-24 relative overflow-y-auto">
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-24 relative">
           <div className="w-full max-w-md space-y-12">
             <div className="lg:hidden flex items-center gap-2 mb-12">
               <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center font-black text-lg">
