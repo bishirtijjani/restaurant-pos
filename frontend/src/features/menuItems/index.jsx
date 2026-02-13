@@ -42,7 +42,7 @@ const TopSideButtons = () => {
         title: "Add New Menu Item",
         bodyType: MODAL_BODY_TYPES.ADD_NEW_MENU_ITEM,
         size: "xl",
-      })
+      }),
     );
   };
 
@@ -112,7 +112,9 @@ const MenuItems = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [viewMode, setViewMode] = useState("cards");
+  const [viewMode, setViewMode] = useState(
+    window.innerWidth > 768 ? "table" : "cards",
+  );
 
   useEffect(() => {
     if (status === "idle") {
@@ -253,7 +255,7 @@ const MenuItems = () => {
                                     title: "Menu Item Details",
                                     bodyType: MODAL_BODY_TYPES.VIEW_MENU_ITEM,
                                     extraObject: { ...item },
-                                  })
+                                  }),
                                 )
                               }
                             >
@@ -288,7 +290,7 @@ const MenuItems = () => {
                                       title: "Edit Menu Item",
                                       bodyType: MODAL_BODY_TYPES.EDIT_MENU_ITEM,
                                       extraObject: item,
-                                    })
+                                    }),
                                   )
                                 }
                               >
@@ -310,7 +312,7 @@ const MenuItems = () => {
                                         type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_MENU_ITEM,
                                         id: item._id,
                                       },
-                                    })
+                                    }),
                                   )
                                 }
                               >
@@ -350,7 +352,7 @@ const MenuItems = () => {
                 title: "Add New Menu Item",
                 bodyType: MODAL_BODY_TYPES.ADD_NEW_MENU_ITEM,
                 size: "xl",
-              })
+              }),
             )
           }
           className="btn btn-primary mt-4"
@@ -399,9 +401,10 @@ const MenuItems = () => {
       topMargin="mt-2"
     >
       {/* Filters Row */}
-      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 mb-6">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 lg:max-w-4xl">
-          <div className="relative flex-1">
+      <div className="mb-6">
+        <div className="flex flex-col xl:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1">
             <SearchBar
               searchText={searchQuery}
               setSearchText={setSearchQuery}
@@ -411,53 +414,59 @@ const MenuItems = () => {
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="dropdown dropdown-bottom dropdown-start sm:dropdown-end w-full sm:w-auto">
-              <label
-                tabIndex={0}
-                className="btn btn-outline btn-sm h-10 min-h-10 w-full sm:w-auto px-4 justify-between flex-nowrap"
-              >
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <Filter className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">
-                    {selectedCategory ? selectedCategory : "All Categories"}
-                  </span>
-                </div>
-                <svg
-                  className="w-4 h-4 ml-1 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+          {/* Filters & Toggles Group */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Filters Group - Stay on same line on small screens if possible, or stack */}
+            <div className="flex flex-row gap-2 w-full sm:w-auto">
+              <div className="dropdown dropdown-bottom dropdown-start sm:dropdown-end w-full sm:w-auto">
+                <label
+                  tabIndex={0}
+                  className="btn btn-outline btn-sm h-10 min-h-10 w-full sm:w-48 px-4 justify-between flex-nowrap"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </label>
-              <ul
-                tabIndex={0}
-                className="dropdown-content z-20 menu p-2 shadow-xl bg-base-100 rounded-box w-64 max-h-80 overflow-auto border border-base-200 mt-1"
-              >
-                <li>
-                  <button
-                    className={selectedCategory === "" ? "active" : ""}
-                    onClick={() => setSelectedCategory("")}
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <Filter className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">
+                      {selectedCategory ? selectedCategory : "All Categories"}
+                    </span>
+                  </div>
+                  <svg
+                    className="w-4 h-4 ml-1 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
                   >
-                    All Categories
-                  </button>
-                </li>
-                {categories.map((category, index) => (
-                  <li key={index}>
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </label>
+                <ul
+                  tabIndex={0}
+                  className="dropdown-content z-20 menu p-2 shadow-xl bg-base-100 rounded-box w-64 max-h-80 overflow-auto border border-base-200 mt-1"
+                >
+                  <li>
                     <button
-                      className={selectedCategory === category ? "active" : ""}
-                      onClick={() => setSelectedCategory(category)}
+                      className={selectedCategory === "" ? "active" : ""}
+                      onClick={() => setSelectedCategory("")}
                     >
-                      {category}
+                      All Categories
                     </button>
                   </li>
-                ))}
-              </ul>
+                  {categories.map((category, index) => (
+                    <li key={index}>
+                      <button
+                        className={
+                          selectedCategory === category ? "active" : ""
+                        }
+                        onClick={() => setSelectedCategory(category)}
+                      >
+                        {category}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             {/* View Toggle */}

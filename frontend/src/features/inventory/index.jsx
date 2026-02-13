@@ -51,7 +51,7 @@ const TopSideButtons = ({ onRefresh }) => {
         title: "Add Inventory Item",
         bodyType: MODAL_BODY_TYPES.ADD_INVENTORY_ITEM,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -463,20 +463,22 @@ const InventoryManagement = () => {
   const dispatch = useDispatch();
   const { can } = useAuth();
   const { items, status, loading, error, success, message } = useSelector(
-    (state) => state.inventory
+    (state) => state.inventory,
   );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [stockFilter, setStockFilter] = useState("");
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState(
+    window.innerWidth > 768 ? "table" : "grid",
+  );
 
   useEffect(() => {
     dispatch(
       fetchInventoryItems({
         category: categoryFilter,
         lowStock: stockFilter === "low",
-      })
+      }),
     );
   }, [dispatch, categoryFilter, stockFilter]);
 
@@ -487,7 +489,7 @@ const InventoryManagement = () => {
     }
     if (error) {
       dispatch(
-        showNotification({ message: error.message || error, status: 0 })
+        showNotification({ message: error.message || error, status: 0 }),
       );
       dispatch(clearError());
     }
@@ -524,7 +526,7 @@ const InventoryManagement = () => {
         bodyType: MODAL_BODY_TYPES.EDIT_INVENTORY_ITEM,
         extraObject: item,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -538,7 +540,7 @@ const InventoryManagement = () => {
           type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_INVENTORY_ITEM,
           id: item._id,
         },
-      })
+      }),
     );
   };
 
@@ -549,7 +551,7 @@ const InventoryManagement = () => {
         bodyType: MODAL_BODY_TYPES.LINK_MENU_ITEMS,
         extraObject: item,
         size: "lg",
-      })
+      }),
     );
   };
 
@@ -558,7 +560,7 @@ const InventoryManagement = () => {
       fetchInventoryItems({
         category: categoryFilter,
         lowStock: stockFilter === "low",
-      })
+      }),
     );
   };
 
@@ -623,7 +625,7 @@ const InventoryManagement = () => {
                     title: "Add Inventory Item",
                     bodyType: MODAL_BODY_TYPES.ADD_INVENTORY_ITEM,
                     size: "lg",
-                  })
+                  }),
                 )
               }
               className="btn btn-primary mt-4 gap-2"

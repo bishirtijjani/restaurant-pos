@@ -18,7 +18,7 @@ export default function Hero() {
     <section className="relative min-h-screen pt-32 pb-20 overflow-hidden bg-white">
       <div className="container">
         {/* Text Content - Top Section */}
-        <div className="max-w-3xl mx-auto text-center mb-42">
+        <div className="max-w-3xl mx-auto text-center mb-26 md:mb-32">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -84,15 +84,16 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Large 3D Dashboard - Bottom Section (Full Width Outside Container) */}
-      <div className="relative w-full h-[600px] lg:h-[700px] perspective-[2000px] -mt-24">
+      {/* Large 3D Dashboard - Bottom Section (Refined Full Width) */}
+      <div className="relative w-full perspective-[1000px] md:perspective-[2000px] -mt-12 md:-mt-20">
         <motion.div
           initial={{
             rotateX: 0,
             rotateY: 20,
             rotateZ: -15,
             opacity: 0,
-            y: 100,
+            y: 50,
+            scale: 0.9,
           }}
           animate={{
             rotateX: 0,
@@ -100,22 +101,23 @@ export default function Hero() {
             rotateZ: -15,
             opacity: 1,
             y: 0,
+            scale: 1,
           }}
           transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
           style={{ transformStyle: "preserve-3d" }}
-          className="relative w-full h-full flex items-start justify-center"
+          className="relative w-full flex items-start justify-center origin-top"
         >
-          {/* Main Dashboard - Spans Full Width */}
-          <div className="relative w-full rounded-3xl overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] border border-gray-200">
+          {/* Main Dashboard - Spans Full Width with Breathing Room */}
+          <div className="relative w-full max-w-[1600px] mx-auto rounded-2xl md:rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)]">
             <img
               src="/assets/dashboard.png"
               alt="Restaurant Management Dashboard"
-              className="w-full h-auto object-cover"
+              className="w-full h-auto rounded-2xl md:rounded-3xl border border-gray-200"
             />
           </div>
 
           {/* Ambient Glow */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-purple-500/10 blur-[120px] -z-10 transform translate-y-20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-purple-500/10 blur-[60px] md:blur-[120px] -z-10 transform translate-y-20" />
         </motion.div>
       </div>
     </section>

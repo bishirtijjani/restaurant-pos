@@ -1,5 +1,7 @@
 import React from "react";
 import { AlertTriangle, Home, RefreshCw } from "lucide-react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -64,7 +66,7 @@ class ErrorBoundary extends React.Component {
                         const errorText = `Error: ${this.state.error?.toString()}\n\nStack:\n${this.state.error?.stack}`;
                         navigator.clipboard.writeText(errorText);
                         // Optional: You could add a temporary "Copied!" state here if converted to functional component or adding more state
-                        alert("Error details copied to clipboard!");
+                        toast.success("Error details copied to clipboard!");
                       }}
                     >
                       <svg
@@ -98,6 +100,7 @@ class ErrorBoundary extends React.Component {
               </div>
             </div>
           </div>
+          <ToastContainer />
         </div>
       );
     }

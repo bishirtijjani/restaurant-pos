@@ -353,7 +353,7 @@ const SearchAndFilters = ({
     <div className="flex flex-col xl:flex-row gap-4">
       {/* Search Bar */}
       <div className="flex-1">
-        <SearchBar                    
+        <SearchBar
           searchText={searchTerm}
           setSearchText={onSearchChange}
           placeholderText="Search customers by name, phone, or email..."
@@ -449,13 +449,15 @@ const Customers = () => {
   const status = useSelector((state) => state.customers.status);
   const error = useSelector((state) => state.customers.error);
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [debtLimitFilter, setDebtLimitFilter] = useState("");
-  const [viewMode, setViewMode] = useState("table");
+  const [viewMode, setViewMode] = useState(
+    window.innerWidth > 768 ? "table" : "card",
+  );
 
   useEffect(() => {
     dispatch(fetchSettings());
@@ -519,7 +521,7 @@ const Customers = () => {
         title: "Add New Customer",
         bodyType: MODAL_BODY_TYPES.ADD_NEW_CUSTOMER,
         size: "md",
-      })
+      }),
     );
   };
 
@@ -534,7 +536,7 @@ const Customers = () => {
         bodyType: MODAL_BODY_TYPES.EDIT_CUSTOMER,
         extraObject: customer,
         size: "md",
-      })
+      }),
     );
   };
 
@@ -548,7 +550,7 @@ const Customers = () => {
           type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_CUSTOMER,
           id: customer._id,
         },
-      })
+      }),
     );
   };
 

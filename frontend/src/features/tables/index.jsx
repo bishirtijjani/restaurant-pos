@@ -24,16 +24,18 @@ const TableManagement = () => {
   const navigate = useNavigate();
 
   const { currentFloor, loading: floorLoading } = useSelector(
-    (state) => state.floors
+    (state) => state.floors,
   );
   const { tables, loading: tablesLoading } = useSelector(
-    (state) => state.tables
+    (state) => state.tables,
   );
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
 
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState(
+    window.innerWidth > 768 ? "list" : "grid",
+  );
   const [showTableForm, setShowTableForm] = useState(false);
   const [showTableDetails, setShowTableDetails] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
@@ -74,7 +76,7 @@ const TableManagement = () => {
     try {
       if (selectedTable) {
         await dispatch(
-          updateTable({ id: selectedTable._id, ...data })
+          updateTable({ id: selectedTable._id, ...data }),
         ).unwrap();
         dispatch(showNotification({ message: "Table updated", status: 1 }));
       } else {
@@ -88,7 +90,7 @@ const TableManagement = () => {
         showNotification({
           message: error.message || "Operation failed",
           status: 0,
-        })
+        }),
       );
     }
   };
@@ -96,7 +98,7 @@ const TableManagement = () => {
   const handleStatusChange = async (tableId, newStatus) => {
     try {
       await dispatch(
-        updateTableStatus({ id: tableId, status: newStatus })
+        updateTableStatus({ id: tableId, status: newStatus }),
       ).unwrap();
       dispatch(showNotification({ message: "Status updated", status: 1 }));
       dispatch(fetchTables({ floorId }));
@@ -108,7 +110,7 @@ const TableManagement = () => {
         showNotification({
           message: error.message || "Failed to update status",
           status: 0,
-        })
+        }),
       );
     }
   };
@@ -122,7 +124,7 @@ const TableManagement = () => {
         dispatch(fetchTables({ floorId }));
       } catch (error) {
         dispatch(
-          showNotification({ message: "Failed to delete table", status: 0 })
+          showNotification({ message: "Failed to delete table", status: 0 }),
         );
       }
     }

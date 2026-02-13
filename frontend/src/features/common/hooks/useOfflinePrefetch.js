@@ -56,6 +56,21 @@ export const useOfflinePrefetch = () => {
         if (!isMounted) return;
         // Run these sequentially to be nice to the network
         try {
+          await axios.get("/api/dashboard"); // Dashboard Overview
+        } catch (e) {
+          console.warn("Prefetch dashboard failed", e);
+        }
+        try {
+          await axios.get("/api/expenses"); // Recent Expenses
+        } catch (e) {
+          console.warn("Prefetch expenses failed", e);
+        }
+        try {
+          await axios.get("/analytics/overview"); // Key Metrics
+        } catch (e) {
+          console.warn("Prefetch analytics failed", e);
+        }
+        try {
           await axios.get("/api/inventory");
         } catch (e) {
           console.warn("Prefetch inventory failed", e);

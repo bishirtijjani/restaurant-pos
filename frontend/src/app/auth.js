@@ -29,7 +29,7 @@ const setupAxiosInterceptors = () => {
       }
       return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 
   // Response interceptor
@@ -137,7 +137,8 @@ const setupAxiosInterceptors = () => {
       }
 
       // Handle Network Errors (no response)
-      if (!error.response) {
+      // Skip if it's an expected offline error (handled by offlineAxios)
+      if (!error.response && !error.isOffline) {
         store.dispatch({
           type: "header/showNotification",
           payload: {
@@ -148,7 +149,7 @@ const setupAxiosInterceptors = () => {
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 };
 

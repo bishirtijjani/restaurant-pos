@@ -348,7 +348,9 @@ const Suppliers = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
-  const [viewMode, setViewMode] = useState("card");
+  const [viewMode, setViewMode] = useState(
+    window.innerWidth > 768 ? "table" : "card",
+  );
 
   useEffect(() => {
     if (status === "idle") {
@@ -390,7 +392,7 @@ const Suppliers = () => {
         title: "Add New Supplier",
         bodyType: MODAL_BODY_TYPES.ADD_NEW_SUPPLIER,
         size: "md",
-      })
+      }),
     );
   };
 
@@ -405,7 +407,7 @@ const Suppliers = () => {
         bodyType: MODAL_BODY_TYPES.EDIT_SUPPLIER,
         extraObject: supplier,
         size: "md",
-      })
+      }),
     );
   };
 
@@ -419,7 +421,7 @@ const Suppliers = () => {
           type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_SUPPLIER,
           id: supplier._id,
         },
-      })
+      }),
     );
   };
 

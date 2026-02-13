@@ -110,7 +110,7 @@ const UserCard = ({ user, onView, onEdit, onDelete }) => {
               </h3>
               <div
                 className={`badge ${getRoleColor(
-                  user.role
+                  user.role,
                 )} badge-xs capitalize border-none font-medium mt-1 px-2`}
               >
                 {user.role}
@@ -241,7 +241,7 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
               <td>
                 <div
                   className={`badge ${getRoleColor(
-                    user.role
+                    user.role,
                   )} badge-sm capitalize`}
                 >
                   {user.role}
@@ -412,7 +412,9 @@ const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
-  const [viewMode, setViewMode] = useState("table");
+  const [viewMode, setViewMode] = useState(
+    window.innerWidth > 768 ? "table" : "card",
+  );
 
   useEffect(() => {
     if (status === "idle") {
@@ -430,7 +432,7 @@ const Users = () => {
         (u) =>
           u.fullname?.toLowerCase().includes(lowerTerm) ||
           u.email?.toLowerCase().includes(lowerTerm) ||
-          u.role?.toLowerCase().includes(lowerTerm)
+          u.role?.toLowerCase().includes(lowerTerm),
       );
     }
 
@@ -466,7 +468,7 @@ const Users = () => {
         title: "Add New User",
         bodyType: MODAL_BODY_TYPES.ADD_NEW_USER,
         size: "xl",
-      })
+      }),
     );
   };
 
@@ -481,7 +483,7 @@ const Users = () => {
         bodyType: MODAL_BODY_TYPES.VIEW_USER,
         extraObject: user,
         size: "xl",
-      })
+      }),
     );
   };
 
@@ -493,7 +495,7 @@ const Users = () => {
           bodyType: MODAL_BODY_TYPES.MANAGE_STORE_ACCESS,
           extraObject: user,
           size: "lg",
-        })
+        }),
       );
     } else if (mode === "permissions") {
       dispatch(
@@ -502,7 +504,7 @@ const Users = () => {
           bodyType: MODAL_BODY_TYPES.MANAGE_USER_PERMISSIONS,
           extraObject: user,
           size: "xl",
-        })
+        }),
       );
     } else {
       dispatch(
@@ -511,7 +513,7 @@ const Users = () => {
           bodyType: MODAL_BODY_TYPES.EDIT_USER,
           extraObject: user,
           size: "xl",
-        })
+        }),
       );
     }
   };
@@ -522,7 +524,7 @@ const Users = () => {
         showNotification({
           message: "You cannot delete your own account!",
           status: 0,
-        })
+        }),
       );
       return;
     }
@@ -536,7 +538,7 @@ const Users = () => {
           type: CONFIRMATION_MODAL_CLOSE_TYPES.DELETE_USER,
           id: user._id,
         },
-      })
+      }),
     );
   };
 

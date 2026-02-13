@@ -2,7 +2,7 @@ import ChevronDownIcon from "@heroicons/react/24/outline/ChevronDownIcon";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function SidebarSubmenu({ submenu, name, icon }) {
+function SidebarSubmenu({ submenu, name, icon, closeSidebar }) {
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -59,6 +59,7 @@ function SidebarSubmenu({ submenu, name, icon }) {
                       ? "glass-pill font-bold bg-primary text-primary-content border-accent"
                       : "hover:bg-base-200/50 hover:shadow-lg text-base-content/90 hover:text-base-content font-medium"
                   }`}
+                  onClick={closeSidebar}
                 >
                   <div
                     className={`p-1 bg-primary/20 rounded-lg ${isActive ? "" : "group-hover:bg-primary/30"}`}
