@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Smartphone,
@@ -10,14 +9,27 @@ import {
 } from "lucide-react";
 
 export default function OperationalFlow() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  // Unique ambient glow colors per step
+  const glowColors = [
+    "rgba(255, 107, 53, 0.15)", // Orange
+    "rgba(99, 102, 241, 0.15)", // Indigo
+    "rgba(16, 185, 129, 0.15)", // Emerald
+    "rgba(168, 85, 247, 0.15)", // Purple
+  ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % 4);
-    }, 1000); // 4s total cycle / 4 cards = 1s per card
-    return () => clearInterval(interval);
-  }, []);
+  const borderGlowColors = [
+    "rgba(255, 107, 53, 0.3)",
+    "rgba(99, 102, 241, 0.3)",
+    "rgba(16, 185, 129, 0.3)",
+    "rgba(168, 85, 247, 0.3)",
+  ];
+
+  const images = [
+    { src: "/assets/pos.png", alt: "POS System" },
+    { src: "/assets/kds.png", alt: "Kitchen Display System" },
+    { src: "/assets/inventory.png", alt: "Inventory Management" },
+    { src: "/assets/analytics.png", alt: "Analytics Dashboard" },
+  ];
 
   const steps = [
     {
@@ -26,6 +38,7 @@ export default function OperationalFlow() {
       title: "From Table",
       desc: "Orders are created once and flow through tables, counters, and devices without duplication or resync.",
       highlight: "No Duplication",
+      annotations: ["Live order tracking", "Multi-device sync"],
     },
     {
       icon: ChefHat,
@@ -33,6 +46,7 @@ export default function OperationalFlow() {
       title: "To Kitchen",
       desc: "Orders route automatically to the correct stations with timing, notes, and status updates in real time.",
       highlight: "Real-Time Sync",
+      annotations: ["Auto-routing", "Station management"],
     },
     {
       icon: RotateCcw,
@@ -40,29 +54,31 @@ export default function OperationalFlow() {
       title: "To Inventory",
       desc: "Every item sold deducts ingredients, tracks waste, and updates cost data—without manual stock edits.",
       highlight: "Zero Manual Edits",
+      annotations: ["Auto-deduction", "Cost tracking"],
     },
     {
       icon: BarChart3,
       phase: "Reporting & Oversight",
       title: "To Analytics",
       desc: "Sales, margins, staff activity, and stock movement are always up to date—no end-of-day surprises.",
-      highlight: "Oversight",
+      highlight: "Live Data",
+      annotations: ["Real-time insights", "Margin tracking"],
     },
   ];
 
   return (
     <section className="relative py-32 bg-slate-950 overflow-hidden" id="flow">
       {/* Background Circuit Grid */}
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[linear-gradient(to_right,#FFF_1px,transparent_1px),linear-gradient(to_bottom,#FFF_1px,transparent_1px)] bg-[size:50px_50px]" />
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(to_right,#FFF_1px,transparent_1px),linear-gradient(to_bottom,#FFF_1px,transparent_1px)] bg-[size:60px_60px]" />
 
       <div className="container relative z-10 px-8">
         {/* Section Header */}
-        <div className="max-w-3xl mb-24">
+        <div className="max-w-3xl mb-20 mx-auto text-center md:text-left md:mx-0">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="flex flex-col items-start gap-4"
+            className="flex flex-col items-center md:items-start gap-4"
           >
             <div className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/30 rounded-full">
               <Zap size={14} className="text-accent fill-accent" />
@@ -84,128 +100,156 @@ export default function OperationalFlow() {
           </motion.div>
         </div>
 
-        {/* The Circuit Flow */}
-        <div className="relative">
-          {/* Desktop Connection Path (SVG) */}
-          <div className="absolute top-[80px] left-[5%] right-[5%] hidden lg:block h-[2px] z-0">
-            <svg
-              width="100%"
-              height="2"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M0 1H1000"
-                stroke="url(#circuit-gradient)"
-                strokeWidth="2"
-                strokeDasharray="8 12"
-              />
-              <defs>
-                <linearGradient
-                  id="circuit-gradient"
-                  x1="0"
-                  y1="1"
-                  x2="1000"
-                  y2="1"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop stopColor="#FF6B35" stopOpacity="0" />
-                  <stop offset="0.2" stopColor="#FF6B35" />
-                  <stop offset="0.8" stopColor="#FF6B35" />
-                  <stop offset="1" stopColor="#FF6B35" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-            </svg>
-            {/* Pulsing Data Packet */}
-            <motion.div
-              animate={{ left: ["0%", "100%"] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              className="absolute top-1/2 -translate-y-1/2 w-8 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent shadow-[0_0_10px_#FF6B35]"
-            />
-          </div>
+        {/* Flow Steps */}
+        <div className="relative z-10 flex flex-col items-center gap-24 md:gap-32 w-full">
+          {steps.map((step, i) => {
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 60 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-10%" }}
+                transition={{ delay: 0.15, duration: 0.7 }}
+                className="flex flex-col items-center text-center w-full group"
+              >
+                {/* Phase + Title + Description */}
+                <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-accent/60 mb-4 block">
+                  {step.phase}
+                </span>
+                <h3 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">
+                  {step.title}
+                </h3>
+                <p className="text-slate-400 font-medium leading-relaxed text-base md:text-lg max-w-2xl mb-10">
+                  {step.desc}
+                </p>
 
-          {/* Flow Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-            {steps.map((step, i) => {
-              const isActive = activeIndex === i;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.15, duration: 0.6 }}
-                  className="flex flex-col items-start group"
-                >
-                  {/* Node Milestone */}
-                  <div className="relative mb-10 self-center lg:self-start">
+                {/* App Window Showcase */}
+                <div className="relative w-full max-w-5xl mx-auto">
+                  {/* Ambient Glow Behind */}
+                  <div
+                    className="absolute -inset-8 md:-inset-16 rounded-[40px] blur-2xl opacity-50 pointer-events-none"
+                    style={{
+                      background: `radial-gradient(ellipse at center, ${glowColors[i]}, transparent 70%)`,
+                    }}
+                  />
+
+                  {/* The App Window */}
+                  <motion.div
+                    whileHover={{ y: -8, scale: 1.01 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="relative z-10"
+                    style={{ perspective: "1200px" }}
+                  >
                     <div
-                      className={`w-20 h-20 rounded-[24px] border-2 flex items-center justify-center transition-all duration-500 relative z-10 overflow-hidden ${
-                        isActive
-                          ? "border-accent bg-accent/5 shadow-[0_0_20px_rgba(255,107,53,0.2)] text-accent"
-                          : "bg-slate-900 border-slate-800 text-white shadow-2xl"
-                      } group-hover:border-accent group-hover:bg-accent/5 group-hover:shadow-accent/20`}
+                      className="relative rounded-2xl overflow-hidden border transition-all duration-500"
+                      style={{
+                        transform: "rotateX(4deg)",
+                        transformOrigin: "center bottom",
+                        borderColor: borderGlowColors[i],
+                        boxShadow: `0 30px 60px -15px ${glowColors[i]}, 0 15px 30px -10px rgba(0,0,0,0.4)`,
+                      }}
                     >
-                      <step.icon
-                        size={32}
-                        strokeWidth={1.5}
-                        className={`${
-                          isActive ? "text-accent" : ""
-                        } group-hover:text-accent transition-colors`}
-                      />
-                      {/* Inner Tech Accent */}
-                      <div
-                        className={`absolute inset-0 bg-[radial-gradient(circle_at_center,#FF6B35_0%,transparent_70%)] transition-opacity ${
-                          isActive ? "opacity-10" : "opacity-0"
-                        } group-hover:opacity-10`}
-                      />
-                    </div>
+                      {/* Window Title Bar */}
+                      <div className="flex items-center gap-2 px-4 py-3 bg-slate-900/95 border-b border-slate-800/80 backdrop-blur-sm">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                          <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                        </div>
+                        <div className="flex-1 flex justify-center">
+                          <div className="px-4 py-1 rounded-md bg-slate-800/60 text-[11px] text-slate-500 font-medium tracking-wide">
+                            codeket.app — {step.phase}
+                          </div>
+                        </div>
+                        <div className="w-[52px]" /> {/* Spacer for symmetry */}
+                      </div>
 
-                    {/* Step Number Badge */}
-                    <div
-                      className={`absolute -top-3 -right-3 w-8 h-8 rounded-full border-2 flex items-center justify-center text-[0.65rem] font-black transition-all z-20 ${
-                        isActive
-                          ? "bg-accent border-accent text-white"
-                          : "bg-slate-800 border-slate-950 text-slate-400"
-                      } group-hover:text-white group-hover:border-accent group-hover:bg-accent transition-all`}
-                    >
-                      0{i + 1}
-                    </div>
-                  </div>
+                      {/* Screenshot */}
+                      <div className="relative aspect-[16/9] bg-slate-900">
+                        <img
+                          src={images[i].src}
+                          alt={images[i].alt}
+                          className="w-full h-full object-cover object-top"
+                        />
 
-                  {/* Content */}
-                  <div className="text-center lg:text-left">
-                    <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent/60 mb-2 block">
-                      {step.phase}
-                    </span>
-                    <h3 className="text-2xl font-black text-white mb-4 tracking-tight">
-                      {step.title}
-                    </h3>
-                    <div
-                      className={`h-0.5 transition-all duration-500 mb-6 mx-auto lg:mx-0 ${
-                        isActive ? "w-full bg-accent/30" : "w-12 bg-slate-800"
-                      } group-hover:w-full group-hover:bg-accent/30`}
-                    />
-                    <p className="text-slate-400 font-medium leading-relaxed text-sm">
-                      {step.desc}
-                    </p>
-
-                    {/* Highlight Badge */}
-                    <div
-                      className={`mt-8 pt-6 border-t border-slate-900 flex items-center justify-center lg:justify-start gap-2 transition-opacity ${
-                        isActive ? "opacity-100" : "opacity-60"
-                      } group-hover:opacity-100`}
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                      <span className="text-[0.6rem] font-black uppercase tracking-widest text-slate-300">
-                        {step.highlight}
-                      </span>
+                        {/* Very subtle bottom fade */}
+                        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950/50 to-transparent pointer-events-none" />
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                  </motion.div>
+
+                  {/* Floating Annotation Badges */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.6, duration: 0.5 }}
+                    className="absolute -left-4 md:-left-8 top-1/3 z-20 hidden md:block"
+                  >
+                    <div className="px-4 py-2.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/50 shadow-xl">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{
+                            backgroundColor: borderGlowColors[i].replace(
+                              "0.3",
+                              "1",
+                            ),
+                          }}
+                        />
+                        <span className="text-xs font-bold text-slate-200 tracking-wide whitespace-nowrap">
+                          {step.annotations[0]}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.8, duration: 0.5 }}
+                    className="absolute -right-4 md:-right-8 top-2/3 z-20 hidden md:block"
+                  >
+                    <div className="px-4 py-2.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/50 shadow-xl">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{
+                            backgroundColor: borderGlowColors[i].replace(
+                              "0.3",
+                              "1",
+                            ),
+                          }}
+                        />
+                        <span className="text-xs font-bold text-slate-200 tracking-wide whitespace-nowrap">
+                          {step.annotations[1]}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Highlight Badge below image */}
+                <div className="mt-6 inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{
+                      backgroundColor: borderGlowColors[i].replace("0.3", "1"),
+                    }}
+                  />
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                    {step.highlight}
+                  </span>
+                </div>
+
+                {/* Connector to next step */}
+                {i < steps.length - 1 && (
+                  <div className="mt-8 w-[2px] h-16 bg-gradient-to-b from-slate-700 to-transparent" />
+                )}
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Closing Trust Statement */}
@@ -241,10 +285,10 @@ export default function OperationalFlow() {
             </div>
 
             <a
-              href="#flow"
+              href="#pricing"
               className="flex items-center gap-3 text-white font-black text-xs uppercase tracking-widest group hover:text-accent transition-colors no-underline"
             >
-              Explore System Architecture
+              Get Started
               <ArrowRight
                 size={16}
                 className="group-hover:translate-x-1 transition-transform"
