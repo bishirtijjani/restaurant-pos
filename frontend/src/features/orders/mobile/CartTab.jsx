@@ -1,7 +1,14 @@
 // frontend/src/features/orders/mobile/CartTab.jsx
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Trash2, Edit3, Plus, Minus, StickyNote } from "lucide-react";
+import {
+  Trash2,
+  Edit3,
+  Plus,
+  Minus,
+  StickyNote,
+  ShoppingCart,
+} from "lucide-react";
 import { useHaptic } from "../../../hooks/useHaptic";
 import {
   removeFromCart,
@@ -35,8 +42,6 @@ const CartTab = () => {
 
   // Local state for editing notes use existing...
   const [editingNoteIndex, setEditingNoteIndex] = useState(null);
-  const [noteText, setNoteText] = useState("");
-
   const [noteText, setNoteText] = useState("");
 
   // Calculate totals
@@ -194,115 +199,110 @@ const CartTab = () => {
                 <Trash2 size={14} />
               </button>
             </div>
-              {/* Item Header */}
-              <div className="flex items-start gap-3 mb-3">
-                <div className="flex-1">
-                  <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-base-content/70">
-                    {currency}
-                    {item.price.toFixed(2)}
-                    {item.addOnsTotal > 0 && (
-                      <span className="text-success">
-                        {" "}
-                        +{currency}
-                        {item.addOnsTotal.toFixed(2)}
-                      </span>
-                    )}
-                  </p>
-
-                  {/* Add-ons List */}
-                  {item.addOnSummary?.length > 0 && (
-                    <div className="mt-1 text-xs text-base-content/60">
-                      {item.addOnSummary.join(", ")}
-                    </div>
+            {/* Item Header */}
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex-1">
+                <h3 className="font-semibold">{item.name}</h3>
+                <p className="text-sm text-base-content/70">
+                  {currency}
+                  {item.price.toFixed(2)}
+                  {item.addOnsTotal > 0 && (
+                    <span className="text-success">
+                      {" "}
+                      +{currency}
+                      {item.addOnsTotal.toFixed(2)}
+                    </span>
                   )}
-                </div>
+                </p>
 
-                {/* Item Total */}
-                <div className="text-right">
-                  <div className="text-lg font-bold text-primary">
-                    {currency}
-                    {(
-                      (item.price + (item.addOnsTotal || 0)) *
-                      item.quantity
-                    ).toFixed(2)}
+                {/* Add-ons List */}
+                {item.addOnSummary?.length > 0 && (
+                  <div className="mt-1 text-xs text-base-content/60">
+                    {item.addOnSummary.join(", ")}
                   </div>
-                </div>
-              </div>
-
-              {/* Quantity Controls */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() =>
-                      handleQuantityChange(index, item.quantity - 1)
-                    }
-                    className="btn btn-circle btn-sm btn-outline"
-                    disabled={item.quantity <= 1}
-                  >
-                    <Minus size={16} />
-                  </button>
-                  <span className="text-lg font-semibold min-w-[2rem] text-center">
-                    {item.quantity}
-                  </span>
-                  <button
-                    onClick={() =>
-                      handleQuantityChange(index, item.quantity + 1)
-                    }
-                    className="btn btn-circle btn-sm btn-primary"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-
-                {/* Note Button */}
-                {editingNoteIndex === index ? (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleSaveNote(index)}
-                      className="btn btn-sm btn-success"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={handleCancelEditNote}
-                      className="btn btn-sm btn-ghost"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleStartEditNote(index, item.itemNote)}
-                    className="btn btn-sm btn-ghost gap-2"
-                  >
-                    <StickyNote size={16} />
-                    {item.itemNote ? "Edit Note" : "Add Note"}
-                  </button>
                 )}
               </div>
 
-              {/* Note Input/Display */}
+              {/* Item Total */}
+              <div className="text-right">
+                <div className="text-lg font-bold text-primary">
+                  {currency}
+                  {(
+                    (item.price + (item.addOnsTotal || 0)) *
+                    item.quantity
+                  ).toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            {/* Quantity Controls */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleQuantityChange(index, item.quantity - 1)}
+                  className="btn btn-circle btn-sm btn-outline"
+                  disabled={item.quantity <= 1}
+                >
+                  <Minus size={16} />
+                </button>
+                <span className="text-lg font-semibold min-w-[2rem] text-center">
+                  {item.quantity}
+                </span>
+                <button
+                  onClick={() => handleQuantityChange(index, item.quantity + 1)}
+                  className="btn btn-circle btn-sm btn-primary"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+
+              {/* Note Button */}
               {editingNoteIndex === index ? (
-                <input
-                  type="text"
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSaveNote(index)}
-                  placeholder="Add special instructions..."
-                  className="input input-bordered input-sm w-full mt-3"
-                  autoFocus
-                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleSaveNote(index)}
+                    className="btn btn-sm btn-success"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={handleCancelEditNote}
+                    className="btn btn-sm btn-ghost"
+                  >
+                    Cancel
+                  </button>
+                </div>
               ) : (
-                item.itemNote && (
-                  <div className="mt-3 p-2 bg-warning/10 rounded-lg">
-                    <p className="text-sm italic text-warning-content">
-                      Note: {item.itemNote}
-                    </p>
-                  </div>
-                )
+                <button
+                  onClick={() => handleStartEditNote(index, item.itemNote)}
+                  className="btn btn-sm btn-ghost gap-2"
+                >
+                  <StickyNote size={16} />
+                  {item.itemNote ? "Edit Note" : "Add Note"}
+                </button>
               )}
             </div>
+
+            {/* Note Input/Display */}
+            {editingNoteIndex === index ? (
+              <input
+                type="text"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSaveNote(index)}
+                placeholder="Add special instructions..."
+                className="input input-bordered input-sm w-full mt-3"
+                autoFocus
+              />
+            ) : (
+              item.itemNote && (
+                <div className="mt-3 p-2 bg-warning/10 rounded-lg">
+                  <p className="text-sm italic text-warning-content">
+                    Note: {item.itemNote}
+                  </p>
+                </div>
+              )
+            )}
           </div>
         ))}
       </div>
