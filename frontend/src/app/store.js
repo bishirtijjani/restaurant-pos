@@ -21,6 +21,7 @@ import stockAdjustmentsReducer from "../features/stockAdjustments/stockAdjustmen
 import inventoryReducer from "../features/inventory/inventorySlice";
 import purchaseOrdersReducer from "../features/purchaseOrders/purchaseOrdersSlice";
 import offlineMiddleware from "../utils/offline/offlineMiddleware";
+import { injectStore } from "../utils/offline/offlineAxios";
 import ultraFastPOSReducer from "../features/ultraFastPOS/ultraFastPOSSlice";
 import addOnGroupsReducer from "../features/addOnGroups/addOnGroupsSlice";
 import discountsReducer from "../features/discounts/discountsSlice";
@@ -94,7 +95,7 @@ const combinedReducer = {
   auditLogs: auditLogsReducer, // Audit Logs
 };
 
-export default configureStore({
+const store = configureStore({
   reducer: combinedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -104,3 +105,7 @@ export default configureStore({
       },
     }).concat(offlineMiddleware),
 });
+
+injectStore(store);
+
+export default store;

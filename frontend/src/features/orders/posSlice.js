@@ -33,6 +33,7 @@ export const posSlice = createSlice({
         ...newItem,
         quantity: 1,
         addOns: addOnData.addOns,
+        addOnSummary: addOnData.addOnSummary,
         itemNote: addOnData.itemNote,
         addOnsTotal: addOnsTotal,
         cartId: Date.now(), // Unique ID for cart item
@@ -89,6 +90,7 @@ export const posSlice = createSlice({
       state.cart[index] = {
         ...oldItem,
         addOns: addOnData.addOns,
+        addOnSummary: addOnData.addOnSummary,
         itemNote: addOnData.itemNote,
         addOnsTotal: addOnsTotal,
         price: item.price, // ensure price is consistent

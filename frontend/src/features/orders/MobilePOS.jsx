@@ -6,7 +6,7 @@ import { useResponsive } from "../../hooks/useResponsive";
 import { useSwipe } from "../../hooks/useSwipe";
 import { useHaptic } from "../../hooks/useHaptic";
 import { BottomTabBar, FloatingCartPreview } from "../../components/Mobile";
-import { setActiveTab, toggleCartPreview } from "./mobilePOSSlice";
+import { setActiveTab } from "./mobilePOSSlice";
 import { useAuth } from "../../utils/permission";
 import TitleCard from "../../components/Cards/TitleCard";
 
@@ -33,11 +33,11 @@ const MobilePOS = () => {
 
   // Redux state
   const { activeTab, showFloatingCart } = useSelector(
-    (state) => state.mobilePOS
+    (state) => state.mobilePOS,
   );
   const { cart } = useSelector((state) => state.pos);
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
 
@@ -47,7 +47,7 @@ const MobilePOS = () => {
   // Calculate cart total
   const cartTotal = cart.reduce(
     (sum, item) => sum + (item.price + (item.addOnsTotal || 0)) * item.quantity,
-    0
+    0,
   );
 
   // Swipe between tabs
@@ -69,11 +69,6 @@ const MobilePOS = () => {
       }
     },
   });
-
-  // Handle cart preview expand
-  const handleCartPreviewExpand = () => {
-    dispatch(toggleCartPreview());
-  };
 
   const handleNavigateToCart = () => {
     dispatch(setActiveTab("cart"));
@@ -132,7 +127,6 @@ const MobilePOS = () => {
           itemCount={cart.length}
           total={cartTotal}
           currency={currency}
-          onExpand={handleCartPreviewExpand}
           onNavigateToCart={handleNavigateToCart}
         />
       )}

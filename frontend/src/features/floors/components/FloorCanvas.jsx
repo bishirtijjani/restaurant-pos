@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useImperativeHandle } from "react";
-import { Stage, Layer, Transformer, Line } from "react-konva";
+import { Stage, Layer, Transformer, Line, Text } from "react-konva";
 import { useDroppable } from "@dnd-kit/core";
 import TableNode from "./TableNode";
 import GridLayer from "./GridLayer";
@@ -42,7 +42,7 @@ const FloorCanvas = React.forwardRef(
       onTableSelect, // Lifted handler
       locked = false, // NEW: Lock view
     },
-    ref
+    ref,
   ) => {
     const stageRef = useRef(null);
     const containerRef = useRef(null);
@@ -142,7 +142,7 @@ const FloorCanvas = React.forwardRef(
     useEffect(() => {
       if (editMode && transformerRef.current && stageRef.current) {
         const nodes = selectedTableIds.map((id) =>
-          stageRef.current.findOne(`#table-${id}`)
+          stageRef.current.findOne(`#table-${id}`),
         );
         const validNodes = nodes.filter(Boolean);
         transformerRef.current.nodes(validNodes);
@@ -261,8 +261,8 @@ const FloorCanvas = React.forwardRef(
         stageRef.current.container().style.cursor = editMode
           ? "default"
           : selectedTableIds.length > 0
-          ? "default"
-          : "grab";
+            ? "default"
+            : "grab";
       }
     }, [editMode, selectedTableIds]);
 
@@ -318,6 +318,24 @@ const FloorCanvas = React.forwardRef(
             visible={true}
             opacity={editMode ? 1 : 0.3}
           />
+
+          <Layer>
+            {/* Watermark Floor Name */}
+            <Text
+              text={floor?.name?.toUpperCase() || ""}
+              fontSize={180} // Huge text
+              fontStyle="bold"
+              fill="#cbd5e1" // Slate-300 / neutral
+              opacity={0.15} // Faded watermark feel
+              x={stageSize.width / 2}
+              y={stageSize.height / 2}
+              offsetX={
+                (floor?.name?.length || 0) * 55 // Center offset (rough estimation)
+              }
+              offsetY={90} // Half of fontSize
+              listening={false} // Don't block clicks
+            />
+          </Layer>
 
           <Layer>
             {/* Render Merge Connections */}
@@ -386,7 +404,7 @@ const FloorCanvas = React.forwardRef(
           </Layer>
         </Stage>
 
-        <div className="absolute top-4 right-4 flex flex-col gap-2 z-50">
+        <div className="absolute top-4 right-4 flex flex-col gap-2 z-40">
           <button
             className="btn btn-circle btn-sm bg-base-100 shadow-lg"
             onClick={handleZoomIn}
@@ -417,7 +435,7 @@ const FloorCanvas = React.forwardRef(
         )}
       </div>
     );
-  }
+  },
 );
 
 export default FloorCanvas;

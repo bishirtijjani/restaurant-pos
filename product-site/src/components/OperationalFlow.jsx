@@ -69,7 +69,7 @@ export default function OperationalFlow() {
   return (
     <section className="relative py-32 bg-slate-950 overflow-hidden" id="flow">
       {/* Background Circuit Grid */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(to_right,#FFF_1px,transparent_1px),linear-gradient(to_bottom,#FFF_1px,transparent_1px)] bg-[size:60px_60px]" />
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(to_right,#FFF_1px,transparent_1px),linear-gradient(to_bottom,#FFF_1px,transparent_1px)] bg-size-[60px_60px]" />
 
       <div className="container relative z-10 px-8">
         {/* Section Header */}
@@ -89,7 +89,7 @@ export default function OperationalFlow() {
 
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.05]">
               One Continuous <br />
-              <span className="text-accent underline decoration-8 underline-offset-[-4px] decoration-accent/10">
+              <span className="text-accent underline decoration-8 -underline-offset-4 decoration-accent/10">
                 Operational Flow, On Any Device, Even Without Internet.
               </span>
             </h2>
@@ -165,7 +165,7 @@ export default function OperationalFlow() {
                       </div>
 
                       {/* Screenshot */}
-                      <div className="relative aspect-[16/9] bg-slate-900">
+                      <div className="relative aspect-video bg-slate-900">
                         <img
                           src={images[i].src}
                           alt={images[i].alt}
@@ -173,7 +173,7 @@ export default function OperationalFlow() {
                         />
 
                         {/* Very subtle bottom fade */}
-                        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950/50 to-transparent pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-slate-950/50 to-transparent pointer-events-none" />
                       </div>
                     </div>
                   </motion.div>
@@ -245,7 +245,7 @@ export default function OperationalFlow() {
 
                 {/* Connector to next step */}
                 {i < steps.length - 1 && (
-                  <div className="mt-8 w-[2px] h-16 bg-gradient-to-b from-slate-700 to-transparent" />
+                  <div className="mt-8 w-[2px] h-16 bg-linear-to-b from-slate-700 to-transparent" />
                 )}
               </motion.div>
             );

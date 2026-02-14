@@ -1,16 +1,8 @@
 // frontend/src/features/orders/mobile/CartTab.jsx
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  ShoppingCart,
-  Trash2,
-  Edit3,
-  Plus,
-  Minus,
-  StickyNote,
-} from "lucide-react";
+import { Trash2, Edit3, Plus, Minus, StickyNote } from "lucide-react";
 import { useHaptic } from "../../../hooks/useHaptic";
-import { SwipeableCard } from "../../../components/Mobile";
 import {
   removeFromCart,
   updateCartItemQuantity,
@@ -25,7 +17,6 @@ import {
   MODAL_BODY_TYPES,
   CONFIRMATION_MODAL_CLOSE_TYPES,
 } from "../../../utils/globalConstantUtil";
-import AddOnSheet from "./sheets/AddOnSheet";
 
 /**
  * Cart Tab - Mobile optimized cart management
@@ -38,7 +29,7 @@ const CartTab = () => {
   // Redux state
   const { cart, orderNote } = useSelector((state) => state.pos);
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
 
@@ -46,16 +37,12 @@ const CartTab = () => {
   const [editingNoteIndex, setEditingNoteIndex] = useState(null);
   const [noteText, setNoteText] = useState("");
 
-  // Edit Item State
-  const [editSheetOpen, setEditSheetOpen] = useState(false);
-  const [itemToEdit, setItemToEdit] = useState(null);
-  const [editIndex, setEditIndex] = useState(null);
-  const [initialSelections, setInitialSelections] = useState({});
+  const [noteText, setNoteText] = useState("");
 
   // Calculate totals
   const subtotal = cart.reduce(
     (sum, item) => sum + (item.price + (item.addOnsTotal || 0)) * item.quantity,
-    0
+    0,
   );
 
   // Handle quantity change
@@ -70,36 +57,39 @@ const CartTab = () => {
     dispatch(removeFromCart(index));
   };
 
-  // Handle item edit (add-ons)
   const handleEdit = (index) => {
     haptic.light();
     const item = cart[index];
 
-    // Transform cart add-ons back to selection map
+    // Transform cart add-ons back to selection map for the standard modal
     const selections = {};
     item.addOns?.forEach((group) => {
-      if (group.selectedItems) {
-        selections[group.groupId] = group.selectedItems.map((i) => i._id);
+      if (group.selectedItemIds) {
+        selections[group.groupId] = group.selectedItemIds;
       }
     });
 
-    setItemToEdit(item);
-    setEditIndex(index);
-    setInitialSelections(selections);
-    setEditSheetOpen(true);
-  };
-
-  const handleSaveEdit = (addOnData) => {
     dispatch(
-      updateCartItem({
-        index: editIndex,
-        item: itemToEdit,
-        addOnData,
-      })
+      openModal({
+        title: `Edit ${item.name}`,
+        bodyType: MODAL_BODY_TYPES.ADD_ON_SELECTOR,
+        extraObject: {
+          menuItem: item,
+          initialSelections: selections,
+          initialNote: item.itemNote,
+          onConfirm: (addOnData) => {
+            dispatch(
+              updateCartItem({
+                index,
+                item,
+                addOnData,
+              }),
+            );
+          },
+        },
+        size: "lg",
+      }),
     );
-    setEditSheetOpen(false);
-    setItemToEdit(null);
-    setEditIndex(null);
   };
 
   // Handle note edit
@@ -133,7 +123,7 @@ const CartTab = () => {
             dispatch(clearCart());
           },
         },
-      })
+      }),
     );
   };
 
@@ -181,15 +171,29 @@ const CartTab = () => {
         </button>
       </div>
 
-      {/* Cart Items */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {cart.map((item, index) => (
-          <SwipeableCard
+          <div
             key={item.cartId || index}
-            onDelete={() => handleDelete(index)}
-            onEdit={() => handleEdit(index)}
+            className="bg-base-100 rounded-xl p-4 shadow-sm border border-base-200 relative"
           >
-            <div className="bg-base-100 rounded-xl p-4 shadow-sm">
+            {/* Action Buttons (Top Right) */}
+            <div className="absolute top-3 right-3 flex gap-2">
+              <button
+                onClick={() => handleEdit(index)}
+                className="btn btn-circle btn-xs btn-ghost text-info"
+                title="Edit item"
+              >
+                <Edit3 size={14} />
+              </button>
+              <button
+                onClick={() => handleDelete(index)}
+                className="btn btn-circle btn-xs btn-ghost text-error"
+                title="Remove item"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
               {/* Item Header */}
               <div className="flex items-start gap-3 mb-3">
                 <div className="flex-1">
@@ -206,14 +210,10 @@ const CartTab = () => {
                     )}
                   </p>
 
-                  {/* Add-ons */}
-                  {item.addOns?.length > 0 && (
+                  {/* Add-ons List */}
+                  {item.addOnSummary?.length > 0 && (
                     <div className="mt-1 text-xs text-base-content/60">
-                      {item.addOns.map((group, idx) => (
-                        <div key={idx}>
-                          {group.selectedItems?.map((si) => si.name).join(", ")}
-                        </div>
-                      ))}
+                      {item.addOnSummary.join(", ")}
                     </div>
                   )}
                 </div>
@@ -303,7 +303,7 @@ const CartTab = () => {
                 )
               )}
             </div>
-          </SwipeableCard>
+          </div>
         ))}
       </div>
 
@@ -349,17 +349,6 @@ const CartTab = () => {
           </button>
         </div>
       </div>
-
-      {/* Edit Item Sheet */}
-      <AddOnSheet
-        menuItem={itemToEdit}
-        isOpen={editSheetOpen}
-        onClose={() => setEditSheetOpen(false)}
-        initialSelections={initialSelections}
-        initialNote={itemToEdit?.itemNote}
-        mode="edit"
-        onConfirm={handleSaveEdit}
-      />
     </div>
   );
 };

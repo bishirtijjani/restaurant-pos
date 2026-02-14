@@ -58,7 +58,7 @@ const FloorManager = () => {
 
   // Data Selectors
   const { floors, loading: floorsLoading } = useSelector(
-    (state) => state.floors
+    (state) => state.floors,
   );
   const { tables } = useSelector((state) => state.tables);
   const { items: reservations } = useSelector((state) => state.reservations);
@@ -69,14 +69,14 @@ const FloorManager = () => {
 
   // Derived State
   const reservedSoonReservations = useSelector((state) =>
-    selectReservedSoon(state, timezone)
+    selectReservedSoon(state, timezone),
   );
   const reservedSoonTableIds = useMemo(
     () =>
       reservedSoonReservations
         .filter((r) => r.tableId)
         .map((r) => r.tableId._id || r.tableId),
-    [reservedSoonReservations]
+    [reservedSoonReservations],
   );
 
   // Local State
@@ -123,7 +123,7 @@ const FloorManager = () => {
             id: reservationId,
             tableId: tableId,
             status: "confirmed", // Auto confirm when dropped
-          })
+          }),
         )
           .unwrap()
           .then(() => {
@@ -131,7 +131,7 @@ const FloorManager = () => {
               showNotification({
                 message: "Reservation assigned and confirmed!",
                 status: 1,
-              })
+              }),
             );
           })
           .catch((err) => {
@@ -139,11 +139,11 @@ const FloorManager = () => {
               showNotification({
                 message: err.message || "Failed to assign reservation",
                 status: 0,
-              })
+              }),
             );
           });
       },
-      stageRef // Pass stageRef for coordinate translation
+      stageRef, // Pass stageRef for coordinate translation
     );
 
   // DnD Sensors
@@ -152,7 +152,7 @@ const FloorManager = () => {
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
   );
 
   // --- Handlers ---
@@ -168,7 +168,7 @@ const FloorManager = () => {
       openModal({
         title: "Add New Floor",
         bodyType: MODAL_BODY_TYPES.ADD_NEW_FLOOR,
-      })
+      }),
     );
   };
 
@@ -180,7 +180,7 @@ const FloorManager = () => {
         header: "Add New Table",
         type: RIGHT_DRAWER_TYPES.FLOOR_TABLE_EDIT,
         extraObject: { floorId: activeFloorId },
-      })
+      }),
     );
   };
 
@@ -193,11 +193,11 @@ const FloorManager = () => {
     // tables state already updated optimistically?
     // tables are in 'tables' selector.
     const floorTables = tables.filter(
-      (t) => t.floorId === activeFloorId || t.floorId?._id === activeFloorId
+      (t) => t.floorId === activeFloorId || t.floorId?._id === activeFloorId,
     );
 
     dispatch(
-      updateTablePositions({ floorId: activeFloorId, tables: floorTables })
+      updateTablePositions({ floorId: activeFloorId, tables: floorTables }),
     )
       .unwrap()
       .then(() => {
@@ -206,7 +206,7 @@ const FloorManager = () => {
       })
       .catch((err) => {
         dispatch(
-          showNotification({ message: "Failed to save layout", status: 0 })
+          showNotification({ message: "Failed to save layout", status: 0 }),
         );
       });
   };
@@ -222,7 +222,7 @@ const FloorManager = () => {
         header: `Table ${table.tableNumber}`,
         type: RIGHT_DRAWER_TYPES.FLOOR_TABLE_DETAILS,
         extraObject: table,
-      })
+      }),
     );
   };
 
@@ -250,7 +250,7 @@ const FloorManager = () => {
             header: `Edit Table ${table.tableNumber}`,
             type: RIGHT_DRAWER_TYPES.FLOOR_TABLE_EDIT,
             extraObject: table,
-          })
+          }),
         );
         break;
       // Add other actions like Merge, clean etc
@@ -266,7 +266,7 @@ const FloorManager = () => {
         title: "Merge Tables",
         bodyType: MODAL_BODY_TYPES.MERGE_TABLES, // Constant 61 is MERGE_TABLE
         extraObject: { tableIds: selectedTableIds, floorId: activeFloorId },
-      })
+      }),
     );
   };
 
@@ -279,7 +279,7 @@ const FloorManager = () => {
       setSelectedTableIds((prev) =>
         prev.includes(tableId)
           ? prev.filter((id) => id !== tableId)
-          : [...prev, tableId]
+          : [...prev, tableId],
       );
     } else {
       setSelectedTableIds([tableId]);
@@ -292,7 +292,7 @@ const FloorManager = () => {
       openModal({
         title: "New Reservation",
         bodyType: MODAL_BODY_TYPES.ADD_RESERVATION,
-      })
+      }),
     );
   };
 
@@ -320,7 +320,7 @@ const FloorManager = () => {
                     title: "Edit Floor",
                     bodyType: MODAL_BODY_TYPES.ADD_NEW_FLOOR,
                     extraObject: floor,
-                  })
+                  }),
                 );
               }}
               onDeleteFloor={(id) => {
@@ -372,7 +372,7 @@ const FloorManager = () => {
           {/* Main Content */}
           <div className="flex-1 flex flex-col relative w-full overflow-hidden">
             {/* Toolbar */}
-            <div className="h-14 border-b border-base-300 bg-base-100 flex items-center justify-between px-4 z-10 shrink-0">
+            <div className="h-auto min-h-[3.5rem] border-b border-base-300 bg-base-100 flex flex-wrap items-center justify-between px-4 py-2 gap-y-2 z-30 shrink-0">
               <div className="flex items-center gap-2">
                 <button
                   className="md:hidden btn btn-ghost btn-circle btn-sm"
@@ -427,11 +427,11 @@ const FloorManager = () => {
                 </div>
 
                 {editMode && (
-                  <div className="flex gap-2 ml-2">
+                  <div className="flex items-center gap-2 border-l border-base-300 pl-4 h-8">
                     {selectedTableIds.length > 1 && (
                       <button
                         onClick={handleMergeTables}
-                        className="btn btn-sm btn-warning btn-circle text-white"
+                        className="btn btn-sm btn-warning btn-circle text-white shadow-sm"
                         title="Merge"
                       >
                         <Combine className="w-4 h-4" />
@@ -439,14 +439,14 @@ const FloorManager = () => {
                     )}
                     <button
                       onClick={handleAddTable}
-                      className="btn btn-sm btn-outline btn-circle"
+                      className="btn btn-sm btn-outline btn-circle shadow-sm"
                       title="Add Table"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
                     <button
                       onClick={handleSaveLayout}
-                      className="btn btn-sm btn-success btn-circle text-white"
+                      className="btn btn-sm btn-success btn-circle text-white shadow-sm"
                       title="Save"
                     >
                       <Save className="w-4 h-4" />
@@ -469,7 +469,7 @@ const FloorManager = () => {
                   tables={tables.filter(
                     (t) =>
                       t.floorId === activeFloorId ||
-                      t.floorId?._id === activeFloorId
+                      t.floorId?._id === activeFloorId,
                   )}
                   editMode={editMode}
                   locked={locked}
@@ -479,7 +479,7 @@ const FloorManager = () => {
                       optimisticUpdateTablePositionTableSlice({
                         tableId: id,
                         position: newAttrs.position,
-                      })
+                      }),
                     );
                     // We don't save to DB on every drag for performance, only on Save.
                     // But if width changes (resize), we might want to update local state more robustly.

@@ -12,7 +12,8 @@ import {
   toggleFavoriteItem,
   setActiveSheet,
 } from "../mobilePOSSlice";
-import AddOnSheet from "./sheets/AddOnSheet";
+import { openModal } from "../../common/modalSlice";
+import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { BottomSheet } from "../../../components/Mobile";
 
 const MenuItemCard = ({
@@ -33,7 +34,7 @@ const MenuItemCard = ({
     {
       threshold: 500,
       onClick: () => onAddToCart(item),
-    }
+    },
   );
 
   const hasAddOns = item.addOnGroups && item.addOnGroups.length > 0;
@@ -96,10 +97,10 @@ const MenuTab = () => {
   const menuItems = useSelector((state) => state.menuItems.menuItems);
   const categories = useSelector((state) => state.categories.categories);
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const { favoriteItems, searchHistory } = useSelector(
-    (state) => state.mobilePOS
+    (state) => state.mobilePOS,
   );
 
   const currency = settings?.currency?.symbol || "$";
@@ -110,8 +111,6 @@ const MenuTab = () => {
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
 
   // Sheet state
-  const [showAddOnSheet, setShowAddOnSheet] = useState(false);
-  const [selectedItemForAddOn, setSelectedItemForAddOn] = useState(null);
   const [quickActionItem, setQuickActionItem] = useState(null);
 
   // Load data
@@ -134,7 +133,7 @@ const MenuTab = () => {
 
   // Favorite items
   const favoriteItemsList = menuItems.filter((item) =>
-    favoriteItems.includes(item._id)
+    favoriteItems.includes(item._id),
   );
 
   // Handle search
@@ -170,16 +169,26 @@ const MenuTab = () => {
     haptic.medium();
 
     if (item.addOnGroups && item.addOnGroups.length > 0) {
-      // Open add-ons sheet
-      setSelectedItemForAddOn(item);
-      setShowAddOnSheet(true);
+      dispatch(
+        openModal({
+          title: `Customize ${item.name}`,
+          bodyType: MODAL_BODY_TYPES.ADD_ON_SELECTOR,
+          extraObject: {
+            menuItem: item,
+            onConfirm: (addOnData) => {
+              dispatch(addToCart({ item, addOnData }));
+            },
+          },
+          size: "lg",
+        }),
+      );
     } else {
       // Add directly
       dispatch(
         addToCart({
           item,
           addOnData: { addOns: [], itemNote: "", total: item.price },
-        })
+        }),
       );
     }
   };
@@ -336,13 +345,6 @@ const MenuTab = () => {
           </div>
         )}
       </div>
-
-      {/* Add-on Sheet */}
-      <AddOnSheet
-        menuItem={selectedItemForAddOn}
-        isOpen={showAddOnSheet}
-        onClose={() => setShowAddOnSheet(false)}
-      />
 
       {/* Quick Action Sheet */}
       <BottomSheet

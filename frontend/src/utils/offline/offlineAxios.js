@@ -1,9 +1,17 @@
-// frontend/src/utils/offline/offlineAxios.js
 import axios from "axios";
 import offlineStorage from "./storage";
 import { syncQueue } from "./syncQueue";
 import { connectionMonitor } from "./connectionMonitor";
-import store from "../../app/store"; // Import store to access state
+// Removed static store import to break circular dependency loop
+let store;
+
+/**
+ * Injects the Redux store into the axios utility to break circular dependencies.
+ * Called from store.js after initialization.
+ */
+export const injectStore = (_store) => {
+  store = _store;
+};
 
 // Generate temporary ID for offline items
 const generateTempId = () =>
@@ -86,9 +94,12 @@ axios.interceptors.request.use(
 
     // 2. Inject Store ID (Context)
     // Try to get from Redux first, then localStorage
-    const state = store.getState();
-    const activeStoreId =
-      state.commonStore?.activeStoreId || localStorage.getItem("activeStoreId");
+    let activeStoreId = localStorage.getItem("activeStoreId");
+
+    if (store) {
+      const state = store.getState();
+      activeStoreId = state.commonStore?.activeStoreId || activeStoreId;
+    }
 
     if (activeStoreId) {
       config.headers["x-store-id"] = activeStoreId;

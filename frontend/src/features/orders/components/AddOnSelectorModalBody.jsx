@@ -9,15 +9,20 @@ import { Check, X } from "lucide-react";
 
 const AddOnSelectorModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
-  const { menuItem, onConfirm } = extraObject;
+  const {
+    menuItem,
+    onConfirm,
+    initialSelections = {},
+    initialNote = "",
+  } = extraObject;
   const { menuItemGroups, loading } = useSelector((state) => state.addOnGroups);
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const currency = settings?.currency?.symbol || "$";
 
-  const [selections, setSelections] = useState({});
-  const [itemNote, setItemNote] = useState("");
+  const [selections, setSelections] = useState(initialSelections);
+  const [itemNote, setItemNote] = useState(initialNote || "");
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -33,9 +38,9 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
     menuItemGroups.length > 0
       ? menuItemGroups
       : Array.isArray(menuItem?.addOnGroups) &&
-        typeof menuItem.addOnGroups[0] === "object"
-      ? menuItem.addOnGroups
-      : [];
+          typeof menuItem.addOnGroups[0] === "object"
+        ? menuItem.addOnGroups
+        : [];
 
   const handleSelect = (groupId, itemId, group) => {
     setSelections((prev) => {
@@ -52,7 +57,7 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
               showNotification({
                 message: `Maximum ${group.maxSelections} selections allowed for ${group.name}`,
                 status: 0,
-              })
+              }),
             );
             return prev;
           }
@@ -93,9 +98,8 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
       }
 
       if (group.minSelections && selected.length < group.minSelections) {
-        newErrors[
-          group._id
-        ] = `Please select at least ${group.minSelections} option(s)`;
+        newErrors[group._id] =
+          `Please select at least ${group.minSelections} option(s)`;
       }
     });
 
@@ -216,8 +220,8 @@ const AddOnSelectorModalBody = ({ extraObject }) => {
                             group.maxSelections || "many"
                           }`
                         : group.maxSelections
-                        ? `up to ${group.maxSelections}`
-                        : "any"
+                          ? `up to ${group.maxSelections}`
+                          : "any"
                     }`}
               </p>
             </div>

@@ -47,11 +47,22 @@ const VarianceDashboard = () => {
 
   const isLoading = status === "loading";
 
+  // Defensive guards
+  const safeReasons = reasons || [];
+  const safeSummary = summary || {
+    totalGain: 0,
+    totalLoss: 0,
+    netImpact: 0,
+    totalAdjustments: 0,
+  };
+  const safeItems = items || [];
+
   // Format data for chart
-  const reasonChartData = reasons.map((r) => ({
+  const reasonChartData = safeReasons.map((r) => ({
     name:
-      r.reason.charAt(0).toUpperCase() + r.reason.slice(1).replace("_", " "),
-    value: Math.abs(r.impact),
+      r.reason?.charAt(0).toUpperCase() +
+        r.reason?.slice(1).replace("_", " ") || "Unknown",
+    value: Math.abs(r.impact || 0),
   }));
 
   return (
@@ -69,28 +80,28 @@ const VarianceDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
           title="Potential Gain"
-          value={`$${(summary.totalGain || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          value={`$${(safeSummary.totalGain || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
           icon={TrendingUpIcon}
           color="success"
           loading={isLoading}
         />
         <KPICard
           title="Total Shrinkage"
-          value={`$${Math.abs(summary.totalLoss || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          value={`$${Math.abs(safeSummary.totalLoss || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
           icon={TrendingDownIcon}
           color="error"
           loading={isLoading}
         />
         <KPICard
           title="Net Financial Impact"
-          value={`${(summary.netImpact || 0) < 0 ? "-" : ""}$${Math.abs(summary.netImpact || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          value={`${(safeSummary.netImpact || 0) < 0 ? "-" : ""}$${Math.abs(safeSummary.netImpact || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
           icon={BarChartIcon}
-          color={(summary.netImpact || 0) >= 0 ? "primary" : "warning"}
+          color={(safeSummary.netImpact || 0) >= 0 ? "primary" : "warning"}
           loading={isLoading}
         />
         <KPICard
           title="Total Discrepancies"
-          value={summary.totalAdjustments || 0}
+          value={safeSummary.totalAdjustments || 0}
           icon={AlertTriangleIcon}
           color="accent"
           loading={isLoading}
@@ -148,7 +159,7 @@ const VarianceDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {items.slice(0, 10).map((item, index) => (
+                {safeItems.slice(0, 10).map((item, index) => (
                   <tr key={index}>
                     <td>{item.name}</td>
                     <td>
@@ -170,7 +181,7 @@ const VarianceDashboard = () => {
                     </td>
                   </tr>
                 ))}
-                {items.length === 0 && (
+                {safeItems.length === 0 && (
                   <tr>
                     <td
                       colSpan="4"
