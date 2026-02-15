@@ -91,7 +91,7 @@ function LeftSidebar() {
   }
 
   return (
-    <div className="drawer-side z-50" style={{ backdropFilter: "none" }}>
+    <div className="drawer-side z-[100]" style={{ backdropFilter: "none" }}>
       <label
         htmlFor="left-sidebar-drawer"
         className="drawer-overlay backdrop-blur-sm lg:hidden"

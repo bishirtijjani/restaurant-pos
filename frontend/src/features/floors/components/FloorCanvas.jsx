@@ -404,7 +404,7 @@ const FloorCanvas = React.forwardRef(
           </Layer>
         </Stage>
 
-        <div className="absolute top-4 right-4 flex flex-col gap-2 z-40">
+        <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
           <button
             className="btn btn-circle btn-sm bg-base-100 shadow-lg"
             onClick={handleZoomIn}

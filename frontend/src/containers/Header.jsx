@@ -80,7 +80,7 @@ function Header() {
 
   return (
     <>
-      <div className="navbar sticky top-0 bg-base-100 z-10 shadow-md">
+      <div className="navbar sticky top-0 bg-base-100 z-[90] shadow-md">
         {/* Menu toggle for mobile view or small screen */}
         <div className="flex-none lg:hidden">
           <label

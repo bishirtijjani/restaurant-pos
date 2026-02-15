@@ -180,34 +180,19 @@ const CartTab = () => {
         {cart.map((item, index) => (
           <div
             key={item.cartId || index}
-            className="bg-base-100 rounded-xl p-4 shadow-sm border border-base-200 relative"
+            className="bg-base-100 rounded-xl p-4 shadow-sm border border-base-200"
           >
-            {/* Action Buttons (Top Right) */}
-            <div className="absolute top-3 right-3 flex gap-2">
-              <button
-                onClick={() => handleEdit(index)}
-                className="btn btn-circle btn-xs btn-ghost text-info"
-                title="Edit item"
-              >
-                <Edit3 size={14} />
-              </button>
-              <button
-                onClick={() => handleDelete(index)}
-                className="btn btn-circle btn-xs btn-ghost text-error"
-                title="Remove item"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-            {/* Item Header */}
-            <div className="flex items-start gap-3 mb-3">
-              <div className="flex-1">
-                <h3 className="font-semibold">{item.name}</h3>
-                <p className="text-sm text-base-content/70">
+            {/* Item Header & Actions */}
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold truncate text-base">
+                  {item.name}
+                </h3>
+                <p className="text-xs text-base-content/70 mt-0.5">
                   {currency}
                   {item.price.toFixed(2)}
                   {item.addOnsTotal > 0 && (
-                    <span className="text-success">
+                    <span className="text-success font-medium">
                       {" "}
                       +{currency}
                       {item.addOnsTotal.toFixed(2)}
@@ -217,15 +202,35 @@ const CartTab = () => {
 
                 {/* Add-ons List */}
                 {item.addOnSummary?.length > 0 && (
-                  <div className="mt-1 text-xs text-base-content/60">
+                  <div className="mt-1 text-[10px] text-base-content/50 leading-tight">
                     {item.addOnSummary.join(", ")}
                   </div>
                 )}
               </div>
 
-              {/* Item Total */}
-              <div className="text-right">
-                <div className="text-lg font-bold text-primary">
+              {/* Action Buttons & Total */}
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleEdit(index)}
+                    className="btn btn-ghost btn-xs h-7 min-h-7 px-2 gap-1 text-info hover:bg-info/10"
+                  >
+                    <Edit3 size={12} />
+                    <span className="text-[10px] font-bold uppercase">
+                      Edit
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(index)}
+                    className="btn btn-ghost btn-xs h-7 min-h-7 px-2 gap-1 text-error hover:bg-error/10"
+                  >
+                    <Trash2 size={12} />
+                    <span className="text-[10px] font-bold uppercase">
+                      Delete
+                    </span>
+                  </button>
+                </div>
+                <div className="text-lg font-bold text-primary tabular-nums">
                   {currency}
                   {(
                     (item.price + (item.addOnsTotal || 0)) *

@@ -124,7 +124,7 @@ function ModalLayout() {
     <>
       {/* The button to open modal */}
       <div
-        className={`modal h-full backdrop-blur-sm transition-all duration-300 ${isOpen ? "modal-open" : ""} `}
+        className={`modal h-full my-12 backdrop-blur-sm transition-all duration-300 ${isOpen ? "modal-open" : ""} `}
       >
         <div
           ref={modalRef}

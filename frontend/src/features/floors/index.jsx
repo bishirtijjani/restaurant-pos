@@ -336,7 +336,7 @@ const FloorManager = () => {
 
           {/* Mobile Sidebar (Drawer) */}
           <div
-            className={`absolute inset-0 z-40 transform transition-transform duration-300 md:hidden ${
+            className={`absolute inset-0 z-50 transform transition-transform duration-300 md:hidden ${
               isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             }`}
           >
@@ -372,88 +372,96 @@ const FloorManager = () => {
           {/* Main Content */}
           <div className="flex-1 flex flex-col relative w-full overflow-hidden">
             {/* Toolbar */}
-            <div className="h-auto min-h-[3.5rem] border-b border-base-300 bg-base-100 flex flex-wrap items-center justify-between px-4 py-2 gap-y-2 z-30 shrink-0">
-              <div className="flex items-center gap-2">
-                <button
-                  className="md:hidden btn btn-ghost btn-circle btn-sm"
-                  onClick={() => setIsSidebarOpen(true)}
-                >
-                  <Menu size={20} />
-                </button>
-                <h2 className="font-bold text-lg hidden sm:block">
-                  {floors.find((f) => f._id === activeFloorId)?.name ||
-                    "Select Floor"}
-                </h2>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  className={`btn btn-sm btn-rounded me-2 ${
-                    locked ? "btn-error text-white" : ""
-                  }`}
-                  onClick={() => setLocked(!locked)}
-                  title={locked ? "Unlock View" : "Lock View"}
-                >
-                  {locked ? (
-                    <span className="flex items-center">
-                      <Lock className="w-4 h-4 inline" /> floor{" "}
-                    </span>
-                  ) : (
-                    <span className="flex items-center">
-                      <Unlock className="w-4 h-4 inline" /> floor{" "}
-                    </span>
-                  )}
-                </button>
-
-                <div className="join">
+            <div className="border-b border-base-300 bg-base-100 z-30 shrink-0">
+              {/* Top Row: Navigation and Mode Toggle */}
+              <div className="h-14 flex items-center justify-between px-4">
+                <div className="flex items-center gap-2">
                   <button
-                    className={`join-item btn btn-sm ${
-                      !editMode ? "btn-primary" : ""
-                    }`}
-                    onClick={() => setEditMode(false)}
+                    className="md:hidden btn btn-ghost btn-circle btn-sm"
+                    onClick={() => setIsSidebarOpen(true)}
                   >
-                    <Monitor className="w-4 h-4 mr-1" />{" "}
-                    <span className="inline">Live</span>
+                    <Menu size={20} />
                   </button>
-                  <button
-                    className={`join-item btn btn-sm ${
-                      editMode ? "btn-primary" : ""
-                    }`}
-                    onClick={() => setEditMode(true)}
-                  >
-                    <Settings className="w-4 h-4 mr-1" />{" "}
-                    <span className="inline">Edit</span>
-                  </button>
+                  <h2 className="font-bold text-lg hidden sm:block">
+                    {floors.find((f) => f._id === activeFloorId)?.name ||
+                      "Select Floor"}
+                  </h2>
                 </div>
 
-                {editMode && (
-                  <div className="flex items-center gap-2 border-l border-base-300 pl-4 h-8">
+                <div className="flex items-center gap-2">
+                  <button
+                    className={`btn btn-sm btn-rounded me-2 ${
+                      locked ? "btn-error text-white" : ""
+                    }`}
+                    onClick={() => setLocked(!locked)}
+                    title={locked ? "Unlock View" : "Lock View"}
+                  >
+                    {locked ? (
+                      <span className="flex items-center gap-1">
+                        <Lock className="w-4 h-4" />
+                        <span className="inline">Floor</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <Unlock className="w-4 h-4" />
+                        <span className="inline">Floor</span>
+                      </span>
+                    )}
+                  </button>
+
+                  <div className="join">
+                    <button
+                      className={`join-item btn btn-sm ${
+                        !editMode ? "btn-primary" : ""
+                      }`}
+                      onClick={() => setEditMode(false)}
+                    >
+                      <Monitor className="w-4 h-4 mr-1" />
+                      <span className="inline">Live</span>
+                    </button>
+                    <button
+                      className={`join-item btn btn-sm ${
+                        editMode ? "btn-primary" : ""
+                      }`}
+                      onClick={() => setEditMode(true)}
+                    >
+                      <Settings className="w-4 h-4 mr-1" />
+                      <span className="inline">Edit</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Second Row: Admin Actions (Edit Mode Only) */}
+              {editMode && (
+                <div className="h-12 border-t border-base-200 bg-base-200/30 flex items-center justify-center sm:justify-end px-4 gap-2">
+                  <div className="flex items-center gap-2">
                     {selectedTableIds.length > 1 && (
                       <button
                         onClick={handleMergeTables}
-                        className="btn btn-sm btn-warning btn-circle text-white shadow-sm"
-                        title="Merge"
+                        className="btn btn-sm btn-warning gap-2 shadow-sm"
                       >
                         <Combine className="w-4 h-4" />
+                        <span>Merge</span>
                       </button>
                     )}
                     <button
                       onClick={handleAddTable}
-                      className="btn btn-sm btn-outline btn-circle shadow-sm"
-                      title="Add Table"
+                      className="btn btn-sm btn-outline gap-2 shadow-sm bg-base-100"
                     >
                       <Plus className="w-4 h-4" />
+                      <span>Table</span>
                     </button>
                     <button
                       onClick={handleSaveLayout}
-                      className="btn btn-sm btn-success btn-circle text-white shadow-sm"
-                      title="Save"
+                      className="btn btn-sm btn-success text-white gap-2 shadow-sm"
                     >
                       <Save className="w-4 h-4" />
+                      <span>Save</span>
                     </button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Canvas Area */}
