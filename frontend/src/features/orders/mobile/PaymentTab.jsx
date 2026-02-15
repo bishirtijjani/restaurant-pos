@@ -17,8 +17,9 @@ import {
 import { useHaptic } from "../../../hooks/useHaptic";
 import CustomerSheet from "./sheets/CustomerSheet";
 import DiscountSheet from "./sheets/DiscountSheet";
-import TableSelectionSheet from "./sheets/TableSelectionSheet";
-import { setOrderType } from "../posSlice";
+import { setOrderType, setSelectedTable } from "../posSlice";
+import { openModal } from "../../common/modalSlice";
+import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { setActiveSheet, setActiveTab } from "../mobilePOSSlice";
 import { openRightDrawer } from "../../common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../../../utils/globalConstantUtil";
@@ -36,7 +37,7 @@ const PaymentTab = () => {
   const { cart, orderType, customerDetails, orderNote, orderDiscount } =
     useSelector((state) => state.pos);
   const settings = useSelector(
-    (state) => state.generalSettings.generalSettings
+    (state) => state.generalSettings.generalSettings,
   );
   const { activeSheet } = useSelector((state) => state.mobilePOS);
   const currency = settings?.currency?.symbol || "$";
@@ -48,7 +49,7 @@ const PaymentTab = () => {
   // Calculate totals (simplified - full calculation in payment confirmation)
   const subtotal = cart.reduce(
     (sum, item) => sum + (item.price + (item.addOnsTotal || 0)) * item.quantity,
-    0
+    0,
   );
 
   const tipAmount = (subtotal * tipPercentage) / 100;
@@ -101,7 +102,16 @@ const PaymentTab = () => {
 
     // If dine-in, show table selection next
     if (type === "dine-in") {
-      dispatch(setActiveSheet("table"));
+      dispatch(
+        openModal({
+          title: "Select Table",
+          bodyType: MODAL_BODY_TYPES.SELECT_TABLE,
+          extraObject: {
+            selectedTableId: null,
+            onSelect: (table) => dispatch(setSelectedTable(table)),
+          },
+        }),
+      );
     } else {
       dispatch(setActiveSheet(null));
     }
@@ -154,7 +164,7 @@ const PaymentTab = () => {
         header: "Payment Confirmation",
         bodyType: RIGHT_DRAWER_TYPES.CONFIRM_PAYMENT,
         extraObject: orderPayload,
-      })
+      }),
     );
   };
 
@@ -430,11 +440,6 @@ const PaymentTab = () => {
           })}
         </div>
       </BottomSheet>
-
-      <TableSelectionSheet
-        isOpen={activeSheet === "table"}
-        onClose={() => dispatch(setActiveSheet(null))}
-      />
 
       <CustomerSheet
         isOpen={activeSheet === "customer"}

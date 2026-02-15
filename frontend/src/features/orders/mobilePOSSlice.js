@@ -6,7 +6,7 @@ const initialState = {
   activeTab: "menu", // 'menu' | 'cart' | 'payment' | 'more'
 
   // Active bottom sheet
-  activeSheet: null, // null | 'addons' | 'table' | 'discount' | 'customer' | 'ordertype'
+  activeSheet: null, // null | 'addons' | 'discount' | 'customer' | 'ordertype'
 
   // Cart preview state
   cartPreviewExpanded: false,
@@ -90,13 +90,13 @@ export const mobilePOSSlice = createSlice({
 
     removePendingOrder: (state, action) => {
       state.pendingOrders = state.pendingOrders.filter(
-        (order) => order.timestamp !== action.payload
+        (order) => order.timestamp !== action.payload,
       );
     },
 
     markOrderSynced: (state, action) => {
       const order = state.pendingOrders.find(
-        (o) => o.timestamp === action.payload
+        (o) => o.timestamp === action.payload,
       );
       if (order) {
         order.synced = true;
@@ -106,7 +106,7 @@ export const mobilePOSSlice = createSlice({
     addRecentOrder: (state, action) => {
       // Remove if already exists
       state.recentOrders = state.recentOrders.filter(
-        (o) => o._id !== action.payload._id
+        (o) => o._id !== action.payload._id,
       );
       // Add to beginning
       state.recentOrders.unshift(action.payload);

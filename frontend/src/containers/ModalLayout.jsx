@@ -65,6 +65,7 @@ import AddExpenseModalBody from "../features/expenses/components/AddExpenseModal
 import AddFloorModalBody from "../features/floors/components/AddFloorModalBody";
 import MergeTableModalBody from "../features/floors/components/MergeTableModalBody";
 import EditExpenseModalBody from "../features/expenses/components/EditExpenseModalBody";
+import TableSelectionModalBody from "../features/orders/components/TableSelectionModalBody";
 
 // KDS modals
 import StationManagementModalBody from "../features/kdsStations/components/StationManagementModalBody";
@@ -357,6 +358,12 @@ function ModalLayout() {
                 ),
                 [MODAL_BODY_TYPES.MERGE_TABLE]: (
                   <MergeTableModalBody
+                    closeModal={close}
+                    extraObject={extraObject}
+                  />
+                ),
+                [MODAL_BODY_TYPES.SELECT_TABLE]: (
+                  <TableSelectionModalBody
                     closeModal={close}
                     extraObject={extraObject}
                   />

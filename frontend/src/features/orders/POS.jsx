@@ -36,7 +36,6 @@ import { showNotification } from "../common/headerSlice";
 import CustomerSearch from "../../components/Common/CustomerSearch";
 import { fetchTables } from "../tables/tableSlice";
 import { getMergedGroup, getPrimaryTable } from "../tables/tableUtils";
-import TableSelectionModal from "./components/TableSelectionModal";
 import {
   addToCart,
   removeFromCart,
@@ -395,7 +394,6 @@ export default function POS() {
   } = useSelector((state) => state.pos);
 
   const [lastOrder, setLastOrder] = useState(null);
-  const [showTableModal, setShowTableModal] = useState(false);
 
   // Local state for packaging/delivery fee inputs (to handle typing)
   // We sync with Redux on blur or enter, or just update directly if formatted
@@ -799,7 +797,20 @@ export default function POS() {
               <span className="text-sm font-medium">Table Selection</span>
               {selectedTable && (
                 <button
-                  onClick={() => setShowTableModal(true)}
+                  onClick={() =>
+                    dispatch(
+                      openModal({
+                        title: "Select Table",
+                        bodyType: MODAL_BODY_TYPES.SELECT_TABLE,
+                        extraObject: {
+                          selectedTableId: selectedTable?._id,
+                          onSelect: (table) =>
+                            dispatch(setSelectedTable(table)),
+                        },
+                        size: "lg",
+                      }),
+                    )
+                  }
                   className="btn btn-xs btn-ghost"
                 >
                   Change
@@ -819,7 +830,19 @@ export default function POS() {
               </div>
             ) : (
               <button
-                onClick={() => setShowTableModal(true)}
+                onClick={() =>
+                  dispatch(
+                    openModal({
+                      title: "Select Table",
+                      bodyType: MODAL_BODY_TYPES.SELECT_TABLE,
+                      extraObject: {
+                        selectedTableId: selectedTable?._id,
+                        onSelect: (table) => dispatch(setSelectedTable(table)),
+                      },
+                      size: "lg",
+                    }),
+                  )
+                }
                 className="btn btn-sm btn-outline w-full"
                 disabled={!canCreateOrders}
               >
@@ -1026,26 +1049,6 @@ export default function POS() {
           </div>
         </div>
       </div>
-
-      {/* Table Selection Modal */}
-      {showTableModal && (
-        <div className="modal modal-open">
-          <div className="modal-box max-w-4xl h-[80vh]">
-            <TableSelectionModal
-              selectedTableId={selectedTable?._id}
-              onSelect={(table) => {
-                dispatch(setSelectedTable(table));
-                // Also set tableNumber if needed, but we used selectedTable mostly.
-                // tableNumber state is unused in new logic? Let's check.
-              }}
-              onClose={() => setShowTableModal(false)}
-            />
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={() => setShowTableModal(false)}>close</button>
-          </form>
-        </div>
-      )}
     </div>
   );
 }

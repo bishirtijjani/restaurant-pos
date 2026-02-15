@@ -29,9 +29,6 @@ vi.mock("./components/DiscountSection", () => ({
 vi.mock("./components/DiscountBreakdown", () => ({
   default: () => <div data-testid="discount-breakdown" />,
 }));
-vi.mock("./components/TableSelectionModal", () => ({
-  default: () => <div data-testid="table-modal" />,
-}));
 vi.mock("../../components/Common/CustomerSearch", () => ({
   default: () => <div data-testid="customer-search" />,
 }));
