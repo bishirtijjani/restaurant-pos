@@ -68,7 +68,7 @@ Fire / hold courses ❌
 Prep time tracking ✅
 Order recall ✅
 Kitchen notes ✅
-Printer integration ❌
+Printer integration ✅
 Bar routing ✅
 Delivery prep status ✅
 Real-time order sync ✅
@@ -141,14 +141,14 @@ Country-specific tax compliance logic ❌
 
 Percentage discounts ✅
 Fixed amount discounts ✅
-Item-level discounts ❌
+Item-level discounts ✅ (via Discount model scope:"items" + applicableItems[])
 Order-level discounts ✅
-Scheduled promotions ❌
+Scheduled promotions ✅ (via Discount model startDate/endDate fields)
 Coupon codes ✅
 Loyalty discounts ❌
 Staff discounts ❌
 Happy hour pricing ✅
-Buy-one-get-one ❌
+Buy-one-get-one ✅ (via Discount model type:"bogo" + bogoConfig)
 Conditional discounts ❌
 Stackable discounts ✅
 Non-stackable rules ✅
@@ -204,7 +204,7 @@ Loyalty points ✅
 Membership tiers ❌
 Stored payment methods ❌
 Marketing tags ❌
-Notes on customers ❌
+Notes on customers ✅ (Customer model notes[] array + addCustomerNote API)
 Repeat customer analytics ✅
 
 11. DELIVERY & THIRD-PARTY INTEGRATION
@@ -218,7 +218,7 @@ Online ordering ❌
 QR code ordering ❌
 Table QR menus ✅ (QR generation exists in TableController)
 API endpoints ✅
-Webhooks ❌
+Webhooks ✅ (Stripe webhook handler in webhookController.js + webhookRoutes.js)
 
 12. SYSTEM & PLATFORM FEATURES
 
@@ -233,7 +233,7 @@ Backup & restore ❌
 Data export ✅
 Import tools ✅
 Audit logs ✅
-System health monitoring ❌
+System health monitoring ✅ (healthController.js + platformHealthRoutes.js + PlatformHealthDashboard.jsx)
 Error logging ✅
 Environment configuration ✅
 
@@ -249,7 +249,7 @@ UI behavior toggles ❌
 
 14. ADMIN / SUPER-ADMIN (Often Forgotten)
 
-Platform-level admin ❌
+Platform-level admin ✅
 Tenant management ✅
 Plan enforcement ❌
 Usage limits ❌

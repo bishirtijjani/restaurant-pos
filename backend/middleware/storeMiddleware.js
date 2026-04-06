@@ -89,6 +89,15 @@ const storeMiddleware = async (req, res, next) => {
         .json({ message: "Your access to this store has been suspended" });
     }
 
+    // Enforce Organization level suspension
+    const Organization = mongoose.model("Organization");
+    const org = await Organization.findById(storeLink.organizationId).select("status").lean();
+    if (org && org.status === "suspended") {
+      return res.status(403).json({ 
+        message: "Your organization has been suspended by the platform administrator. Please contact support." 
+      });
+    }
+
     // 5. Inject Context
     req.storeId = targetStoreId;
     req.organizationId = storeLink.organizationId;

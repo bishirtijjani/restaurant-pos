@@ -26,7 +26,11 @@ const SyncStatusModal = ({ isOpen, onClose }) => {
         setStatus(event.success ? "complete" : "error");
         loadQueue();
       }
-      if (event.type === "push:success" || event.type === "push:error") {
+      if (
+        event.type === "push:success" ||
+        event.type === "push:error" ||
+        event.type === "sync:conflict"
+      ) {
         loadQueue();
       }
     });
@@ -40,10 +44,10 @@ const SyncStatusModal = ({ isOpen, onClose }) => {
 
     // Check which failed items are conflicts
     const conflictItems = failed.filter(
-      (item) => item.failureReason === "conflict"
+      (item) => item.failureReason === "conflict",
     );
     const normalFailed = failed.filter(
-      (item) => item.failureReason !== "conflict"
+      (item) => item.failureReason !== "conflict",
     );
 
     setQueue([...pending, ...normalFailed]);
@@ -143,7 +147,7 @@ const SyncStatusModal = ({ isOpen, onClose }) => {
 
           {/* Failed Section */}
           {queue.some(
-            (i) => i.failureReason && i.failureReason !== "conflict"
+            (i) => i.failureReason && i.failureReason !== "conflict",
           ) && (
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">

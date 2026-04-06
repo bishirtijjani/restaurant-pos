@@ -233,8 +233,27 @@ axios.interceptors.request.use(
       const urlParts = config.url.split("/");
       const itemId = urlParts[urlParts.length - 1];
 
+      // OPTIMISTIC LOCKING: Inject version if missing
+      let requestData = { ...config.data };
+      if (requestData.version === undefined) {
+        try {
+          const storedItem = await offlineStorage.get(storeName, itemId);
+          if (storedItem && storedItem.version !== undefined) {
+            console.log(
+              `🔒 Injecting version ${storedItem.version} for ${storeName}/${itemId}`,
+            );
+            requestData.version = storedItem.version;
+          }
+        } catch (err) {
+          console.warn(
+            "Failed to fetch stored item for version injection:",
+            err,
+          );
+        }
+      }
+
       const optimisticData = {
-        ...config.data,
+        ...requestData,
         _id: itemId,
         _offline: true,
         _synced: false,
@@ -245,7 +264,7 @@ axios.interceptors.request.use(
         type: "update",
         method: method.toUpperCase(),
         endpoint: config.url,
-        data: config.data,
+        data: requestData,
         storeName: storeName,
         itemId: itemId,
         headers: config.headers,

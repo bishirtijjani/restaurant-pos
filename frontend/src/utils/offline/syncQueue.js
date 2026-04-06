@@ -18,7 +18,7 @@ export class SyncQueue {
     ) {
       console.log(
         "⚠️ Duplicate operation detected, skipping enqueue:",
-        operation.signature
+        operation.signature,
       );
       return null;
     }
@@ -49,7 +49,7 @@ export class SyncQueue {
       "✅ Operation enqueued:",
       queueItem.id,
       operation.type,
-      operation.storeName
+      operation.storeName,
     );
 
     return queueItem.id;
@@ -84,11 +84,12 @@ export class SyncQueue {
   }
 
   // Move operation to failed queue
-  async markFailed(id, error) {
+  async markFailed(id, error, failureReason = "error") {
     const item = await offlineStorage.get("syncQueue", id);
     if (item) {
       item.status = "failed";
-      item.error = error.message;
+      item.error = error?.message || String(error);
+      item.failureReason = failureReason;
       item.failedAt = Date.now();
 
       // Clear signature tracking
@@ -100,7 +101,7 @@ export class SyncQueue {
       await offlineStorage.remove("syncQueue", id);
       this.notifyListeners();
 
-      console.log("❌ Operation failed:", id, error.message);
+      console.log("❌ Operation failed:", id, error?.message);
     }
   }
 
@@ -119,6 +120,12 @@ export class SyncQueue {
 
       console.log("🔄 Retrying operation:", id);
     }
+  }
+
+  // Remove an operation from the failed queue
+  async removeFailed(id) {
+    await offlineStorage.remove("failedQueue", id);
+    this.notifyListeners();
   }
 
   // Clear all completed operations

@@ -105,7 +105,7 @@ const addNewMenuItem = async (req, res) => {
 
     const savedMenuItem = await newMenuItem.save();
     const populatedMenuItem = await MenuItem.findById(
-      savedMenuItem._id
+      savedMenuItem._id,
     ).populate("addOnGroups");
 
     // Log the creation action
@@ -118,7 +118,7 @@ const addNewMenuItem = async (req, res) => {
       "create",
       null,
       savedMenuItem,
-      `Created new menu item: ${name}`
+      `Created new menu item: ${name}`,
     );
 
     res.status(201).json(populatedMenuItem);
@@ -147,10 +147,40 @@ const updateMenuItem = async (req, res) => {
   } = req.body;
 
   try {
-    const menuItem = await MenuItem.findOne({ _id: id, storeId: req.storeId });
+    const menuItem = await MenuItem.findOne({
+      _id: id,
+      storeId: req.storeId,
+    }).session(req.transactionSession || null);
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found." });
     }
+
+    // OPTIMISTIC LOCKING CHECK
+    if (
+      req.body.version !== undefined &&
+      menuItem.version !== req.body.version
+    ) {
+      // MUST throw (not return) so that pushChanges detects the 409 in batch mode
+      const err = Object.assign(
+        new Error(
+          "Menu item has been updated by another user. Please refresh.",
+        ),
+        {
+          statusCode: 409,
+          body: {
+            success: false,
+            message:
+              "Menu item has been updated by another user. Please refresh.",
+            currentVersion: menuItem.version,
+            updatedMenuItem: menuItem,
+          },
+        },
+      );
+      throw err;
+    }
+
+    // Increment version
+    menuItem.version = (menuItem.version || 0) + 1;
 
     // FIELD LOCKING: Prevent editing master-owned fields for synced items
     if (menuItem.masterId) {
@@ -170,16 +200,17 @@ const updateMenuItem = async (req, res) => {
 
       const attemptedFields = Object.keys(req.body);
       const forbiddenFields = attemptedFields.filter((field) =>
-        MASTER_OWNED_FIELDS.includes(field)
+        MASTER_OWNED_FIELDS.includes(field),
       );
 
       if (forbiddenFields.length > 0) {
-        return res.status(403).json({
-          success: false,
-          message: `Cannot modify brand-controlled fields: ${forbiddenFields.join(
-            ", "
-          )}. Only ${OPERATIONAL_FIELDS.join(", ")} can be edited.`,
-        });
+        // Must throw (not return) so pushChanges aborts the transaction in batch mode
+        throw Object.assign(
+          new Error(
+            `Cannot modify brand-controlled fields: ${forbiddenFields.join(", ")}. Only ${OPERATIONAL_FIELDS.join(", ")} can be edited.`,
+          ),
+          { statusCode: 403 },
+        );
       }
 
       // Track overrides
@@ -190,12 +221,16 @@ const updateMenuItem = async (req, res) => {
       });
     }
 
-    const itemCategory = await Category.findById(category);
+    const itemCategory = await Category.findById(category).session(
+      req.transactionSession || null,
+    );
 
     if (!itemCategory) {
-      return res.status(404).json({
-        message: "Category not found. Please create the category first.",
-      });
+      // Must throw (not return) in batch mode
+      throw Object.assign(
+        new Error("Category not found. Please create the category first."),
+        { statusCode: 404 },
+      );
     }
 
     // Store old menu item state for logging
@@ -208,8 +243,8 @@ const updateMenuItem = async (req, res) => {
       const existingMenuItemWithCode = await MenuItem.findOne({
         itemCode,
         storeId: req.storeId,
-        _id: { $ne: id }, // Exclude the current item from the check
-      });
+        _id: { $ne: id },
+      }).session(req.transactionSession || null);
       if (existingMenuItemWithCode) {
         itemCodeConflict = true;
       }
@@ -219,23 +254,27 @@ const updateMenuItem = async (req, res) => {
       const existingMenuItemWithName = await MenuItem.findOne({
         name,
         storeId: req.storeId,
-        _id: { $ne: id }, // Exclude the current item from the check
-      });
+        _id: { $ne: id },
+      }).session(req.transactionSession || null);
       if (existingMenuItemWithName) {
         nameConflict = true;
       }
     }
 
     if (itemCodeConflict) {
-      return res.status(400).json({
-        message: "A menu item with the same item code already exists.",
-      });
+      // Must throw (not return) in batch mode
+      throw Object.assign(
+        new Error("A menu item with the same item code already exists."),
+        { statusCode: 400 },
+      );
     }
 
     if (nameConflict) {
-      return res.status(400).json({
-        message: "A menu item with the same name already exists.",
-      });
+      // Must throw (not return) in batch mode
+      throw Object.assign(
+        new Error("A menu item with the same name already exists."),
+        { statusCode: 400 },
+      );
     }
 
     menuItem.name = name || menuItem.name;
@@ -258,12 +297,14 @@ const updateMenuItem = async (req, res) => {
       menuItem.image = image; // Set to new image or null if image was removed
     }
 
-    const updatedMenuItem = await menuItem.save();
+    const updatedMenuItem = await menuItem.save({
+      session: req.transactionSession,
+    });
     const populatedMenuItem = await MenuItem.findById(
-      updatedMenuItem._id
+      updatedMenuItem._id,
     ).populate("addOnGroups");
 
-    // Log the update action
+    // Log the update action (pass session so log is rolled back on transaction failure)
     await logAction(
       req.user.id,
       req.storeId,
@@ -273,17 +314,23 @@ const updateMenuItem = async (req, res) => {
       "edit",
       oldMenuItem,
       updatedMenuItem,
-      `Updated menu item: ${menuItem.name}`
+      `Updated menu item: ${menuItem.name}`,
+      req.transactionSession || null,
     );
 
     res.status(200).json(populatedMenuItem);
   } catch (error) {
     console.error("Error updating menu item:", error.message);
+    // In batch mode, rethrow so the orchestrator can abort the transaction
+    if (req.transactionSession) throw error;
     if (error.kind === "ObjectId") {
       return res.status(400).json({ message: "Invalid menu item ID." });
     }
-    res.status(500).json({
-      message: "Failed to update the menu item. Please try again later.",
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({
+      message:
+        error.message ||
+        "Failed to update the menu item. Please try again later.",
     });
   }
 };
@@ -314,7 +361,7 @@ const deleteMenuItem = async (req, res) => {
       "delete",
       deletedMenuItem,
       null,
-      `Deleted menu item: ${menuItem.name}`
+      `Deleted menu item: ${menuItem.name}`,
     );
 
     res.status(200).json({ message: "Menu item deleted successfully." });
@@ -357,7 +404,7 @@ const toggleAvailability = async (req, res) => {
       updatedMenuItem,
       `${menuItem.isAvailable ? "Enabled" : "Disabled"} menu item: ${
         menuItem.name
-      }`
+      }`,
     );
 
     res.status(200).json(updatedMenuItem);

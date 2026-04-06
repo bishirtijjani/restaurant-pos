@@ -17,6 +17,7 @@ import {
   WifiOff,
   User,
   ChevronDown,
+  ShoppingCart,
 } from "lucide-react";
 // import { getTourId } from "../utils/Helpers";
 // import TourTriggerButton from "../features/onboarding/components/TourTriggerButton";
@@ -81,29 +82,44 @@ function Header() {
   return (
     <>
       <div className="navbar sticky top-0 bg-base-100 z-[90] shadow-md">
-        {/* Menu toggle for mobile view or small screen */}
-        <div className="flex-none lg:hidden">
-          <label
-            htmlFor="left-sidebar-drawer"
-            className="btn btn-square btn-ghost"
+        {/* Navbar Start: Left side items */}
+        <div className="flex-1 flex items-center gap-2 overflow-hidden">
+          {/* Mobile Toggle */}
+          <div className="lg:hidden border-x ">
+            <label
+              htmlFor="left-sidebar-drawer"
+              className="btn btn-square btn-ghost btn-sm"
+            >
+              <Bars3Icon className="h-6 w-6" />
+            </label>
+          </div>
+
+          {/* Desktop Title */}
+          <div className="hidden lg:flex items-center overflow-hidden">
+            <span className="text-xl font-semibold truncate">
+              {pageTitle}
+              {showStoreBadge && (
+                <span className="ml-2 badge badge-primary badge-sm whitespace-nowrap">
+                  {activeStore.name}
+                </span>
+              )}
+            </span>
+          </div>
+        </div>
+
+        {/* Navbar Center: POS Button (Truly Centered via flex-1 sides) */}
+        <div className="flex-none flex">
+          <Link
+            to="/app/pos"
+            className="btn btn-primary btn-sm gap-2 rounded-full shadow-md px-6"
           >
-            <Bars3Icon className="h-6 inline-block w-6" />
-          </label>
+            <ShoppingCart className="h-4 w-4" />
+            POS
+          </Link>
         </div>
 
-        <div className="flex-1">
-          <span className="text-xl font-semibold">
-            {pageTitle}
-            {showStoreBadge && (
-              <span className="ml-2 badge badge-primary badge-sm">
-                {activeStore.name}
-              </span>
-            )}
-          </span>
-        </div>
-
-        {/* Right side utility buttons and profile */}
-        <div className="flex-none">
+        {/* Navbar End: Utilities */}
+        <div className="flex-1 flex justify-end items-center gap-2">
           {/* Mobile Sync Indicator (Always Visible) */}
           <div className="lg:hidden mr-2">
             <button
@@ -226,7 +242,7 @@ function Header() {
             <div className="dropdown dropdown-end">
               <label
                 tabIndex={0}
-                className="btn rounded-full btn-outline btn-sm gap-2"
+                className="btn rounded-full btn-outline btn-sm gap-2 whitespace-nowrap"
               >
                 <PaletteIcon className="h-4 w-4" />
                 Theme
@@ -276,7 +292,7 @@ function Header() {
               className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
             >
               <li className="justify-between">
-                <Link to="/app/settings-profile">
+                <Link to="/app/settings/profile">
                   Profile Settings
                   <span className="badge">New</span>
                 </Link>

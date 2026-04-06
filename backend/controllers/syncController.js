@@ -10,6 +10,9 @@ const PurchaseOrder = require("../models/PurchaseOrder");
 const User = require("../models/User");
 const Store = require("../models/Store");
 const { getEffectiveSettings } = require("../utils/settingsManager");
+const orderController = require("./orderController");
+const customerController = require("./customerController");
+const menuItemController = require("./menuItemController");
 
 // Mapping of store names to Mongoose models
 const MODEL_MAP = {
@@ -112,6 +115,106 @@ const pullChanges = async (req, res) => {
   }
 };
 
+// Helper to build a mock res that captures the result
+const buildMockRes = () => {
+  const result = { statusCode: 200, body: null };
+  return {
+    result,
+    status(code) {
+      result.statusCode = code;
+      return this;
+    },
+    json(body) {
+      result.body = body;
+      return this;
+    },
+  };
+};
+
+// Map of operation types to controller functions
+const OPERATION_MAP = {
+  "order:create": orderController.createOrder,
+  "order:updateStatus": orderController.updateOrderStatus,
+  "order:cancel": orderController.cancelOrder,
+  "customer:create": customerController.createCustomer,
+  "customer:update": customerController.updateCustomer,
+  "menuItem:update": menuItemController.updateMenuItem,
+};
+
+// @desc    Push multiple offline changes in a single atomic transaction
+// @route   POST /api/sync/push
+// @access  Private
+const pushChanges = async (req, res) => {
+  const { operations } = req.body;
+
+  if (!Array.isArray(operations) || operations.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Operations array is required",
+    });
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const results = [];
+
+    for (const op of operations) {
+      const handler = OPERATION_MAP[op.type];
+      if (!handler) {
+        throw new Error(`Unknown operation type: ${op.type}`);
+      }
+
+      // Build a mock request reusing auth/store context from the real request
+      const mockReq = {
+        ...op.data, // spread to allow destructuring inside controllers
+        body: op.data,
+        params: op.params || {},
+        storeId: req.storeId,
+        organizationId: req.organizationId,
+        user: req.user,
+        transactionSession: session, // SESSION INJECTION
+      };
+
+      const mockRes = buildMockRes();
+      await handler(mockReq, mockRes);
+
+      const { statusCode, body } = mockRes.result;
+      if (statusCode >= 400) {
+        const err = new Error(
+          body?.message ||
+            `Operation ${op.type} failed with status ${statusCode}`,
+        );
+        err.statusCode = statusCode;
+        err.body = body;
+        throw err;
+      }
+
+      results.push({ type: op.type, tempId: op.tempId, data: body?.data });
+    }
+
+    await session.commitTransaction();
+
+    return res.status(200).json({
+      success: true,
+      message: `Batch of ${operations.length} operations committed successfully`,
+      results,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Batch push failed, rolled back:", error.message);
+    const statusCode = error.statusCode || 500;
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Batch sync failed. All changes rolled back.",
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
 module.exports = {
   pullChanges,
+  pushChanges,
 };

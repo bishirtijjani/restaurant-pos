@@ -202,7 +202,7 @@ const recordCustomerPayment = async (req, res) => {
       "update",
       null,
       null,
-      `Recorded payment of ${amount}`
+      `Recorded payment of ${amount}`,
     );
 
     res.status(201).json({ success: true, data: newPayment });
@@ -224,17 +224,17 @@ const createCustomer = async (req, res) => {
       .json({ success: false, message: "Fullname and phone are required" });
   }
 
-  const existingCustomer = await Customer.findOne({
-    phone,
-    storeId: req.storeId,
-  });
-  if (existingCustomer) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Phone number already exists" });
-  }
-
   try {
+    const existingCustomer = await Customer.findOne({
+      phone,
+      storeId: req.storeId,
+    }).session(req.transactionSession || null);
+    if (existingCustomer) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Phone number already exists" });
+    }
+
     const newCustomer = new Customer({
       fullname,
       phone,
@@ -244,7 +244,11 @@ const createCustomer = async (req, res) => {
       organizationId: req.organizationId,
     });
 
-    await newCustomer.save();
+    await newCustomer.save({ session: req.transactionSession });
+    if (req.transactionSession) {
+      // Caller manages commit; skip logging within transaction for simplicity
+      return res.status(201).json({ success: true, data: newCustomer });
+    }
 
     // Log action
     await logAction(
@@ -256,12 +260,14 @@ const createCustomer = async (req, res) => {
       "create",
       null,
       newCustomer,
-      "New customer created"
+      "New customer created",
     );
 
     res.status(201).json({ success: true, data: newCustomer });
   } catch (error) {
     console.error("Error creating customer:", error);
+    // In batch mode, rethrow so the orchestrator can abort the transaction
+    if (req.transactionSession) throw error;
     res
       .status(500)
       .json({ success: false, message: "Failed to create customer" });
@@ -276,7 +282,7 @@ const updateCustomer = async (req, res) => {
     const oldCustomer = await Customer.findOne({
       _id: id,
       storeId: req.storeId,
-    }); // Get existing customer details
+    }).session(req.transactionSession || null);
     if (!oldCustomer) {
       return res
         .status(404)
@@ -286,10 +292,10 @@ const updateCustomer = async (req, res) => {
     const updatedCustomer = await Customer.findOneAndUpdate(
       { _id: id, storeId: req.storeId },
       { fullname, phone, email, address, debtLimit },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, session: req.transactionSession },
     );
 
-    // Log action
+    // Log action (pass session so log rolls back if transaction fails)
     await logAction(
       req.user.id,
       req.storeId,
@@ -299,12 +305,15 @@ const updateCustomer = async (req, res) => {
       "edit",
       oldCustomer,
       updatedCustomer,
-      "Customer details updated"
+      "Customer details updated",
+      req.transactionSession || null,
     );
 
     res.status(200).json({ success: true, data: updatedCustomer });
   } catch (error) {
     console.error("Error updating customer:", error);
+    // In batch mode, rethrow so the orchestrator can abort the transaction
+    if (req.transactionSession) throw error;
     res
       .status(500)
       .json({ success: false, message: "Failed to update customer" });
@@ -335,7 +344,7 @@ const deleteCustomer = async (req, res) => {
       "delete",
       deletedCustomer,
       null,
-      "Customer deleted"
+      "Customer deleted",
     );
 
     res

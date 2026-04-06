@@ -29,9 +29,15 @@ const organizationMiddleware = asyncHandler(async (req, res, next) => {
   req.user.activeOrganizationId = organizationId;
 
   // Check if User is the Organization Owner
-  const org = await Organization.findById(organizationId);
+  const org = await Organization.findById(organizationId).lean();
   if (!org) {
     return res.status(404).json({ message: "Organization not found" });
+  }
+
+  if (org.status === "suspended") {
+    return res.status(403).json({ 
+      message: "Your organization has been suspended by the platform administrator. Please contact support." 
+    });
   }
 
   const isOwner = org.ownerId.toString() === user._id.toString();

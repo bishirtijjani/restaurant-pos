@@ -23,6 +23,9 @@ router.get("/analytics/multi-store-overview", getMultiStoreOverview);
 // Brand-Level Routes (Organization-wide, no store context required)
 router.use("/brand", require("./brandRoutes"));
 
+// Platform Admin Routes (Super Admin only, no store context required)
+router.use("/platform-admin", require("./platformAdminRoutes"));
+
 router.use(storeMiddleware);
 
 // Tenant health routes (requires store context)

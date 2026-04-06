@@ -18,6 +18,7 @@ const generateTokens = (user) => {
       role: effectiveRole,
       email: user.email,
       fullname: user.fullname,
+      isSuperAdmin: user.isSuperAdmin,
     },
     process.env.JWT_SECRET,
     { expiresIn: "7d" },

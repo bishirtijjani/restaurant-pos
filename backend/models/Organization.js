@@ -11,6 +11,11 @@ const organizationSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    plan: {
+      type: String,
+      enum: ["free", "basic", "pro"],
+      default: "free",
+    },
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

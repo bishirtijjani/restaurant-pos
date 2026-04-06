@@ -165,71 +165,127 @@ export class SyncManager {
   }
   // ---------------------------------
 
+  // --- BATCH PUSH: All pending operations sent atomically ---
   async pushToServer() {
     const pending = await syncQueue.getPending();
+    if (pending.length === 0) return;
 
-    for (const operation of pending) {
-      try {
-        const result = await this.processOperation(operation);
-        await syncQueue.markCompleted(operation.id);
+    // Build the operations array for the batch endpoint
+    // Map each queue item to the operation schema the backend expects
+    const operations = pending.map((op) => ({
+      type: this._mapToOperationType(op),
+      tempId: op.tempId || op.id,
+      params: op.params || (op.itemId ? { id: op.itemId } : {}),
+      data: op.data || {},
+    }));
 
-        // If it was a create operation, replace temp ID with real ID
-        if (operation.type === "create" && operation.tempId && result.data) {
-          const realData = result.data.data || result.data;
-          await this.replaceTempId(operation, realData);
+    try {
+      const response = await axios.post(
+        "/api/sync/push",
+        { operations },
+        { headers: { "x-sync-request": "true" } },
+      );
+
+      const { results } = response.data;
+
+      // Mark all as completed and update local storage
+      for (let i = 0; i < pending.length; i++) {
+        const op = pending[i];
+        const result = results?.[i];
+
+        await syncQueue.markCompleted(op.id);
+
+        // Replace temp IDs if it was a create
+        if (op.type === "create" && op.tempId && result?.data) {
+          await this.replaceTempId(op, result.data);
+        } else if (result?.data) {
+          const serverData = result.data;
+          const id = serverData._id || serverData.id || op.itemId;
+          if (id && op.storeName) {
+            await offlineStorage.set(op.storeName, id, {
+              ...serverData,
+              _synced: true,
+              _offline: false,
+            });
+          }
         }
+      }
 
+      this.notifyListeners({
+        type: "push:success",
+        count: pending.length,
+      });
+    } catch (error) {
+      const status = error.response?.status;
+
+      // CONFLICT — at least one operation had a version mismatch
+      if (status === 409) {
+        console.warn("Batch conflict detected:", error.response?.data);
+        for (const op of pending) {
+          await syncQueue.markFailed(op.id, error, "conflict");
+        }
         this.notifyListeners({
-          type: "push:success",
-          operation: operation.type,
+          type: "sync:conflict",
+          error: error.response?.data?.message || "Data conflict detected",
         });
-      } catch (error) {
-        // CONFLICT HANDLING (409)
-        if (error.response?.status === 409) {
-          console.warn("Conflict detected for operation:", operation);
-          await syncQueue.markFailed(operation.id, error, "conflict");
-          // We do NOT increment attempts for conflicts; they need manual resolution
-          this.notifyListeners({
-            type: "sync:conflict",
-            operation: operation,
-            error: "Data conflict detected",
-          });
-          continue;
+        return;
+      }
+
+      // LOGIC ERROR (4xx) — bad request, fail without retry
+      if (status >= 400 && status < 500) {
+        console.error("Batch logic error (no retry):", error);
+        for (const op of pending) {
+          await syncQueue.markFailed(op.id, error, "logic_error");
         }
-
-        // LOGIC ERRORS (4xx) - Fail immediately (except 409 handled above)
-        // e.g. 400 Bad Request, 422 Validation Error
-        if (
-          error.response &&
-          error.response.status >= 400 &&
-          error.response.status < 500
-        ) {
-          console.error("Logic error (no retry):", operation, error);
-          await syncQueue.markFailed(operation.id, error, "logic_error");
-          this.notifyListeners({
-            type: "push:error",
-            operation: operation.type,
-            error: error.message || "Logic Error",
-          });
-          continue;
-        }
-
-        // NETWORK / SERVER ERRORS (5xx, or no response) - Retry
-        console.error("Transient error (retrying):", operation, error);
-        operation.attempts += 1;
-
-        if (operation.attempts >= 3) {
-          await syncQueue.markFailed(operation.id, error, "max_retries");
-        }
-
         this.notifyListeners({
           type: "push:error",
-          operation: operation.type,
-          error: error.message,
+          error: error.response?.data?.message || "Logic error",
         });
+        return;
       }
+
+      // NETWORK / SERVER ERROR (5xx) — increment attempts, retry later
+      console.error("Batch transient error (will retry):", error);
+      for (const op of pending) {
+        const newAttempts = (op.attempts || 0) + 1;
+        if (newAttempts >= 3) {
+          await syncQueue.markFailed(op.id, error, "max_retries");
+        } else {
+          // Persist attempt count so it survives across sync sessions
+          op.attempts = newAttempts;
+          await offlineStorage.set("syncQueue", op.id, op);
+        }
+      }
+      this.notifyListeners({
+        type: "push:error",
+        error: error.message,
+      });
     }
   }
+
+  /**
+   * Maps a sync queue operation to the backend operation type string.
+   * Falls back to null if unknown (will cause batch to reject that op).
+   */
+  _mapToOperationType(op) {
+    const { storeName, type, method } = op;
+    if (storeName === "orders") {
+      if (type === "create" || method === "POST") return "order:create";
+      if (type === "updateStatus") return "order:updateStatus";
+      if (type === "cancel") return "order:cancel";
+    }
+    if (storeName === "customers") {
+      if (type === "create" || method === "POST") return "customer:create";
+      return "customer:update";
+    }
+    if (storeName === "menuItems") {
+      return "menuItem:update";
+    }
+    // For other stores not yet in the OPERATION_MAP, fall back to null
+    // The backend will reject with "Unknown operation type"
+    return op.operationType || null;
+  }
+  // --------------------------------------------------------
 
   async processOperation(operation) {
     const { type, method, endpoint, data, storeName, itemId } = operation;

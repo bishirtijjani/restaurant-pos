@@ -101,10 +101,11 @@ const calculateOrderTax = (
   };
 };
 
-// Create a new order (UPDATED)
+// Create a new order (UPDATED for Session Injection)
 const createOrder = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const session = req.transactionSession || (await mongoose.startSession());
+  const isExternalTransaction = !!req.transactionSession;
+  if (!isExternalTransaction) session.startTransaction();
   try {
     const {
       table,
@@ -117,7 +118,6 @@ const createOrder = async (req, res) => {
       deliveryFee,
       note,
       orderNote,
-      // NEW: Payment system fields
       payments, // Array of payment entries for split payments
       tip, // Tip object { amount, percentage }
       change, // Change amount
@@ -128,28 +128,25 @@ const createOrder = async (req, res) => {
 
     // VALIDATION: Dine-in requires a table
     if (orderType === "dine-in" && (!table || table === "Takeaway")) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Dine-in orders must have a table assigned",
-      });
+      throw Object.assign(
+        new Error("Dine-in orders must have a table assigned"),
+        {
+          statusCode: 400,
+        },
+      );
     }
 
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Order must contain at least one item",
+      throw Object.assign(new Error("Order must contain at least one item"), {
+        statusCode: 400,
       });
     }
 
     // Fetch Effective Settings (Merges Store + Brand)
     const settings = await getEffectiveSettings(storeId);
     if (!settings) {
-      await session.abortTransaction();
-      return res.status(500).json({
-        success: false,
-        message: "Store settings not configured",
+      throw Object.assign(new Error("Store settings not configured"), {
+        statusCode: 500,
       });
     }
 
@@ -168,19 +165,17 @@ const createOrder = async (req, res) => {
         .session(session);
 
       if (!menuItem) {
-        await session.abortTransaction();
-        return res.status(404).json({
-          success: false,
-          message: `Menu item with ID ${item.menuItemId} not found`,
-        });
+        throw Object.assign(
+          new Error(`Menu item with ID ${item.menuItemId} not found`),
+          { statusCode: 404 },
+        );
       }
 
       if (!menuItem.isAvailable) {
-        await session.abortTransaction();
-        return res.status(400).json({
-          success: false,
-          message: `${menuItem.name} is currently unavailable`,
-        });
+        throw Object.assign(
+          new Error(`${menuItem.name} is currently unavailable`),
+          { statusCode: 400 },
+        );
       }
 
       const quantity = item.quantity || 1;
@@ -204,11 +199,10 @@ const createOrder = async (req, res) => {
             addOnGroup.isRequired &&
             (!addOn.selectedItemIds || addOn.selectedItemIds.length === 0)
           ) {
-            await session.abortTransaction();
-            return res.status(400).json({
-              success: false,
-              message: `${addOnGroup.name} is required for ${menuItem.name}`,
-            });
+            throw Object.assign(
+              new Error(`${addOnGroup.name} is required for ${menuItem.name}`),
+              { statusCode: 400 },
+            );
           }
 
           // Validate selection rules
@@ -217,33 +211,34 @@ const createOrder = async (req, res) => {
               addOnGroup.selectionType === "single" &&
               addOn.selectedItemIds.length > 1
             ) {
-              await session.abortTransaction();
-              return res.status(400).json({
-                success: false,
-                message: `${addOnGroup.name} allows only single selection`,
-              });
+              throw Object.assign(
+                new Error(`${addOnGroup.name} allows only single selection`),
+                { statusCode: 400 },
+              );
             }
 
             if (
               addOnGroup.minSelections &&
               addOn.selectedItemIds.length < addOnGroup.minSelections
             ) {
-              await session.abortTransaction();
-              return res.status(400).json({
-                success: false,
-                message: `${addOnGroup.name} requires at least ${addOnGroup.minSelections} selection(s)`,
-              });
+              throw Object.assign(
+                new Error(
+                  `${addOnGroup.name} requires at least ${addOnGroup.minSelections} selection(s)`,
+                ),
+                { statusCode: 400 },
+              );
             }
 
             if (
               addOnGroup.maxSelections &&
               addOn.selectedItemIds.length > addOnGroup.maxSelections
             ) {
-              await session.abortTransaction();
-              return res.status(400).json({
-                success: false,
-                message: `${addOnGroup.name} allows maximum ${addOnGroup.maxSelections} selections`,
-              });
+              throw Object.assign(
+                new Error(
+                  `${addOnGroup.name} allows maximum ${addOnGroup.maxSelections} selections`,
+                ),
+                { statusCode: 400 },
+              );
             }
           }
 
@@ -334,14 +329,15 @@ const createOrder = async (req, res) => {
 
       if (inventoryItem) {
         if (inventoryItem.currentStock < deduction.quantityToDeduct) {
-          await session.abortTransaction();
           const itemType = deduction.isMenuItem
             ? `ingredient "${deduction.name}" for "${deduction.menuItemName}"`
             : `add-on: ${deduction.name}`;
-          return res.status(400).json({
-            success: false,
-            message: `Insufficient stock for ${itemType}. Available: ${inventoryItem.currentStock} ${inventoryItem.unit}`,
-          });
+          throw Object.assign(
+            new Error(
+              `Insufficient stock for ${itemType}. Available: ${inventoryItem.currentStock} ${inventoryItem.unit}`,
+            ),
+            { statusCode: 400 },
+          );
         }
 
         inventoryItem.currentStock -= deduction.quantityToDeduct;
@@ -465,13 +461,12 @@ const createOrder = async (req, res) => {
 
       // Validate: total payments must equal or exceed bill total
       if (paidAmount < finalTotal) {
-        await session.abortTransaction();
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient payment. Total: ${finalTotal.toFixed(
-            2,
-          )}, Paid: ${paidAmount.toFixed(2)}`,
-        });
+        throw Object.assign(
+          new Error(
+            `Insufficient payment. Total: ${finalTotal.toFixed(2)}, Paid: ${paidAmount.toFixed(2)}`,
+          ),
+          { statusCode: 400 },
+        );
       }
 
       // Store payments array
@@ -640,7 +635,7 @@ const createOrder = async (req, res) => {
       session,
     );
 
-    await session.commitTransaction();
+    if (!isExternalTransaction) await session.commitTransaction();
 
     const populatedOrder = await Order.findById(newOrder._id)
       .populate("servedBy", "fullname")
@@ -682,15 +677,20 @@ const createOrder = async (req, res) => {
       data: populatedOrder,
     });
   } catch (error) {
-    await session.abortTransaction();
+    if (!isExternalTransaction) await session.abortTransaction();
     console.error("Error creating order:", error);
-    return res.status(500).json({
+
+    // IMPORTANT: If external transaction, rethrow to let orchestrator handle rollback
+    if (isExternalTransaction) throw error;
+
+    const statusCode = error.statusCode || 500;
+    return res.status(statusCode).json({
       success: false,
-      message: "Failed to create order. Please try again.",
+      message: error.message || "Failed to create order. Please try again.",
       error: error.message,
     });
   } finally {
-    session.endSession();
+    if (!isExternalTransaction) session.endSession();
   }
 };
 
@@ -773,16 +773,15 @@ const getOrderById = async (req, res) => {
 
 // Update order status
 const updateOrderStatus = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const session = req.transactionSession || (await mongoose.startSession());
+  const isExternalTransaction = !!req.transactionSession;
+  if (!isExternalTransaction) session.startTransaction();
   try {
     const { orderStatus, reason } = req.body;
 
     if (!orderStatus) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Order status is required",
+      throw Object.assign(new Error("Order status is required"), {
+        statusCode: 400,
       });
     }
 
@@ -792,12 +791,27 @@ const updateOrderStatus = async (req, res) => {
     }).session(session);
 
     if (!order) {
-      await session.abortTransaction();
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
+      throw Object.assign(new Error("Order not found"), { statusCode: 404 });
     }
+
+    if (req.body.version !== undefined && order.version !== req.body.version) {
+      throw Object.assign(
+        new Error("Details have been updated by another user. Please refresh."),
+        {
+          statusCode: 409,
+          body: {
+            success: false,
+            message:
+              "Details have been updated by another user. Please refresh.",
+            currentVersion: order.version,
+            updatedOrder: order,
+          },
+        },
+      );
+    }
+
+    // Increment version
+    order.version = (order.version || 0) + 1;
 
     // Define valid status transitions
     const validTransitions = {
@@ -813,15 +827,12 @@ const updateOrderStatus = async (req, res) => {
     const allowedTransitions = validTransitions[currentStatus] || [];
 
     if (!allowedTransitions.includes(orderStatus)) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: `Invalid status transition: Cannot change from "${currentStatus}" to "${orderStatus}"`,
-        allowedTransitions:
-          allowedTransitions.length > 0
-            ? allowedTransitions
-            : "No transitions allowed from this state",
-      });
+      throw Object.assign(
+        new Error(
+          `Invalid status transition: Cannot change from "${currentStatus}" to "${orderStatus}"`,
+        ),
+        { statusCode: 400 },
+      );
     }
 
     const oldOrder = { ...order.toObject() };
@@ -856,7 +867,7 @@ const updateOrderStatus = async (req, res) => {
       session,
     );
 
-    await session.commitTransaction();
+    if (!isExternalTransaction) await session.commitTransaction();
 
     await order.populate("servedBy", "fullname");
     await order.populate("orderItems.menuItemId", "name category");
@@ -890,21 +901,20 @@ const updateOrderStatus = async (req, res) => {
       data: order,
     });
   } catch (error) {
-    await session.abortTransaction();
+    if (!isExternalTransaction) await session.abortTransaction();
     console.error("Error updating order status:", error);
-    if (error.kind === "ObjectId") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid order ID",
-      });
-    }
-    return res.status(500).json({
+    if (isExternalTransaction) throw error;
+    // Return 409 body directly if it was a conflict
+    if (error.body) return res.status(error.statusCode).json(error.body);
+    const statusCode =
+      error.statusCode || (error.kind === "ObjectId" ? 400 : 500);
+    return res.status(statusCode).json({
       success: false,
-      message: "Failed to update order status. Please try again.",
-      error: error.message,
+      message:
+        error.message || "Failed to update order status. Please try again.",
     });
   } finally {
-    session.endSession();
+    if (!isExternalTransaction) session.endSession();
   }
 };
 
@@ -1007,17 +1017,16 @@ const updatePayment = async (req, res) => {
 
 // Cancel an order
 const cancelOrder = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const session = req.transactionSession || (await mongoose.startSession());
+  const isExternalTransaction = !!req.transactionSession;
+  if (!isExternalTransaction) session.startTransaction();
 
   try {
     const { reason } = req.body;
 
     if (!reason) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Cancellation reason is required",
+      throw Object.assign(new Error("Cancellation reason is required"), {
+        statusCode: 400,
       });
     }
 
@@ -1027,18 +1036,12 @@ const cancelOrder = async (req, res) => {
     }).session(session);
 
     if (!order) {
-      await session.abortTransaction();
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
+      throw Object.assign(new Error("Order not found"), { statusCode: 404 });
     }
 
     if (order.orderStatus === "completed") {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Cannot cancel a completed order",
+      throw Object.assign(new Error("Cannot cancel a completed order"), {
+        statusCode: 400,
       });
     }
 
@@ -1088,7 +1091,7 @@ const cancelOrder = async (req, res) => {
       session,
     );
 
-    await session.commitTransaction();
+    if (!isExternalTransaction) await session.commitTransaction();
 
     await order.populate("servedBy", "fullname");
     await order.populate("orderItems.menuItemId", "name category");
@@ -1103,21 +1106,17 @@ const cancelOrder = async (req, res) => {
       inventoryRestored: inventoryRestoration.totalItemsRestored,
     });
   } catch (error) {
-    await session.abortTransaction();
+    if (!isExternalTransaction) await session.abortTransaction();
     console.error("Error cancelling order:", error);
-    if (error.kind === "ObjectId") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid order ID",
-      });
-    }
-    return res.status(500).json({
+    if (isExternalTransaction) throw error;
+    const statusCode =
+      error.statusCode || (error.kind === "ObjectId" ? 400 : 500);
+    return res.status(statusCode).json({
       success: false,
-      message: "Failed to cancel order. Please try again.",
-      error: error.message,
+      message: error.message || "Failed to cancel order. Please try again.",
     });
   } finally {
-    session.endSession();
+    if (!isExternalTransaction) session.endSession();
   }
 };
 
@@ -1429,6 +1428,20 @@ const reopenOrder = async (req, res) => {
         message: "Order not found",
       });
     }
+
+    // OPTIMISTIC LOCKING CHECK
+    if (req.body.version !== undefined && order.version !== req.body.version) {
+      await session.abortTransaction();
+      return res.status(409).json({
+        success: false,
+        message: "Details have been updated by another user. Please refresh.",
+        currentVersion: order.version,
+        updatedOrder: order,
+      });
+    }
+
+    // Increment version
+    order.version = (order.version || 0) + 1;
 
     // Only allow reopening completed or cancelled orders
     if (!["completed", "cancelled"].includes(order.orderStatus)) {

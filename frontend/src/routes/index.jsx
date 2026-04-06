@@ -91,6 +91,9 @@ const MockInventoryPage = lazy(
 const MockAnalyticsPage = lazy(
   () => import("../pages/protected/MockAnalyticsPage"),
 );
+const PlatformAdminDashboard = lazy(
+  () => import("../features/platformAdmin"),
+);
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
@@ -102,6 +105,7 @@ const routes = [
   { path: "/mock-inventory", component: MockInventoryPage },
   { path: "/mock-analytics", component: MockAnalyticsPage },
 
+  { path: "/platform-admin", component: PlatformAdminDashboard },
   { path: "/platform/health", component: PlatformHealthDashboard },
   { path: "/settings", component: SettingsHub },
   { path: "/settings/profile", component: ProfileSettings },
