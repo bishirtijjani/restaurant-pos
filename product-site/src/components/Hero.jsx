@@ -25,7 +25,7 @@ export default function Hero() {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <h1 className="text-4xl md:text-5xl xl:text-6xl font-black mb-6 tracking-tighter leading-[1.05] text-[--color-text-primary]">
-              Run TEST Your Restaurant on One{" "}
+              Run TESTed Your Restaurant on One{" "}
               <span className="text-accent underline decoration-8 underline-offset-[-4px] decoration-accent/10">
                 Operational System
               </span>
