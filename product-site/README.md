@@ -1,16 +1,12 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[vite-react-ssg] An internal error occurred.
+[vite-react-ssg] Please report an issue, if none already exists: https://github.com/daydreamer-riri/vite-react-ssg/issues
+file:///C:/Users/BISHIR-TM/Documents/projects/restaurant-management-system/product-site/node_modules/vite-react-ssg/dist/shared/vite-react-ssg.DUkzxBEb.mjs:818
+  const { routes } = await createRoot(false);
+                           ^
 
-Currently, two official plugins are available:
+TypeError: createRoot is not a function
+    at build (file:///C:/Users/BISHIR-TM/Documents/projects/restaurant-management-system/product-site/node_modules/vite-react-ssg/dist/shared/vite-react-ssg.DUkzxBEb.mjs:818:28)
+    at async Object.handler (file:///C:/Users/BISHIR-TM/Documents/projects/restaurant-management-system/product-site/node_modules/vite-react-ssg/dist/node/cli.mjs:40:5)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Node.js v22.18.0

@@ -24,6 +24,19 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white selection:bg-orange-100">
+      <title>Codeket - All-in-One Restaurant Management System</title>
+      <meta
+        name="description"
+        content="Streamline your restaurant operations with Codeket. The ultimate POS, inventory, and analytics platform for modern food businesses."
+      />
+      <meta
+        property="og:title"
+        content="Codeket - Modern Restaurant Management"
+      />
+      <meta
+        property="og:description"
+        content="Everything you need to run your restaurant in one place."
+      />
       <Header />
       <main>
         <Hero />
