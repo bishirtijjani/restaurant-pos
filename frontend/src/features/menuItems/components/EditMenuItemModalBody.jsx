@@ -12,6 +12,8 @@ import FormattedNumberInput from "../../../components/Input/FormattedNumberInput
 import { fetchAddOnGroups } from "../../addOnGroups/addOnGroupsSlice";
 import { Check, PlusCircle } from "lucide-react";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
+import MultiSelect from "../../../components/Input/MultiSelect";
+import { ALLERGENS, DIETARY_TAGS } from "../../../utils/dietaryConstants";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { openModal } from "../../common/modalSlice";
 
@@ -44,6 +46,8 @@ const EditMenuItemModalBody = ({ extraObject }) => {
       rate: 0,
     },
     addOnGroups: [],
+    allergens: [],
+    dietaryTags: [],
   });
 
   // Add state for image preview
@@ -76,6 +80,8 @@ const EditMenuItemModalBody = ({ extraObject }) => {
           enabled: false,
           rate: 0,
         },
+        allergens: menuItem.allergens || [],
+        dietaryTags: menuItem.dietaryTags || [],
       });
 
       // Set image preview if the menu item has an image
@@ -218,6 +224,8 @@ const EditMenuItemModalBody = ({ extraObject }) => {
           ? parseInt(formData.preparationTime)
           : 15,
         addOnGroups: selectedAddOnGroups,
+        allergens: formData.allergens,
+        dietaryTags: formData.dietaryTags,
       };
 
       // Dispatch the updateMenuItem thunk
@@ -412,6 +420,36 @@ const EditMenuItemModalBody = ({ extraObject }) => {
               })
             }
           ></textarea>
+        </div>
+
+        {/* Dietary Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Allergens</span>
+            </label>
+            <MultiSelect
+              options={ALLERGENS.map((a) => ({ value: a, name: a }))}
+              value={formData.allergens}
+              onChange={(e) => updateFormValue({ updateType: "allergens", value: e.target.value })}
+              name="allergens"
+              placeholder="Select allergens"
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Dietary Tags</span>
+            </label>
+            <MultiSelect
+              options={DIETARY_TAGS.map((t) => ({ value: t, name: t }))}
+              value={formData.dietaryTags}
+              onChange={(e) => updateFormValue({ updateType: "dietaryTags", value: e.target.value })}
+              name="dietaryTags"
+              placeholder="Select tags (e.g. Halal)"
+              disabled={isSubmitting}
+            />
+          </div>
         </div>
 
         {/* Image upload field (full width) */}

@@ -24,6 +24,7 @@ import {
   MODAL_BODY_TYPES,
   CONFIRMATION_MODAL_CLOSE_TYPES,
 } from "../../../utils/globalConstantUtil";
+import { DIETARY_TAG_STYLES } from "../../../utils/dietaryConstants";
 
 /**
  * Cart Tab - Mobile optimized cart management
@@ -206,6 +207,52 @@ const CartTab = () => {
                     {item.addOnSummary.join(", ")}
                   </div>
                 )}
+
+                {/* Dietary Tags and Allergens */}
+                {(() => {
+                  const baseAllergens = item.allergens || [];
+                  const baseTags = item.dietaryTags || [];
+                  
+                  // In cart, add-ons are stored with their full data in item.addOnData
+                  let addOnAllergens = [];
+                  let addOnTags = [];
+                  
+                  if (item.addOnData) {
+                    item.addOnData.forEach(g => {
+                      if (g.selectedItems) {
+                        g.selectedItems.forEach(si => {
+                          if (si.allergens) addOnAllergens.push(...si.allergens);
+                          if (si.dietaryTags) addOnTags.push(...si.dietaryTags);
+                        });
+                      }
+                    });
+                  }
+
+                  const allAllergens = [...new Set([...baseAllergens, ...addOnAllergens])];
+                  const allTags = [...new Set([...baseTags, ...addOnTags])];
+
+                  if (allAllergens.length > 0 || allTags.length > 0) {
+                    return (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {allTags.map(tag => {
+                          const style = DIETARY_TAG_STYLES[tag] || { color: "bg-base-200 text-base-content" };
+                          return (
+                            <span key={tag} className={`badge badge-xs border ${style.color} font-medium`}>
+                              {style.icon && <span className="mr-1">{style.icon}</span>}
+                              {tag}
+                            </span>
+                          );
+                        })}
+                        {allAllergens.length > 0 && (
+                          <span className="badge badge-xs bg-red-100 text-red-800 border-red-200 font-bold px-1" title={allAllergens.join(", ")}>
+                            ⚠️ ALLERGY
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               {/* Action Buttons & Total */}

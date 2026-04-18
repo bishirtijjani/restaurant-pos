@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../../../utils/numberFormat";
 import { useSelector } from "react-redux";
+import { DIETARY_TAG_STYLES } from "../../../utils/dietaryConstants";
 
 const ViewMenuItemModalBody = ({ extraObject }) => {
   const menuItem = extraObject;
@@ -119,6 +120,48 @@ const ViewMenuItemModalBody = ({ extraObject }) => {
             <p className="text-base-content/80 whitespace-pre-wrap">
               {menuItem.description}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Dietary Information */}
+      {(menuItem.allergens?.length > 0 || menuItem.dietaryTags?.length > 0) && (
+        <div className="card bg-base-100 border border-base-200">
+          <div className="card-body p-4">
+            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-success" />
+              Dietary Information
+            </h3>
+            
+            {menuItem.allergens?.length > 0 && (
+              <div className="mb-3">
+                <p className="text-sm text-base-content/60 mb-1">Allergens</p>
+                <div className="flex flex-wrap gap-2">
+                  {menuItem.allergens.map(allergen => (
+                    <span key={allergen} className="badge bg-red-50 text-red-700 border-red-200">
+                      {allergen}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {menuItem.dietaryTags?.length > 0 && (
+              <div>
+                <p className="text-sm text-base-content/60 mb-1">Dietary Tags</p>
+                <div className="flex flex-wrap gap-2">
+                  {menuItem.dietaryTags.map(tag => {
+                    const style = DIETARY_TAG_STYLES[tag] || { color: "bg-base-200 text-base-content" };
+                    return (
+                      <span key={tag} className={`badge border ${style.color} gap-1`}>
+                        {style.icon && <span>{style.icon}</span>}
+                        {tag}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -8,6 +8,8 @@ import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
+import MultiSelect from "../../../components/Input/MultiSelect";
+import { ALLERGENS, DIETARY_TAGS } from "../../../utils/dietaryConstants";
 
 import {
   INVENTORY_CATEGORIES,
@@ -35,6 +37,8 @@ const EditInventoryModalBody = ({ extraObject }) => {
     supplier: "",
     notes: "",
     reason: "",
+    allergens: [],
+    dietaryTags: [],
   });
 
   const [errors, setErrors] = useState({});
@@ -58,6 +62,8 @@ const EditInventoryModalBody = ({ extraObject }) => {
         supplier: item.supplier?._id || "",
         notes: item.notes || "",
         reason: "",
+        allergens: item.allergens || [],
+        dietaryTags: item.dietaryTags || [],
       });
     }
   }, [dispatch, item, settings]);
@@ -296,6 +302,34 @@ const EditInventoryModalBody = ({ extraObject }) => {
             onChange={handleChange}
             className="input input-bordered"
             placeholder="e.g., Price update, Corrected information"
+          />
+        </div>
+
+        {/* Allergens */}
+        <div className="form-control md:col-span-1">
+          <label className="label">
+            <span className="label-text">Allergens</span>
+          </label>
+          <MultiSelect
+            options={ALLERGENS.map((a) => ({ value: a, name: a }))}
+            value={formData.allergens}
+            onChange={handleChange}
+            name="allergens"
+            placeholder="Select allergens"
+          />
+        </div>
+
+        {/* Dietary Tags */}
+        <div className="form-control md:col-span-1">
+          <label className="label">
+            <span className="label-text">Dietary Tags</span>
+          </label>
+          <MultiSelect
+            options={DIETARY_TAGS.map((t) => ({ value: t, name: t }))}
+            value={formData.dietaryTags}
+            onChange={handleChange}
+            name="dietaryTags"
+            placeholder="Select tags (e.g. Halal)"
           />
         </div>
       </div>

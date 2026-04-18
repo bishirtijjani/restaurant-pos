@@ -54,6 +54,14 @@ const inventoryItemSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    allergens: [{
+      type: String,
+      trim: true,
+    }],
+    dietaryTags: [{
+      type: String,
+      trim: true,
+    }],
     linkedMenuItems: [
       {
         menuItemId: {

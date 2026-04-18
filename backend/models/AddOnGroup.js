@@ -37,6 +37,14 @@ const addOnItemSchema = new mongoose.Schema({
     type: Number,
     default: null,
   },
+  allergens: [{
+    type: String,
+    trim: true,
+  }],
+  dietaryTags: [{
+    type: String,
+    trim: true,
+  }],
 });
 
 const addOnGroupSchema = new mongoose.Schema(

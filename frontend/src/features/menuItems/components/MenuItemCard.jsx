@@ -20,6 +20,7 @@ import {
 import { formatCurrency } from "../../../utils/numberFormat";
 import { useAuth } from "../../../utils/permission";
 import Can from "../../../components/Auth/Can";
+import { DIETARY_TAG_STYLES } from "../../../utils/dietaryConstants";
 
 const MenuItemCard = ({ item, handleToggleAvailability }) => {
   const dispatch = useDispatch();
@@ -116,6 +117,34 @@ const MenuItemCard = ({ item, handleToggleAvailability }) => {
             {item.description}
           </p>
         )}
+
+        {/* Dietary Tags & Allergens */}
+        <div className="flex flex-wrap gap-1 mt-2">
+          {item.dietaryTags?.map((tag) => {
+            const style = DIETARY_TAG_STYLES[tag] || {
+              icon: "",
+              color: "bg-base-200 text-base-content",
+            };
+            return (
+              <span
+                key={tag}
+                className={`badge badge-sm border ${style.color} font-medium gap-1`}
+                title={tag}
+              >
+                {style.icon && <span>{style.icon}</span>}
+                {tag}
+              </span>
+            );
+          })}
+          {item.allergens?.length > 0 && (
+            <span
+              className="badge badge-sm border bg-red-50 text-red-700 border-red-200 font-medium"
+              title={`Contains: ${item.allergens.join(", ")}`}
+            >
+              ⚠️ Allergens
+            </span>
+          )}
+        </div>
 
         <div className="card-actions justify-end mt-4">
           <div className="flex gap-1">

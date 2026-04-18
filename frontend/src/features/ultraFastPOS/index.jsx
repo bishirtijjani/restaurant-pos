@@ -24,6 +24,7 @@ import {
   Banknote,
 } from "lucide-react";
 import { printerService } from "../../services/PrinterService";
+import { DIETARY_TAG_STYLES } from "../../utils/dietaryConstants";
 
 const UltraFastPOS = () => {
   const dispatch = useDispatch();
@@ -602,6 +603,20 @@ const UltraFastPOS = () => {
                   {settings?.currency?.symbol || "₦"}
                   {item.price.toFixed(2)}
                 </div>
+                {/* Dietary Indicators */}
+                {(item.dietaryTags?.length > 0 || item.allergens?.length > 0) && (
+                  <div className="flex flex-wrap justify-center gap-1 mt-1">
+                    {item.dietaryTags?.slice(0, 2).map((tag) => {
+                      const style = DIETARY_TAG_STYLES[tag] || { icon: "" };
+                      return style.icon ? (
+                        <span key={tag} className="text-xs" title={tag}>{style.icon}</span>
+                      ) : null;
+                    })}
+                    {item.allergens?.length > 0 && (
+                      <span className="text-xs text-error" title="Contains Allergens">⚠️</span>
+                    )}
+                  </div>
+                )}
                 {item.addOnGroups?.length > 0 && (
                   <div className="badge badge-xs badge-info absolute top-2 right-2">
                     +

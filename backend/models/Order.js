@@ -38,6 +38,14 @@ const selectedAddOnSchema = new mongoose.Schema(
           type: Number,
           default: 1,
         },
+        allergens: [{
+          type: String,
+          trim: true,
+        }],
+        dietaryTags: [{
+          type: String,
+          trim: true,
+        }],
       },
     ],
     addOnSubtotal: {

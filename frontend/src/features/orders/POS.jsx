@@ -31,11 +31,11 @@ import { openRightDrawer } from "../common/rightDrawerSlice";
 import { openModal } from "../common/modalSlice";
 import { useAuth } from "../../utils/permission";
 import { useNavigate } from "react-router-dom";
-import TitleCard from "../../components/Cards/TitleCard";
 import { showNotification } from "../common/headerSlice";
 import CustomerSearch from "../../components/Common/CustomerSearch";
 import { fetchTables } from "../tables/tableSlice";
 import { getMergedGroup, getPrimaryTable } from "../tables/tableUtils";
+import { DIETARY_TAG_STYLES } from "../../utils/dietaryConstants";
 import {
   addToCart,
   removeFromCart,
@@ -141,6 +141,22 @@ const MenuItem = ({ item, onAdd, currency, disabled }) => {
             <span className="badge badge-xs badge-secondary">+</span>
           )}
         </div>
+        
+        {/* Dietary tags mini indicator */}
+        {(item.dietaryTags?.length > 0 || item.allergens?.length > 0) && (
+          <div className="flex gap-1 mt-1">
+            {item.dietaryTags?.slice(0, 3).map(tag => {
+              const style = DIETARY_TAG_STYLES[tag];
+              if (!style || !style.icon) return null;
+              return (
+                <span key={tag} className="text-xs" title={tag}>{style.icon}</span>
+              )
+            })}
+            {item.allergens?.length > 0 && (
+              <span className="text-xs" title="Contains Allergens">⚠️</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

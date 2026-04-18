@@ -128,6 +128,8 @@ exports.createAddOnGroup = async (req, res) => {
         isAvailable: item.isAvailable !== false,
         inventoryItem: item.inventoryItem || null,
         quantityUsed: item.quantityUsed || 1,
+        allergens: item.allergens || [],
+        dietaryTags: item.dietaryTags || [],
       })),
       selectionType: selectionType || "single",
       isRequired: isRequired || false,
@@ -219,6 +221,8 @@ exports.updateAddOnGroup = async (req, res) => {
         isAvailable: item.isAvailable !== false,
         inventoryItem: item.inventoryItem || null,
         quantityUsed: item.quantityUsed || 1,
+        allergens: item.allergens || [],
+        dietaryTags: item.dietaryTags || [],
       }));
     }
 

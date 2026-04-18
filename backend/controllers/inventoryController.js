@@ -83,6 +83,8 @@ exports.createInventoryItem = async (req, res) => {
       linkedMenuItems,
       supplier,
       notes,
+      allergens,
+      dietaryTags,
     } = req.body;
 
     // Validate required fields
@@ -118,6 +120,8 @@ exports.createInventoryItem = async (req, res) => {
       linkedMenuItems: linkedMenuItems || [],
       supplier,
       notes,
+      allergens: allergens || [],
+      dietaryTags: dietaryTags || [],
       lastRestockDate: currentStock > 0 ? new Date() : null,
       storeId: req.storeId,
       organizationId: req.organizationId,

@@ -22,6 +22,7 @@ import OrderTimer from "./OrderTimer";
 import { getOrderColor, groupItemsByCategory } from "../kdsUtils";
 import { showNotification } from "../../common/headerSlice";
 import { useAuth } from "../../../utils/permission";
+import { DIETARY_TAG_STYLES } from "../../../utils/dietaryConstants";
 
 const OrderCard = ({ order, settings, isCompletedView = false }) => {
   const dispatch = useDispatch();
@@ -243,15 +244,57 @@ const OrderCard = ({ order, settings, isCompletedView = false }) => {
                   className="flex items-start justify-between gap-2"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col">
                       <span className="font-medium">
                         {item.quantity}x {item.name}
                       </span>
+                      {(() => {
+                        const baseAllergens = item.menuItemId?.allergens || [];
+                        const baseTags = item.menuItemId?.dietaryTags || [];
+                        const addOnAllergens = item.addOns?.flatMap(g => g.selectedItems?.flatMap(si => si.allergens || [])) || [];
+                        const addOnTags = item.addOns?.flatMap(g => g.selectedItems?.flatMap(si => si.dietaryTags || [])) || [];
+                        const allAllergens = [...new Set([...baseAllergens, ...addOnAllergens])];
+                        const allTags = [...new Set([...baseTags, ...addOnTags])];
+
+                        if (allAllergens.length > 0 || allTags.length > 0) {
+                          return (
+                            <div className="flex flex-wrap gap-1 mt-1 mb-1">
+                              {allTags.map(tag => {
+                                const style = DIETARY_TAG_STYLES[tag] || { color: "bg-base-200 text-base-content" };
+                                return (
+                                  <span key={tag} className={`badge badge-xs border ${style.color} font-medium`}>
+                                    {style.icon && <span className="mr-1">{style.icon}</span>}
+                                    {tag}
+                                  </span>
+                                );
+                              })}
+                              {allAllergens.length > 0 && (
+                                <span className="badge badge-xs bg-red-100 text-red-800 border-red-200 font-bold px-1" title={allAllergens.join(", ")}>
+                                  ⚠️ ALLERGY
+                                </span>
+                              )}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                     {expanded && item.customizations && (
                       <div className="text-xs opacity-70 mt-1 flex items-start gap-1">
                         <MessageSquare className="w-3 h-3 mt-0.5 flex-shrink-0" />
                         <span>{item.customizations}</span>
+                      </div>
+                    )}
+                    {expanded && item.addOns?.length > 0 && (
+                      <div className="text-xs mt-1 space-y-1">
+                        {item.addOns.map((group, idx) => (
+                          <div key={idx} className="flex flex-col ml-1 border-l-2 border-base-300 pl-2">
+                            <span className="opacity-70 italic">{group.groupName}:</span>
+                            <span className="font-medium text-primary">
+                              {group.selectedItems?.map(si => si.name).join(", ")}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>

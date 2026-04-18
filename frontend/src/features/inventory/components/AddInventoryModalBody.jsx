@@ -8,6 +8,8 @@ import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import { fetchSettings } from "../../settings/generalSettings/generalSettingsSlice";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
+import MultiSelect from "../../../components/Input/MultiSelect";
+import { ALLERGENS, DIETARY_TAGS } from "../../../utils/dietaryConstants";
 
 import {
   INVENTORY_CATEGORIES,
@@ -33,6 +35,8 @@ const AddInventoryModalBody = () => {
     costPrice: "",
     supplier: "",
     notes: "",
+    allergens: [],
+    dietaryTags: [],
   });
 
   const [errors, setErrors] = useState({});
@@ -263,6 +267,36 @@ const AddInventoryModalBody = () => {
             className="textarea textarea-bordered"
             rows="3"
             placeholder="Additional notes about this item..."
+            disabled={isSubmitting}
+          />
+        </div>
+
+        {/* Allergens */}
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Allergens</span>
+          </label>
+          <MultiSelect
+            options={ALLERGENS.map((a) => ({ value: a, name: a }))}
+            value={formData.allergens}
+            onChange={handleChange}
+            name="allergens"
+            placeholder="Select allergens"
+            disabled={isSubmitting}
+          />
+        </div>
+
+        {/* Dietary Tags */}
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Dietary Tags</span>
+          </label>
+          <MultiSelect
+            options={DIETARY_TAGS.map((t) => ({ value: t, name: t }))}
+            value={formData.dietaryTags}
+            onChange={handleChange}
+            name="dietaryTags"
+            placeholder="Select tags (e.g. Halal)"
             disabled={isSubmitting}
           />
         </div>

@@ -15,6 +15,7 @@ import {
 import { openModal } from "../../common/modalSlice";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { BottomSheet } from "../../../components/Mobile";
+import { DIETARY_TAG_STYLES } from "../../../utils/dietaryConstants";
 
 const MenuItemCard = ({
   item,
@@ -80,6 +81,22 @@ const MenuItemCard = ({
             <span className="badge badge-secondary badge-xs">+</span>
           )}
         </div>
+        
+        {/* Dietary Indicators */}
+        {(item.dietaryTags?.length > 0 || item.allergens?.length > 0) && (
+          <div className="flex gap-1 mt-1.5 flex-wrap">
+            {item.dietaryTags?.slice(0, 3).map(tag => {
+              const style = DIETARY_TAG_STYLES[tag];
+              if (!style || !style.icon) return null;
+              return (
+                <span key={tag} className="text-[10px]" title={tag}>{style.icon}</span>
+              )
+            })}
+            {item.allergens?.length > 0 && (
+              <span className="text-[10px]" title="Contains Allergens">⚠️</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -108,6 +125,7 @@ const MenuTab = () => {
   // Local state
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [dietaryFilter, setDietaryFilter] = useState("All");
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
 
   // Sheet state
@@ -126,9 +144,19 @@ const MenuTab = () => {
       .includes(searchQuery.toLowerCase());
     const matchesCategory =
       activeCategory === "All" || item.category === activeCategory;
+    
+    let matchesDietary = true;
+    if (dietaryFilter !== "All") {
+      if (dietaryFilter === "Allergen-Free") {
+        matchesDietary = !item.allergens || item.allergens.length === 0;
+      } else {
+        matchesDietary = item.dietaryTags?.includes(dietaryFilter);
+      }
+    }
+
     const isAvailable = item.isAvailable;
 
-    return matchesSearch && matchesCategory && isAvailable;
+    return matchesSearch && matchesCategory && matchesDietary && isAvailable;
   });
 
   // Favorite items
@@ -253,6 +281,31 @@ const MenuTab = () => {
             ))}
           </div>
         )}
+
+        {/* Dietary Filters */}
+        <div className="mt-3 flex overflow-x-auto scrollbar-hide gap-2 pb-1">
+          <button
+            onClick={() => { haptic.light(); setDietaryFilter("All"); }}
+            className={`btn btn-xs rounded-full ${dietaryFilter === "All" ? "btn-primary" : "btn-outline border-base-300"}`}
+          >
+            All Diets
+          </button>
+          <button
+            onClick={() => { haptic.light(); setDietaryFilter("Allergen-Free"); }}
+            className={`btn btn-xs rounded-full ${dietaryFilter === "Allergen-Free" ? "btn-success" : "btn-outline border-base-300"}`}
+          >
+            Allergen-Free
+          </button>
+          {Object.keys(DIETARY_TAG_STYLES).map(tag => (
+            <button
+              key={tag}
+              onClick={() => { haptic.light(); setDietaryFilter(tag); }}
+              className={`btn btn-xs rounded-full ${dietaryFilter === tag ? "btn-secondary" : "btn-outline border-base-300"}`}
+            >
+              {DIETARY_TAG_STYLES[tag].icon} {tag}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Categories */}

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { createMasterItem, updateMasterItem } from "../brandMenuSlice";
 import { closeModal } from "../../common/modalSlice";
+import MultiSelect from "../../../components/Input/MultiSelect";
+import { DIETARY_TAGS, ALLERGENS } from "../../../utils/dietaryConstants";
 
 function BrandMenuForm({ extraObject }) {
   const dispatch = useDispatch();
@@ -13,6 +15,8 @@ function BrandMenuForm({ extraObject }) {
     description: "",
     image: "",
     preparationTime: 15,
+    allergens: [],
+    dietaryTags: [],
   });
 
   useEffect(() => {
@@ -24,6 +28,8 @@ function BrandMenuForm({ extraObject }) {
         description: extraObject.description || "",
         image: extraObject.image || "",
         preparationTime: extraObject.preparationTime || 15,
+        allergens: extraObject.allergens || [],
+        dietaryTags: extraObject.dietaryTags || [],
       });
     }
   }, [extraObject]);
@@ -151,6 +157,34 @@ function BrandMenuForm({ extraObject }) {
             className="textarea textarea-bordered h-24 focus:textarea-primary transition-all"
             value={formData.description}
             onChange={handleChange}
+          />
+        </div>
+
+        {/* Allergens */}
+        <div className="form-control md:col-span-1">
+          <label className="label">
+            <span className="label-text font-semibold">Allergens</span>
+          </label>
+          <MultiSelect
+            options={ALLERGENS.map((a) => ({ value: a, name: a }))}
+            value={formData.allergens}
+            onChange={handleChange}
+            name="allergens"
+            placeholder="Select allergens"
+          />
+        </div>
+
+        {/* Dietary Tags */}
+        <div className="form-control md:col-span-1">
+          <label className="label">
+            <span className="label-text font-semibold">Dietary Tags</span>
+          </label>
+          <MultiSelect
+            options={DIETARY_TAGS.map((t) => ({ value: t, name: t }))}
+            value={formData.dietaryTags}
+            onChange={handleChange}
+            name="dietaryTags"
+            placeholder="Select tags (e.g. Halal)"
           />
         </div>
 

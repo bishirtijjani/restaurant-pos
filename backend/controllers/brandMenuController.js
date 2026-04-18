@@ -51,6 +51,8 @@ const createMasterItem = async (req, res) => {
       image,
       preparationTime,
       addOnGroups,
+      allergens,
+      dietaryTags,
     } = req.body;
 
     // Validate required fields
@@ -70,6 +72,8 @@ const createMasterItem = async (req, res) => {
       image,
       preparationTime: preparationTime || 15,
       addOnGroups: addOnGroups || [],
+      allergens: allergens || [],
+      dietaryTags: dietaryTags || [],
       organizationId: req.organizationId,
       storeId: null, // Master items have no storeId
       isMaster: true,

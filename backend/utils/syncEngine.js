@@ -161,6 +161,10 @@ async function propagateToStore(
         updates.preparationTime = masterItem.preparationTime;
       if (!storeItem.syncOverrides?.get("addOnGroups"))
         updates.addOnGroups = masterItem.addOnGroups;
+      if (!storeItem.syncOverrides?.get("allergens"))
+        updates.allergens = masterItem.allergens;
+      if (!storeItem.syncOverrides?.get("dietaryTags"))
+        updates.dietaryTags = masterItem.dietaryTags;
     } else if (masterType === "Category") {
       if (!storeItem.syncOverrides?.get("name")) updates.name = masterItem.name;
       if (!storeItem.syncOverrides?.get("description"))

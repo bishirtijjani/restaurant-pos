@@ -56,6 +56,8 @@ const addNewMenuItem = async (req, res) => {
     isAvailable,
     image,
     addOnGroups,
+    allergens,
+    dietaryTags,
   } = req.body;
 
   if (!name || !category || !price) {
@@ -101,6 +103,8 @@ const addNewMenuItem = async (req, res) => {
       // Only add image if provided
       ...(image ? { image } : {}),
       addOnGroups: addOnGroups || [],
+      allergens: allergens || [],
+      dietaryTags: dietaryTags || [],
     });
 
     const savedMenuItem = await newMenuItem.save();
@@ -144,6 +148,8 @@ const updateMenuItem = async (req, res) => {
     isAvailable,
     image,
     addOnGroups,
+    allergens,
+    dietaryTags,
   } = req.body;
 
   try {
@@ -291,6 +297,8 @@ const updateMenuItem = async (req, res) => {
     menuItem.isAvailable =
       isAvailable !== undefined ? isAvailable : menuItem.isAvailable;
     menuItem.addOnGroups = addOnGroups || menuItem.addOnGroups;
+    menuItem.allergens = allergens || menuItem.allergens;
+    menuItem.dietaryTags = dietaryTags || menuItem.dietaryTags;
 
     // Handle image update
     if (image !== undefined) {

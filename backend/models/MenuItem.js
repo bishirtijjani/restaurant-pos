@@ -67,6 +67,14 @@ const menuItemSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    allergens: [{
+      type: String,
+      trim: true,
+    }],
+    dietaryTags: [{
+      type: String,
+      trim: true,
+    }],
     // NEW: Add-on groups associated with this menu item
     addOnGroups: [
       {

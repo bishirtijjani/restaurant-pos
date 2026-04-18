@@ -8,6 +8,8 @@ import { showNotification } from "../../common/headerSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
+import MultiSelect from "../../../components/Input/MultiSelect";
+import { DIETARY_TAGS, ALLERGENS } from "../../../utils/dietaryConstants";
 import { Plus, Trash2, Package } from "lucide-react";
 
 const AddAddOnGroupModalBody = () => {
@@ -33,6 +35,8 @@ const AddAddOnGroupModalBody = () => {
         isAvailable: true,
         inventoryItem: null,
         quantityUsed: 1,
+        allergens: [],
+        dietaryTags: [],
       },
     ],
   });
@@ -89,6 +93,8 @@ const AddAddOnGroupModalBody = () => {
           isAvailable: true,
           inventoryItem: null,
           quantityUsed: 1,
+          allergens: [],
+          dietaryTags: [],
         },
       ],
     }));
@@ -150,6 +156,8 @@ const AddAddOnGroupModalBody = () => {
           isAvailable: item.isAvailable,
           inventoryItem: item.inventoryItem || null,
           quantityUsed: parseFloat(item.quantityUsed) || 1,
+          allergens: item.allergens || [],
+          dietaryTags: item.dietaryTags || [],
         })),
         minSelections: parseInt(formData.minSelections) || 0,
         maxSelections:
@@ -391,7 +399,7 @@ const AddAddOnGroupModalBody = () => {
                   </div>
                 )}
 
-                <div className="form-control flex justify-center">
+                <div className="form-control flex justify-center mt-6">
                   <label className="label cursor-pointer">
                     <span className="label-text mr-2">Available?</span>
                     <input
@@ -403,6 +411,32 @@ const AddAddOnGroupModalBody = () => {
                       className="checkbox checkbox-primary"
                     />
                   </label>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Allergens</span>
+                  </label>
+                  <MultiSelect
+                    options={ALLERGENS.map((a) => ({ value: a, name: a }))}
+                    value={item.allergens}
+                    onChange={(e) => handleItemChange(index, "allergens", e.target.value)}
+                    name={`allergens_${index}`}
+                    placeholder="Select allergens"
+                  />
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Dietary Tags</span>
+                  </label>
+                  <MultiSelect
+                    options={DIETARY_TAGS.map((t) => ({ value: t, name: t }))}
+                    value={item.dietaryTags}
+                    onChange={(e) => handleItemChange(index, "dietaryTags", e.target.value)}
+                    name={`dietaryTags_${index}`}
+                    placeholder="Select tags"
+                  />
                 </div>
               </div>
             </div>

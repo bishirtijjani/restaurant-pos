@@ -254,6 +254,8 @@ const createOrder = async (req, res) => {
                 price: addOnItem.price,
                 inventoryItem: addOnItem.inventoryItem,
                 quantityUsed: addOnItem.quantityUsed || 1,
+                allergens: addOnItem.allergens || [],
+                dietaryTags: addOnItem.dietaryTags || [],
               });
 
               addOnsTotal += addOnItem.price;
@@ -639,7 +641,7 @@ const createOrder = async (req, res) => {
 
     const populatedOrder = await Order.findById(newOrder._id)
       .populate("servedBy", "fullname")
-      .populate("orderItems.menuItemId", "name category");
+      .populate("orderItems.menuItemId", "name category allergens dietaryTags");
 
     // Notify KDS via WebSocket
     notifyKDS("order:created", populatedOrder, null, req.storeId);
@@ -740,7 +742,7 @@ const getOrderById = async (req, res) => {
       _id: req.params.id,
       storeId: req.storeId,
     })
-      .populate("orderItems.menuItemId", "name category price preparationTime")
+      .populate("orderItems.menuItemId", "name category price preparationTime allergens dietaryTags")
       .populate("servedBy", "fullname")
       .populate("lastAction.performedBy", "fullname");
 
@@ -870,7 +872,7 @@ const updateOrderStatus = async (req, res) => {
     if (!isExternalTransaction) await session.commitTransaction();
 
     await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
+    await order.populate("orderItems.menuItemId", "name category allergens dietaryTags");
 
     // Notify KDS via WebSocket
     notifyKDS("order:updated", order, null, req.storeId);
@@ -990,7 +992,7 @@ const updatePayment = async (req, res) => {
     await session.commitTransaction();
 
     await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
+    await order.populate("orderItems.menuItemId", "name category allergens dietaryTags");
 
     return res.status(200).json({
       success: true,
@@ -1094,7 +1096,7 @@ const cancelOrder = async (req, res) => {
     if (!isExternalTransaction) await session.commitTransaction();
 
     await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
+    await order.populate("orderItems.menuItemId", "name category allergens dietaryTags");
 
     // Notify KDS via WebSocket
     notifyKDS("order:cancelled", order, null, req.storeId);
@@ -1371,7 +1373,7 @@ const refundOrder = async (req, res) => {
     await session.commitTransaction();
 
     await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
+    await order.populate("orderItems.menuItemId", "name category allergens dietaryTags");
     await order.populate("refunds.refundedBy", "fullname");
     await order.populate("paymentHistory.performedBy", "fullname");
 
@@ -1582,7 +1584,7 @@ const reopenOrder = async (req, res) => {
     await session.commitTransaction();
 
     await order.populate("servedBy", "fullname");
-    await order.populate("orderItems.menuItemId", "name category");
+    await order.populate("orderItems.menuItemId", "name category allergens dietaryTags");
 
     // Notify KDS via WebSocket
     notifyKDS("order:reopened", order, null, req.storeId);
