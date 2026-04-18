@@ -63,5 +63,6 @@ router.use("/organizations", require("./organizationRoutes"));
 router.use("/payments", require("./paymentRoutes"));
 router.use("/sync", require("./syncRoutes"));
 router.use("/logs", require("./logRoutes"));
+router.use("/upload", require("./uploadRoutes"));
 
 module.exports = router;

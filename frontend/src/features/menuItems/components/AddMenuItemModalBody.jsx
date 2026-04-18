@@ -12,6 +12,7 @@ import MultiSelect from "../../../components/Input/MultiSelect";
 import { ALLERGENS, DIETARY_TAGS } from "../../../utils/dietaryConstants";
 import { MODAL_BODY_TYPES } from "../../../utils/globalConstantUtil";
 import { openModal } from "../../common/modalSlice";
+import axios from "../../../utils/offline/offlineAxios";
 
 const AddMenuItemModalBody = () => {
   const dispatch = useDispatch();
@@ -46,6 +47,7 @@ const AddMenuItemModalBody = () => {
   });
 
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -124,13 +126,16 @@ const AddMenuItemModalBody = () => {
     const reader = new FileReader();
     reader.onload = () => {
       setImagePreview(reader.result);
-      updateFormValue({ updateType: "image", value: reader.result });
+      setImageFile(file);
+      // We don't set base64 value directly to form data anymore to save memory
+      // updateFormValue({ updateType: "image", value: reader.result });
     };
     reader.readAsDataURL(file);
   };
 
   const removeImage = () => {
     setImagePreview(null);
+    setImageFile(null);
     updateFormValue({ updateType: "image", value: null });
   };
 
@@ -173,8 +178,30 @@ const AddMenuItemModalBody = () => {
     setIsSubmitting(true);
 
     try {
+      let finalImageUrl = formData.image;
+
+      // Upload image to Cloudinary if a file was selected
+      if (imageFile) {
+        const imageFormData = new FormData();
+        imageFormData.append("image", imageFile);
+        
+        try {
+          const uploadRes = await axios.post("/api/upload", imageFormData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          if (uploadRes.data?.success) {
+            finalImageUrl = uploadRes.data.data.url;
+          }
+        } catch (uploadErr) {
+          throw new Error("Failed to upload image. Please try again.");
+        }
+      }
+
       const menuItemData = {
         ...formData,
+        image: finalImageUrl,
         price: parseFloat(formData.price),
         costPrice: formData.costPrice ? parseFloat(formData.costPrice) : 0,
         preparationTime: formData.preparationTime
