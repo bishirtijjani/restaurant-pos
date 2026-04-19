@@ -42,7 +42,12 @@ const PERMISSIONS = {
  * Default permissions assigned to roles if no granular permissions are specified.
  */
 const DEFAULT_ROLE_PERMISSIONS = {
-  admin: ["all"], // Universal access
+  admin: [
+    "all",
+    PERMISSIONS.BRAND_MENU_VIEW,
+    PERMISSIONS.BRAND_MENU_EDIT,
+    PERMISSIONS.BRAND_MENU_PUBLISH,
+  ],
   manager: [
     PERMISSIONS.MENU_VIEW,
     PERMISSIONS.MENU_EDIT,

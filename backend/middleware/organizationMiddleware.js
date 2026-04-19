@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
 const Organization = require("../models/Organization");
+const { DEFAULT_ROLE_PERMISSIONS } = require("../config/permissions");
 
 /**
  * Middleware to populate req.organizationId and check global permissions.
@@ -67,15 +68,18 @@ const organizationMiddleware = asyncHandler(async (req, res, next) => {
 
     orgStores.forEach((s) => {
       if (s.role === "admin") isOrgAdmin = true;
-      if (s.permissions) {
-        s.permissions.forEach((p) => aggregatedPermissions.add(p));
-      }
+
+      // Use explicit permissions if present, otherwise fall back to role defaults
+      const permsToApply =
+        s.permissions && s.permissions.length > 0
+          ? s.permissions
+          : DEFAULT_ROLE_PERMISSIONS[s.role] || [];
+
+      permsToApply.forEach((p) => aggregatedPermissions.add(p));
     });
 
     req.user.permissions = Array.from(aggregatedPermissions);
-
-    // If user is Admin in any store, maybe give them extra rights?
-    // For now, rely on permissions.js constants like BRAND_MENU_EDIT
+    // "all" from admin role defaults gives universal access through permissionMiddleware
   }
 
   next();

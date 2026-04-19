@@ -10,7 +10,7 @@ import FormattedNumberInput from "../../../components/Input/FormattedNumberInput
 import SearchableSelect from "../../../components/Input/SearchableSelect";
 import MultiSelect from "../../../components/Input/MultiSelect";
 import { DIETARY_TAGS, ALLERGENS } from "../../../utils/dietaryConstants";
-import { Plus, Trash2, Package } from "lucide-react";
+import { Plus, Trash2, Package, Lock } from "lucide-react";
 
 const EditAddOnGroupModalBody = ({ extraObject }) => {
   const dispatch = useDispatch();
@@ -21,6 +21,22 @@ const EditAddOnGroupModalBody = ({ extraObject }) => {
     (state) => state.generalSettings.generalSettings
   );
   const currency = settings?.currency?.symbol || "$";
+
+  // Brand-lock helpers
+  const isBrandControlled = !!group?.masterId;
+  const BRAND_TIP = "Brand-controlled. Edit this in the Brand Dashboard.";
+  const BrandLockedField = ({ children }) => {
+    if (!isBrandControlled) return children;
+    return (
+      <div className="tooltip tooltip-top w-full" data-tip={BRAND_TIP}>
+        {children}
+      </div>
+    );
+  };
+  const BrandLockIcon = () =>
+    isBrandControlled ? (
+      <Lock className="w-3.5 h-3.5 text-base-content/40 ml-1.5 inline-block" />
+    ) : null;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -210,38 +226,54 @@ const EditAddOnGroupModalBody = ({ extraObject }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Brand-lock banner */}
+      {isBrandControlled && (
+        <div className="alert alert-warning py-2">
+          <Lock className="w-4 h-4 shrink-0" />
+          <span className="text-sm">
+            This add-on group is managed by the Brand. Only brand admins can edit it.
+          </span>
+        </div>
+      )}
+
       {/* Basic Info */}
       <div className="grid grid-cols-1 gap-4">
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">Group Name *</span>
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className={`input input-bordered ${
-              errors.name ? "input-error" : ""
-            }`}
-            placeholder="e.g., Toppings, Size, Add Extra"
-          />
-          {errors.name && <ErrorText>{errors.name}</ErrorText>}
-        </div>
+        <BrandLockedField>
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Group Name * <BrandLockIcon /></span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className={`input input-bordered ${
+                errors.name ? "input-error" : ""
+              }`}
+              placeholder="e.g., Toppings, Size, Add Extra"
+              disabled={isBrandControlled}
+            />
+            {errors.name && <ErrorText>{errors.name}</ErrorText>}
+          </div>
+        </BrandLockedField>
 
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">Description (Optional)</span>
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className="textarea textarea-bordered"
-            rows="2"
-            placeholder="Brief description..."
-          />
-        </div>
+        <BrandLockedField>
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Description (Optional) <BrandLockIcon /></span>
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="textarea textarea-bordered"
+              rows="2"
+              placeholder="Brief description..."
+              disabled={isBrandControlled}
+            />
+          </div>
+        </BrandLockedField>
 
         <div className="form-control">
           <label className="label cursor-pointer">
@@ -261,71 +293,83 @@ const EditAddOnGroupModalBody = ({ extraObject }) => {
 
       {/* Selection Rules */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-control">
-          <SearchableSelect
-            options={[
-              { value: "single", name: "Single (Choose One)" },
-              { value: "multiple", name: "Multiple (Choose Many)" },
-            ]}
-            value={formData.selectionType}
-            onChange={(e) => handleChange({ target: { name: "selectionType", value: e.target.value } })}
-            name="selectionType"
-            label="Selection Type *"
-            placeholder="Select Type"
-            className=""
-            valueKey="value"
-            labelKey="name"
-          />
-        </div>
-
-        <div className="form-control">
-          <label className="label cursor-pointer">
-            <span className="label-text">Required Group?</span>
-            <input
-              type="checkbox"
-              name="isRequired"
-              checked={formData.isRequired}
-              onChange={handleChange}
-              className="checkbox checkbox-primary"
+        <BrandLockedField>
+          <div className="form-control">
+            <SearchableSelect
+              options={[
+                { value: "single", name: "Single (Choose One)" },
+                { value: "multiple", name: "Multiple (Choose Many)" },
+              ]}
+              value={formData.selectionType}
+              onChange={(e) => handleChange({ target: { name: "selectionType", value: e.target.value } })}
+              name="selectionType"
+              label={<>Selection Type * <BrandLockIcon /></>}
+              placeholder="Select Type"
+              className=""
+              valueKey="value"
+              labelKey="name"
+              disabled={isBrandControlled}
             />
-          </label>
-        </div>
+          </div>
+        </BrandLockedField>
+
+        <BrandLockedField>
+          <div className="form-control">
+            <label className="label cursor-pointer">
+              <span className="label-text">Required Group? <BrandLockIcon /></span>
+              <input
+                type="checkbox"
+                name="isRequired"
+                checked={formData.isRequired}
+                onChange={handleChange}
+                className="checkbox checkbox-primary"
+                disabled={isBrandControlled}
+              />
+            </label>
+          </div>
+        </BrandLockedField>
 
         {formData.selectionType === "multiple" && (
           <>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Min Selections</span>
-              </label>
-              <input
-                type="number"
-                name="minSelections"
-                value={formData.minSelections}
-                onChange={handleChange}
-                className={`input input-bordered ${
-                  errors.minSelections ? "input-error" : ""
-                }`}
-                min="0"
-              />
-              {errors.minSelections && (
-                <ErrorText>{errors.minSelections}</ErrorText>
-              )}
-            </div>
+            <BrandLockedField>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Min Selections <BrandLockIcon /></span>
+                </label>
+                <input
+                  type="number"
+                  name="minSelections"
+                  value={formData.minSelections}
+                  onChange={handleChange}
+                  className={`input input-bordered ${
+                    errors.minSelections ? "input-error" : ""
+                  }`}
+                  min="0"
+                  disabled={isBrandControlled}
+                />
+                {errors.minSelections && (
+                  <ErrorText>{errors.minSelections}</ErrorText>
+                )}
+              </div>
+            </BrandLockedField>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Max Selections</span>
-              </label>
-              <input
-                type="number"
-                name="maxSelections"
-                value={formData.maxSelections || ""}
-                onChange={handleChange}
-                className="input input-bordered"
-                min="0"
-                placeholder="Leave empty for unlimited"
-              />
-            </div>
+            <BrandLockedField>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Max Selections <BrandLockIcon /></span>
+                </label>
+                <input
+                  type="number"
+                  name="maxSelections"
+                  value={formData.maxSelections || ""}
+                  onChange={handleChange}
+                  className="input input-bordered"
+                  min="0"
+                  placeholder="Leave empty for unlimited"
+                  disabled={isBrandControlled}
+                />
+              </div>
+            </BrandLockedField>
           </>
         )}
       </div>
@@ -335,11 +379,11 @@ const EditAddOnGroupModalBody = ({ extraObject }) => {
       {/* Add-On Items */}
       <div className="space-y-3">
         {formData.items.map((item, index) => (
-          <div key={index} className="card bg-base-200 border border-base-300">
+          <div key={index} className={`card bg-base-200 border ${ isBrandControlled ? 'border-warning/40 opacity-80' : 'border-base-300' }`}>
             <div className="card-body p-4">
               <div className="flex justify-between items-start mb-3">
                 <h4 className="font-semibold">Item {index + 1}</h4>
-                {formData.items.length > 1 && (
+                {formData.items.length > 1 && !isBrandControlled && (
                   <button
                     type="button"
                     onClick={() => removeItem(index)}
@@ -483,6 +527,8 @@ const EditAddOnGroupModalBody = ({ extraObject }) => {
           type="button"
           onClick={addItem}
           className="btn btn-outline btn-sm w-full gap-2"
+          disabled={isBrandControlled}
+          title={isBrandControlled ? BRAND_TIP : undefined}
         >
           <Plus className="w-4 h-4" />
           Add Item

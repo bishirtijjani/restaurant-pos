@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { createMasterItem, updateMasterItem } from "../brandMenuSlice";
 import { closeModal } from "../../common/modalSlice";
 import MultiSelect from "../../../components/Input/MultiSelect";
+import ImageUploader from "../../../components/Input/ImageUploader";
 import { DIETARY_TAGS, ALLERGENS } from "../../../utils/dietaryConstants";
 
 function BrandMenuForm({ extraObject }) {
@@ -190,34 +191,14 @@ function BrandMenuForm({ extraObject }) {
 
         <div className="form-control md:col-span-2">
           <label className="label border-t border-base-200 mt-2 pt-4">
-            <span className="label-text font-semibold">Media & Visuals</span>
+            <span className="label-text font-semibold">Item Image</span>
           </label>
-          <div className="flex flex-col md:flex-row gap-4 items-start">
-            <div className="flex-1 w-full">
-              <label className="label">
-                <span className="label-text text-xs opacity-60 uppercase">
-                  Image URL
-                </span>
-              </label>
-              <input
-                type="text"
-                name="image"
-                className="input input-bordered w-full focus:input-primary transition-all"
-                value={formData.image}
-                onChange={handleChange}
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
-            {formData.image && (
-              <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/20 bg-base-200">
-                <img
-                  src={formData.image}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-          </div>
+          <ImageUploader
+            value={formData.image}
+            onChange={(url) =>
+              setFormData((prev) => ({ ...prev, image: url }))
+            }
+          />
         </div>
       </div>
 

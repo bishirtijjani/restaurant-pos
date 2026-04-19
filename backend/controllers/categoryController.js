@@ -85,6 +85,14 @@ exports.updateCategory = async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
 
+    // FIELD LOCKING: Prevent store-level editing of brand-synced categories
+    if (oldCategory.masterId) {
+      return res.status(403).json({
+        message:
+          "Cannot modify a brand-controlled category. Edit it from the Master Menu in the Brand Dashboard.",
+      });
+    }
+
     if (name && name !== oldCategory.name) {
       const duplicateCategory = await Category.findOne({
         name,

@@ -185,6 +185,15 @@ exports.updateAddOnGroup = async (req, res) => {
       });
     }
 
+    // FIELD LOCKING: Prevent store-level editing of brand-synced add-on groups
+    if (oldGroup.masterId) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Cannot modify a brand-controlled add-on group. Edit it from the Master Menu in the Brand Dashboard.",
+      });
+    }
+
     const {
       name,
       description,
