@@ -145,15 +145,15 @@ function Login() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#050505] text-white font-sans selection:bg-brand/30">
+    <div className="relative min-h-screen bg-stone-50 text-gray-900 font-sans selection:bg-brand/30">
       {/* Immersive Background Engine */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-500/5 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-500/10 rounded-full blur-[120px]" />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
             backgroundSize: "50px 50px",
           }}
         />
@@ -161,28 +161,28 @@ function Login() {
 
       <div className="relative z-10 flex min-h-screen">
         {/* Left Side: Cinematic Branding (Hidden on mobile) */}
-        <div className="hidden lg:flex w-1/2 flex-col justify-center px-24 border-r border-white/5">
+        <div className="hidden lg:flex w-1/2 flex-col justify-center px-24 border-r border-gray-300">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
             <div className="flex items-center gap-3 mb-12">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-2xl shadow-lg shadow-brand/20">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-2xl shadow-lg shadow-brand/30">
                 <img src="/favicon.png" alt="" />
               </div>
-              <span className="text-2xl font-black tracking-tighter uppercase">
+              <span className="text-2xl font-black tracking-tighter uppercase text-gray-900">
                 CODEKET
               </span>
             </div>
 
-            <h1 className="text-7xl font-black tracking-tight leading-[0.9] mb-8">
+            <h1 className="text-7xl font-black tracking-tight leading-[0.9] mb-8 text-gray-900">
               Welcome
               <br />
               <span className="text-brand italic">back.</span>
             </h1>
 
-            <p className="text-xl text-white/50 font-medium leading-relaxed max-w-md">
+            <p className="text-xl text-gray-600 font-medium leading-relaxed max-w-md">
               Access your dashboard to manage your operations with precision and
               clarity.
             </p>
@@ -193,10 +193,10 @@ function Login() {
         <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-24 relative">
           <div className="w-full max-w-md space-y-12">
             <div className="lg:hidden flex items-center gap-2 mb-12">
-              <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center font-black text-lg">
+              <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center font-black text-lg text-white">
                 P
               </div>
-              <span className="text-lg font-black tracking-tighter uppercase">
+              <span className="text-lg font-black tracking-tighter uppercase text-gray-900">
                 CODEKET
               </span>
             </div>
@@ -205,11 +205,11 @@ function Login() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[40px] p-8 md:p-12 shadow-2xl relative"
+              className="bg-white border-2 border-gray-200 rounded-[40px] p-8 md:p-12 shadow-2xl shadow-gray-300/60 relative"
             >
               {loginMode === "password" && (
                 <div className="mb-10 text-center lg:text-left">
-                  <h2 className="text-3xl font-black tracking-tight text-white mb-2">
+                  <h2 className="text-3xl font-black tracking-tight text-gray-900 mb-2">
                     Sign In
                   </h2>
                 </div>
@@ -219,7 +219,7 @@ function Login() {
                   <div className="space-y-4">
                     <div className="relative">
                       <EnvelopeIcon
-                        className={`absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.email ? "text-error" : "text-white/20"}`}
+                        className={`absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.email ? "text-error" : "text-gray-400"}`}
                       />
                       <InputText
                         defaultValue={loginObj.email}
@@ -235,12 +235,12 @@ function Login() {
                             }));
                         }}
                         placeholder="Email Address"
-                        className={`pl-14 bg-white/5 focus:border-brand/50 rounded-full ${fieldErrors.email ? "border-error" : "border-white/10"}`}
+                        className={`pl-14 bg-gray-50 border-2 text-gray-900 focus:border-brand rounded-full ${fieldErrors.email ? "border-error" : "border-gray-300"}`}
                       />
                     </div>
                     <div className="relative">
                       <KeyIcon
-                        className={`absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.password ? "text-error" : "text-white/20"}`}
+                        className={`absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.password ? "text-error" : "text-gray-400"}`}
                       />
                       <InputText
                         defaultValue={loginObj.password}
@@ -256,7 +256,7 @@ function Login() {
                             }));
                         }}
                         placeholder="Password"
-                        className={`pl-14 bg-white/5 focus:border-brand/50 rounded-full ${fieldErrors.password ? "border-error" : "border-white/10"}`}
+                        className={`pl-14 bg-gray-50 text-gray-900 focus:border-brand/50 rounded-full ${fieldErrors.password ? "border-error" : "border-gray-200"}`}
                       />
                       <button
                         type="button"
@@ -264,9 +264,9 @@ function Login() {
                         onClick={() => setShowPassword((prev) => !prev)}
                       >
                         {showPassword ? (
-                          <EyeSlashIcon className="h-5 w-5 text-white/20 hover:text-white/40 transition-colors" />
+                          <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
                         ) : (
-                          <EyeIcon className="h-5 w-5 text-white/20 hover:text-white/40 transition-colors" />
+                          <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
                         )}
                       </button>
                     </div>
@@ -275,7 +275,7 @@ function Login() {
                   <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest px-1">
                     <Link
                       to="/forgot-password"
-                      className="text-white/30 hover:text-brand transition-colors"
+                      className="text-gray-500 hover:text-brand transition-colors font-semibold"
                     >
                       Forgot Credentials?
                     </Link>
@@ -320,11 +320,11 @@ function Login() {
             </motion.div>
 
             <div className="text-center">
-              <p className="text-white/30 font-medium">
+              <p className="text-gray-600 font-medium">
                 New to the platform?{" "}
                 <Link
                   to="/register"
-                  className="text-brand font-black hover:underline"
+                  className="text-brand font-black hover:text-brand-hover hover:underline"
                 >
                   Create Account
                 </Link>
@@ -344,7 +344,7 @@ function Login() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
       />
     </div>
   );

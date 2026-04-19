@@ -99,43 +99,43 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#050505] text-white font-sans selection:bg-brand/30">
+    <div className="relative min-h-screen bg-stone-50 text-gray-900 font-sans selection:bg-brand/30">
       {/* Immersive Background Engine */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-500/5 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-500/10 rounded-full blur-[120px]" />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
             backgroundSize: "50px 50px",
           }}
         />
       </div>
 
       <div className="relative z-10 flex min-h-screen">
-        <div className="hidden lg:flex w-1/2 flex-col justify-center px-24 border-r border-white/5">
+        <div className="hidden lg:flex w-1/2 flex-col justify-center px-24 border-r border-gray-300">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
             <div className="flex items-center gap-3 mb-12">
-              <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center font-black text-2xl">
+              <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-brand/30">
                 P
               </div>
-              <span className="text-2xl font-black tracking-tighter uppercase">
+              <span className="text-2xl font-black tracking-tighter uppercase text-gray-900">
                 CODEKET
               </span>
             </div>
 
-            <h1 className="text-6xl font-black tracking-tight leading-[0.9] mb-8">
+            <h1 className="text-6xl font-black tracking-tight leading-[0.9] mb-8 text-gray-900">
               Vault
               <br />
               <span className="text-brand italic">Recovery.</span>
             </h1>
 
-            <p className="text-lg text-white/50 font-medium leading-relaxed max-w-md">
+            <p className="text-lg text-gray-600 font-medium leading-relaxed max-w-md">
               Securely reset your credentials through our multi-factor recovery
               system.
             </p>
@@ -147,15 +147,15 @@ function ForgotPassword() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[40px] p-8 md:p-12 shadow-2xl relative"
+              className="bg-white border-2 border-gray-200 rounded-[40px] p-8 md:p-12 shadow-2xl shadow-gray-300/60 relative"
             >
               <div className="mb-10 text-center lg:text-left transition-all">
-                <h2 className="text-3xl font-black tracking-tight text-white mb-2">
+                <h2 className="text-3xl font-black tracking-tight text-gray-900 mb-2">
                   {step === 1 && "Identity"}
                   {step === 2 && "Verification"}
                   {step === 3 && "Success"}
                 </h2>
-                <p className="text-white/40 font-medium">
+                <p className="text-gray-600 font-semibold">
                   {step === 1 && "Enter your registered email address"}
                   {step === 2 && "Confirm security challenge details"}
                   {step === 3 && "Credentials successfully updated"}
@@ -173,7 +173,7 @@ function ForgotPassword() {
                     className="space-y-6"
                   >
                     <div className="relative">
-                      <EnvelopeIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                      <EnvelopeIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                       <InputText
                         type="email"
                         defaultValue={email}
@@ -182,7 +182,7 @@ function ForgotPassword() {
                         labelTitle=""
                         updateFormValue={({ value }) => setEmail(value)}
                         placeholder="Email Address"
-                        className="pl-14 bg-white/5 border-white/10 focus:border-brand/50 rounded-full"
+                        className="pl-14 bg-gray-50 border-2 text-gray-900 border-gray-300 focus:border-brand rounded-full shadow-inner"
                       />
                     </div>
 
@@ -191,10 +191,10 @@ function ForgotPassword() {
                     <button
                       type="submit"
                       disabled={loading || !email}
-                      className="w-full bg-white text-black hover:bg-white/90 disabled:opacity-20 font-black py-4 rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl"
+                      className="w-full bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-20 font-black py-4 rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl"
                     >
                       {loading ? (
-                        <span className="loading loading-spinner text-black"></span>
+                        <span className="loading loading-spinner text-white"></span>
                       ) : (
                         <>
                           Continue{" "}
@@ -205,7 +205,7 @@ function ForgotPassword() {
                     <div className="text-center pt-4">
                       <Link
                         to="/login"
-                        className="text-white/30 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                        className="text-gray-500 hover:text-gray-900 transition-colors text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
                       >
                         <ArrowLeftIcon className="w-3 h-3" /> Back to Sign In
                       </Link>
@@ -225,11 +225,11 @@ function ForgotPassword() {
                     <div className="space-y-6">
                       {securityQuestions.map((sq, index) => (
                         <div key={index} className="space-y-3">
-                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 ml-1">
                             Challenge {index + 1}
                           </label>
-                          <div className="p-4 bg-white/5 border border-white/10 rounded-3xl">
-                            <p className="text-sm font-bold text-white/60">
+                          <div className="p-4 bg-gray-100 border-2 border-gray-300 rounded-3xl">
+                            <p className="text-sm font-bold text-gray-800">
                               {sq.question}
                             </p>
                           </div>
@@ -239,21 +239,21 @@ function ForgotPassword() {
                             onChange={(e) =>
                               handleAnswerChange(index, e.target.value)
                             }
-                            className="w-full bg-white/5 border border-white/10 rounded-full py-4 px-6 focus:outline-none focus:border-brand/50 text-white font-bold transition-all"
+                            className="w-full bg-gray-50 border-2 border-gray-300 rounded-full py-4 px-6 focus:outline-none focus:border-brand text-gray-900 font-bold transition-all shadow-inner"
                             placeholder="Your Answer"
                             required
                           />
                         </div>
                       ))}
 
-                      <div className="pt-4 space-y-4 border-t border-white/5">
+                      <div className="pt-4 space-y-4 border-t-2 border-gray-300">
                         <div className="relative">
-                          <KeyIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                          <KeyIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                           <input
                             type="password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-full py-4 pl-14 pr-6 focus:outline-none focus:border-brand/50 text-white font-bold transition-all"
+                            className="w-full bg-gray-50 border-2 border-gray-300 rounded-full py-4 pl-14 pr-6 focus:outline-none focus:border-brand text-gray-900 font-bold transition-all shadow-inner"
                             placeholder="New Secure Password"
                             required
                             minLength={6}
@@ -263,7 +263,7 @@ function ForgotPassword() {
                           type="password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-full py-4 px-6 focus:outline-none focus:border-brand/50 text-white font-bold transition-all"
+                          className="w-full bg-gray-50 border-2 border-gray-300 rounded-full py-4 px-6 focus:outline-none focus:border-brand text-gray-900 font-bold transition-all shadow-inner"
                           placeholder="Confirm New Password"
                           required
                           minLength={6}
@@ -298,16 +298,16 @@ function ForgotPassword() {
                       <CheckCircleIcon className="w-10 h-10 text-success" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-black text-white mb-2">
+                      <h3 className="text-xl font-black text-gray-900 mb-2">
                         System Updated
                       </h3>
-                      <p className="text-white/40 text-sm font-medium">
+                      <p className="text-gray-600 text-sm font-semibold">
                         Your password has been successfully reset. You can now
                         securely access your account.
                       </p>
                     </div>
                     <Link to="/login" className="block">
-                      <button className="w-full bg-white text-black font-black py-4 rounded-full shadow-xl hover:scale-105 transition-all">
+                      <button className="w-full bg-gray-900 text-white font-black py-4 rounded-full shadow-2xl hover:bg-gray-800 transition-all">
                         Sign In Now
                       </button>
                     </Link>

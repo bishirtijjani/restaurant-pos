@@ -147,6 +147,7 @@ const BrandSettings = () => {
       setFormData({
         ...settings,
         ...settings.branding,
+        restaurantName: org.name || "", // <-- Load from org.name
         paymentGateways: settings.paymentGateways || {
           stripe: { enabled: false, publishableKey: "", secretKey: "", accountId: "" },
         },

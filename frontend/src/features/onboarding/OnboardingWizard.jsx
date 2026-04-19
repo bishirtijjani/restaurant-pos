@@ -135,11 +135,11 @@ const OnboardingWizard = () => {
       {/* Background Engine */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-brand/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-500/10 rounded-full blur-[120px]" />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
             backgroundSize: "60px 60px",
           }}
         />
@@ -154,7 +154,7 @@ const OnboardingWizard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-2xl md:rounded-[40px] p-6 md:p-12 shadow-2xl"
+              className="bg-white border border-gray-200 rounded-2xl md:rounded-[40px] p-6 md:p-12 shadow-2xl shadow-gray-300/60"
             >
               <div className="flex flex-col md:flex-row gap-8 md:gap-16">
                 <div className="flex-1 space-y-6 md:space-y-8">
@@ -162,12 +162,12 @@ const OnboardingWizard = () => {
                     <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-brand mb-3 md:mb-4 block">
                       Initialization
                     </span>
-                    <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-3 md:mb-4 leading-tight">
+                    <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gray-900 mb-3 md:mb-4 leading-tight">
                       Name your
                       <br />
                       restaurant.
                     </h2>
-                    <p className="text-white/40 text-sm md:text-lg font-medium leading-relaxed">
+                    <p className="text-gray-600 text-sm md:text-lg font-medium leading-relaxed">
                       Every great experience starts with an identity. How should
                       we refer to your space?
                     </p>
@@ -175,11 +175,11 @@ const OnboardingWizard = () => {
 
                   <div className="space-y-4 md:space-y-6">
                     <div className="relative">
-                      <BuildingStorefrontIcon className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 text-white/20" />
+                      <BuildingStorefrontIcon className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 text-gray-500" />
                       <input
                         type="text"
                         placeholder="e.g. Blue Lagoon Bistro"
-                        className="w-full bg-white/5 border border-white/10 rounded-full py-4 md:py-6 pl-12 md:pl-16 pr-4 md:pr-6 focus:outline-none focus:border-brand/50 text-base md:text-xl font-bold placeholder:text-white/10 transition-all"
+                        className="w-full bg-gray-50 border-2 border-gray-200 rounded-full py-4 md:py-6 pl-12 md:pl-16 pr-4 md:pr-6 focus:outline-none focus:border-brand text-base md:text-xl font-bold text-gray-900 placeholder:text-gray-500 transition-all shadow-inner"
                         value={data.storeName}
                         onChange={(e) =>
                           updateData({ storeName: e.target.value })
@@ -196,7 +196,7 @@ const OnboardingWizard = () => {
                           className={`py-3 md:py-4 rounded-full border-2 font-bold text-[10px] md:text-xs uppercase tracking-wide md:tracking-widest transition-all ${
                             data.storeType === type
                               ? "border-brand bg-brand/10 text-brand"
-                              : "border-white/5 bg-white/5 text-white/20 hover:border-white/20"
+                              : "border-gray-300 bg-gray-100 text-gray-700 hover:border-gray-400 hover:bg-gray-200"
                           }`}
                         >
                           {type}
@@ -208,16 +208,16 @@ const OnboardingWizard = () => {
                   <button
                     disabled={!data.storeName}
                     onClick={() => setCurrentStep(STEPS.MENU)}
-                    className="w-full bg-white text-black hover:bg-white/90 disabled:opacity-20 font-black py-4 md:py-6 rounded-full transition-all flex items-center justify-center gap-2 md:gap-3 text-base md:text-lg"
+                    className="w-full bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-20 font-black py-4 md:py-6 rounded-full transition-all flex items-center justify-center gap-2 md:gap-3 text-base md:text-lg"
                   >
                     Set Identity <ArrowRightIcon className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                 </div>
-                <div className="hidden md:flex w-72 items-center justify-center bg-white/5 rounded-full border border-white/10 relative overflow-hidden">
+                <div className="hidden md:flex w-72 items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-full border-2 border-gray-300 relative overflow-hidden shadow-inner">
                   <div className="text-center p-8">
-                    <BuildingStorefrontIcon className="w-24 h-24 text-brand opacity-20 mx-auto mb-6" />
-                    <div className="h-2 w-32 bg-white/10 rounded-full mx-auto mb-2" />
-                    <div className="h-2 w-20 bg-white/5 rounded-full mx-auto" />
+                    <BuildingStorefrontIcon className="w-24 h-24 text-brand/50 mx-auto mb-6" />
+                    <div className="h-2 w-32 bg-gray-300 rounded-full mx-auto mb-2" />
+                    <div className="h-2 w-20 bg-gray-200 rounded-full mx-auto" />
                   </div>
                 </div>
               </div>
@@ -231,28 +231,28 @@ const OnboardingWizard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-2xl md:rounded-[40px] p-6 md:p-12"
+              className="bg-white border border-gray-200 rounded-2xl md:rounded-[40px] p-6 md:p-12 shadow-2xl shadow-gray-300/60"
             >
               <div className="max-w-xl mx-auto space-y-6 md:space-y-12">
                 <div className="text-center">
                   <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-brand mb-3 md:mb-4 block">
                     Organization
                   </span>
-                  <h2 className="text-2xl md:text-4xl font-black text-white mb-3 md:mb-4">
+                  <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-3 md:mb-4">
                     First Category
                   </h2>
-                  <p className="text-white/40 text-sm md:text-base font-medium">
+                  <p className="text-gray-600 text-sm md:text-base font-medium">
                     Categories help your kitchen team stay organized. What's the
                     main focus of your menu?
                   </p>
                 </div>
 
                 <div className="relative">
-                  <RectangleStackIcon className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 text-white/20" />
+                  <RectangleStackIcon className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 text-gray-500" />
                   <input
                     type="text"
                     placeholder="e.g. Signature Mains"
-                    className="w-full bg-white/5 border border-white/10 rounded-full py-4 md:py-6 pl-12 md:pl-16 pr-4 md:pr-6 focus:outline-none focus:border-brand/50 text-base md:text-xl font-bold placeholder:text-white/10"
+                    className="w-full bg-gray-50 border-2 border-gray-200 rounded-full py-4 md:py-6 pl-12 md:pl-16 pr-4 md:pr-6 focus:outline-none focus:border-brand text-base md:text-xl font-bold text-gray-900 placeholder:text-gray-500 shadow-inner"
                     value={data.categoryName}
                     onChange={(e) =>
                       updateData({ categoryName: e.target.value })
@@ -264,14 +264,14 @@ const OnboardingWizard = () => {
                 <div className="grid grid-cols-2 gap-3 md:gap-4">
                   <button
                     onClick={() => setCurrentStep(STEPS.BRAND)}
-                    className="py-4 md:py-6 rounded-full border border-white/10 font-black uppercase tracking-widest text-white/40 hover:bg-white/5 transition-all text-sm md:text-base"
+                    className="py-4 md:py-6 rounded-full border-2 border-gray-300 font-black uppercase tracking-widest text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all text-sm md:text-base"
                   >
                     Back
                   </button>
                   <button
                     disabled={!data.categoryName}
                     onClick={() => setCurrentStep(STEPS.ITEM)}
-                    className="py-4 md:py-6 rounded-full bg-brand text-white font-black uppercase tracking-widest hover:bg-brand-hover transition-all shadow-xl shadow-brand/20 text-sm md:text-base"
+                    className="py-4 md:py-6 rounded-full bg-brand text-white font-black uppercase tracking-widest hover:bg-brand-hover transition-all shadow-xl shadow-brand/30 text-sm md:text-base"
                   >
                     Confirm
                   </button>
@@ -287,17 +287,17 @@ const OnboardingWizard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-2xl md:rounded-[40px] p-6 md:p-12"
+              className="bg-white border border-gray-200 rounded-2xl md:rounded-[40px] p-6 md:p-12 shadow-2xl shadow-gray-300/60"
             >
               <div className="max-w-xl mx-auto space-y-6 md:space-y-10">
                 <div className="text-center">
                   <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-brand mb-3 md:mb-4 block">
                     Products
                   </span>
-                  <h2 className="text-2xl md:text-4xl font-black text-white mb-3 md:mb-4">
+                  <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-3 md:mb-4">
                     Add a Menu Item
                   </h2>
-                  <p className="text-white/40 text-sm md:text-base font-medium">
+                  <p className="text-gray-600 text-sm md:text-base font-medium">
                     Add your first signature menu item to see the system in
                     action.
                   </p>
@@ -306,14 +306,14 @@ const OnboardingWizard = () => {
                 <div className="space-y-4">
                   <div className="flex gap-3 md:gap-4 flex-col md:flex-row">
                     <div className="flex-[3]">
-                      <label className="text-[10px] md:text-xs uppercase tracking-wider text-white/40 mb-1 block">Item Name</label>
+                      <label className="text-[10px] md:text-xs uppercase tracking-wider text-gray-600 mb-1 block font-bold">Item Name</label>
                       <div className="relative">
-                        <PlusIcon className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 text-white/20" />
+                        <PlusIcon className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 text-gray-500" />
                         <input
                           type="text"
                           id="itemName"
                           placeholder="Item Name"
-                          className="w-full bg-white/5 border border-white/10 rounded-full py-3 md:py-4 pl-12 md:pl-16 pr-4 md:pr-6 focus:outline-none focus:border-brand/50 text-base md:text-lg font-bold"
+                          className="w-full bg-gray-50 border-2 border-gray-200 rounded-full py-3 md:py-4 pl-12 md:pl-16 pr-4 md:pr-6 focus:outline-none focus:border-brand text-base md:text-lg font-bold text-gray-900 placeholder:text-gray-500 shadow-inner"
                           value={data.itemName}
                           onChange={(e) =>
                             updateData({ itemName: e.target.value })
@@ -323,15 +323,15 @@ const OnboardingWizard = () => {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] md:text-xs uppercase tracking-wider text-white/40 mb-1 block">Price</label>
+                      <label className="text-[10px] md:text-xs uppercase tracking-wider text-gray-600 mb-1 block font-bold">Price</label>
                       <div className="relative">
-                        <span className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-white/20 font-bold text-sm md:text-base">
+                        <span className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm md:text-base">
                           $
                         </span>
                         <input
                           type="number"
                           id="itemPrice"
-                          className="w-full bg-white/5 border border-white/10 rounded-full py-3 md:py-4 pl-10 md:pl-10 pr-4 md:pr-6 focus:outline-none focus:border-brand/50 text-base md:text-lg font-bold"
+                          className="w-full bg-gray-50 border-2 border-gray-200 rounded-full py-3 md:py-4 pl-10 md:pl-10 pr-4 md:pr-6 focus:outline-none focus:border-brand text-base md:text-lg font-bold text-gray-900 shadow-inner"
                           value={data.itemPrice}
                           onChange={(e) =>
                             updateData({ itemPrice: e.target.value })
@@ -345,14 +345,14 @@ const OnboardingWizard = () => {
                 <div className="grid grid-cols-2 gap-3 md:gap-4">
                   <button
                     onClick={() => setCurrentStep(STEPS.MENU)}
-                    className="py-4 md:py-6 rounded-full border border-white/10 font-black uppercase tracking-widest text-white/40 hover:bg-white/5 transition-all text-sm md:text-base"
+                    className="py-4 md:py-6 rounded-full border-2 border-gray-300 font-black uppercase tracking-widest text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all text-sm md:text-base"
                   >
                     Back
                   </button>
                   <button
                     disabled={!data.itemName}
                     onClick={() => setCurrentStep(STEPS.DEMO)}
-                    className="py-4 md:py-6 rounded-full bg-white text-black font-black uppercase tracking-widest hover:bg-white/90 transition-all text-sm md:text-base"
+                    className="py-4 md:py-6 rounded-full bg-gray-900 text-white font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg text-sm md:text-base"
                   >
                     Preview Loop
                   </button>
@@ -374,11 +374,11 @@ const OnboardingWizard = () => {
                 <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-brand mb-2 md:mb-4 block">
                   The Core Loop
                 </span>
-                <h2 className="text-2xl md:text-4xl font-black text-white mb-2 md:mb-4">
+                <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 md:mb-4">
                   Pulse Test
                 </h2>
-                <p className="text-white/40 text-sm md:text-base font-medium max-w-lg mx-auto px-4">
-                  This is a <strong>Mini-POS</strong>. Select your item, check
+                <p className="text-gray-600 text-sm md:text-base font-medium max-w-lg mx-auto px-4">
+                  This is a <strong className="text-gray-900">Mini-POS</strong>. Select your item, check
                   ticket, and fire it to the kitchen to verify the link.
                 </p>
               </div>
@@ -401,7 +401,7 @@ const OnboardingWizard = () => {
               className="text-center space-y-6 md:space-y-12 px-4"
             >
               <div className="relative">
-                <div className="w-20 h-20 md:w-32 md:h-32 bg-brand/20 rounded-full flex items-center justify-center mx-auto border border-brand/30 relative z-10">
+                <div className="w-20 h-20 md:w-32 md:h-32 bg-brand/10 rounded-full flex items-center justify-center mx-auto border border-brand/20 relative z-10">
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{
@@ -416,10 +416,10 @@ const OnboardingWizard = () => {
               </div>
 
               <div className="space-y-2 md:space-y-4">
-                <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white">
+                <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gray-900">
                   Initializing...
                 </h2>
-                <p className="text-white/30 text-base md:text-xl font-medium max-w-sm mx-auto">
+                <p className="text-gray-600 text-base md:text-xl font-medium max-w-sm mx-auto">
                   Creating your store, configuring the menu, and calibrating
                   your workspace...
                 </p>

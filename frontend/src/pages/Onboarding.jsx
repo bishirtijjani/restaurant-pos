@@ -2,7 +2,7 @@ import OnboardingWizard from "../features/onboarding/OnboardingWizard";
 
 function OnboardingPage() {
   return (
-    <div className="min-h-screen bg-[#050505]">
+    <div className="min-h-screen bg-stone-50">
       <OnboardingWizard />
     </div>
   );
