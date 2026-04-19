@@ -12,6 +12,7 @@ import {
   ArrowRightIcon,
   ShoppingBagIcon,
   PresentationChartLineIcon,
+  ChevronLeftIcon,
 } from "@heroicons/react/24/outline";
 import { createStore } from "../stores/storeSlice";
 import { showNotification } from "../common/headerSlice";
@@ -25,6 +26,14 @@ const STEPS = {
   DEMO: 3,
   LAUNCHING: 4,
 };
+
+const STEP_CONFIG = [
+  { id: STEPS.BRAND, label: "Brand", icon: BuildingStorefrontIcon },
+  { id: STEPS.MENU, label: "Menu", icon: RectangleStackIcon },
+  { id: STEPS.ITEM, label: "Item", icon: PlusIcon },
+  { id: STEPS.DEMO, label: "Demo", icon: BoltIcon },
+  { id: STEPS.LAUNCHING, label: "Launch", icon: RocketLaunchIcon },
+];
 
 const OnboardingWizard = () => {
   const dispatch = useDispatch();
@@ -146,6 +155,89 @@ const OnboardingWizard = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-4xl px-4 md:px-6">
+        {/* Step Progress Indicator */}
+        <div className="mb-6 md:mb-8">
+          <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 md:p-6 shadow-xl shadow-gray-300/40">
+            {/* Progress Bar */}
+            <div className="relative mb-6">
+              <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 rounded-full -translate-y-1/2" />
+              <motion.div
+                className="absolute top-1/2 left-0 h-1 bg-brand rounded-full -translate-y-1/2 transition-all duration-500"
+                style={{ width: `${(currentStep / (STEP_CONFIG.length - 1)) * 100}%` }}
+              />
+            </div>
+
+            {/* Step Indicators */}
+            <div className="flex justify-between items-center relative">
+              {STEP_CONFIG.map((step, index) => {
+                const isCompleted = currentStep > step.id;
+                const isCurrent = currentStep === step.id;
+                const isClickable = currentStep > step.id; // Can go back to completed steps
+
+                return (
+                  <div key={step.id} className="flex flex-col items-center gap-2">
+                    <motion.button
+                      whileHover={isClickable ? { scale: 1.1 } : {}}
+                      whileTap={isClickable ? { scale: 0.95 } : {}}
+                      onClick={() => isClickable && setCurrentStep(step.id)}
+                      disabled={!isClickable && !isCurrent}
+                      className={`relative w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        isCompleted
+                          ? "bg-brand text-white shadow-lg shadow-brand/30 cursor-pointer"
+                          : isCurrent
+                            ? "bg-gray-900 text-white shadow-lg shadow-gray-900/30 ring-4 ring-gray-200"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <CheckCircleIcon className="w-5 h-5 md:w-6 md:h-6" />
+                      ) : (
+                        <step.icon className="w-5 h-5 md:w-6 md:h-6" />
+                      )}
+                      {isCurrent && (
+                        <motion.div
+                          layoutId="currentStep"
+                          className="absolute -inset-1 rounded-full border-2 border-brand/30"
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        />
+                      )}
+                    </motion.button>
+                    <span
+                      className={`text-[10px] md:text-xs font-black uppercase tracking-wider transition-colors ${
+                        isCompleted
+                          ? "text-brand"
+                          : isCurrent
+                            ? "text-gray-900"
+                            : "text-gray-400"
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Step Info & Back Button */}
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-2">
+                {currentStep > STEPS.BRAND && currentStep < STEPS.LAUNCHING && (
+                  <button
+                    onClick={() => setCurrentStep(currentStep - 1)}
+                    className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 font-bold text-xs uppercase tracking-wider transition-colors group"
+                  >
+                    <ChevronLeftIcon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                    Back
+                  </button>
+                )}
+              </div>
+              <span className="text-gray-500 font-semibold text-xs md:text-sm">
+                Step {currentStep + 1} of {STEP_CONFIG.length}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <AnimatePresence mode="wait">
           {/* Step 1: BRAND */}
           {currentStep === STEPS.BRAND && (
@@ -205,13 +297,15 @@ const OnboardingWizard = () => {
                     </div>
                   </div>
 
-                  <button
-                    disabled={!data.storeName}
-                    onClick={() => setCurrentStep(STEPS.MENU)}
-                    className="w-full bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-20 font-black py-4 md:py-6 rounded-full transition-all flex items-center justify-center gap-2 md:gap-3 text-base md:text-lg"
-                  >
-                    Set Identity <ArrowRightIcon className="w-4 h-4 md:w-5 md:h-5" />
-                  </button>
+                  <div className="flex gap-3 md:gap-4">
+                    <button
+                      disabled={!data.storeName}
+                      onClick={() => setCurrentStep(STEPS.MENU)}
+                      className="flex-1 bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-20 disabled:cursor-not-allowed font-black py-4 md:py-6 rounded-full transition-all flex items-center justify-center gap-2 md:gap-3 text-base md:text-lg"
+                    >
+                      Set Identity <ArrowRightIcon className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                  </div>
                 </div>
                 <div className="hidden md:flex w-72 items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-full border-2 border-gray-300 relative overflow-hidden shadow-inner">
                   <div className="text-center p-8">
@@ -389,6 +483,17 @@ const OnboardingWizard = () => {
                 categoryName={data.categoryName}
                 onOrderFired={handleLaunch}
               />
+
+              {/* Back Button for Demo Step */}
+              <div className="flex justify-center mt-4 md:mt-6">
+                <button
+                  onClick={() => setCurrentStep(STEPS.ITEM)}
+                  className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold text-xs uppercase tracking-wider transition-colors group bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm hover:shadow-md"
+                >
+                  <ChevronLeftIcon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                  Back to Item Setup
+                </button>
+              </div>
             </motion.div>
           )}
 
