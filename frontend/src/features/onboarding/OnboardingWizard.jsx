@@ -46,7 +46,6 @@ const OnboardingWizard = () => {
   // Unified data state
   const [data, setData] = useState({
     storeName: "",
-    storeType: "Cafe",
     categoryName: "",
     itemName: "",
     itemPrice: "12.00",
@@ -280,21 +279,6 @@ const OnboardingWizard = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 md:gap-4">
-                      {["Cafe", "Fine Dining", "Quick Service"].map((type) => (
-                        <button
-                          key={type}
-                          onClick={() => updateData({ storeType: type })}
-                          className={`py-3 md:py-4 rounded-full border-2 font-bold text-[10px] md:text-xs uppercase tracking-wide md:tracking-widest transition-all ${
-                            data.storeType === type
-                              ? "border-brand bg-brand/10 text-brand"
-                              : "border-gray-300 bg-gray-100 text-gray-700 hover:border-gray-400 hover:bg-gray-200"
-                          }`}
-                        >
-                          {type}
-                        </button>
-                      ))}
-                    </div>
                   </div>
 
                   <div className="flex gap-3 md:gap-4">

@@ -1,7 +1,7 @@
 // frontend/src/features/orders/mobile/MenuTab.jsx
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Search, X, Heart, Clock, Star } from "lucide-react";
+import { Search, X, Heart, Clock, Star, Plus, ChevronRight } from "lucide-react";
 import { useHaptic } from "../../../hooks/useHaptic";
 import { useLongPress } from "../../../hooks/useLongPress";
 import { fetchAllMenuItems } from "../../menuItems/menuItemsSlice";
@@ -77,9 +77,14 @@ const MenuItemCard = ({
             {currency}
             {item.price.toFixed(2)}
           </span>
-          {hasAddOns && (
-            <span className="badge badge-secondary badge-xs">+</span>
-          )}
+          <div className="flex items-center gap-1">
+            {hasAddOns && (
+              <span className="badge badge-secondary badge-xs">+</span>
+            )}
+            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+              <Plus size={12} className="text-white" />
+            </div>
+          </div>
         </div>
         
         {/* Dietary Indicators */}
@@ -283,34 +288,42 @@ const MenuTab = () => {
         )}
 
         {/* Dietary Filters */}
-        <div className="mt-3 flex overflow-x-auto scrollbar-hide gap-2 pb-1">
-          <button
-            onClick={() => { haptic.light(); setDietaryFilter("All"); }}
-            className={`btn btn-xs rounded-full ${dietaryFilter === "All" ? "btn-primary" : "btn-outline border-base-300"}`}
-          >
-            All Diets
-          </button>
-          <button
-            onClick={() => { haptic.light(); setDietaryFilter("Allergen-Free"); }}
-            className={`btn btn-xs rounded-full ${dietaryFilter === "Allergen-Free" ? "btn-success" : "btn-outline border-base-300"}`}
-          >
-            Allergen-Free
-          </button>
-          {Object.keys(DIETARY_TAG_STYLES).map(tag => (
+        <div className="mt-3 relative">
+          <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-1 pr-8">
             <button
-              key={tag}
-              onClick={() => { haptic.light(); setDietaryFilter(tag); }}
-              className={`btn btn-xs rounded-full ${dietaryFilter === tag ? "btn-secondary" : "btn-outline border-base-300"}`}
+              onClick={() => { haptic.light(); setDietaryFilter("All"); }}
+              className={`btn btn-xs rounded-full ${dietaryFilter === "All" ? "btn-primary" : "btn-outline border-base-300"}`}
             >
-              {DIETARY_TAG_STYLES[tag].icon} {tag}
+              All Diets
             </button>
-          ))}
+            <button
+              onClick={() => { haptic.light(); setDietaryFilter("Allergen-Free"); }}
+              className={`btn btn-xs rounded-full ${dietaryFilter === "Allergen-Free" ? "btn-success" : "btn-outline border-base-300"}`}
+            >
+              Allergen-Free
+            </button>
+            {Object.keys(DIETARY_TAG_STYLES).map(tag => (
+              <button
+                key={tag}
+                onClick={() => { haptic.light(); setDietaryFilter(tag); }}
+                className={`btn btn-xs rounded-full ${dietaryFilter === tag ? "btn-secondary" : "btn-outline border-base-300"}`}
+              >
+                {DIETARY_TAG_STYLES[tag].icon} {tag}
+              </button>
+            ))}
+          </div>
+          {/* Scroll indicator */}
+          <div className="absolute right-0 top-0 bottom-0 flex items-center">
+            <div className="bg-gradient-to-l from-base-100 via-base-100/80 to-transparent pl-6 pr-1 py-1 flex items-center">
+              <ChevronRight size={16} className="text-base-content/40 animate-pulse" />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Categories */}
-      <div className="bg-base-100 px-4 py-3 shadow-sm overflow-x-auto scrollbar-hide snap-scroll">
-        <div className="flex gap-2 min-w-max">
+      <div className="bg-base-100 px-4 py-3 shadow-sm relative">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-scroll pr-8 pb-1">
           <button
             onClick={() => handleCategoryChange("All")}
             className={`btn btn-sm flex-shrink-0 ${
@@ -330,6 +343,12 @@ const MenuTab = () => {
               {category.name}
             </button>
           ))}
+        </div>
+        {/* Scroll indicator */}
+        <div className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none">
+          <div className="bg-gradient-to-l from-base-100 via-base-100/90 to-transparent pl-8 pr-2 py-2 flex items-center">
+            <ChevronRight size={18} className="text-base-content/40 animate-pulse" />
+          </div>
         </div>
       </div>
 
@@ -374,7 +393,7 @@ const MenuTab = () => {
         )}
 
       {/* Menu Items Grid */}
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto p-3 pb-20">
         <div className="grid grid-cols-3 gap-2">
           {filteredItems.map((item) => (
             <MenuItemCard
@@ -388,6 +407,15 @@ const MenuTab = () => {
             />
           ))}
         </div>
+        {/* End of list indicator */}
+        {filteredItems.length > 0 && (
+          <div className="text-center py-6 text-base-content/30">
+            <div className="flex items-center justify-center gap-2 text-xs">
+              <span>End of menu</span>
+              <span className="w-8 h-px bg-base-content/20"></span>
+            </div>
+          </div>
+        )}
 
         {/* Empty State */}
         {filteredItems.length === 0 && (
