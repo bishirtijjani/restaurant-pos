@@ -79,8 +79,39 @@ function Header() {
   // Show store badge only for multi-store users
   const showStoreBadge = user?.stores?.length > 1 && activeStore?.name;
 
+  // Check if impersonating
+  const impersonatingOrg = localStorage.getItem("impersonatingOrg");
+  const impersonatingOrgName = localStorage.getItem("impersonatingOrgName");
+  const isImpersonating = !!impersonatingOrg && user?.isSuperAdmin;
+
+  const exitImpersonation = () => {
+    const originalStoreId = localStorage.getItem("originalStoreId");
+    localStorage.removeItem("impersonatingOrg");
+    localStorage.removeItem("impersonatingOrgName");
+    localStorage.removeItem("originalStoreId");
+    if (originalStoreId) {
+      localStorage.setItem("activeStoreId", originalStoreId);
+    }
+    window.location.href = "/app/platform-admin";
+  };
+
   return (
     <>
+      {/* Impersonation Banner */}
+      {isImpersonating && (
+        <div className="bg-warning text-warning-content px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">👁️ Viewing as owner of: {impersonatingOrgName}</span>
+            <span className="text-sm opacity-80">(You can perform any action in this restaurant)</span>
+          </div>
+          <button 
+            onClick={exitImpersonation}
+            className="btn btn-sm btn-ghost bg-warning-content/10 hover:bg-warning-content/20"
+          >
+            Exit View
+          </button>
+        </div>
+      )}
       <div className="navbar sticky top-0 bg-base-100 z-[90] shadow-md">
         {/* Navbar Start: Left side items */}
         <div className="flex-1 flex items-center gap-2 overflow-hidden">

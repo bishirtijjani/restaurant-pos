@@ -9,7 +9,7 @@ import {
   XCircle,
   Filter,
 } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   updateReservationStatus,
   checkInReservation,
@@ -149,6 +149,10 @@ const DraggableReservation = ({
 const ReservationSidebar = ({ reservations, onAddReservation }) => {
   const dispatch = useDispatch();
   const [filter, setFilter] = useState("upcoming"); // upcoming, seated, all
+
+  const timezone = useSelector(
+    (state) => state.organization?.currentOrganization?.brandSettings?.timezone || "UTC"
+  );
 
   const filteredReservations = useMemo(() => {
     if (!reservations) return [];

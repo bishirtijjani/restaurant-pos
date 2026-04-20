@@ -43,7 +43,9 @@ const seedData = async () => {
       }
     });
 
-    // 2. Create Super Admin User
+// look deeply at the seedRealisticData script, we need a new one to create another restaurant for demos, this one would be full with other things so it has history, a weeks history is enough, so we can view analytics, and all the other settings need to be set such as brand settings, floors and tables, suppliers, inventory, some menu items with ingredients and some without, expenses, customers and their data and some of them already ordered,  etc also there are other data we could set that would make it realistic such as already set orders, kitchen etc, how do you go about it, it has to be realistic no lipsum or nonsense data. you need to understand the controllers not just the models so it can be realistic and no steps get skipped
+
+// 2. Create Super Admin User
     const adminEmail = "admin@artisangrill.com";
     const password = "password123";
     const adminUser = new User({

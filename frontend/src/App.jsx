@@ -16,10 +16,12 @@ import { fetchSettings } from "./features/settings/generalSettings/generalSettin
 import { getCurrentUser, setUserFromToken } from "./app/authSlice";
 import SuspenseContent from "./containers/SuspenseContent";
 import StoreGuard from "./containers/StoreGuard";
+import SuperAdminGuard from "./containers/SuperAdminGuard";
 import ModalLayout from "./containers/ModalLayout";
 import { useOfflinePrefetch } from "./features/common/hooks/useOfflinePrefetch";
 
 const Layout = lazy(() => import("./containers/Layout"));
+const SuperAdminLayout = lazy(() => import("./containers/SuperAdminLayout"));
 const Login = lazy(() => import("./pages/Login"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -155,6 +157,14 @@ function App() {
               <StoreGuard>
                 <Layout />
               </StoreGuard>
+            }
+          />
+          <Route
+            path="/super-admin/*"
+            element={
+              <SuperAdminGuard>
+                <SuperAdminLayout />
+              </SuperAdminGuard>
             }
           />
           <Route

@@ -5,6 +5,7 @@ import { Suspense, lazy } from "react"; // React Suspense for lazy-loading compo
 import SuspenseContent from "./SuspenseContent"; // Fallback content shown during lazy loading
 import { useSelector } from "react-redux"; // Hook for accessing the Redux store
 import { useEffect, useRef } from "react"; // React hooks for side effects and DOM references
+import SuperAdminGuard from "./SuperAdminGuard"; // Guard for Super Admin only routes
 
 const Page404 = lazy(() => import("../pages/protected/404")); // Lazily load the 404 error page
 
@@ -35,12 +36,20 @@ function PageContent() {
           <Routes>
             {/* Map over routes array to dynamically create Route components */}
             {routes.map((route, key) => {
+              const RouteComponent = route.component;
+              const element = route.requireSuperAdmin ? (
+                <SuperAdminGuard>
+                  <RouteComponent />
+                </SuperAdminGuard>
+              ) : (
+                <RouteComponent />
+              );
               return (
                 <Route
                   key={key} // Unique key for each route
                   exact={true} // Match exact paths
                   path={`${route.path}`} // Path defined in the route object
-                  element={<route.component />} // Component to render for the route
+                  element={element} // Component to render for the route
                 />
               );
             })}

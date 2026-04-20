@@ -1,5 +1,6 @@
 // frontend/src/routes/index.jsx
 import { lazy } from "react";
+import SuperAdminGuard from "../containers/SuperAdminGuard";
 
 const Page404 = lazy(() => import("../pages/protected/404"));
 const Dashboard = lazy(() => import("../pages/protected/Dashboard"));
@@ -94,6 +95,12 @@ const MockAnalyticsPage = lazy(
 const PlatformAdminDashboard = lazy(
   () => import("../features/platformAdmin"),
 );
+const SuperAdminLayout = lazy(
+  () => import("../containers/SuperAdminLayout"),
+);
+const SuperAdminDashboard = lazy(
+  () => import("../features/platformAdmin/SuperAdminDashboard"),
+);
 
 const routes = [
   { path: "/dashboard", component: Dashboard },
@@ -105,8 +112,8 @@ const routes = [
   { path: "/mock-inventory", component: MockInventoryPage },
   { path: "/mock-analytics", component: MockAnalyticsPage },
 
-  { path: "/platform-admin", component: PlatformAdminDashboard },
-  { path: "/platform/health", component: PlatformHealthDashboard },
+  { path: "/platform-admin", component: PlatformAdminDashboard, requireSuperAdmin: true },
+  { path: "/platform/health", component: PlatformHealthDashboard, requireSuperAdmin: true },
   { path: "/settings", component: SettingsHub },
   { path: "/settings/profile", component: ProfileSettings },
   { path: "/settings/general", component: GeneralSettings },

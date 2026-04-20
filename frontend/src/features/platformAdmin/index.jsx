@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useMemo } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
 import axios from "axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { showNotification } from "../common/headerSlice";
+import { setActiveStore, setActiveStoreDetails } from "../common/storeSlice";
+import { useNavigate } from "react-router-dom";
 import { 
   MagnifyingGlassIcon, 
   BuildingOfficeIcon, 
   UserIcon, 
-  ChartBarIcon 
+  ChartBarIcon,
+  ArrowRightOnRectangleIcon
 } from "@heroicons/react/24/outline";
 
 function PlatformAdminDashboard() {
@@ -15,7 +18,10 @@ function PlatformAdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPlan, setFilterPlan] = useState("all");
+  const [impersonating, setImpersonating] = useState(null);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { activeStoreId } = useSelector((state) => state.store);
 
   const fetchOrgs = async () => {
     try {
@@ -55,6 +61,42 @@ function PlatformAdminDashboard() {
     } catch (error) {
       console.error("Error updating plan", error);
       dispatch(showNotification({ message: "Failed to update plan", status: 0 }));
+    }
+  };
+
+  const handleImpersonate = async (org) => {
+    try {
+      // Save original context before impersonating
+      const originalStoreId = localStorage.getItem("activeStoreId");
+      localStorage.setItem("originalStoreId", originalStoreId || "");
+      localStorage.setItem("impersonatingOrg", org._id);
+      localStorage.setItem("impersonatingOrgName", org.name);
+
+      // Get the first store of this organization
+      const res = await axios.get(`/api/stores?organizationId=${org._id}`);
+      const stores = res.data.data || [];
+      
+      if (stores.length === 0) {
+        dispatch(showNotification({ message: "This organization has no stores", status: 0 }));
+        return;
+      }
+
+      const targetStore = stores[0];
+      
+      // Set the active store to impersonate
+      dispatch(setActiveStore(targetStore._id));
+      dispatch(setActiveStoreDetails(targetStore));
+      setImpersonating(org);
+      
+      dispatch(showNotification({ 
+        message: `Now viewing as owner of ${org.name}`, 
+        status: 1 
+      }));
+      
+      navigate("/app/dashboard");
+    } catch (error) {
+      console.error("Error impersonating", error);
+      dispatch(showNotification({ message: "Failed to enter organization", status: 0 }));
     }
   };
 
@@ -154,21 +196,31 @@ function PlatformAdminDashboard() {
                         </div>
                       </td>
                       <td className="text-right">
-                        {org.status === "active" ? (
+                        <div className="flex gap-2 justify-end">
                           <button
-                            className="btn btn-error btn-xs btn-outline"
-                            onClick={() => handleUpdateStatus(org._id, "suspended", org.name)}
+                            className="btn btn-primary btn-xs btn-outline"
+                            onClick={() => handleImpersonate(org)}
+                            title="Enter this restaurant as owner"
                           >
-                            Suspend
+                            <ArrowRightOnRectangleIcon className="w-3 h-3" />
+                            Enter
                           </button>
-                        ) : (
-                          <button
-                            className="btn btn-success btn-xs"
-                            onClick={() => handleUpdateStatus(org._id, "active", org.name)}
-                          >
-                            Activate
-                          </button>
-                        )}
+                          {org.status === "active" ? (
+                            <button
+                              className="btn btn-error btn-xs btn-outline"
+                              onClick={() => handleUpdateStatus(org._id, "suspended", org.name)}
+                            >
+                              Suspend
+                            </button>
+                          ) : (
+                            <button
+                              className="btn btn-success btn-xs"
+                              onClick={() => handleUpdateStatus(org._id, "active", org.name)}
+                            >
+                              Activate
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )

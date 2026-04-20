@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const path = require("path");
 const User = require("../models/User");
 
-// Load env vars
-dotenv.config({ path: ".env" });
+// Load env vars from backend directory when running from project root
+const envPath = path.resolve(__dirname, "../.env");
+dotenv.config({ path: envPath });
 
 const makeSuperAdmin = async () => {
   try {
