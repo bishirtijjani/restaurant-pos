@@ -8,6 +8,7 @@ import {
   Minus,
   StickyNote,
   ShoppingCart,
+  AlertTriangle,
 } from "lucide-react";
 import { useHaptic } from "../../../hooks/useHaptic";
 import {
@@ -244,8 +245,8 @@ const CartTab = () => {
                           );
                         })}
                         {allAllergens.length > 0 && (
-                          <span className="badge badge-xs bg-red-100 text-red-800 border-red-200 font-bold px-1" title={allAllergens.join(", ")}>
-                            ⚠️ ALLERGY
+                          <span className="badge badge-xs bg-red-100 text-red-800 border-red-200 font-bold px-1 flex items-center gap-1" title={allAllergens.join(", ")}>
+                            <AlertTriangle className="w-3 h-3" /> ALLERGY
                           </span>
                         )}
                       </div>

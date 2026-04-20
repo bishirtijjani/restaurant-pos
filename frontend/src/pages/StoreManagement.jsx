@@ -95,28 +95,28 @@ function StoreManagement() {
             return (
               <div
                 key={k}
-                className={`card w-full bg-base-100 shadow-xl border transition-all hover:shadow-2xl ${
+                className={`card w-full bg-base-100 shadow-xl border transition-all hover:shadow-2xl overflow-hidden ${
                   isCurrent ? "border-primary border-2" : "border-base-200"
                 }`}
               >
                 <div className="card-body">
-                  <h2 className="card-title flex justify-between">
-                    <div className="flex items-center gap-2">
-                      <BuildingStorefrontIcon className="w-6 h-6 text-primary" />
-                      <span className="truncate">{sData.name}</span>
+                  <h2 className="card-title flex justify-between min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <BuildingStorefrontIcon className="w-6 h-6 text-primary flex-shrink-0" />
+                      <span className="break-words">{sData.name}</span>
                     </div>
                     {isCurrent && (
                       <div className="badge badge-primary">Active</div>
                     )}
                   </h2>
-                  <p className="text-sm text-gray-500 flex items-center gap-1">
-                    <MapPinIcon className="w-4 h-4" />{" "}
-                    {sData.location || "No location set"}
+                  <p className="text-sm text-gray-500 flex items-center gap-1 min-w-0">
+                    <MapPinIcon className="w-4 h-4 flex-shrink-0" />{" "}
+                    <span className="break-words">{sData.location || "No location set"}</span>
                   </p>
 
                   {/* Performance Sparkline */}
                   {liveData?.hourlyTrend && (
-                    <div className="h-16 w-full mt-4 -mx-2">
+                    <div className="h-16 w-full mt-4">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={liveData.hourlyTrend}>
                           <defs>

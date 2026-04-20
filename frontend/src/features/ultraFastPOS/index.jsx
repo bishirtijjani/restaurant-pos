@@ -22,6 +22,7 @@ import {
   DollarSign,
   CreditCard,
   Banknote,
+  AlertTriangle,
 } from "lucide-react";
 import { printerService } from "../../services/PrinterService";
 import { DIETARY_TAG_STYLES } from "../../utils/dietaryConstants";
@@ -613,7 +614,7 @@ const UltraFastPOS = () => {
                       ) : null;
                     })}
                     {item.allergens?.length > 0 && (
-                      <span className="text-xs text-error" title="Contains Allergens">⚠️</span>
+                      <AlertTriangle className="w-3 h-3 text-error flex-shrink-0" title="Contains Allergens" />
                     )}
                   </div>
                 )}

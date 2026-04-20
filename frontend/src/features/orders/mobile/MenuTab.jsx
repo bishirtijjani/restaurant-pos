@@ -1,7 +1,7 @@
 // frontend/src/features/orders/mobile/MenuTab.jsx
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Search, X, Heart, Clock, Star, Plus, ChevronRight } from "lucide-react";
+import { Search, X, Heart, Clock, Star, Plus, ChevronRight, Utensils, AlertTriangle, Search as SearchIcon } from "lucide-react";
 import { useHaptic } from "../../../hooks/useHaptic";
 import { useLongPress } from "../../../hooks/useLongPress";
 import { fetchAllMenuItems } from "../../menuItems/menuItemsSlice";
@@ -65,7 +65,7 @@ const MenuItemCard = ({
             className="w-full h-full object-cover"
           />
         ) : (
-          <span className="text-4xl opacity-30">🍽️</span>
+          <Utensils className="w-10 h-10 opacity-30" />
         )}
       </div>
 
@@ -98,7 +98,7 @@ const MenuItemCard = ({
               )
             })}
             {item.allergens?.length > 0 && (
-              <span className="text-[10px]" title="Contains Allergens">⚠️</span>
+              <AlertTriangle className="w-3 h-3 text-warning flex-shrink-0" title="Contains Allergens" />
             )}
           </div>
         )}
@@ -289,7 +289,10 @@ const MenuTab = () => {
 
         {/* Dietary Filters */}
         <div className="mt-3 relative">
-          <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-1 pr-8">
+          <div
+            className="flex overflow-x-auto gap-2 pb-1 pr-8 scrollbar-thin"
+            onTouchStart={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => { haptic.light(); setDietaryFilter("All"); }}
               className={`btn btn-xs rounded-full ${dietaryFilter === "All" ? "btn-primary" : "btn-outline border-base-300"}`}
@@ -323,7 +326,10 @@ const MenuTab = () => {
 
       {/* Categories */}
       <div className="bg-base-100 px-4 py-3 shadow-sm relative">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-scroll pr-8 pb-1">
+        <div
+          className="flex gap-2 overflow-x-auto snap-scroll pr-8 pb-1 scrollbar-thin"
+          onTouchStart={(e) => e.stopPropagation()}
+        >
           <button
             onClick={() => handleCategoryChange("All")}
             className={`btn btn-sm flex-shrink-0 ${
@@ -361,7 +367,10 @@ const MenuTab = () => {
               <Star size={16} className="text-warning fill-warning" />
               <h3 className="font-semibold">Favorites</h3>
             </div>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-scroll pb-2">
+            <div
+              className="flex gap-3 overflow-x-auto snap-scroll pb-2 scrollbar-thin"
+              onTouchStart={(e) => e.stopPropagation()}
+            >
               {favoriteItemsList.map((item) => (
                 <div
                   key={item._id}
@@ -376,7 +385,7 @@ const MenuTab = () => {
                         className="w-full h-full object-cover rounded-lg"
                       />
                     ) : (
-                      <span className="text-3xl">🍽️</span>
+                      <Utensils className="w-8 h-8 opacity-30" />
                     )}
                   </div>
                   <div className="text-xs font-medium line-clamp-1">
@@ -420,7 +429,7 @@ const MenuTab = () => {
         {/* Empty State */}
         {filteredItems.length === 0 && (
           <div className="text-center py-12 text-base-content/50">
-            <div className="text-6xl mb-4">🔍</div>
+            <SearchIcon className="w-16 h-16 mb-4 text-base-content/30" />
             <p className="text-lg font-medium">No items found</p>
             <p className="text-sm">Try adjusting your search or filters</p>
           </div>
@@ -445,9 +454,7 @@ const MenuTab = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-2xl flex items-center justify-center h-full">
-                    🍽️
-                  </span>
+                  <Utensils className="w-6 h-6 opacity-30" />
                 )}
               </div>
               <div>

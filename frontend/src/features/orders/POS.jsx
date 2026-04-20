@@ -15,6 +15,12 @@ import {
   Edit3,
   Tag,
   Printer,
+  Utensils,
+  AlertTriangle,
+  Check,
+  Lock,
+  ChevronRight,
+  Plus,
 } from "lucide-react";
 import { printerService } from "../../services/PrinterService";
 import {
@@ -76,34 +82,85 @@ const OrderTypeSelector = ({ orderType, setOrderType, disabled }) => (
   </div>
 );
 
+const DietaryFilter = ({ activeFilter, setActiveFilter, disabled }) => (
+  <div className="relative">
+    <div
+      className="flex overflow-x-auto gap-2 pb-2 pr-8 scrollbar-thin"
+      onTouchStart={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={() => setActiveFilter("All")}
+        disabled={disabled}
+        className={`btn btn-xs rounded-full flex-shrink-0 ${activeFilter === "All" ? "btn-primary" : "btn-outline border-base-300"}`}
+      >
+        All Diets
+      </button>
+      <button
+        onClick={() => setActiveFilter("Allergen-Free")}
+        disabled={disabled}
+        className={`btn btn-xs rounded-full flex-shrink-0 ${activeFilter === "Allergen-Free" ? "btn-success" : "btn-outline border-base-300"}`}
+      >
+        Allergen-Free
+      </button>
+      {Object.keys(DIETARY_TAG_STYLES).map(tag => (
+        <button
+          key={tag}
+          onClick={() => setActiveFilter(tag)}
+          disabled={disabled}
+          className={`btn btn-xs rounded-full flex-shrink-0 ${activeFilter === tag ? "btn-secondary" : "btn-outline border-base-300"}`}
+        >
+          {DIETARY_TAG_STYLES[tag].icon} {tag}
+        </button>
+      ))}
+    </div>
+    {/* Scroll indicator */}
+    <div className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none">
+      <div className="bg-gradient-to-l from-base-100 via-base-100/90 to-transparent pl-8 pr-2 py-2 flex items-center">
+        <ChevronRight size={18} className="text-base-content/40 animate-pulse" />
+      </div>
+    </div>
+  </div>
+);
+
 const CategoryFilter = ({
   activeCategory,
   setActiveCategory,
   categories,
   disabled,
 }) => (
-  <div className="flex overflow-x-auto space-x-2 pb-4 mb-4 scrollbar-thin">
-    <button
-      className={`btn btn-sm ${
-        activeCategory === "All" ? "btn-primary" : "btn-outline"
-      } flex-shrink-0`}
-      onClick={() => setActiveCategory("All")}
-      disabled={disabled}
+  <div className="relative">
+    <div
+      className="flex overflow-x-auto gap-2 pb-2 pr-8 scrollbar-thin"
+      onTouchStart={(e) => e.stopPropagation()}
     >
-      All
-    </button>
-    {categories.map((category) => (
       <button
-        key={category._id}
-        className={`btn btn-sm ${
-          activeCategory === category.name ? "btn-primary" : "btn-outline"
-        } flex-shrink-0`}
-        onClick={() => setActiveCategory(category.name)}
+        className={`btn btn-sm flex-shrink-0 ${
+          activeCategory === "All" ? "btn-primary" : "btn-outline"
+        }`}
+        onClick={() => setActiveCategory("All")}
         disabled={disabled}
       >
-        {category.name}
+        All
       </button>
-    ))}
+      {categories.map((category) => (
+        <button
+          key={category._id}
+          className={`btn btn-sm flex-shrink-0 ${
+            activeCategory === category.name ? "btn-primary" : "btn-outline"
+          }`}
+          onClick={() => setActiveCategory(category.name)}
+          disabled={disabled}
+        >
+          {category.name}
+        </button>
+      ))}
+    </div>
+    {/* Scroll indicator */}
+    <div className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none">
+      <div className="bg-gradient-to-l from-base-100 via-base-100/90 to-transparent pl-8 pr-2 py-2 flex items-center">
+        <ChevronRight size={18} className="text-base-content/40 animate-pulse" />
+      </div>
+    </div>
   </div>
 );
 
@@ -127,7 +184,7 @@ const MenuItem = ({ item, onAdd, currency, disabled }) => {
             className="h-24 w-full object-cover"
           />
         ) : (
-          <span className="text-3xl opacity-30">🍽️</span>
+          <Utensils className="w-8 h-8 opacity-30" />
         )}
       </div>
       <div className="p-2">
@@ -138,7 +195,9 @@ const MenuItem = ({ item, onAdd, currency, disabled }) => {
             {parseFloat(item.price).toFixed(2)}
           </span>
           {hasAddOns && (
-            <span className="badge badge-xs badge-secondary">+</span>
+            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+              <Plus size={12} className="text-white" />
+            </div>
           )}
         </div>
         
@@ -153,7 +212,7 @@ const MenuItem = ({ item, onAdd, currency, disabled }) => {
               )
             })}
             {item.allergens?.length > 0 && (
-              <span className="text-xs" title="Contains Allergens">⚠️</span>
+              <AlertTriangle className="w-3 h-3 text-warning" title="Contains Allergens" />
             )}
           </div>
         )}
@@ -221,13 +280,13 @@ const CartItem = ({
                 onClick={handleSaveNote}
                 className="btn btn-xs btn-primary"
               >
-                ✓
+                <Check className="w-3 h-3" />
               </button>
               <button
                 onClick={() => setShowNoteInput(false)}
                 className="btn btn-xs btn-ghost"
               >
-                ×
+                <X className="w-3 h-3" />
               </button>
             </div>
           ) : item.itemNote ? (
@@ -410,6 +469,7 @@ export default function POS() {
   } = useSelector((state) => state.pos);
 
   const [lastOrder, setLastOrder] = useState(null);
+  const [dietaryFilter, setDietaryFilter] = useState("All");
 
   // Local state for packaging/delivery fee inputs (to handle typing)
   // We sync with Redux on blur or enter, or just update directly if formatted
@@ -426,12 +486,25 @@ export default function POS() {
     dispatch(fetchTables());
   }, [dispatch]);
 
-  const filteredItems = menuItems.filter(
-    (item) =>
-      (activeCategory === "All" || item.category === activeCategory) &&
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      item.isAvailable,
-  );
+  const filteredItems = menuItems.filter((item) => {
+    const matchesCategory =
+      activeCategory === "All" || item.category === activeCategory;
+    const matchesSearch = item.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const isAvailable = item.isAvailable;
+
+    let matchesDietary = true;
+    if (dietaryFilter !== "All") {
+      if (dietaryFilter === "Allergen-Free") {
+        matchesDietary = !item.allergens || item.allergens.length === 0;
+      } else {
+        matchesDietary = item.dietaryTags?.includes(dietaryFilter);
+      }
+    }
+
+    return matchesCategory && matchesSearch && isAvailable && matchesDietary;
+  });
 
   const handleAddToCart = (item) => {
     if (!canCreateOrders) return;
@@ -724,7 +797,7 @@ export default function POS() {
         <div className="hero min-h-[400px]">
           <div className="hero-content text-center">
             <div className="max-w-md">
-              <div className="text-6xl mb-4">🔒</div>
+              <Lock className="w-16 h-16 mb-4 text-error" />
               <h1 className="text-3xl font-bold text-error">Access Denied</h1>
               <p className="py-6">
                 You do not have permission to create orders.
@@ -760,14 +833,21 @@ export default function POS() {
           />
         </div>
 
-        <CategoryFilter
-          activeCategory={activeCategory}
-          setActiveCategory={(cat) => dispatch(setActiveCategory(cat))}
-          categories={categories}
-          disabled={!canCreateOrders}
-        />
+        <div className="space-y-3 mb-4">
+          <CategoryFilter
+            activeCategory={activeCategory}
+            setActiveCategory={(cat) => dispatch(setActiveCategory(cat))}
+            categories={categories}
+            disabled={!canCreateOrders}
+          />
+          <DietaryFilter
+            activeFilter={dietaryFilter}
+            setActiveFilter={setDietaryFilter}
+            disabled={!canCreateOrders}
+          />
+        </div>
 
-        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 overflow-y-auto flex-1 pr-2 content-start">
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 overflow-y-auto flex-1 pr-2 content-start auto-rows-min">
           {filteredItems.map((item) => (
             <MenuItem
               key={item._id}

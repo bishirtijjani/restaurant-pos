@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useResponsive } from "../../hooks/useResponsive";
+import { Lock } from "lucide-react";
 import { useSwipe } from "../../hooks/useSwipe";
 import { useHaptic } from "../../hooks/useHaptic";
 import { BottomTabBar, FloatingCartPreview } from "../../components/Mobile";
@@ -86,7 +87,7 @@ const MobilePOS = () => {
         <div className="hero min-h-[400px]">
           <div className="hero-content text-center">
             <div className="max-w-md">
-              <div className="text-6xl mb-4">🔒</div>
+              <Lock className="w-16 h-16 mb-4 text-error" />
               <h1 className="text-3xl font-bold text-error">Access Denied</h1>
               <p className="py-6">
                 You do not have permission to create orders.

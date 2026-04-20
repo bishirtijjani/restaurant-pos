@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { splitOrder } from "../../orders/ordersSlice";
 import { fetchTables } from "../../tables/tableSlice";
-import { ArrowRight, Check, X, Split, AlertCircle } from "lucide-react";
+import { ArrowRight, Check, X, Split, AlertCircle, Utensils } from "lucide-react";
 import { showNotification } from "../../common/headerSlice";
 
 const SplitOrderModal = ({ sourceOrder, onClose, onSuccess }) => {
@@ -272,7 +272,7 @@ const SplitOrderModal = ({ sourceOrder, onClose, onSuccess }) => {
                       : "border-base-200 hover:border-base-300"
                   }`}
                 >
-                  <div className="text-2xl mb-2">🍽️</div>
+                  <Utensils className="w-8 h-8 mb-2 mx-auto" />
                   <div className="font-bold">Another Table</div>
                   <div className="text-xs opacity-70 mt-1">
                     Move to an existing table

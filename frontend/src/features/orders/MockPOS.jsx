@@ -12,6 +12,8 @@ import {
   Tag,
   Printer,
   Edit3,
+  Utensils,
+  Lock,
 } from "lucide-react";
 
 // --- Local Components (Copied/Mocked from POS.jsx for isolation) ---
@@ -75,7 +77,7 @@ const MenuItem = ({ item, onAdd, currency }) => {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="text-4xl">{item.emoji || "🍽️"}</div>
+          <Utensils className="w-10 h-10 opacity-30" />
         )}
       </div>
       <div className="p-2">
@@ -204,7 +206,6 @@ const MOCK_ITEMS = [
     price: 7.5,
     category: "Starters",
     image: "/menu-items/Prawn Cocktail.jpeg",
-    emoji: "🍤",
   },
   {
     _id: "102",
@@ -212,7 +213,6 @@ const MOCK_ITEMS = [
     price: 6.95,
     category: "Starters",
     image: "/menu-items/Garlic Mushrooms.jpeg",
-    emoji: "🍄",
   },
   {
     _id: "201",
@@ -220,7 +220,6 @@ const MOCK_ITEMS = [
     price: 15.5,
     category: "Pub Classics",
     image: "/menu-items/Fish & Chips.jpeg",
-    emoji: "🐟",
   },
   {
     _id: "202",
@@ -228,16 +227,14 @@ const MOCK_ITEMS = [
     price: 14.5,
     category: "Pub Classics",
     image: "/menu-items/Steak & Kidney Pie.jpeg",
-    emoji: "🥧",
   },
   {
     _id: "301",
-    name: "Sunday Roast - Beef",
-    price: 17.5,
+    name: "Rib Eye Steak",
+    price: 18.95,
     category: "Mains",
     image:
       "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?auto=format&fit=crop&w=400&h=300&q=80",
-    emoji: "🥩",
   },
   {
     _id: "302",
@@ -246,7 +243,6 @@ const MOCK_ITEMS = [
     category: "Mains",
     image:
       "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&h=300&q=80",
-    emoji: "🍔",
   },
   {
     _id: "401",
@@ -254,15 +250,13 @@ const MOCK_ITEMS = [
     price: 3.5,
     category: "Drinks",
     image: "/menu-items/Elderflower Pressé.jpeg",
-    emoji: "🍹",
   },
   {
     _id: "402",
-    name: "Sparkling Water (330ml)",
+    name: "Sparkling Water",
     price: 2.5,
     category: "Drinks",
     image: "/menu-items/Sparkling Water.jpeg",
-    emoji: "💧",
   },
 ];
 
