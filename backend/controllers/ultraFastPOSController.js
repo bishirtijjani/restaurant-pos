@@ -103,7 +103,7 @@ exports.updateKeyboardSettings = async (req, res) => {
       null,
       settings,
       "Updated keyboard shortcuts"
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -148,7 +148,7 @@ exports.resetKeyboardSettings = async (req, res) => {
       null,
       DEFAULT_SHORTCUTS,
       "Reset keyboard shortcuts to defaults"
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -163,3 +163,4 @@ exports.resetKeyboardSettings = async (req, res) => {
     });
   }
 };
+

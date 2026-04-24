@@ -42,7 +42,7 @@ const createExpense = async (req, res) => {
       null,
       savedExpense,
       `Created new ${category} expense of ${amount}`,
-    );
+    ), req);
 
     res.status(201).json(savedExpense);
   } catch (error) {
@@ -111,7 +111,7 @@ const updateExpense = async (req, res) => {
       oldExpense,
       updatedExpense,
       `Updated ${updatedExpense.category} expense`,
-    );
+    ), req);
 
     res.status(200).json(updatedExpense);
   } catch (error) {
@@ -146,7 +146,7 @@ const deleteExpense = async (req, res) => {
       expenseToDelete,
       null,
       `Deleted ${expenseToDelete.category} expense of ${expenseToDelete.amount}`,
-    );
+    ), req);
 
     res.status(200).json({ message: "Expense deleted successfully" });
   } catch (error) {
@@ -161,3 +161,4 @@ module.exports = {
   updateExpense,
   deleteExpense,
 };
+

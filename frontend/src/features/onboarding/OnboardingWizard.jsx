@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -42,6 +42,13 @@ const OnboardingWizard = () => {
   const [currentStep, setCurrentStep] = useState(STEPS.BRAND);
   const [loading, setLoading] = useState(false);
   const [orderFired, setOrderFired] = useState(false);
+
+  // Redirect super admins to platform admin dashboard
+  useEffect(() => {
+    if (user?.isSuperAdmin) {
+      navigate("/super-admin", { replace: true });
+    }
+  }, [user, navigate]);
 
   // Unified data state
   const [data, setData] = useState({

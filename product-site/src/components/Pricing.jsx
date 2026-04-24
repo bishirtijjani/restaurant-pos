@@ -70,14 +70,15 @@ export default function Pricing() {
         </div>
 
         {/* Comparison HUD - UNIFIED ALIGNED GRID */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={
-            isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.98 }
-          }
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-[900px] mx-auto mb-20 bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xl grid grid-cols-[1.2fr_1fr_1fr]"
-        >
+        <div className="overflow-x-auto -mx-4 px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={
+              isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.98 }
+            }
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="min-w-[600px] max-w-[900px] mx-auto mb-20 bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xl grid grid-cols-[1.2fr_1fr_1fr]"
+          >
           {/* Column Headers */}
           <div className="contents">
             {["Feature", "Competitors", "Codeket"].map((header, i) => (
@@ -135,7 +136,8 @@ export default function Pricing() {
               </div>
             </div>
           ))}
-        </motion.div>
+          </motion.div>
+        </div>
 
         {/* Pricing Card - Centered Focus */}
         <motion.div

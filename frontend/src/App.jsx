@@ -17,6 +17,7 @@ import { getCurrentUser, setUserFromToken } from "./app/authSlice";
 import SuspenseContent from "./containers/SuspenseContent";
 import StoreGuard from "./containers/StoreGuard";
 import SuperAdminGuard from "./containers/SuperAdminGuard";
+import SuperAdminBlockGuard from "./containers/SuperAdminBlockGuard";
 import ModalLayout from "./containers/ModalLayout";
 import { useOfflinePrefetch } from "./features/common/hooks/useOfflinePrefetch";
 
@@ -65,6 +66,14 @@ function App() {
     loading,
   } = useSelector((state) => state.auth);
 
+  // Determine default redirect based on user type
+  const getDefaultRedirect = () => {
+    if (user?.isSuperAdmin) {
+      return "/super-admin";
+    }
+    return "/app/dashboard";
+  };
+
   // Use ref to track if we've already fetched user
   const hasFetchedUser = useRef(false);
 
@@ -107,14 +116,14 @@ function App() {
           <Route
             path="/login"
             element={
-              authToken ? <Navigate to="/app/dashboard" replace /> : <Login />
+              authToken ? <Navigate to={getDefaultRedirect()} replace /> : <Login />
             }
           />
           <Route
             path="/forgot-password"
             element={
               authToken ? (
-                <Navigate to="/app/dashboard" replace />
+                <Navigate to={getDefaultRedirect()} replace />
               ) : (
                 <ForgotPassword />
               )
@@ -124,7 +133,7 @@ function App() {
             path="/reset-password"
             element={
               authToken ? (
-                <Navigate to="/app/dashboard" replace />
+                <Navigate to={getDefaultRedirect()} replace />
               ) : (
                 <ResetPassword />
               )
@@ -134,7 +143,7 @@ function App() {
             path="/register"
             element={
               authToken ? (
-                <Navigate to="/app/dashboard" replace />
+                <Navigate to={getDefaultRedirect()} replace />
               ) : (
                 <Register />
               )
@@ -154,9 +163,11 @@ function App() {
           <Route
             path="/app/*"
             element={
-              <StoreGuard>
-                <Layout />
-              </StoreGuard>
+              <SuperAdminBlockGuard>
+                <StoreGuard>
+                  <Layout />
+                </StoreGuard>
+              </SuperAdminBlockGuard>
             }
           />
           <Route
@@ -170,7 +181,7 @@ function App() {
           <Route
             path="/*"
             element={
-              <Navigate to={authToken ? "/app/dashboard" : "/login"} replace />
+              <Navigate to={authToken ? getDefaultRedirect() : "/login"} replace />
             }
           />
         </Routes>

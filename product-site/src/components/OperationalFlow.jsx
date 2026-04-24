@@ -149,21 +149,7 @@ export default function OperationalFlow() {
                         boxShadow: `0 30px 60px -15px ${glowColors[i]}, 0 15px 30px -10px rgba(0,0,0,0.4)`,
                       }}
                     >
-                      {/* Window Title Bar */}
-                      <div className="flex items-center gap-2 px-4 py-3 bg-slate-900/95 border-b border-slate-800/80 backdrop-blur-sm">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                          <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                        </div>
-                        <div className="flex-1 flex justify-center">
-                          <div className="px-4 py-1 rounded-md bg-slate-800/60 text-[11px] text-slate-500 font-medium tracking-wide">
-                            codeket.app — {step.phase}
-                          </div>
-                        </div>
-                        <div className="w-[52px]" /> {/* Spacer for symmetry */}
-                      </div>
-
+                      
                       {/* Screenshot */}
                       <div className="relative aspect-video bg-slate-900">
                         <img

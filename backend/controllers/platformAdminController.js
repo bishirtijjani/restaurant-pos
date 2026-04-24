@@ -111,3 +111,4 @@ module.exports = {
   updateOrganizationStatus,
   updateOrganizationPlan
 };
+

@@ -115,16 +115,10 @@ export default function Footer({ onContactClick }) {
                 <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
                   <Mail size={16} />
                 </div>
-                restaurant@codeket.com
+                <span className="text-primary">Email: </span>
+                <span className="underline" >restaurant@codeket.com</span>
               </a>
-
-              <div className="flex items-center gap-3 text-gray-500 text-sm font-semibold">
-                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
-                  <Phone size={16} />
-                </div>
-                <span>Founder Direct Line (24/7)</span>
-              </div>
-
+              <span className="text-primary">OR: </span>
               {/* Enticing WhatsApp Button */}
               <a
                 href="https://wa.me/2349063503232"

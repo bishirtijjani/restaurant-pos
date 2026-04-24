@@ -323,16 +323,16 @@ const FloorCanvas = React.forwardRef(
             {/* Watermark Floor Name */}
             <Text
               text={floor?.name?.toUpperCase() || ""}
-              fontSize={180} // Huge text
+              fontSize={80} // Reduced from 180
               fontStyle="bold"
               fill="#cbd5e1" // Slate-300 / neutral
               opacity={0.15} // Faded watermark feel
               x={stageSize.width / 2}
               y={stageSize.height / 2}
               offsetX={
-                (floor?.name?.length || 0) * 55 // Center offset (rough estimation)
+                (floor?.name?.length || 0) * 25 // Adjusted offset for smaller font
               }
-              offsetY={90} // Half of fontSize
+              offsetY={40} // Half of fontSize
               listening={false} // Don't block clicks
             />
           </Layer>

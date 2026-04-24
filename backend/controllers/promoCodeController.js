@@ -57,7 +57,7 @@ const createPromoCode = async (req, res) => {
       null,
       promoCode,
       `Created promo code: ${promoCode.code}`,
-    );
+    ), req);
 
     res.status(201).json({
       success: true,
@@ -257,7 +257,7 @@ const updatePromoCode = async (req, res) => {
       oldPromoCode,
       promoCode,
       `Updated promo code: ${promoCode.code}`,
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -302,7 +302,7 @@ const deletePromoCode = async (req, res) => {
       promoCode,
       null,
       `Deleted promo code: ${promoCode.code}`,
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -369,3 +369,4 @@ module.exports = {
   deletePromoCode,
   togglePromoCodeStatus,
 };
+

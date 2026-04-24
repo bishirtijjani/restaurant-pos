@@ -87,7 +87,7 @@ const createStore = asyncHandler(async (req, res) => {
     null,
     newStore,
     `Created new store: ${name}`,
-  );
+  ), req);
 
   res.status(201).json({
     success: true,
@@ -221,7 +221,7 @@ const updateStore = asyncHandler(async (req, res) => {
     oldData,
     updatedStore,
     `Updated store details: ${name || store.name}`,
-  );
+  ), req);
 
   res.status(200).json({
     success: true,
@@ -236,3 +236,4 @@ module.exports = {
   getStoreById,
   updateStore,
 };
+

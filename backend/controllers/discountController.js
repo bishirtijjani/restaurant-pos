@@ -42,7 +42,7 @@ const createDiscount = async (req, res) => {
       null,
       discount,
       `Created discount: ${discount.name}`,
-    );
+    ), req);
 
     res.status(201).json({
       success: true,
@@ -177,7 +177,7 @@ const updateDiscount = async (req, res) => {
       oldDiscount,
       discount,
       `Updated discount: ${discount.name}`,
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -219,7 +219,7 @@ const deleteDiscount = async (req, res) => {
       discount,
       null,
       `Deleted discount: ${discount.name}`,
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -325,3 +325,4 @@ module.exports = {
   getActiveDiscountsForPOS,
   toggleDiscountStatus,
 };
+

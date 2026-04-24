@@ -52,11 +52,33 @@ const storeMiddleware = async (req, res, next) => {
     // Lazy load the User model to avoid circular deps if any
     const User = mongoose.model("User");
     const user = await User.findById(req.user.id).select(
-      "stores lastActiveStore"
+      "stores lastActiveStore isSuperAdmin"
     );
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
+    }
+
+    // Platform admins (super admins) have unrestricted access to any store
+    if (user.isSuperAdmin) {
+      // If no store ID provided, return error - platform admins must specify which store they're accessing
+      if (!targetStoreId) {
+        return res
+          .status(400)
+          .json({ message: "Store ID header (x-store-id) is required for platform admins" });
+      }
+      // Verify the store exists
+      const Store = mongoose.model("Store");
+      const store = await Store.findById(targetStoreId).select("organizationId");
+      if (!store) {
+        return res.status(404).json({ message: "Store not found" });
+      }
+      req.storeId = targetStoreId;
+      req.organizationId = store.organizationId;
+      // Set a default role for platform admins
+      req.user.role = "admin";
+      req.user.permissions = [];
+      return next();
     }
 
     // Auto-select logic if header is missing

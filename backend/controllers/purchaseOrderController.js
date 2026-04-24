@@ -187,7 +187,7 @@ exports.createPurchaseOrder = async (req, res) => {
       purchaseOrder,
       `Created purchase order: ${purchaseOrder.orderNumber}`,
       session
-    );
+    ), req);
 
     await session.commitTransaction();
 
@@ -317,7 +317,7 @@ exports.updatePurchaseOrder = async (req, res) => {
       updatedOrder,
       req.body.reason || `Updated purchase order: ${updatedOrder.orderNumber}`,
       session
-    );
+    ), req);
 
     await session.commitTransaction();
 
@@ -386,7 +386,7 @@ exports.approvePurchaseOrder = async (req, res) => {
       order,
       `Approved purchase order: ${order.orderNumber}`,
       session
-    );
+    ), req);
 
     await session.commitTransaction();
 
@@ -507,7 +507,7 @@ exports.receivePurchaseOrder = async (req, res) => {
       order,
       `Received purchase order: ${order.orderNumber}`,
       session
-    );
+    ), req);
 
     await session.commitTransaction();
 
@@ -587,7 +587,7 @@ exports.cancelPurchaseOrder = async (req, res) => {
       order,
       reason || `Cancelled purchase order: ${order.orderNumber}`,
       session
-    );
+    ), req);
 
     await session.commitTransaction();
 
@@ -673,7 +673,7 @@ exports.updatePaymentStatus = async (req, res) => {
       order,
       `Updated payment for purchase order: ${order.orderNumber}`,
       session
-    );
+    ), req);
 
     await session.commitTransaction();
 
@@ -700,3 +700,4 @@ exports.updatePaymentStatus = async (req, res) => {
 };
 
 module.exports = exports;
+

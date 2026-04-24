@@ -596,3 +596,4 @@ module.exports = {
   getCurrentUser,
   updateCurrentUser,
 };
+

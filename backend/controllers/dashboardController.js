@@ -176,3 +176,4 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 module.exports = {
   getDashboardStats,
 };
+

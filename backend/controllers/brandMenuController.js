@@ -92,7 +92,7 @@ const createMasterItem = async (req, res) => {
       null,
       masterItem,
       `Created master menu item: ${name}`
-    );
+    ), req);
 
     res.status(201).json({
       success: true,
@@ -170,7 +170,7 @@ const updateMasterItem = async (req, res) => {
       // Let's just log the action with the updated item.
       masterItem,
       `Updated master menu item: ${masterItem.name}`
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -319,7 +319,7 @@ const deleteMasterItem = async (req, res) => {
       masterItem,
       null,
       `Deleted master menu item: ${masterItem.name}`
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -343,3 +343,4 @@ module.exports = {
   getSyncStatus,
   deleteMasterItem,
 };
+

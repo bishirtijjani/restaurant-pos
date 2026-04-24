@@ -43,7 +43,7 @@ exports.createSupplier = async (req, res) => {
       null,
       newSupplier,
       `Created new supplier`
-    );
+    ), req);
 
     res.status(201).json(newSupplier);
   } catch (error) {
@@ -129,7 +129,7 @@ exports.updateSupplier = async (req, res) => {
       oldSupplier,
       updatedSupplier,
       "Updated supplier details"
-    );
+    ), req);
 
     res.status(200).json(updatedSupplier);
   } catch (error) {
@@ -168,7 +168,7 @@ exports.deleteSupplier = async (req, res) => {
       deletedSupplier,
       null,
       "Deleted supplier"
-    );
+    ), req);
     res.status(200).json({ message: "Supplier deleted successfully" });
   } catch (error) {
     console.error("Error deleting supplier:", error);
@@ -177,3 +177,4 @@ exports.deleteSupplier = async (req, res) => {
       .json({ message: "An error occurred while deleting the supplier" });
   }
 };
+

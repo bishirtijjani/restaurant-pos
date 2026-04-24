@@ -5,10 +5,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { showNotification } from "../common/headerSlice";
 import { setActiveStore, setActiveStoreDetails } from "../common/storeSlice";
 import { useNavigate } from "react-router-dom";
-import { 
-  MagnifyingGlassIcon, 
-  BuildingOfficeIcon, 
-  UserIcon, 
+import {
+  MagnifyingGlassIcon,
+  BuildingOfficeIcon,
+  UserIcon,
   ChartBarIcon,
   ArrowRightOnRectangleIcon
 } from "@heroicons/react/24/outline";
@@ -21,7 +21,6 @@ function PlatformAdminDashboard() {
   const [impersonating, setImpersonating] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { activeStoreId } = useSelector((state) => state.store);
 
   const fetchOrgs = async () => {
     try {

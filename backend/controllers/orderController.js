@@ -635,7 +635,7 @@ const createOrder = async (req, res) => {
       newOrder,
       `Created new order #${newOrder.orderNumber}`,
       session,
-    );
+    ), req);
 
     if (!isExternalTransaction) await session.commitTransaction();
 
@@ -867,7 +867,7 @@ const updateOrderStatus = async (req, res) => {
       order,
       `Updated order #${order.orderNumber} status to ${orderStatus}`,
       session,
-    );
+    ), req);
 
     if (!isExternalTransaction) await session.commitTransaction();
 
@@ -987,7 +987,7 @@ const updatePayment = async (req, res) => {
       order,
       `Updated payment for order #${order.orderNumber}`,
       session,
-    );
+    ), req);
 
     await session.commitTransaction();
 
@@ -1091,7 +1091,7 @@ const cancelOrder = async (req, res) => {
       order,
       `Cancelled order #${order.orderNumber}: ${reason}. Inventory restored: ${inventoryRestoration.totalItemsRestored} items`,
       session,
-    );
+    ), req);
 
     if (!isExternalTransaction) await session.commitTransaction();
 
@@ -1624,3 +1624,4 @@ module.exports = {
   refundOrder,
   reopenOrder,
 };
+

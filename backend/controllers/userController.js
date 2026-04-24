@@ -125,7 +125,7 @@ const createUser = async (req, res) => {
       user,
       "User added to store",
       null // session
-    );
+    ), req);
 
     res.status(201).json({ success: true, data: user });
   } catch (error) {
@@ -242,7 +242,7 @@ const deleteUser = async (req, res) => {
       null,
       "User removed from store",
       null
-    );
+    ), req);
 
     res
       .status(200)
@@ -260,3 +260,4 @@ module.exports = {
   updateUser,
   deleteUser,
 };
+

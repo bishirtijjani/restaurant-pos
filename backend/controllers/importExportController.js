@@ -54,7 +54,7 @@ const importData = asyncHandler(async (req, res) => {
         null,
         { type, fileName: req.file.originalname, result },
         `Imported ${type} data`
-      );
+      ), req);
     }
 
     res.status(200).json(result);
@@ -88,7 +88,7 @@ const exportData = asyncHandler(async (req, res) => {
       null,
       { type, format },
       `Exported ${type} data as ${format}`
-    );
+    ), req);
 
     if (!data) {
       return res.status(404).json({ message: "No data found to export." });
@@ -120,3 +120,4 @@ module.exports = {
   importData,
   exportData,
 };
+

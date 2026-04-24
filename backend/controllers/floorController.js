@@ -106,7 +106,7 @@ exports.createFloor = async (req, res) => {
       null,
       floor,
       `Created floor: ${floor.name}`,
-    );
+    ), req);
 
     res.status(201).json({
       success: true,
@@ -177,7 +177,7 @@ exports.updateFloor = async (req, res) => {
       oldFloor,
       updatedFloor,
       req.body.reason || `Updated floor: ${updatedFloor.name}`,
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -224,7 +224,7 @@ exports.updateFloorLayout = async (req, res) => {
       null,
       floor,
       `Updated floor layout for: ${floor.name}`,
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -276,7 +276,7 @@ exports.updateTablePositions = async (req, res) => {
       null,
       { count: tables.length }, // logging count of moved tables
       `Bulk updated positions for ${tables.length} tables`,
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -347,7 +347,7 @@ exports.deleteFloor = async (req, res) => {
       floor,
       null,
       `Deleted floor: ${floor.name}`,
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -364,3 +364,4 @@ exports.deleteFloor = async (req, res) => {
 };
 
 module.exports = exports;
+

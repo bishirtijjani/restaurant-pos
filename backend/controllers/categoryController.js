@@ -60,7 +60,7 @@ exports.createCategory = async (req, res) => {
       null,
       savedCategory,
       `Created new category: ${name}`,
-    );
+    ), req);
 
     res.status(201).json(savedCategory);
   } catch (error) {
@@ -123,7 +123,7 @@ exports.updateCategory = async (req, res) => {
       oldCategory,
       updatedCategory,
       `Updated category: ${oldCategory.name} to ${name}`,
-    );
+    ), req);
 
     res.status(200).json(updatedCategory);
   } catch (error) {
@@ -173,7 +173,7 @@ exports.deleteCategory = async (req, res) => {
       categoryToDelete,
       null,
       `Deleted category: ${categoryToDelete.name}. ${affectedMenuItems.length} menuItems disassociated`,
-    );
+    ), req);
 
     res.status(200).json({
       message: "Category deleted and menuItems disassociated successfully",
@@ -185,3 +185,4 @@ exports.deleteCategory = async (req, res) => {
 };
 
 module.exports = exports;
+

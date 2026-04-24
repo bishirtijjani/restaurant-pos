@@ -137,7 +137,7 @@ exports.updateTable = async (req, res) => {
       oldTable,
       updatedTable,
       req.body.reason || `Updated table: ${updatedTable.tableNumber}`,
-    );
+    ), req);
 
     // Update floor capacity
     const floor = await Floor.findById(oldTable.floorId);
@@ -358,7 +358,7 @@ exports.createTable = async (req, res) => {
       null,
       table,
       `Created table: ${tableNumber} on ${floor.name}`,
-    );
+    ), req);
 
     const populatedTable = await Table.findById(table._id)
       .populate("floorId", "name")
@@ -426,7 +426,7 @@ exports.updateTableStatus = async (req, res) => {
       { status: oldStatus },
       { status },
       reason || `Changed status from ${oldStatus} to ${status}`,
-    );
+    ), req);
 
     const populatedTable = await Table.findById(table._id)
       .populate("floorId", "name")
@@ -506,7 +506,7 @@ exports.linkTableToOrder = async (req, res) => {
       { currentOrder: null },
       { currentOrder: orderId },
       `Linked table ${table.tableNumber} to order #${order.orderNumber}`,
-    );
+    ), req);
 
     const populatedTable = await Table.findById(table._id)
       .populate("floorId", "name")
@@ -559,7 +559,7 @@ exports.unlinkTableFromOrder = async (req, res) => {
       { currentOrder: oldOrderId },
       { currentOrder: null },
       `Unlinked table ${table.tableNumber} from order`,
-    );
+    ), req);
 
     const populatedTable = await Table.findById(table._id)
       .populate("floorId", "name")
@@ -713,7 +713,7 @@ exports.splitTables = async (req, res) => {
         { mergedWith: oldMergedWith },
         { mergedWith: [] },
         reason || "Tables split",
-      );
+      ), req);
     }
 
     const updatedTables = await Table.find({
@@ -816,7 +816,7 @@ exports.deleteTable = async (req, res) => {
       table,
       { isActive: false },
       `Deleted table: ${table.tableNumber}`,
-    );
+    ), req);
 
     res.status(200).json({
       success: true,
@@ -833,3 +833,4 @@ exports.deleteTable = async (req, res) => {
 };
 
 module.exports = exports;
+

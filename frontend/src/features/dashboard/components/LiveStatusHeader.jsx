@@ -20,11 +20,11 @@ const LiveStatusHeader = () => {
             <span className="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
           </div>
           <span className="text-xs font-bold text-success uppercase tracking-widest">
-            Live Intelligence Feed
+            Live Feed
           </span>
         </div>
         <h1 className="text-2xl md:text-4xl font-black text-base-content">
-          Command Center
+          Dashboard
         </h1>
         <p className="text-base-content/60 font-medium mt-1">
           {activeStore?.name || "Global Overview"} •{" "}
