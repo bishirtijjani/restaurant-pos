@@ -41,7 +41,7 @@ exports.createStation = async (req, res) => {
       null,
       station,
       "Station Created"
-    ), req);
+    );
 
     res.status(201).json({
       success: true,
@@ -85,7 +85,7 @@ exports.updateStation = async (req, res) => {
       null,
       req.body,
       "Station Updated"
-    ), req);
+    );
 
     res.json({
       success: true,
@@ -128,7 +128,7 @@ exports.deleteStation = async (req, res) => {
       station,
       null,
       "Station Deleted"
-    ), req);
+    );
 
     res.json({
       success: true,
@@ -143,4 +143,5 @@ exports.deleteStation = async (req, res) => {
   }
 };
 module.exports = exports;
+
 

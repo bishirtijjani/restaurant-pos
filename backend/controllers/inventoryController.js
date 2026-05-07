@@ -138,7 +138,7 @@ exports.createInventoryItem = async (req, res) => {
       null,
       inventoryItem,
       `Created inventory item: ${name}`,
-    ), req);
+    );
 
     const populatedItem = await InventoryItem.findById(inventoryItem._id)
       .populate("supplier", "name phone email")
@@ -212,7 +212,7 @@ exports.updateInventoryItem = async (req, res) => {
       oldItem,
       updatedItem,
       req.body.reason || `Updated inventory item: ${updatedItem.name}`,
-    ), req);
+    );
 
     // Check for low stock alert
     if (updatedItem.currentStock <= updatedItem.minStockLevel) {
@@ -272,7 +272,7 @@ exports.deleteInventoryItem = async (req, res) => {
       item,
       null,
       `Deleted inventory item: ${item.name}`,
-    ), req);
+    );
 
     res.status(200).json({
       success: true,
@@ -438,7 +438,7 @@ exports.unlinkMenuItem = async (req, res) => {
       inventoryItem,
       `Unlinked menu item ${menuItemId}`,
       session,
-    ), req);
+    );
 
     await session.commitTransaction();
 
@@ -461,4 +461,5 @@ exports.unlinkMenuItem = async (req, res) => {
 };
 
 module.exports = exports;
+
 

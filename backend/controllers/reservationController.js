@@ -309,7 +309,7 @@ exports.createReservation = async (req, res) => {
         table ? ` at table ${table.tableNumber}` : ""
       }`,
       session,
-    ), req);
+    );
 
     await session.commitTransaction();
     session.endSession();
@@ -426,7 +426,7 @@ exports.updateReservation = async (req, res) => {
       updatedReservation,
       req.body.reason ||
         `Updated reservation for ${updatedReservation.customerName}`,
-    ), req);
+    );
 
     res.status(200).json({
       success: true,
@@ -492,7 +492,7 @@ exports.updateReservationStatus = async (req, res) => {
       { status: oldStatus },
       { status },
       reason || `Changed reservation status from ${oldStatus} to ${status}`,
-    ), req);
+    );
 
     const populatedReservation = await Reservation.findById(reservation._id)
       .populate("tableId", "tableNumber floorId")
@@ -542,7 +542,7 @@ exports.deleteReservation = async (req, res) => {
       reservation,
       null,
       `Deleted reservation for ${reservation.customerName}`,
-    ), req);
+    );
 
     res.status(200).json({
       success: true,
@@ -670,7 +670,7 @@ exports.checkInReservation = async (req, res) => {
         { status: "seated", orderId: newOrder._id },
         `Checked in reservation for ${reservation.customerName}, created order #${orderNumber}`,
         session,
-      ), req);
+      );
 
       await session.commitTransaction();
       session.endSession();
@@ -705,4 +705,5 @@ exports.checkInReservation = async (req, res) => {
 };
 
 module.exports = exports;
+
 

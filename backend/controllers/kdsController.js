@@ -137,7 +137,7 @@ exports.updateKDSOrderStatus = async (req, res) => {
       action === "start"
         ? "Order started in kitchen"
         : "Order completed in kitchen",
-    ), req);
+    );
 
     res.json({
       success: true,
@@ -210,7 +210,7 @@ exports.recallOrder = async (req, res) => {
       null,
       order,
       reason || "Order recalled from ready",
-    ), req);
+    );
 
     res.json({
       success: true,
@@ -225,4 +225,5 @@ exports.recallOrder = async (req, res) => {
     });
   }
 };
+
 

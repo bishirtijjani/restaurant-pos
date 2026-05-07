@@ -313,7 +313,7 @@ const updateSettings = async (req, res) => {
       null, // could be old settings diff
       store.settings,
       "Updated store settings",
-    ), req);
+    );
 
     res.json({
       success: true,
@@ -358,7 +358,7 @@ const resetSettings = async (req, res) => {
       null,
       store.settings,
       "Reset store settings to default",
-    ), req);
+    );
 
     res.json({
       success: true,
@@ -379,4 +379,5 @@ module.exports = {
   updateSettings,
   resetSettings,
 };
+
 

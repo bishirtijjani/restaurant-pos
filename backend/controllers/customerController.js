@@ -203,7 +203,7 @@ const recordCustomerPayment = async (req, res) => {
       null,
       null,
       `Recorded payment of ${amount}`,
-    ), req);
+    );
 
     res.status(201).json({ success: true, data: newPayment });
   } catch (error) {
@@ -261,7 +261,7 @@ const createCustomer = async (req, res) => {
       null,
       newCustomer,
       "New customer created",
-    ), req);
+    );
 
     res.status(201).json({ success: true, data: newCustomer });
   } catch (error) {
@@ -307,7 +307,7 @@ const updateCustomer = async (req, res) => {
       updatedCustomer,
       "Customer details updated",
       req.transactionSession || null,
-    ), req);
+    );
 
     res.status(200).json({ success: true, data: updatedCustomer });
   } catch (error) {
@@ -345,7 +345,7 @@ const deleteCustomer = async (req, res) => {
       deletedCustomer,
       null,
       "Customer deleted",
-    ), req);
+    );
 
     res
       .status(200)
@@ -368,4 +368,5 @@ module.exports = {
   updateCustomer,
   deleteCustomer,
 };
+
 

@@ -370,7 +370,7 @@ const deleteMenuItem = async (req, res) => {
       deletedMenuItem,
       null,
       `Deleted menu item: ${menuItem.name}`,
-    ), req);
+    );
 
     res.status(200).json({ message: "Menu item deleted successfully." });
   } catch (error) {
@@ -435,4 +435,5 @@ module.exports = {
   deleteMenuItem,
   toggleAvailability,
 };
+
 

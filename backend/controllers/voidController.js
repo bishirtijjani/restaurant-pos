@@ -216,7 +216,7 @@ exports.voidOrderItems = async (req, res) => {
       order,
       `Voided ${voidedItems.length} items from order #${order.orderNumber}: ${reason}`,
       session,
-    ), req);
+    );
 
     await session.commitTransaction();
 
@@ -322,4 +322,5 @@ exports.getAllVoidLogs = async (req, res) => {
 };
 
 module.exports = exports;
+
 

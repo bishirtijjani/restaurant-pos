@@ -148,7 +148,7 @@ exports.createAddOnGroup = async (req, res) => {
       null,
       addOnGroup,
       `Created add-on group: ${name}`
-    ), req);
+    );
 
     const populatedGroup = await AddOnGroup.findById(addOnGroup._id).populate(
       "items.inventoryItem",
@@ -252,7 +252,7 @@ exports.updateAddOnGroup = async (req, res) => {
       oldGroup,
       updatedGroup,
       req.body.reason || `Updated add-on group: ${updatedGroup.name}`
-    ), req);
+    );
 
     res.status(200).json({
       success: true,
@@ -332,7 +332,7 @@ exports.deleteAddOnGroup = async (req, res) => {
       group,
       null,
       `Deleted add-on group: ${group.name}`
-    ), req);
+    );
 
     res.status(200).json({
       success: true,
@@ -393,4 +393,5 @@ exports.getAddOnGroupsForMenuItem = async (req, res) => {
 };
 
 module.exports = exports;
+
 
