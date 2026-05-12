@@ -10,8 +10,9 @@ import { showNotification } from "../../common/headerSlice";
 import { createOrder, fetchOrders } from "../ordersSlice";
 import { clearCart } from "../posSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
-import { Plus, Trash2, DollarSign, CreditCard } from "lucide-react";
+import { Plus, Trash2, DollarSign, CreditCard, WifiOff } from "lucide-react";
 import { printerService } from "../../../services/PrinterService";
+import { useOnlineStatus } from "../../../hooks/useOnlineStatus";
 import axios from "axios";
 
 // Stripe Imports
@@ -98,6 +99,11 @@ function PaymentConfirmationModalBody(props) {
   const currency = settings?.currency?.symbol || "$";
   const currencyCode = settings?.currency?.code || "USD";
 
+  // Card / Transfer / Stripe all require a live server round-trip. Offline,
+  // only cash is safe — anything else would optimistically "succeed" but
+  // sit in the sync queue, masking actual payment failures from the operator.
+  const isOnline = useOnlineStatus();
+
   const [paymentMode, setPaymentMode] = useState("single"); // 'single' or 'split'
   const [tipMode, setTipMode] = useState("none"); // 'none', 'percentage', 'custom'
   const [tipPercentage, setTipPercentage] = useState(0);
@@ -137,8 +143,14 @@ function PaymentConfirmationModalBody(props) {
     { value: "card", name: "Card (Manual)" }, // Legacy
   ]);
 
-  // Update options when providers load
+  // Update options when providers load OR connectivity changes.
+  // Offline: collapse to cash-only.
   useEffect(() => {
+    if (!isOnline) {
+      setPaymentMethodOptions([{ value: "cash", name: "Cash" }]);
+      return;
+    }
+
     const defaultOptions = [
       { value: "cash", name: "Cash" },
       { value: "Transfer", name: "Bank Transfer" },
@@ -152,7 +164,7 @@ function PaymentConfirmationModalBody(props) {
       newOptions.push({ value: "stripe", name: "Pay with Card (Stripe)" });
     }
     setPaymentMethodOptions(newOptions);
-  }, [stripeConfig]);
+  }, [stripeConfig, isOnline]);
 
   // Single payment state
   const [singlePayment, setSinglePayment] = useState({
@@ -164,6 +176,19 @@ function PaymentConfirmationModalBody(props) {
   const [splitPayments, setSplitPayments] = useState([
     { method: "cash", amount: "" },
   ]);
+
+  // When connectivity is lost mid-checkout, snap any selected non-cash
+  // payment method back to cash so the operator can't accidentally submit
+  // a card transaction that won't actually clear.
+  useEffect(() => {
+    if (isOnline) return;
+    if (singlePayment.paymentMethod !== "cash") {
+      setSinglePayment((prev) => ({ ...prev, paymentMethod: "cash" }));
+    }
+    setSplitPayments((prev) =>
+      prev.map((p) => (p.method === "cash" ? p : { ...p, method: "cash" })),
+    );
+  }, [isOnline, singlePayment.paymentMethod]);
 
   // Calculate tip amount
   const calculateTipAmount = () => {
@@ -552,6 +577,16 @@ function PaymentConfirmationModalBody(props) {
           )}
         </div>
       </div>
+
+      {!isOnline && (
+        <div className="alert alert-warning py-2">
+          <WifiOff size={18} />
+          <span className="text-sm">
+            Offline — cash only. Card and Transfer payments resume
+            automatically when connectivity is restored.
+          </span>
+        </div>
+      )}
 
       {/* Single Payment */}
       {paymentMode === "single" && (

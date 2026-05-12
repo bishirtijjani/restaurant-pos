@@ -39,7 +39,7 @@ export default function Hero() {
             <div className="flex items-center justify-center gap-3 py-2 px-4 bg-orange-50 border border-orange-100 rounded-xl mb-10 w-fit mx-auto">
               <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
               <span className="text-[0.7rem] font-black uppercase tracking-widest text-orange-900">
-                Early Access — Limited UK Restaurants
+                Early Access — Limited UAE Restaurants
               </span>
             </div>
 

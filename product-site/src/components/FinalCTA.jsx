@@ -8,7 +8,7 @@ export default function FinalCTA({ onContactClick }) {
     "Setup in 15 Minutes",
     "Direct Founder Support",
     "Use iPad, Android, or Any Browser",
-    "No £799–£3,000 Hardware Purchase",
+    "No AED 3,500–14,000 Hardware Purchase",
   ];
 
   return (

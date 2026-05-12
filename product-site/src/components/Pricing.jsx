@@ -9,14 +9,14 @@ export default function Pricing() {
   const comparison = [
     {
       feature: "Hardware",
-      them: "£799-£3,000 upfront",
+      them: "AED 3,500–14,000 upfront",
       us: "Use existing iPads, tablets, laptops, desktops (no required purchases)",
       usBetter: true,
     },
     {
       feature: "Monthly Fee",
-      them: "£150+ / location",
-      us: "£129 flat for all locations",
+      them: "AED 700+ / location",
+      us: "AED 599 flat for all locations",
       usBetter: true,
     },
     {
@@ -148,11 +148,11 @@ export default function Pricing() {
         >
           <div className="mb-10">
             <div className="text-7xl font-extrabold text-[--color-text-primary] mb-2 tracking-tighter">
-              £129
+              AED 599
               <span className="text-2xl font-normal text-gray-400">/mo</span>
             </div>
             <p className="text-gray-500 text-sm font-semibold mb-3">
-              Or £1290/year per location (2 months free for annual plan)
+              Or AED 5,990/year per location (2 months free for annual plan)
             </p>
             <p className="text-gray-400 font-mono text-[0.7rem] font-bold uppercase tracking-widest">
               UNLIMITED DEVICES • PER LOCATION • FULL OFFLINE MODE • GRANULAR
@@ -162,7 +162,7 @@ export default function Pricing() {
 
           <div className="flex flex-col gap-4 mx-auto mb-10 text-left max-w-[350px]">
             {[
-              "Zero hardware spend — save £1,000+ on day one",
+              "Zero hardware spend — save AED 5,000+ on day one",
               "Unlimited Front-of-House POS",
               "Unlimited Kitchen Displays (KDS)",
               "Drag & Drop Floor & Table Management With Reservations",

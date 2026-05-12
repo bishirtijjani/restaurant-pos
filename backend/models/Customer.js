@@ -3,6 +3,13 @@ const mongoose = require("mongoose");
 const customerSchema = new mongoose.Schema(
   {
     fullname: { type: String, required: true },
+    // Client-generated business key. UUIDv7 from the POS terminal.
+    // Same purpose as Order.clientId: dedup on retry after network drop.
+    clientId: {
+      type: String,
+      index: true,
+      sparse: true,
+    },
     phone: { type: String, sparse: true },
     email: { type: String, sparse: true },
     storeId: {
@@ -50,5 +57,15 @@ const customerSchema = new mongoose.Schema(
 // Compound indexes for store-scoped uniqueness
 customerSchema.index({ storeId: 1, phone: 1 }, { unique: true, sparse: true });
 customerSchema.index({ storeId: 1, email: 1 }, { unique: true, sparse: true });
+// Partial-filter unique index: enforce uniqueness only when clientId is
+// actually present and non-null (plain sparse index would still collide on null).
+customerSchema.index(
+  { storeId: 1, clientId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { clientId: { $type: "string" } },
+  },
+);
 
-module.exports = mongoose.model("Customer", customerSchema);
+module.exports =
+  mongoose.models.Customer || mongoose.model("Customer", customerSchema);

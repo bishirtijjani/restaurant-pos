@@ -19,6 +19,7 @@ import StoreGuard from "./containers/StoreGuard";
 import SuperAdminGuard from "./containers/SuperAdminGuard";
 import SuperAdminBlockGuard from "./containers/SuperAdminBlockGuard";
 import ModalLayout from "./containers/ModalLayout";
+import InitialSyncOverlay from "./components/InitialSyncOverlay";
 import { useOfflinePrefetch } from "./features/common/hooks/useOfflinePrefetch";
 
 const Layout = lazy(() => import("./containers/Layout"));
@@ -187,6 +188,7 @@ function App() {
         </Routes>
       </Router>
       <ModalLayout />
+      <InitialSyncOverlay />
     </>
   );
 }

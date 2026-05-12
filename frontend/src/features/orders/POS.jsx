@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import FormattedNumberInput from "../../components/Input/FormattedNumberInput";
+import TitleCard from "../../components/Cards/TitleCard";
 import {
   ShoppingBag,
   UtensilsCrossed,

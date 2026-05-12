@@ -6,13 +6,27 @@ import ErrorText from "../../../components/Typography/ErrorText";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { fetchOrders, refundOrder } from "../ordersSlice";
-import { DollarSign, AlertTriangle } from "lucide-react";
+import { DollarSign, AlertTriangle, WifiOff } from "lucide-react";
+import { useOnlineStatus } from "../../../hooks/useOnlineStatus";
 
 function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
   const dispatch = useDispatch();
   const order = extraObject;
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const isOnline = useOnlineStatus();
+
+  // Non-cash refunds require live gateway connectivity (Stripe etc.).
+  // Detect whether this order has any non-cash payments to surface the right
+  // guidance offline. Cash-only orders can still be refunded — the queued
+  // operation processes normally on reconnect with no gateway round-trip.
+  const hasNonCashPayment =
+    order.paymentMethod && order.paymentMethod !== "cash"
+      ? true
+      : Array.isArray(order.payments)
+        ? order.payments.some((p) => p.method && p.method !== "cash")
+        : false;
+  const refundBlockedOffline = !isOnline && hasNonCashPayment;
 
   const settings = useSelector(
     (state) => state.generalSettings.generalSettings
@@ -136,6 +150,25 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
 
   return (
     <div className="space-y-4">
+      {refundBlockedOffline && (
+        <div className="alert alert-error">
+          <WifiOff size={18} />
+          <span className="text-sm">
+            Offline — card and Transfer refunds need server connectivity to
+            reach the payment gateway. Reconnect to process this refund.
+          </span>
+        </div>
+      )}
+      {!isOnline && !hasNonCashPayment && (
+        <div className="alert alert-warning">
+          <WifiOff size={18} />
+          <span className="text-sm">
+            Offline — cash refund will be queued and synced when connectivity
+            returns.
+          </span>
+        </div>
+      )}
+
       {/* Order Information */}
       <div className="alert alert-info">
         <div className="flex flex-col gap-1">
@@ -297,7 +330,7 @@ function RefundModalBody({ extraObject, closeModal: closeModalFn }) {
         <button
           onClick={handleSubmit}
           className="btn btn-error"
-          disabled={loading || refundAmount === 0}
+          disabled={loading || refundAmount === 0 || refundBlockedOffline}
         >
           {loading ? (
             <>

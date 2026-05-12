@@ -123,8 +123,25 @@ const createOrder = async (req, res) => {
       change, // Change amount
     } = req.body.order;
 
+    // clientId may arrive at top level (frontend offlineAxios injects there)
+    // OR nested under req.body.order. Accept both for flexibility.
+    const clientId = req.body.clientId || req.body.order.clientId;
+
     // Store Context
     const storeId = req.storeId;
+
+    // Natural dedup: if the same clientId arrives again (offline retry,
+    // network drop after server commit, etc.), return the existing order
+    // instead of creating a duplicate.
+    if (clientId) {
+      const existing = await Order.findOne({ storeId, clientId }).session(
+        session,
+      );
+      if (existing) {
+        if (!isExternalTransaction) await session.commitTransaction();
+        return res.status(200).json({ data: existing });
+      }
+    }
 
     // VALIDATION: Dine-in requires a table
     if (orderType === "dine-in" && (!table || table === "Takeaway")) {
@@ -555,9 +572,18 @@ const createOrder = async (req, res) => {
 
     const newOrder = new Order({
       orderNumber: await generateOrderNumber(session, storeId),
+      clientId: clientId || undefined,
       // NEW: Scoped to Store
       storeId: storeId,
       organizationId: req.organizationId,
+      // Snapshot store's currency on the order so historical totals stay
+      // correct even if the store later switches currency.
+      currency: settings.currency
+        ? {
+            code: settings.currency.code,
+            symbol: settings.currency.symbol,
+          }
+        : undefined,
       table: table || "Takeaway",
       customerDetails: customerDetails || { name: "Walk-in" },
       orderType: orderType || "dine-in",

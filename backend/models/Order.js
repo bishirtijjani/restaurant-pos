@@ -103,6 +103,15 @@ const OrderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // Client-generated business key. UUIDv7 from the POS terminal.
+    // Acts as the canonical dedup key for offline-created orders: if the
+    // same clientId arrives twice (e.g., retry after network drop), the
+    // controller returns the existing record instead of creating a duplicate.
+    clientId: {
+      type: String,
+      index: true,
+      sparse: true,
+    },
     // Store Context
     storeId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -115,6 +124,13 @@ const OrderSchema = new mongoose.Schema(
       ref: "Organization",
       required: true,
       index: true,
+    },
+    // Snapshot of the store's currency at order creation. Frozen on the
+    // order so historical reports stay correct even if the store later
+    // switches currency (e.g., expansion to a new region).
+    currency: {
+      code: { type: String, default: "USD" },
+      symbol: { type: String, default: "$" },
     },
     table: {
       type: String,
@@ -236,6 +252,14 @@ const OrderSchema = new mongoose.Schema(
         },
         amount: { type: Number, required: true },
         timestamp: { type: Date, default: Date.now },
+        // Provider abstraction — reserved fields so regional gateways
+        // (Stripe, Network International, PayTabs, Telr…) plug in without
+        // another schema migration. paymentProvider names the impl;
+        // providerRef holds the gateway's reference (charge id, intent id);
+        // providerMetadata is the opaque echo from the gateway.
+        paymentProvider: { type: String, default: null },
+        providerRef: { type: String, default: null },
+        providerMetadata: { type: mongoose.Schema.Types.Mixed, default: null },
       },
     ],
     // NEW: Payment history for audit trail (includes original payments + refunds)
@@ -471,6 +495,16 @@ OrderSchema.pre("save", async function (next) {
 
 // Compound index for unique order numbers within a store
 OrderSchema.index({ storeId: 1, orderNumber: 1 }, { unique: true });
+// Partial-filter unique index: enforce uniqueness ONLY when clientId is
+// present and non-null. A plain sparse index would still collide on multiple
+// docs with explicit clientId: null.
+OrderSchema.index(
+  { storeId: 1, clientId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { clientId: { $type: "string" } },
+  },
+);
 OrderSchema.index({ storeId: 1, createdAt: -1 }); // Optimize list queries
 OrderSchema.index({ storeId: 1, table: 1, orderStatus: 1 }); // Optimize active order lookups by table
 

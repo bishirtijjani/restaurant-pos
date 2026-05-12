@@ -25,8 +25,8 @@ export default function Credibility() {
     },
     {
       icon: ReceiptText,
-      title: "UK Tax & VAT Ready",
-      desc: "Handle UK VAT, service charges, and per-item tax requirements natively and accurately without fighting US-centric defaults.",
+      title: "UAE Tax & VAT Ready",
+      desc: "Handle UAE 5% VAT, service charges, FTA-compliant tax invoices, and per-item tax requirements natively — without fighting US-centric defaults.",
       feature: "Compliance First",
     },
     {
@@ -53,7 +53,7 @@ export default function Credibility() {
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.05]">
               Designed for mission-critical service — <br />
-              <span className="text-accent">now entering</span> real-world UK
+              <span className="text-accent">now entering</span> real-world UAE
               operations.
             </h2>
 
@@ -148,7 +148,7 @@ export default function Credibility() {
                 VAT Native
               </div>
               <div className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                UK Compliant
+                UAE Compliant
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ const orderController = require("../controllers/orderController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const permissionMiddleware = require("../middleware/permissionMiddleware");
+const idempotencyMiddleware = require("../middleware/idempotencyMiddleware");
 const { PERMISSIONS } = require("../config/permissions");
 
 // Apply auth middleware to all routes
@@ -12,6 +13,7 @@ router.use(authMiddleware);
 router.post(
   "/",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderController.createOrder,
 );
 router.get(
@@ -27,26 +29,31 @@ router.get(
 router.put(
   "/:id/status",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderController.updateOrderStatus,
 );
 router.put(
   "/:id/payment",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderController.updatePayment,
 );
 router.delete(
   "/:id",
   roleMiddleware("admin", "manager"),
+  idempotencyMiddleware,
   orderController.cancelOrder,
 );
 router.post(
   "/:id/refund",
   roleMiddleware("admin", "manager"),
+  idempotencyMiddleware,
   orderController.refundOrder,
 );
 router.patch(
   "/:id/reopen",
   permissionMiddleware(PERMISSIONS.ORDERS_REOPEN),
+  idempotencyMiddleware,
   orderController.reopenOrder,
 );
 
@@ -56,31 +63,37 @@ const orderModificationController = require("../controllers/orderModificationCon
 router.put(
   "/:orderId/items",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderModificationController.modifyOrder,
 );
 router.post(
   "/:orderId/items",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderModificationController.addItemsToOrder,
 );
 router.delete(
   "/:orderId/items",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderModificationController.removeItemsFromOrder,
 );
 router.patch(
   "/:orderId/items/:itemId/quantity",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderModificationController.updateItemQuantity,
 );
 router.patch(
   "/:orderId/items/:itemId/note",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderModificationController.updateItemNote,
 );
 router.patch(
   "/:orderId/note",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderModificationController.updateOrderNote,
 );
 router.get(
@@ -93,11 +106,13 @@ router.get(
 router.post(
   "/:orderId/split",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderModificationController.splitOrder,
 );
 router.post(
   "/merge",
   roleMiddleware("admin", "manager", "cashier", "waiter"),
+  idempotencyMiddleware,
   orderModificationController.mergeOrders,
 );
 

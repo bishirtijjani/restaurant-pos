@@ -1,9 +1,16 @@
 // frontend/src/utils/offline/syncManager.js
 import axios from "../../utils/offline/offlineAxios"; // Use offlineAxios for interceptor magic
+import { v7 as uuidv7 } from "uuid";
 import offlineStorage from "./storage";
 import { syncQueue } from "./syncQueue";
 import store from "../../app/store";
 import { isTokenExpired } from "../../utils/Helpers";
+
+// Metadata key used to persist the in-flight sync batch.
+// If a push crashes mid-flight (network drop, page reload, etc.), the next
+// pushToServer() finds this record and replays the SAME idempotency key,
+// so the backend can deduplicate at the request level instead of re-executing.
+const IN_FLIGHT_BATCH_KEY = "__sync_in_flight_batch__";
 
 export class SyncManager {
   constructor() {
@@ -167,8 +174,42 @@ export class SyncManager {
 
   // --- BATCH PUSH: All pending operations sent atomically ---
   async pushToServer() {
-    const pending = await syncQueue.getPending();
-    if (pending.length === 0) return;
+    // Check for a previous batch that didn't complete cleanly.
+    // If found, replay with the SAME idempotency key + SAME operation set
+    // so the server dedups instead of double-executing.
+    let inFlight = await offlineStorage.get(
+      "metadata",
+      IN_FLIGHT_BATCH_KEY,
+    );
+
+    let pending;
+    let batchKey;
+
+    if (inFlight && Array.isArray(inFlight.operationIds)) {
+      const allPending = await syncQueue.getPending();
+      pending = allPending.filter((op) =>
+        inFlight.operationIds.includes(op.id),
+      );
+      batchKey = inFlight.batchKey;
+
+      // The in-flight ops have all completed externally (or been cleared);
+      // drop the stale record and proceed with a fresh batch.
+      if (pending.length === 0) {
+        await offlineStorage.remove("metadata", IN_FLIGHT_BATCH_KEY);
+        inFlight = null;
+      }
+    }
+
+    if (!inFlight) {
+      pending = await syncQueue.getPending();
+      if (pending.length === 0) return;
+      batchKey = uuidv7();
+      await offlineStorage.set("metadata", IN_FLIGHT_BATCH_KEY, {
+        batchKey,
+        operationIds: pending.map((op) => op.id),
+        createdAt: Date.now(),
+      });
+    }
 
     // Build the operations array for the batch endpoint
     // Map each queue item to the operation schema the backend expects
@@ -183,7 +224,12 @@ export class SyncManager {
       const response = await axios.post(
         "/api/sync/push",
         { operations },
-        { headers: { "x-sync-request": "true" } },
+        {
+          headers: {
+            "x-sync-request": "true",
+            "Idempotency-Key": batchKey,
+          },
+        },
       );
 
       const { results } = response.data;
@@ -211,6 +257,9 @@ export class SyncManager {
         }
       }
 
+      // Batch fully committed — clear the in-flight marker.
+      await offlineStorage.remove("metadata", IN_FLIGHT_BATCH_KEY);
+
       this.notifyListeners({
         type: "push:success",
         count: pending.length,
@@ -224,6 +273,9 @@ export class SyncManager {
         for (const op of pending) {
           await syncQueue.markFailed(op.id, error, "conflict");
         }
+        // Conflict needs manual resolution; the same key+payload would just
+        // get the same 409 back, so release the in-flight slot.
+        await offlineStorage.remove("metadata", IN_FLIGHT_BATCH_KEY);
         this.notifyListeners({
           type: "sync:conflict",
           error: error.response?.data?.message || "Data conflict detected",
@@ -237,6 +289,7 @@ export class SyncManager {
         for (const op of pending) {
           await syncQueue.markFailed(op.id, error, "logic_error");
         }
+        await offlineStorage.remove("metadata", IN_FLIGHT_BATCH_KEY);
         this.notifyListeners({
           type: "push:error",
           error: error.response?.data?.message || "Logic error",
@@ -244,7 +297,10 @@ export class SyncManager {
         return;
       }
 
-      // NETWORK / SERVER ERROR (5xx) — increment attempts, retry later
+      // NETWORK / SERVER ERROR (5xx) — increment attempts, retry later.
+      // Keep the in-flight record so the next pushToServer() replays with
+      // the SAME idempotency key, letting the server dedup if it already
+      // committed but the response was lost.
       console.error("Batch transient error (will retry):", error);
       for (const op of pending) {
         const newAttempts = (op.attempts || 0) + 1;

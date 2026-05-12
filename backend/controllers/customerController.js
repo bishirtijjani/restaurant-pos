@@ -216,7 +216,7 @@ const recordCustomerPayment = async (req, res) => {
 
 // Create a new customer
 const createCustomer = async (req, res) => {
-  const { fullname, phone, email, address, debtLimit } = req.body;
+  const { clientId, fullname, phone, email, address, debtLimit } = req.body;
 
   if (!fullname || !phone) {
     return res
@@ -225,6 +225,20 @@ const createCustomer = async (req, res) => {
   }
 
   try {
+    // Natural dedup by clientId — a retried offline create returns the
+    // existing customer instead of failing on phone-uniqueness.
+    if (clientId) {
+      const existingByClientId = await Customer.findOne({
+        clientId,
+        storeId: req.storeId,
+      }).session(req.transactionSession || null);
+      if (existingByClientId) {
+        return res
+          .status(200)
+          .json({ success: true, data: existingByClientId });
+      }
+    }
+
     const existingCustomer = await Customer.findOne({
       phone,
       storeId: req.storeId,
@@ -236,6 +250,7 @@ const createCustomer = async (req, res) => {
     }
 
     const newCustomer = new Customer({
+      clientId: clientId || undefined,
       fullname,
       phone,
       email,

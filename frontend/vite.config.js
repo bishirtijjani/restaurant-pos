@@ -9,6 +9,12 @@ export default defineConfig({
     VitePWA({
       injectRegister: null, // We register manually in initOffline.js
       registerType: "autoUpdate",
+      // injectManifest mode lets us own the service worker source. We need
+      // this for the Background Sync API event listener (sync event fires
+      // even when the page is closed and triggers our offline queue flush).
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.js",
       includeAssets: ["favicon.png", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
         name: "Restaurant Management System",
@@ -40,9 +46,9 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
-        maximumFileSizeToCacheInBytes: 3000000, // 3MB limit for large chunks
+        maximumFileSizeToCacheInBytes: 3000000,
       },
     }),
   ],

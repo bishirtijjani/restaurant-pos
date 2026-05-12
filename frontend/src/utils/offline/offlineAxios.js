@@ -1,4 +1,5 @@
 import axios from "axios";
+import { v7 as uuidv7 } from "uuid";
 import offlineStorage from "./storage";
 import { syncQueue } from "./syncQueue";
 import { connectionMonitor } from "./connectionMonitor";
@@ -16,6 +17,9 @@ export const injectStore = (_store) => {
 // Generate temporary ID for offline items
 const generateTempId = () =>
   `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+// HTTP methods that mutate state and should carry an Idempotency-Key.
+const MUTATING_METHODS = new Set(["post", "put", "patch", "delete"]);
 
 // Track processed requests to prevent duplicates
 const processedRequests = new Set();
@@ -103,6 +107,35 @@ axios.interceptors.request.use(
 
     if (activeStoreId) {
       config.headers["x-store-id"] = activeStoreId;
+    }
+
+    // 3. Inject Idempotency-Key for mutating methods.
+    // The header makes server-side dedup possible: if a request commits but
+    // the response is lost, a retry with the same key replays the cached response
+    // instead of re-executing. Skipped for sync push (syncManager owns the batch key).
+    const methodLower = (config.method || "").toLowerCase();
+    if (
+      MUTATING_METHODS.has(methodLower) &&
+      !config.headers["idempotency-key"] &&
+      !config.headers["Idempotency-Key"] &&
+      !config.headers["x-sync-request"]
+    ) {
+      config.headers["Idempotency-Key"] = uuidv7();
+    }
+
+    // 4. Inject clientId for POST bodies (creates).
+    // Server-side controllers look for this and short-circuit duplicate creates,
+    // returning the existing record instead of inserting a second row. Combined
+    // with the Idempotency-Key, this guarantees no duplicates even if a batch
+    // commits server-side but the response is lost.
+    if (
+      methodLower === "post" &&
+      config.data &&
+      typeof config.data === "object" &&
+      !Array.isArray(config.data) &&
+      !config.data.clientId
+    ) {
+      config.data.clientId = uuidv7();
     }
 
     // If online, proceed normally

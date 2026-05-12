@@ -25,7 +25,7 @@ export default function FoundingPartners() {
             >
               <Sparkles size={14} className="text-accent" />
               <span className="text-xs font-bold uppercase tracking-widest text-accent">
-                UK Launch Program
+                UAE Launch Program
               </span>
             </motion.div>
 
@@ -35,7 +35,7 @@ export default function FoundingPartners() {
               viewport={{ once: true }}
               className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[0.95] mb-8"
             >
-              UK Early Access: <br />
+              UAE Early Access: <br />
               <span className="text-accent">Founding Restaurants</span> Wanted
             </motion.h2>
 
@@ -47,7 +47,7 @@ export default function FoundingPartners() {
               className="text-lg text-gray-400 font-medium leading-relaxed mb-10 max-w-xl"
             >
               Codeket Restaurant is entering live restaurant environments in the
-              UK for the first time. Founding Partners get early access, direct
+              UAE for the first time. Founding Partners get early access, direct
               influence on features, and locked-in pricing — in exchange for
               real-world usage and feedback.
             </motion.p>
@@ -55,9 +55,9 @@ export default function FoundingPartners() {
             <div className="flex flex-col gap-4 text-gray-300 font-medium hover:text-white transition-colors">
               {[
                 "Direct Access to the Founder (Personal Cell)",
-                "Lifetime Price Lock (£129/mo)",
+                "Lifetime Price Lock (AED 599/mo)",
                 "Feature Priority (You ask, we build)",
-                "Zero Setup Fees (£500 value)",
+                "Zero Setup Fees (AED 2,000 value)",
               ].map((item, i) => (
                 <motion.div
                   key={i}

@@ -2,6 +2,7 @@
 import { registerSW } from "virtual:pwa-register";
 import { syncManager } from "../utils/offline/syncManager";
 import { connectionMonitor } from "../utils/offline/connectionMonitor";
+import { requestPeriodicSync } from "../utils/offline/backgroundSync";
 import store from "./store";
 import { isTokenExpired } from "../utils/Helpers";
 import { showNotification } from "../features/common/headerSlice";
@@ -90,6 +91,10 @@ export const initializeOfflineSupport = () => {
       console.log("Persistent storage:", persistent);
     });
   }
+
+  // Periodic Sync (Chrome PWA installed only) — keeps cached menu/settings
+  // fresh in the background. No-op on browsers/permissions that don't allow it.
+  requestPeriodicSync().catch(() => {});
 
   console.log("Offline support initialized");
 };

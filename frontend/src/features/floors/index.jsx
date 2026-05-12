@@ -221,7 +221,7 @@ const FloorManager = () => {
       openRightDrawer({
         header: `Table ${table.tableNumber}`,
         type: RIGHT_DRAWER_TYPES.FLOOR_TABLE_DETAILS,
-        extraObject: table,
+        extraObject: { table },
       }),
     );
   };
@@ -249,7 +249,7 @@ const FloorManager = () => {
           openRightDrawer({
             header: `Edit Table ${table.tableNumber}`,
             type: RIGHT_DRAWER_TYPES.FLOOR_TABLE_EDIT,
-            extraObject: table,
+            extraObject: { table },
           }),
         );
         break;

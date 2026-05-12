@@ -1,5 +1,5 @@
 // frontend/src/features/orders/mobile/PaymentTab.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CreditCard,
@@ -13,8 +13,10 @@ import {
   ShoppingBag,
   Truck,
   ChevronRight,
+  WifiOff,
 } from "lucide-react";
 import { useHaptic } from "../../../hooks/useHaptic";
+import { useOnlineStatus } from "../../../hooks/useOnlineStatus";
 import CustomerSheet from "./sheets/CustomerSheet";
 import DiscountSheet from "./sheets/DiscountSheet";
 import { setOrderType, setSelectedTable } from "../posSlice";
@@ -45,6 +47,17 @@ const PaymentTab = () => {
   // Local state
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cash");
   const [tipPercentage, setTipPercentage] = useState(0);
+
+  // Card and Transfer require live server connectivity (gateway round-trips).
+  // Offline-only payments are restricted to cash. If the operator was on
+  // a card method when connectivity dropped, snap them back to cash so
+  // they can't accidentally submit a payment that won't actually clear.
+  const isOnline = useOnlineStatus();
+  useEffect(() => {
+    if (!isOnline && selectedPaymentMethod !== "cash") {
+      setSelectedPaymentMethod("cash");
+    }
+  }, [isOnline, selectedPaymentMethod]);
 
   // Calculate totals (simplified - full calculation in payment confirmation)
   const subtotal = cart.reduce(
@@ -322,18 +335,35 @@ const PaymentTab = () => {
         {/* Payment Method */}
         <div className="bg-base-100 rounded-xl p-4 shadow-sm">
           <h3 className="font-semibold mb-3">Payment Method</h3>
+          {!isOnline && (
+            <div className="alert alert-warning mb-3 py-2 text-sm">
+              <WifiOff size={18} />
+              <span>
+                Offline — cash only. Card and Transfer payments resume when
+                connectivity is restored.
+              </span>
+            </div>
+          )}
           <div className="space-y-2">
             {paymentMethods.map((method) => {
               const Icon = method.icon;
               const isSelected = selectedPaymentMethod === method.id;
+              const isOfflineDisabled = !isOnline && method.id !== "cash";
               return (
                 <button
                   key={method.id}
-                  onClick={() => handlePaymentMethodSelect(method.id)}
+                  onClick={() =>
+                    !isOfflineDisabled && handlePaymentMethodSelect(method.id)
+                  }
+                  disabled={isOfflineDisabled}
                   className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
                     isSelected
                       ? "border-primary bg-primary/10"
                       : "border-base-300 hover:border-primary/50"
+                  } ${
+                    isOfflineDisabled
+                      ? "opacity-40 cursor-not-allowed hover:border-base-300"
+                      : ""
                   }`}
                 >
                   <Icon
@@ -347,7 +377,12 @@ const PaymentTab = () => {
                   >
                     {method.name}
                   </span>
-                  {isSelected && (
+                  {isOfflineDisabled && (
+                    <span className="ml-auto text-xs text-base-content/50">
+                      Offline
+                    </span>
+                  )}
+                  {isSelected && !isOfflineDisabled && (
                     <div className="ml-auto w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                       <div className="w-2 h-2 rounded-full bg-primary-content" />
                     </div>

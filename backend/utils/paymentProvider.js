@@ -167,13 +167,97 @@ class StripeProvider extends PaymentProvider {
 }
 
 /**
- * Factory to get the correct provider
+ * Cash Payment Provider
+ *
+ * Stub for offline-safe payments. No external gateway round-trip — cash
+ * is settled at the till. Refunds are also handled locally (operator hands
+ * cash back from drawer). Lives behind the same interface so the rest of
+ * the system doesn't need to special-case payment methods.
+ */
+class CashProvider extends PaymentProvider {
+  async createPaymentIntent(amount, currency, metadata = {}) {
+    return {
+      success: true,
+      provider: "cash",
+      transactionId: `cash_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      clientSecret: null,
+    };
+  }
+
+  async verifyPayment(_paymentId) {
+    return { success: true, status: "paid" };
+  }
+
+  async refundPayment(paymentId, amount, reason, _metadata = {}) {
+    return {
+      success: true,
+      refundId: `cash_refund_${Date.now()}`,
+      status: "succeeded",
+      amount,
+      reason,
+      paymentIntentId: paymentId,
+    };
+  }
+
+  async getRefundStatus(refundId) {
+    return { success: true, status: "succeeded", refundId };
+  }
+}
+
+/**
+ * Bank Transfer Payment Provider
+ *
+ * Stub. Transfers are confirmed manually by the operator (e.g., after
+ * checking the receiving account). Treated as paid once the operator marks
+ * it received. Refunds are also manual (initiated outside the system).
+ */
+class TransferProvider extends PaymentProvider {
+  async createPaymentIntent(amount, currency, metadata = {}) {
+    return {
+      success: true,
+      provider: "transfer",
+      transactionId: `transfer_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      clientSecret: null,
+    };
+  }
+
+  async verifyPayment(_paymentId) {
+    return { success: true, status: "paid" };
+  }
+
+  async refundPayment(paymentId, amount, reason, _metadata = {}) {
+    return {
+      success: true,
+      refundId: `transfer_refund_${Date.now()}`,
+      status: "pending",
+      amount,
+      reason,
+      paymentIntentId: paymentId,
+    };
+  }
+
+  async getRefundStatus(refundId) {
+    return { success: true, status: "pending", refundId };
+  }
+}
+
+/**
+ * Factory to get the correct provider.
+ *
+ * Adding a new regional provider (e.g., Network International for UAE,
+ * PayTabs, Telr, Checkout.com) is a single case branch here plus a new
+ * Provider class — the rest of the codebase calls through the same interface.
  */
 class PaymentProviderFactory {
-  static getProvider(providerName, config) {
+  static getProvider(providerName, config = {}) {
     switch (providerName) {
       case "stripe":
         return new StripeProvider(config);
+      case "cash":
+        return new CashProvider(config);
+      case "transfer":
+      case "Transfer":
+        return new TransferProvider(config);
       default:
         throw new Error(`Payment provider '${providerName}' not supported`);
     }
@@ -183,4 +267,6 @@ class PaymentProviderFactory {
 module.exports = {
   PaymentProviderFactory,
   StripeProvider,
+  CashProvider,
+  TransferProvider,
 };

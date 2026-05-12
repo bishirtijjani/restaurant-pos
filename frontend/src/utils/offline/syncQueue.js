@@ -1,6 +1,7 @@
 // frontend/src/utils/offline/syncQueue.js
 import offlineStorage from "./storage";
 import { v4 as uuidv4 } from "uuid";
+import { requestBackgroundSync } from "./backgroundSync";
 
 export class SyncQueue {
   constructor() {
@@ -51,6 +52,11 @@ export class SyncQueue {
       operation.type,
       operation.storeName,
     );
+
+    // Ask the SW to sync this operation as soon as connectivity is back.
+    // Fire-and-forget: registration.sync.register survives browser close on
+    // supported platforms; falls back silently elsewhere (polling still works).
+    requestBackgroundSync().catch(() => {});
 
     return queueItem.id;
   }

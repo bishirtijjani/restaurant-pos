@@ -1,12 +1,14 @@
 // frontend/src/features/orders/components/UpdatePaymentModalBody.jsx
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { WifiOff } from "lucide-react";
 import FormattedNumberInput from "../../../components/Input/FormattedNumberInput";
 import SearchableSelect from "../../../components/Input/SearchableSelect";
 import { closeModal } from "../../common/modalSlice";
 import { showNotification } from "../../common/headerSlice";
 import { updatePayment, fetchOrders } from "../ordersSlice";
 import ErrorText from "../../../components/Typography/ErrorText";
+import { useOnlineStatus } from "../../../hooks/useOnlineStatus";
 
 function UpdatePaymentModalBody({ extraObject, closeModal: close }) {
   const dispatch = useDispatch();
@@ -15,6 +17,7 @@ function UpdatePaymentModalBody({ extraObject, closeModal: close }) {
     (state) => state.generalSettings.generalSettings
   );
   const currency = settings?.currency?.symbol || "$";
+  const isOnline = useOnlineStatus();
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -24,11 +27,20 @@ function UpdatePaymentModalBody({ extraObject, closeModal: close }) {
     reason: "",
   });
 
-  const paymentMethodOptions = [
-    { value: "cash", name: "Cash" },
-    { value: "card", name: "Card" },
-    { value: "Transfer", name: "Bank Transfer" },
-  ];
+  const paymentMethodOptions = isOnline
+    ? [
+        { value: "cash", name: "Cash" },
+        { value: "card", name: "Card" },
+        { value: "Transfer", name: "Bank Transfer" },
+      ]
+    : [{ value: "cash", name: "Cash" }];
+
+  // Snap to cash if connectivity drops mid-edit.
+  useEffect(() => {
+    if (!isOnline && paymentData.paymentMethod !== "cash") {
+      setPaymentData((prev) => ({ ...prev, paymentMethod: "cash" }));
+    }
+  }, [isOnline, paymentData.paymentMethod]);
 
   const remainingBalance = order.totalAmount - order.amountPaid;
 
@@ -132,6 +144,15 @@ function UpdatePaymentModalBody({ extraObject, closeModal: close }) {
           </span>
         </label>
       </div>
+
+      {!isOnline && (
+        <div className="alert alert-warning py-2 mb-2">
+          <WifiOff size={16} />
+          <span className="text-sm">
+            Offline — cash only.
+          </span>
+        </div>
+      )}
 
       <div className="form-control">
         <label className="label">
