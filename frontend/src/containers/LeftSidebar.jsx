@@ -110,7 +110,7 @@ function LeftSidebar() {
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-black tracking-tighter text-base-content uppercase leading-none">
-                Codeket<span className="text-primary">.</span>
+                Restaurant POS<span className="text-primary">.</span>
               </span>
               <span className="text-[9px] uppercase tracking-[0.2em] font-bold opacity-40">
                 Restaurant

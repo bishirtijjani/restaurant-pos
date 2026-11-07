@@ -172,7 +172,7 @@ function Login() {
                 <img src="/favicon.png" alt="" />
               </div>
               <span className="text-2xl font-black tracking-tighter uppercase text-gray-900">
-                CODEKET
+                RESTAURANT POS
               </span>
             </div>
 
@@ -197,7 +197,7 @@ function Login() {
                 P
               </div>
               <span className="text-lg font-black tracking-tighter uppercase text-gray-900">
-                CODEKET
+                RESTAURANT POS
               </span>
             </div>
 

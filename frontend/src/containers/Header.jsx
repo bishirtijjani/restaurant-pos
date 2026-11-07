@@ -203,7 +203,7 @@ function Header() {
                   </summary>
                   <ul className="p-2 bg-base-100 rounded-t-none">
                     <li>
-                      <a data-set-theme="codeket-rms">🍽️ Codeket RMS</a>
+                      <a data-set-theme="restaurant-pos">🍽️ Restaurant POS RMS</a>
                     </li>
                     <li>
                       <a data-set-theme="light">☀️ Light</a>
@@ -283,7 +283,7 @@ function Header() {
                 className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-4"
               >
                 <li>
-                  <a data-set-theme="codeket-rms">🍽️ Codeket RMS</a>
+                  <a data-set-theme="restaurant-pos">🍽️ Restaurant POS RMS</a>
                 </li>
                 <li>
                   <a data-set-theme="light">☀️ Light</a>

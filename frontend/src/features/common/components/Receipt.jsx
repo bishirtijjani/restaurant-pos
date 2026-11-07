@@ -412,7 +412,7 @@ const Receipt = ({ extraObject, closeModal }) => {
             {/* Footer */}
             <div className="text-center text-xs">
               <p>Thank you for your patronage!</p>
-              <p className="mt-2 opacity-60">Powered by Codeket</p>
+              <p className="mt-2 opacity-60">Powered by Restaurant POS</p>
             </div>
           </div>
         </div>

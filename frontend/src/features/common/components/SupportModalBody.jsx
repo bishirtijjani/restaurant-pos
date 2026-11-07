@@ -11,7 +11,7 @@ const SupportModalBody = ({ closeModal }) => {
       title: "WhatsApp",
       description: "Direct chat with a human. Replies instantly.",
       icon: ChatBubbleLeftRightIcon,
-      action: () => window.open("https://wa.me/2349063503232", "_blank"),
+      action: () => window.open("https://wa.me/", "_blank"),
       color: "text-green-500",
       bg: "bg-green-500/10",
       hover: "hover:bg-green-500/20",
@@ -20,7 +20,7 @@ const SupportModalBody = ({ closeModal }) => {
       title: "Email Support",
       description: "For formal inquiries and business requests.",
       icon: EnvelopeIcon,
-      action: () => (window.location.href = "mailto:restaurant@codeket.com"),
+      action: () => (window.location.href = "mailto:restaurant@"),
       color: "text-blue-500",
       bg: "bg-blue-500/10",
       hover: "hover:bg-blue-500/20",
@@ -58,7 +58,7 @@ const SupportModalBody = ({ closeModal }) => {
         <p className="text-base-content/40 text-xs font-bold uppercase tracking-widest leading-loose">
           24/7 Operational Support Hub
           <br />
-          Codeket Restaurant Operations
+          Restaurant POS Restaurant Operations
         </p>
       </div>
 

@@ -1,9 +1,9 @@
-# Codeket Restaurant
+# Restaurant POS Restaurant
 
 > **The operations-first, offline-capable restaurant management system. One backbone for table, kitchen, inventory, and analytics — running on any device, with or without internet.**
 
-Live marketing site: [restaurant.codeket.com](https://restaurant.codeket.com)
-App: [app.restaurant.codeket.com](https://app.restaurant.codeket.com)
+Live marketing site: [](https://)
+App: [app.](https://app.)
 
 ---
 
@@ -42,7 +42,7 @@ App: [app.restaurant.codeket.com](https://app.restaurant.codeket.com)
 
 ## 1. What This Is
 
-**Codeket Restaurant** is a full-stack, multi-tenant SaaS restaurant management system. It replaces the fragile mosaic that most restaurants run on — a separate POS, a spreadsheet for stock, a printer that crashes when Wi-Fi drops, a notebook for reservations — with one integrated operational backbone.
+**Restaurant POS Restaurant** is a full-stack, multi-tenant SaaS restaurant management system. It replaces the fragile mosaic that most restaurants run on — a separate POS, a spreadsheet for stock, a printer that crashes when Wi-Fi drops, a notebook for reservations — with one integrated operational backbone.
 
 It is **not** a "POS with extras." It is an end-to-end operating system for the restaurant floor: from the guest sitting down at a table, through the order moving to the kitchen, to inventory being deducted, to the manager seeing the variance the next morning — all in one continuous flow that does not break when the internet does.
 
@@ -194,7 +194,7 @@ restaurant-management-system/
 
 ```
                     ┌──────────────────────────────────────────────────┐
-                    │              CODEKET RESTAURANT PLATFORM          │
+                    │              RESTAURANT POS PLATFORM          │
                     └──────────────────────────────────────────────────┘
 
   Customer / Floor Staff Devices                  Manager / Admin Devices
@@ -416,7 +416,7 @@ Each folder contains its Redux slice + UI + sub-components:
 - **React 19 + Vite 7 + Tailwind 4**
 - **vite-react-ssg** for static rendering → fast first paint + SEO
 - **EmailJS** for lead-capture form submission (no backend round-trip)
-- **WhatsApp deep-link** (`2349063503232`) for founder-direct contact
+- **WhatsApp deep-link** (``) for founder-direct contact
 - **Hosted on Vercel** (see `vercel.json`)
 
 Source-of-truth copy is documented in [PRODUCT_SITE_CONTENT.md](PRODUCT_SITE_CONTENT.md). The site's narrative is reproduced in [§25 Marketing Positioning](#25-marketing-positioning).
@@ -756,9 +756,9 @@ All routes mounted under `/api`. Routes mounted in [backend/routes/index.js](bac
 - Refunds (full or partial) tracked in `Order.refunds` + audit logged.
 - Currency snapshotted on the order at creation time (so historic reports stay accurate after currency config changes).
 
-### Platform billing (Codeket → restaurant)
+### Platform billing (Restaurant POS → restaurant)
 - Plan stored on `Organization.plan` (free / basic / pro).
-- Current commercial model: flat **AED 599/mo** during Early Access for UAE Founding Partners, with annual option (AED 5,990/year per location = 2 months free), lifetime price-lock for the first 6 founding restaurants.
+- Current commercial model: subscription-based SaaS with tiered plans.
 - Billing logic enforcement is partial (see [§27 Known Gaps](#27-roadmap--known-gaps)).
 
 ---
@@ -956,98 +956,6 @@ Config: [playwright.config.js](playwright.config.js). Run: `npm test` from root 
 
 ---
 
-## 25. Marketing Positioning
-
-The full source-of-truth marketing copy is in [PRODUCT_SITE_CONTENT.md](PRODUCT_SITE_CONTENT.md). Summary:
-
-### Tagline
-> **Run Your Restaurant on One Operational System**
-
-### Subheadline
-> Offline-capable restaurant management built for real-world conditions. From POS to KDS, inventory to analytics.
-
-### Hero early-access badge
-> **Early Access — Limited UAE Restaurants**
-
-### Hero trust signals
-- No Credit Card • 14-Day Trial • Works Offline
-
-### The 4-step operational story
-1. **From Table** — Orders & service execution. No duplication.
-2. **To Kitchen** — Kitchen & preparation flow. Real-time sync.
-3. **To Inventory** — Inventory & cost control. Zero manual edits.
-4. **To Analytics** — Reporting & oversight. Live data.
-
-### Four core pillars (philosophy)
-1. **Bring Your Own Hardware** — Hardware freedom. Use iPads, Android tablets, laptops, or desktops you already own.
-2. **Talk to Humans, Not Bots** — Direct support. Text the founder directly. No tickets.
-3. **Process Over Customization** — Engineered flow. Proven workflows enforced by design.
-4. **Strong Where It Matters** — Mission-critical focus. POS, Inventory, Taxes, Reports.
-
-### Credibility (UAE positioning)
-> Designed for mission-critical service — now entering real-world UAE operations.
-> Codeket isn't just a POS; it's industrial-grade infrastructure that protects your revenue when it matters most. Especially in regions with unstable connectivity or complex tax requirements.
-
-Four reliability cards: **Built for pressure** (industrial grade) • **Offline-capable** (local-first) • **UAE Tax & VAT Ready** (handles UAE 5% VAT, FTA-compliant invoices, service charges, per-item rules) • **Instant Setup** (live in hours).
-
-Proof HUD: **100% Operational Readiness** • **Instant Local Sync** • **VAT Native — UAE Compliant**.
-
-### Founding partners offer (UAE Launch Program)
-- Wanted: 6 founding UAE restaurants ("06 / 06" spots remaining)
-- Direct Access to the Founder (Personal Cell)
-- Lifetime Price Lock at AED 599/mo
-- Feature Priority — "You ask, we build"
-- Zero Setup Fees (AED 2,000 value)
-- CTA: WhatsApp `2349063503232`
-
-### FAQ
-1. **Setup fee?** None. Live in 15 minutes.
-2. **Existing hardware?** Yes — any iPad, Android tablet, or browser. No proprietary lock-in.
-3. **Offline mode?** Local-first architecture stores transactions on the device; syncs automatically on reconnect.
-4. **Support?** Direct WhatsApp / call line to the founding team. No ticket waitlists.
-5. **Tax flexibility?** Configurable globally, per location, and per menu item. Inclusive or exclusive pricing supported.
-
----
-
-## 26. Pricing
-
-The site presents pricing as a head-to-head comparison against legacy competitor POS systems:
-
-| Feature | Competitors | Codeket |
-|---|---|---|
-| Hardware | AED 3,500–14,000 upfront | Use existing iPads, tablets, laptops, desktops |
-| Monthly Fee | AED 700+ / location | AED 599 flat |
-| Payments | Proprietary lock-in | Integrated Stripe Payments |
-| Support | Ticket waitlist | Founder direct line |
-| Contract | 1–3 year lock-in | Month-to-month |
-| Hidden Fees | Setup & training | Zero hidden costs |
-
-### Plans
-
-| Plan | Price | Notes |
-|---|---|---|
-| **Early Access (Founding Partner)** | **AED 599/mo** | Lifetime-locked for the first 6 UAE restaurants |
-| **Annual** | **AED 5,990/year** per location | 2 months free vs. monthly |
-
-### What's included
-- Zero hardware spend — save AED 5,000+ on day one
-- Unlimited Front-of-House POS devices
-- Unlimited Kitchen Displays (KDS)
-- Drag & drop floor & table management with reservations
-- Live inventory & waste tracking
-- Advanced multi-store reporting
-- Direct human support (call / text)
-- Freedom to use integrated Stripe Payments
-- Full offline mode
-- Granular tax control (global, per location, per item)
-
-### What's *not* there
-- No setup fees
-- No contracts (month-to-month)
-- No hardware markup (bring your own)
-
----
-
 ## 27. Roadmap & Known Gaps
 
 Documented honestly in [checklist.md](checklist.md). Not yet shipped:
@@ -1098,16 +1006,16 @@ Documented honestly in [checklist.md](checklist.md). Not yet shipped:
 
 ## 28. Support
 
-- **Email:** restaurant@codeket.com
-- **WhatsApp (founder direct, no bots):** `2349063503232`
-- **Marketing site:** [restaurant.codeket.com](https://restaurant.codeket.com)
-- **App:** [app.restaurant.codeket.com](https://app.restaurant.codeket.com)
+- **Email:** restaurant@
+- **WhatsApp (founder direct, no bots):** ``
+- **Marketing site:** [](https://)
+- **App:** [app.](https://app.)
 
 ### Legal
-- [Privacy Policy](https://codeket.com/privacy-policy)
-- [Terms of Service](https://codeket.com/terms-of-service)
-- [Cookie Policy](https://codeket.com/cookie-policy)
+- [Privacy Policy](https:///privacy-policy)
+- [Terms of Service](https:///terms-of-service)
+- [Cookie Policy](https:///cookie-policy)
 
 ---
 
-© 2026 Codeket Ltd. All rights reserved.
+© 2026 Restaurant POS Ltd. All rights reserved.

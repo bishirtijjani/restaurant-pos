@@ -743,7 +743,7 @@ const seedDemoRestaurant = async () => {
     const superAdminName = generateName();
     const superAdminUser = new User({
       fullname: `${superAdminName.full} (Super Admin)`,
-      email: "admin@codeket.com",
+      email: "admin@",
       password: "demo123",
       isSuperAdmin: true,
       role: "admin",
@@ -1555,7 +1555,7 @@ const seedDemoRestaurant = async () => {
     console.log("\nRestaurant: Riverside Bistro");
     console.log("Location: 482 Waterfront Drive, Metro City");
     console.log("\n--- LOGIN CREDENTIALS ---");
-    console.log(`Super Admin: admin@codeket.com / demo123 (platform management)`);
+    console.log(`Super Admin: admin@ / demo123 (platform management)`);
     console.log(`Owner:       owner@riversidebistro.com / demo123`);
     console.log(`Manager:     manager@riversidebistro.com / demo123`);
     console.log(`Cashier:     cashier@riversidebistro.com / demo123`);

@@ -66,9 +66,9 @@
                 - button "Pay $0.00" [disabled]
     - list [ref=e106]:
       - listitem [ref=e107]:
-        - link "Codeket Restaurant Logo Restaurant" [ref=e108] [cursor=pointer]:
+        - link "Restaurant POS Restaurant Logo Restaurant" [ref=e108] [cursor=pointer]:
           - /url: /dashboard
-          - img "Codeket Restaurant Logo" [ref=e109]
+          - img "Restaurant POS Restaurant Logo" [ref=e109]
           - generic [ref=e110]: Restaurant
       - generic [ref=e111]:
         - listitem [ref=e112]:

@@ -125,7 +125,7 @@ function ForgotPassword() {
                 P
               </div>
               <span className="text-2xl font-black tracking-tighter uppercase text-gray-900">
-                CODEKET
+                RESTAURANT POS
               </span>
             </div>
 

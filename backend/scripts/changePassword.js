@@ -17,7 +17,7 @@ const changePassword = async () => {
 
     if (!email || !newPassword) {
       console.log("Usage: node scripts/changePassword.js <email> <new-password>");
-      console.log("Example: node scripts/changePassword.js admin@codeket.com admin123");
+      console.log("Example: node scripts/changePassword.js admin@ admin123");
       process.exit(1);
     }
 

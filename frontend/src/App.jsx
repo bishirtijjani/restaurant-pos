@@ -152,7 +152,7 @@ function App() {
           />
           <Route
             path="/home"
-            element={<ExternalRedirect url="https://restaurant.codeket.com" />}
+            element={<ExternalRedirect url="https://" />}
           />
 
           <Route

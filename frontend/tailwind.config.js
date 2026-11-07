@@ -26,7 +26,7 @@ module.exports = {
   daisyui: {
     themes: [
       {
-        "codeket-rms": {
+        "restaurant-pos": {
           // Brand identity from product-site palette
           primary: "#ff6b35", // Brand Orange — Main buttons, active states, highlights
           "primary-content": "#ffffff", // White text on orange (High contrast)

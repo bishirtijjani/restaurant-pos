@@ -154,7 +154,7 @@ function Register() {
                 C
               </div>
               <span className="text-2xl font-black tracking-tighter text-gray-900">
-                CODEKET
+                RESTAURANT POS
               </span>
             </div>
 
